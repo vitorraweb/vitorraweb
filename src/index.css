@@ -1,0 +1,207 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap');
+@import "tailwindcss";
+
+/* Admin Panel shake animation for form error states */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.animate-shake { animation: shake 0.3s ease-in-out; }
+
+@theme {
+  --font-heading: "Montserrat", sans-serif;
+  --font-body: "Open Sans", sans-serif;
+  
+  /* Fallbacks */
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-heading);
+
+  --color-vitorra-bg: var(--bg-primary);
+  --color-vitorra-bg-alt: var(--bg-secondary);
+  --color-vitorra-text: var(--text-primary);
+  --color-vitorra-gold: var(--vitorra-gold);
+  --color-vitorra-gold-hover: var(--vitorra-gold-hover);
+  --color-vitorra-gold-text: var(--vitorra-gold-text);
+  --color-vitorra-muted: var(--text-secondary);
+  --color-vitorra-border: var(--border-color);
+  --color-vitorra-card: var(--card-bg);
+}
+
+:root {
+  --bg-primary: #faf9f6;
+  --bg-secondary: #f2f0ea;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4b5563;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --nav-bg: rgba(250, 249, 246, 0.7);
+  --card-bg: #faf9f6;
+  --vitorra-gold: #A6863B;
+  --vitorra-gold-hover: #917431;
+  --vitorra-gold-text: #1a1a1a;
+}
+
+.dark {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #242424;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --nav-bg: rgba(0, 0, 0, 0.5);
+  --card-bg: #2b2b2b;
+  --vitorra-gold: #CFB53B;
+  --vitorra-gold-hover: #d4b26f;
+  --vitorra-gold-text: #1a1a1a;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
+  }
+
+  body {
+    @apply bg-vitorra-bg text-vitorra-text font-body antialiased selection:bg-vitorra-gold/30 selection:text-vitorra-text transition-colors duration-500 overflow-x-hidden;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
+    font-size: 16px; /* Mobile Body */
+    line-height: 1.6;
+    font-family: var(--font-body);
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(197, 160, 89, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(197, 160, 89, 0.03) 0%, transparent 50%);
+    background-attachment: fixed;
+    position: relative;
+  }
+
+  @media (min-width: 1280px) {
+    body {
+      font-size: 18px; /* Desktop Body */
+    }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-medium tracking-tight drop-shadow-sm;
+    font-family: var(--font-heading);
+    line-height: 1.25;
+  }
+
+  h1 {
+    font-size: clamp(32px, 8vw, 40px); /* Mobile H1 */
+  }
+
+  @media (min-width: 1024px) {
+    h1 {
+      font-size: clamp(48px, 5vw, 64px); /* Desktop H1 */
+    }
+  }
+
+  h2 {
+    font-size: clamp(24px, 5vw, 28px); /* Mobile H2 */
+  }
+
+  @media (min-width: 1024px) {
+    h2 {
+      font-size: clamp(32px, 4vw, 40px); /* Desktop H2 */
+    }
+  }
+
+  h3 {
+    font-size: clamp(20px, 3vw, 22px); /* Mobile H3 */
+  }
+
+  @media (min-width: 1024px) {
+    h3 {
+      font-size: clamp(22px, 2.5vw, 28px); /* Desktop H3 */
+    }
+  }
+
+  h4 {
+    font-size: 20px;
+    line-height: 1.3;
+  }
+
+  /* Utility classes for specific typography needs */
+  .text-label {
+    font-size: 13px;
+    font-family: var(--font-body);
+  }
+  @media (min-width: 1024px) {
+    .text-label {
+      font-size: 14px;
+    }
+  }
+
+  .nav-link {
+    font-size: 15px;
+    font-family: var(--font-body);
+  }
+  @media (min-width: 1024px) {
+    .nav-link {
+      font-size: 16px;
+    }
+  }
+
+  .btn-text {
+    @apply font-bold uppercase tracking-widest;
+    font-size: 14px;
+    font-family: var(--font-heading);
+  }
+  @media (min-width: 1024px) {
+    .btn-text {
+      font-size: 16px;
+    }
+  }
+
+  /* Focus states for input fields across the app */
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply ring-1 ring-vitorra-gold shadow-[0_0_15px_rgba(197,160,89,0.1)];
+  }
+}
+
+/* Refined Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+  border: 1px solid var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C5A059;
+}
+
+
+#root {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
+}
+
+/* =========================================
+   Force Mobile Layout Override
+   When JS detects a real phone screen (screen.width < 768),
+   it adds .force-mobile to <html>. These rules ONLY override
+   the nav visibility — everything else uses normal responsive CSS.
+========================================= */
+.force-mobile [data-nav="desktop"] {
+  display: none !important;
+}
+
+.force-mobile [data-nav="mobile"] {
+  display: flex !important;
+}

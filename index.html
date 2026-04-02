@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="description"
+    content="Vitorra Holdings Limited — A forward-thinking holding company delivering innovative technologies, superior products, and dependable logistics solutions to international markets." />
+  <meta property="og:title" content="Vitorra Holdings Limited" />
+  <meta property="og:description"
+    content="Driving Africa's Economic Transformation through innovative technologies, superior products, and dependable logistics." />
+  <meta property="og:image" content="/images/vitorralogo.png" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/png" href="/images/vitorralogo.png" />
+  <title>Vitorra Holdings Limited</title>
+  <script>
+    // Force mobile layout on real phone/tablet screens even if "Request Desktop Site" is enabled.
+    // Requires BOTH: narrow screen width AND touch capability (to exclude laptops).
+    (function(){
+      var hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      var isNarrow = screen.width < 768;
+      if (hasTouch && isNarrow) {
+        document.documentElement.classList.add('force-mobile');
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
