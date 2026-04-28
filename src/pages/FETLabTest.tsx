@@ -98,7 +98,7 @@ export default function FETLabTest() {
             {KEY_FIGURES.map((item, idx) => (
               <div key={idx}>
                 <div className="text-2xl md:text-3xl font-bold text-emerald-400 mb-2">{item.stat}</div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted">{item.label}</div>
+                <div className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted">{item.label}</div>
               </div>
             ))}
           </div>
@@ -184,7 +184,7 @@ export default function FETLabTest() {
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-emerald-400" />
                     <span className="text-vitorra-text font-bold">{category.title}</span>
-                    <span className="text-[10px] text-vitorra-muted bg-vitorra-bg px-2 py-0.5 rounded-full">{category.items.length}</span>
+                    <span className="text-[11px] text-vitorra-muted bg-vitorra-bg px-2 py-0.5 rounded-full">{category.items.length}</span>
                   </div>
                   <ChevronDown className={`w-5 h-5 text-vitorra-muted shrink-0 transition-transform duration-300 ${openCategory === catIdx ? 'rotate-180' : ''}`} />
                 </button>

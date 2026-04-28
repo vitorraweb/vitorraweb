@@ -255,8 +255,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateUserProfile = async (data: Partial<UserProfile>) => {
     if (!db || !profile) return;
     await updateDoc(doc(db, 'users', profile.uid), data);
-    if (auth?.currentUser && data.displayName) {
-      await fbUpdateProfile(auth.currentUser, { displayName: data.displayName });
+    if (auth?.currentUser) {
+      const authUpdate: { displayName?: string; photoURL?: string } = {};
+      if (data.displayName) authUpdate.displayName = data.displayName;
+      if (data.photoURL !== undefined) authUpdate.photoURL = data.photoURL || null as any;
+      if (Object.keys(authUpdate).length > 0) {
+        await fbUpdateProfile(auth.currentUser, authUpdate);
+      }
     }
   };
 

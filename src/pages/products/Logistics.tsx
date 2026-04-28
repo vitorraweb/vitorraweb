@@ -52,34 +52,34 @@ export default function Logistics() {
   return (
     <div className="w-full bg-vitorra-bg min-h-screen text-vitorra-text pb-16 transition-colors duration-500 font-sans">
       {/* Hero */}
-      <section className="relative min-h-screen flex items-center overflow-hidden bg-vitorra-bg pt-48 pb-20">
+      <section className="relative min-h-[60vh] md:min-h-screen flex items-center overflow-hidden bg-vitorra-bg pt-32 md:pt-48 pb-12 md:pb-20">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-y-0 right-0 w-full md:w-[50%] overflow-hidden">
             <img
               src="/images/logistics_hero.png"
               alt="Vitorra Logistics Fleet"
-              className="w-full h-full object-cover opacity-100 transition-all duration-700"
+              className="w-full h-full object-cover opacity-30 md:opacity-100 transition-all duration-700"
             />
           </div>
           <div className="absolute inset-y-0 left-0 w-full md:w-[65%] bg-gradient-to-r from-vitorra-bg via-vitorra-bg via-[80%] to-transparent z-10" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full mb-20 md:mb-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full mb-8 md:mb-40">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-vitorra-gold/10 backdrop-blur-md border border-vitorra-gold/20 mb-8 font-sans">
               <div className="w-1.5 h-1.5 rounded-full bg-vitorra-gold animate-pulse" />
-              <span className="text-vitorra-gold text-[10px] font-black tracking-[0.25em] uppercase">Global Supply Chain Architecture</span>
+              <span className="text-vitorra-gold text-[11px] font-black tracking-[0.25em] uppercase">Global Supply Chain Architecture</span>
             </div>
-            <h1 className="mb-8">
+            <h1 className="text-3xl md:text-5xl mb-6 md:mb-8">
               East Africa's <br />
               <span className="text-vitorra-gold">Logistics Gateway.</span>
             </h1>
-            <p className="text-vitorra-text/70 mb-10 max-w-lg leading-relaxed font-normal whitespace-pre-line">
+            <p className="text-sm md:text-base text-vitorra-text/70 mb-8 md:mb-10 max-w-lg leading-relaxed font-normal whitespace-pre-line">
               Streamlining global trade through advanced infrastructure and operational excellence. 
               Connecting regional markets to the world with unparalleled precision.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link to="/contact" className="px-6 py-3 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-lg hover:bg-vitorra-text hover:text-vitorra-bg transition-all duration-300 uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-vitorra-gold/20 flex items-center gap-2">
+              <Link to="/contact" className="px-6 py-3 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-lg hover:bg-vitorra-text hover:text-vitorra-bg transition-all duration-300 uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-vitorra-gold/20 flex items-center gap-2">
                 Get Quote Now <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -88,21 +88,21 @@ export default function Logistics() {
       </section>
 
       {/* Strategic Hubs Section */}
-      <section id="verticals" className="py-32 bg-vitorra-bg border-b border-vitorra-border/50 overflow-hidden">
+      <section id="verticals" className="py-20 md:py-32 bg-vitorra-bg border-b border-vitorra-border/50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-24">
+          <div className="text-center mb-14 md:mb-24">
             <div className="flex items-center justify-center gap-3 text-vitorra-gold mb-6 uppercase tracking-[0.2em] text-xs font-bold">
               <Globe className="w-5 h-5" />
               Digital Ecosystem
             </div>
-            <h2 className="mb-10 text-vitorra-text leading-tight">Smart Supply Chain & <br />Logistics Platform</h2>
-            <p className="text-lg text-vitorra-muted max-w-2xl mx-auto leading-relaxed">
+            <h2 className="text-2xl md:text-4xl mb-6 md:mb-10 text-vitorra-text leading-tight">Smart Supply Chain & <br />Logistics Platform</h2>
+            <p className="text-base md:text-lg text-vitorra-muted max-w-2xl mx-auto leading-relaxed">
               We are developing a digital platform that efficiently matches logistics and transport service providers 
               with businesses and consumers, making it easier to find, book, and manage reliable delivery services.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
             {FLEET_IMAGES.map((img, idx) => (
               <motion.div
                 key={idx}
@@ -125,16 +125,16 @@ export default function Logistics() {
       </section>
 
       {/* Tire Solutions Deep Dive */}
-      <section className="py-32 bg-vitorra-bg-alt border-b border-vitorra-border/50">
+      <section className="py-20 md:py-32 bg-vitorra-bg-alt border-b border-vitorra-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-24 items-center">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-              <div className="flex items-center gap-3 text-vitorra-gold mb-6 uppercase tracking-[0.2em] text-[10px] font-bold">
+              <div className="flex items-center gap-3 text-vitorra-gold mb-6 uppercase tracking-[0.2em] text-[11px] font-bold">
                 <Database className="w-5 h-5" />
                 Digital Transport Focus
               </div>
-              <h2 className="mb-10 text-vitorra-text leading-tight">E-Ticketing Platform <br />for Uganda.</h2>
-              <p className="text-lg text-vitorra-muted leading-relaxed mb-12">
+              <h2 className="text-2xl md:text-4xl mb-6 md:mb-10 text-vitorra-text leading-tight">E-Ticketing Platform <br />for Uganda.</h2>
+              <p className="text-base md:text-lg text-vitorra-muted leading-relaxed mb-8 md:mb-12">
                 Vitorra Holdings is embarking on the digital transformation of Uganda’s transport industry 
                 by developing a secure and scalable e-ticketing platform.
               </p>
@@ -172,16 +172,16 @@ export default function Logistics() {
       </section>
 
       {/* Shipment Inquiry Section - For Market Data Collection */}
-      <section id="inquiry" className="py-32 bg-vitorra-bg-alt border-t border-vitorra-border/50">
+      <section id="inquiry" className="py-20 md:py-32 bg-vitorra-bg-alt border-t border-vitorra-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-center">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
               <div className="flex items-center gap-3 text-vitorra-gold mb-6 uppercase tracking-[0.2em] text-xs font-bold">
                 <Navigation className="w-5 h-5" />
                 Platform Integration Request
               </div>
-              <h2>Request Digital <br />Platform Architecture.</h2>
-              <p className="text-lg text-vitorra-muted leading-relaxed mb-12">
+              <h2 className="text-2xl md:text-4xl">Request Digital <br />Platform Architecture.</h2>
+              <p className="text-base md:text-lg text-vitorra-muted leading-relaxed mb-8 md:mb-12">
                 Submit your requirements to join our digital logistics network. This platform will empower traders, SMEs, and regional businesses 
                 to move goods efficiently, strengthening intra-African commerce and supporting economic integration.
               </p>
@@ -192,7 +192,7 @@ export default function Logistics() {
                     <BarChart3 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-vitorra-text font-bold uppercase tracking-widest text-[10px] mb-2">Standardized Pricing</h4>
+                    <h4 className="text-vitorra-text font-bold uppercase tracking-widest text-[11px] mb-2">Standardized Pricing</h4>
                     <p className="text-sm text-vitorra-muted leading-relaxed">Transparent kilometer-based pricing and automated distance calculations ensuring fair rate structures.</p>
                   </div>
                 </div>
@@ -201,7 +201,7 @@ export default function Logistics() {
                     <Activity className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-vitorra-text font-bold uppercase tracking-widest text-[10px] mb-2">Real-time Visibility</h4>
+                    <h4 className="text-vitorra-text font-bold uppercase tracking-widest text-[11px] mb-2">Real-time Visibility</h4>
                     <p className="text-sm text-vitorra-muted leading-relaxed">Improved cargo tracking visibility and real-time booking functionality for verified commercial entities.</p>
                   </div>
                 </div>
@@ -220,7 +220,7 @@ export default function Logistics() {
                       <p className="text-vitorra-muted mb-10">Our infrastructure team will analyze your route requirements and reach out via our technical desk.</p>
                       <button 
                         onClick={() => setIsSubmitted(false)}
-                        className="text-vitorra-gold font-bold uppercase tracking-[0.2em] text-[10px] hover:text-vitorra-text transition-colors"
+                        className="text-vitorra-gold font-bold uppercase tracking-[0.2em] text-[11px] hover:text-vitorra-text transition-colors"
                       >
                         File New Shipment Inquiry
                       </button>
@@ -229,7 +229,7 @@ export default function Logistics() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted flex items-center gap-2">
+                          <label className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted flex items-center gap-2">
                             <User className="w-3 h-3" /> Full Name
                           </label>
                           <input 
@@ -242,7 +242,7 @@ export default function Logistics() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted flex items-center gap-2">
+                          <label className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted flex items-center gap-2">
                             <Globe className="w-3 h-3" /> Business Email
                           </label>
                           <input 
@@ -258,7 +258,7 @@ export default function Logistics() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted flex items-center gap-2">
+                          <label className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted flex items-center gap-2">
                             <Map className="w-3 h-3" /> Origin
                           </label>
                           <input 
@@ -271,7 +271,7 @@ export default function Logistics() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted flex items-center gap-2">
+                          <label className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted flex items-center gap-2">
                             <Navigation className="w-3 h-3" /> Destination
                           </label>
                           <input 
@@ -287,7 +287,7 @@ export default function Logistics() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted flex items-center gap-2">
+                          <label className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted flex items-center gap-2">
                             <Ship className="w-3 h-3" /> Cargo Type
                           </label>
                           <select 

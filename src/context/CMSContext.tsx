@@ -14,6 +14,8 @@ export interface BlogPost {
   status: 'published' | 'draft';
   tags?: string[];
   category?: string;
+  documentUrl?: string;
+  documentName?: string;
 }
 
 export interface ProductVariant {
@@ -106,6 +108,14 @@ export interface Order {
   paymentReceiptUrl?: string | null;  // Customer uploads Receipt
   invoiceUrl?: string | null;         // Admin uploads final Invoice
   
+  // Payment Tracking (Quote-to-Order)
+  paymentStatus?: 'unpaid' | 'proforma_sent' | 'awaiting_payment' | 'partial' | 'paid' | 'refunded';
+  paymentMethod?: 'bank_transfer' | 'mobile_money' | 'cash' | 'cheque' | 'other';
+  paymentDate?: string;
+  paymentAmount?: number;             // Actual amount received
+  paymentReference?: string;          // Bank ref / Mobile Money ID
+  quotedTotal?: number;               // Original quoted amount
+
   // Communication
   notes?: string;                     // Customer notes
   adminNotes?: string;                // Internal admin notes (private)
@@ -194,15 +204,32 @@ export interface JobPosting {
   salary?: string;
   status: 'open' | 'closed';
   postedDate: string;
+  // Extended fields
+  experienceLevel?: 'entry' | 'mid' | 'senior' | 'lead' | 'executive';
+  remote?: 'on-site' | 'hybrid' | 'remote';
+  benefits?: string[];
+  skills?: string[];
+  applicationEmail?: string;
+  applicationUrl?: string;
+  deadline?: string;
+  priority?: 'normal' | 'urgent' | 'critical';
+  category?: string;
+  positions?: number;
 }
 
 export interface SystemSettings {
   general: {
     companyName: string;
+    companyTagline?: string;
     supportEmail: string;
     supportPhone: string;
+    whatsapp?: string;
     logoUrl?: string;
     brandColor?: string;
+    address?: string;
+    businessHours?: string;
+    website?: string;
+    registrationNumber?: string;
     team: TeamMember[];
   };
   logistics: {
@@ -210,6 +237,34 @@ export interface SystemSettings {
     baseDomesticRate: number;
     freeShippingThreshold: number;
     warehouseAddress: string;
+    estimatedDomesticDays?: number;
+    estimatedInternationalDays?: number;
+  };
+  quoting: {
+    quoteValidityDays: number;
+    minimumOrderValue: number;
+    autoConfirmOrders: boolean;
+    requirePO: boolean;
+    defaultPaymentTerms: 'due_on_receipt' | 'net_15' | 'net_30' | 'net_60';
+    cancellationWindowHours: number;
+  };
+  banking: {
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+    branchName?: string;
+    swiftCode?: string;
+    bankAddress?: string;
+    currency: string;
+    additionalInstructions?: string;
+  };
+  invoicing: {
+    companyTIN?: string;
+    invoicePrefix: string;
+    proformaPrefix: string;
+    invoiceFooter?: string;
+    proformaValidityDays: number;
+    showBankDetailsOnInvoice: boolean;
   };
   financials: {
     currency: string;
@@ -305,7 +360,7 @@ const defaultState: CMSState = {
     contactFormTitle: "Send an Inquiry",
     footerDescription: "Our products redefine standards through innovation and precision. They are built to perform across diverse markets, combining advanced technology with dependable quality to deliver exceptional results",
   },
-  version: 4.5,
+  version: 5.3,
   stats: [
     { stat: "4+", label: "Portfolio" },
     { stat: "15+", label: "Global Markets" },
@@ -361,8 +416,33 @@ const defaultState: CMSState = {
     {
       id: "fet", name: "Fuel Eco Tech", description: "Fuel Ecosystem Efficiency Systems.", icon: "Globe", imageUrl: "/images/fet_vehicles.png", path: "/products/fet", type: "wide", category: "FET", categoryId: "FET", status: 'active',
       variants: [
-        { id: 'passenger', name: 'FET Passenger Module', price: 950000, sku: 'FET-PASS-001', stock: 75, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg' },
-        { id: 'commercial', name: 'FET Commercial / Fleet Module', price: 4250000, sku: 'FET-IND-001', stock: 20, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/lkw.jpg' }
+        { id: 'fet-small-cars', name: 'FET - PRO - FI (Small Cars)', price: 937500, sku: 'FET-PRO-FI-SC', stock: 100, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'Downsizing', description: 'Polo, Fiesta class — 1.0L R3 Turbo, 90–120 HP, 160–200 Nm', attributes: { 'Vehicle Class': 'Small Cars', 'Displacement': '1.0L', 'Cylinders': 'R3', 'Turbo': 'Turbo', 'Power': '90 – 120 HP', 'Torque': '160 – 200 Nm', 'Typical Vehicles': 'Polo, Fiesta', 'Market Role': 'Downsizing', 'FET Designation': 'FET - PRO - FI', 'Line Size': 'SAE 5/16"', 'RRP (EUR)': '€250.00' } },
+        { id: 'fet-compact-14', name: 'FET - PRO - FI (Compact 1.4–1.5L)', price: 937500, sku: 'FET-PRO-FI-C14', stock: 100, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'EU-Standard', description: 'Golf, A3 class — 1.4–1.5L R4 Turbo, 120–170 HP, 200–250 Nm', attributes: { 'Vehicle Class': 'Compact Class', 'Displacement': '1.4 – 1.5L', 'Cylinders': 'R4', 'Turbo': 'Turbo', 'Power': '120 – 170 HP', 'Torque': '200 – 250 Nm', 'Typical Vehicles': 'Golf, A3', 'Market Role': 'EU-Standard', 'FET Designation': 'FET - PRO - FI', 'Line Size': 'SAE 5/16"', 'RRP (EUR)': '€250.00' } },
+        { id: 'fet-compact-20', name: 'FET - PRO - FI (Compact 1.8–2.0L)', price: 937500, sku: 'FET-PRO-FI-C20', stock: 80, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'Sporty', description: 'GTI, i30N class — 1.8–2.0L R4 Turbo, 180–300 HP, 300–400 Nm', attributes: { 'Vehicle Class': 'Compact Class', 'Displacement': '1.8 – 2.0L', 'Cylinders': 'R4', 'Turbo': 'Turbo', 'Power': '180 – 300 HP', 'Torque': '300 – 400 Nm', 'Typical Vehicles': 'GTI, i30N', 'Market Role': 'Sporty', 'FET Designation': 'FET - PRO - FI', 'Line Size': 'SAE 5/16" or SAE 1/2"', 'RRP (EUR)': '€250.00' } },
+        { id: 'fet-midrange-20', name: 'FET - PRO - FI (Mid-Range 2.0L)', price: 937500, sku: 'FET-PRO-FI-MR20', stock: 80, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'Sweet Spot', description: 'Passat, 3er class — 2.0L R4 Turbo, 190–320 HP, 320–450 Nm', attributes: { 'Vehicle Class': 'Mid-Range', 'Displacement': '2.0L', 'Cylinders': 'R4', 'Turbo': 'Turbo', 'Power': '190 – 320 HP', 'Torque': '320 – 450 Nm', 'Typical Vehicles': 'Passat, 3er', 'Market Role': 'Sweet Spot', 'FET Designation': 'FET - PRO - FI', 'Line Size': 'SAE 5/16" or SAE 1/2"', 'RRP (EUR)': '€250.00' } },
+        { id: 'fet-midrange-25', name: 'FET - PRO - FII (Mid-Range 2.5L)', price: 1687500, sku: 'FET-PRO-FII-MR25', stock: 50, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'Performance', description: 'RS3 class — 2.5L R5 Turbo, 350–400 HP, 420–480 Nm', attributes: { 'Vehicle Class': 'Mid-Range', 'Displacement': '2.5L', 'Cylinders': 'R5', 'Turbo': 'Turbo', 'Power': '350 – 400 HP', 'Torque': '420 – 480 Nm', 'Typical Vehicles': 'RS3', 'Market Role': 'Performance', 'FET Designation': 'FET - PRO - FII', 'Line Size': 'SAE 5/16" or SAE 1/2"', 'RRP (EUR)': '€450.00' } },
+        { id: 'fet-upper-30', name: 'FET - PRO - FII (Upper Class 3.0L)', price: 1687500, sku: 'FET-PRO-FII-UC30', stock: 40, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'Premium', description: '5er, E-Klasse class — 3.0L R6/V6 Turbo, 280–450 HP, 400–600 Nm', attributes: { 'Vehicle Class': 'Upper Class', 'Displacement': '3.0L', 'Cylinders': 'R6 / V6', 'Turbo': 'Turbo', 'Power': '280 – 450 HP', 'Torque': '400 – 600 Nm', 'Typical Vehicles': '5er, E-Klasse', 'Market Role': 'Premium', 'FET Designation': 'FET - PRO - FII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€450.00' } },
+        { id: 'fet-upper-40', name: 'FET - PRO - FIII (Upper Class 4.0L V8)', price: 2812500, sku: 'FET-PRO-FIII-UC40', stock: 25, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'Luxury', description: 'S-Klasse class — 4.0L V8 Biturbo, 450–650 HP, 600–850 Nm', attributes: { 'Vehicle Class': 'Upper Class', 'Displacement': '4.0L', 'Cylinders': 'V8', 'Turbo': 'Biturbo', 'Power': '450 – 650 HP', 'Torque': '600 – 850 Nm', 'Typical Vehicles': 'S-Klasse', 'Market Role': 'Luxury', 'FET Designation': 'FET - PRO - FIII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€750.00' } },
+        { id: 'fet-suv-compact', name: 'FET - PRO - FII (SUV Compact)', price: 1687500, sku: 'FET-PRO-FII-SUVC', stock: 60, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'Mass Market', description: 'Tiguan, Q3 class — 1.5–2.0L R4 Turbo, 150–250 HP, 250–400 Nm', attributes: { 'Vehicle Class': 'SUV Compact', 'Displacement': '1.5 – 2.0L', 'Cylinders': 'R4', 'Turbo': 'Turbo', 'Power': '150 – 250 HP', 'Torque': '250 – 400 Nm', 'Typical Vehicles': 'Tiguan, Q3', 'Market Role': 'Mass Market', 'FET Designation': 'FET - PRO - FII', 'Line Size': 'SAE 5/16" or SAE 1/2"', 'RRP (EUR)': '€450.00' } },
+        { id: 'fet-suv-large', name: 'FET - PRO - FII (Large SUV)', price: 1687500, sku: 'FET-PRO-FII-SUVL', stock: 40, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/lkw.jpg', tag: 'Long Distance', description: 'X5, GLE class — 3.0L R6/V6 Turbo, 300–450 HP, 500–650 Nm', attributes: { 'Vehicle Class': 'Large SUV', 'Displacement': '3.0L', 'Cylinders': 'R6 / V6', 'Turbo': 'Turbo', 'Power': '300 – 450 HP', 'Torque': '500 – 650 Nm', 'Typical Vehicles': 'X5, GLE', 'Market Role': 'Long Distance', 'FET Designation': 'FET - PRO - FII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€450.00' } },
+        { id: 'fet-suv-perf', name: 'FET - PRO - FIII (SUV Performance)', price: 2812500, sku: 'FET-PRO-FIII-SUVP', stock: 20, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/lkw.jpg', tag: 'High Performance', description: 'X5M, G63 class — 4.0L V8 Biturbo, 500–650 HP, 700–900 Nm', attributes: { 'Vehicle Class': 'SUV Performance', 'Displacement': '4.0L', 'Cylinders': 'V8', 'Turbo': 'Biturbo', 'Power': '500 – 650 HP', 'Torque': '700 – 900 Nm', 'Typical Vehicles': 'X5M, G63', 'Market Role': 'High Performance', 'FET Designation': 'FET - PRO - FIII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€750.00' } },
+        { id: 'fet-sports-20', name: 'FET - PRO - FII (Sports Cars 2.0L)', price: 1687500, sku: 'FET-PRO-FII-SP20', stock: 35, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'Lightweight', description: 'Supra 2.0 class — 2.0L R4 Turbo, 250–320 HP, 350–420 Nm', attributes: { 'Vehicle Class': 'Sports Cars', 'Displacement': '2.0L', 'Cylinders': 'R4', 'Turbo': 'Turbo', 'Power': '250 – 320 HP', 'Torque': '350 – 420 Nm', 'Typical Vehicles': 'Supra 2.0', 'Market Role': 'Lightweight Construction', 'FET Designation': 'FET - PRO - FII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€450.00' } },
+        { id: 'fet-sports-30', name: 'FET - PRO - FII (Sports Cars 3.0L)', price: 1687500, sku: 'FET-PRO-FII-SP30', stock: 30, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'Performance', description: 'Supra 3.0, 911 class — 3.0L R6 Turbo, 350–510 HP, 500–650 Nm', attributes: { 'Vehicle Class': 'Sports Cars', 'Displacement': '3.0L', 'Cylinders': 'R6', 'Turbo': 'Turbo', 'Power': '350 – 510 HP', 'Torque': '500 – 650 Nm', 'Typical Vehicles': 'Supra, 911', 'Market Role': 'Performance', 'FET Designation': 'FET - PRO - FII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€450.00' } },
+        { id: 'fet-supersport', name: 'FET - PRO - FIII (Supersport Cars)', price: 2812500, sku: 'FET-PRO-FIII-SS', stock: 10, isB2B: false, image: 'https://fuelecotech.com/assets/img/usecases/pkw.jpg', tag: 'Emotion', description: 'Ferrari, Lamborghini class — 4.0–6.5L V8–V12 NA/Turbo, 600–1000+ HP, 700–1000+ Nm', attributes: { 'Vehicle Class': 'Supersport Cars', 'Displacement': '4.0 – 6.5L', 'Cylinders': 'V8 – V12', 'Turbo': 'NA / Turbo', 'Power': '600 – 1000+ HP', 'Torque': '700 – 1000+ Nm', 'Typical Vehicles': 'Ferrari, Lamborghini', 'Market Role': 'Emotion', 'FET Designation': 'FET - PRO - FIII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€750.00' } },
+        // ─── COMMERCIAL VEHICLES ────────────────────────────────────
+        { id: 'fet-van-16', name: 'FET - PRO - FI (Van 1.6L)', price: 937500, sku: 'FET-PRO-FI-V16', stock: 80, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/transporter.jpg', tag: 'Shuttle/Taxi', description: 'Mini bus / Van up to 3.5t — 1.6L R4, 95–135 PS, 260–320 Nm', attributes: { 'Vehicle Class': 'Mini Bus / Van', 'Weight Class': 'up to 3.5 tons', 'Displacement': '1.6L', 'Cylinders': 'R4', 'Power': '95 – 135 PS', 'Torque': '260 – 320 Nm', 'Typical Application': 'Shuttle, Taxi', 'FET Designation': 'FET - PRO - FI', 'Line Size': 'SAE 5/16"', 'RRP (EUR)': '€250.00' } },
+        { id: 'fet-van-20', name: 'FET - PRO - FI (Van 2.0L)', price: 937500, sku: 'FET-PRO-FI-V20', stock: 80, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/transporter.jpg', tag: 'Standard Transport', description: 'Mini bus / Van up to 3.5t — 2.0L R4, 110–190 PS, 300–450 Nm', attributes: { 'Vehicle Class': 'Mini Bus / Van', 'Weight Class': 'up to 3.5 tons', 'Displacement': '2.0L', 'Cylinders': 'R4', 'Power': '110 – 190 PS', 'Torque': '300 – 450 Nm', 'Typical Application': 'Standard Transport', 'FET Designation': 'FET - PRO - FI', 'Line Size': 'SAE 5/16" or SAE 1/2"', 'RRP (EUR)': '€250.00' } },
+        { id: 'fet-van-22', name: 'FET - PRO - FII (Van 2.2L)', price: 1687500, sku: 'FET-PRO-FII-V22', stock: 60, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/transporter.jpg', tag: 'Payload', description: 'Mini bus / Van up to 3.5t — 2.2–2.3L R4, 120–180 PS, 320–450 Nm', attributes: { 'Vehicle Class': 'Mini Bus / Van', 'Weight Class': 'up to 3.5 tons', 'Displacement': '2.2 – 2.3L', 'Cylinders': 'R4', 'Power': '120 – 180 PS', 'Torque': '320 – 450 Nm', 'Typical Application': 'Payload-oriented', 'FET Designation': 'FET - PRO - FII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€450.00' } },
+        { id: 'fet-van-30', name: 'FET - PRO - FII (Van 3.0L V6)', price: 1687500, sku: 'FET-PRO-FII-V30', stock: 40, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/transporter.jpg', tag: 'Trailer/Mountains', description: 'Mini bus / Van up to 3.5t — 3.0L V6, 190–258 PS, 440–600 Nm', attributes: { 'Vehicle Class': 'Mini Bus / Van', 'Weight Class': 'up to 3.5 tons', 'Displacement': '3.0L', 'Cylinders': 'V6', 'Power': '190 – 258 PS', 'Torque': '440 – 600 Nm', 'Typical Application': 'Trailer / Mountains', 'FET Designation': 'FET - PRO - FII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€450.00' } },
+        { id: 'fet-trans-20', name: 'FET - PRO - FII (Transporter 2.0L)', price: 1687500, sku: 'FET-PRO-FII-T20', stock: 50, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/transporter.jpg', tag: 'Local Transport', description: 'Transporter / Sprinter 3.5–5.0t — 2.0–2.3L R4, 130–180 PS, 350–450 Nm', attributes: { 'Vehicle Class': 'Transporter / Sprinter', 'Weight Class': '3.5 – 5.0 tons', 'Displacement': '2.0 – 2.3L', 'Cylinders': 'R4', 'Power': '130 – 180 PS', 'Torque': '350 – 450 Nm', 'Typical Application': 'Local transport', 'FET Designation': 'FET - PRO - FII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€450.00' } },
+        { id: 'fet-trans-30', name: 'FET - PRO - FII (Transporter 3.0L)', price: 1687500, sku: 'FET-PRO-FII-T30', stock: 40, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/transporter.jpg', tag: '5t-Class', description: 'Transporter / Sprinter 3.5–5.0t — 3.0L V6, 190–210 PS, 450–600 Nm', attributes: { 'Vehicle Class': 'Transporter / Sprinter', 'Weight Class': '3.5 – 5.0 tons', 'Displacement': '3.0L', 'Cylinders': 'V6', 'Power': '190 – 210 PS', 'Torque': '450 – 600 Nm', 'Typical Application': '5t-class', 'FET Designation': 'FET - PRO - FII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€450.00' } },
+        { id: 'fet-ltruck-30', name: 'FET - PRO - FIII (Light Truck 3.0L)', price: 2812500, sku: 'FET-PRO-FIII-LT30', stock: 30, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/lkw.jpg', tag: 'City Distribution', description: 'Light trucks 5–12t — 3.0–4.5L R4, 160–210 PS, 600–800 Nm', attributes: { 'Vehicle Class': 'Light Trucks', 'Weight Class': '5.0 – 12 tons', 'Displacement': '3.0 – 4.5L', 'Cylinders': 'R4', 'Power': '160 – 210 PS', 'Torque': '600 – 800 Nm', 'Typical Application': 'City / Distribution', 'FET Designation': 'FET - PRO - FIII', 'Line Size': 'SAE 1/2"', 'RRP (EUR)': '€750.00' } },
+        { id: 'fet-ltruck-60', name: 'FET - PRO - FIII (Light Truck 6.0L)', price: 2812500, sku: 'FET-PRO-FIII-LT60', stock: 25, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/lkw.jpg', tag: 'Distribution', description: 'Light trucks 5–12t — 6.0–6.7L R6, 220–320 PS, 800–1,200 Nm', attributes: { 'Vehicle Class': 'Light Trucks', 'Weight Class': '5.0 – 12 tons', 'Displacement': '6.0 – 6.7L', 'Cylinders': 'R6', 'Power': '220 – 320 PS', 'Torque': '800 – 1,200 Nm', 'Typical Application': 'Distribution traffic', 'FET Designation': 'FET - PRO - FIII', 'Line Size': 'SAE 1/2" or 5/8"', 'RRP (EUR)': '€750.00' } },
+        { id: 'fet-mtruck-77', name: 'FET - PRO - FIII (Medium Truck 7.7L)', price: 2812500, sku: 'FET-PRO-FIII-MT77', stock: 20, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/lkw.jpg', tag: 'Regional', description: 'Medium trucks 12–18t — 7.7–8.0L R6, 250–350 PS, 1,100–1,400 Nm', attributes: { 'Vehicle Class': 'Medium Trucks', 'Weight Class': '12 – 18 tons', 'Displacement': '7.7 – 8.0L', 'Cylinders': 'R6', 'Power': '250 – 350 PS', 'Torque': '1,100 – 1,400 Nm', 'Typical Application': 'Regional / Long-distance', 'FET Designation': 'FET - PRO - FIII', 'Line Size': 'SAE 1/2" or 5/8"', 'RRP (EUR)': '€750.00' } },
+        { id: 'fet-mtruck-90', name: 'FET - PRO - FIII (Medium Truck 9.0L)', price: 2812500, sku: 'FET-PRO-FIII-MT90', stock: 15, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/lkw.jpg', tag: 'Heavy Distributor', description: 'Medium trucks 12–18t — 9.0L R6, 300–430 PS, 1,400–1,700 Nm', attributes: { 'Vehicle Class': 'Medium Trucks', 'Weight Class': '12 – 18 tons', 'Displacement': '9.0L', 'Cylinders': 'R6', 'Power': '300 – 430 PS', 'Torque': '1,400 – 1,700 Nm', 'Typical Application': 'Heavy distributor', 'FET Designation': 'FET - PRO - FIII', 'Line Size': 'SAE 1/2" or 5/8"', 'RRP (EUR)': '€750.00' } },
+        { id: 'fet-htruck-10', name: 'FET - PRO - FIV (Heavy Truck 10L)', price: 5437500, sku: 'FET-PRO-FIV-HT10', stock: 15, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/lkw.jpg', tag: 'Long-Distance', description: 'Heavy trucks up to 40t — 10–12L R6, 350–430 PS, 1,800–2,100 Nm', attributes: { 'Vehicle Class': 'Heavy Trucks', 'Weight Class': 'up to 40 tons', 'Displacement': '10 – 12L', 'Cylinders': 'R6', 'Power': '350 – 430 PS', 'Torque': '1,800 – 2,100 Nm', 'Typical Application': 'Long-distance traffic', 'FET Designation': 'FET - PRO - FIV', 'Line Size': 'SAE 5/8" or 3/4"', 'RRP (EUR)': '€1,450.00' } },
+        { id: 'fet-htruck-12', name: 'FET - PRO - FIV (Heavy Truck 12L)', price: 5437500, sku: 'FET-PRO-FIV-HT12', stock: 10, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/lkw.jpg', tag: 'Long-Distance', description: 'Heavy trucks up to 40t — 12–13L R6, 420–540 PS, 2,100–2,600 Nm', attributes: { 'Vehicle Class': 'Heavy Trucks', 'Weight Class': 'up to 40 tons', 'Displacement': '12 – 13L', 'Cylinders': 'R6', 'Power': '420 – 540 PS', 'Torque': '2,100 – 2,600 Nm', 'Typical Application': 'Long-distance traffic', 'FET Designation': 'FET - PRO - FIV', 'Line Size': 'SAE 5/8" or 3/4"', 'RRP (EUR)': '€1,450.00' } },
+        { id: 'fet-htruck-15', name: 'FET - PRO - FIV (Heavy Truck 15L)', price: 5437500, sku: 'FET-PRO-FIV-HT15', stock: 8, isB2B: true, image: 'https://fuelecotech.com/assets/img/usecases/lkw.jpg', tag: 'Heavy Load', description: 'Heavy trucks up to 40t — 15–16L R6/V8, 520–660 PS, 2,700–3,300 Nm', attributes: { 'Vehicle Class': 'Heavy Trucks', 'Weight Class': 'up to 40 tons', 'Displacement': '15 – 16L', 'Cylinders': 'R6 / V8', 'Power': '520 – 660 PS', 'Torque': '2,700 – 3,300 Nm', 'Typical Application': 'Heavy load', 'FET Designation': 'FET - PRO - FIV', 'Line Size': 'SAE 5/8" or 3/4"', 'RRP (EUR)': '€1,450.00' } }
       ]
     }
   ],
@@ -385,9 +465,15 @@ const defaultState: CMSState = {
   settings: {
     general: {
       companyName: "Vitorra Holdings Limited",
+      companyTagline: "Driving Sustainable Growth Across Africa",
       supportEmail: "ops@vitorra.com",
       supportPhone: "+256 700 000 000",
+      whatsapp: "+256 700 000 000",
       brandColor: "#CFB53B",
+      address: "Kampala, Uganda",
+      businessHours: "Mon-Fri 8:00 AM - 5:00 PM (EAT)",
+      website: "https://vitorra.com",
+      registrationNumber: "",
       team: [
         { id: '1', name: 'Admin', email: 'admin@vitorra.com', role: 'Super Admin', status: 'active' }
       ]
@@ -399,7 +485,35 @@ const defaultState: CMSState = {
       ],
       baseDomesticRate: 15000,
       freeShippingThreshold: 2000000,
-      warehouseAddress: "Vitorra Hub 1 - EBB"
+      warehouseAddress: "Vitorra Hub 1 - EBB",
+      estimatedDomesticDays: 3,
+      estimatedInternationalDays: 14
+    },
+    quoting: {
+      quoteValidityDays: 14,
+      minimumOrderValue: 50000,
+      autoConfirmOrders: false,
+      requirePO: false,
+      defaultPaymentTerms: 'net_30' as const,
+      cancellationWindowHours: 48
+    },
+    banking: {
+      bankName: 'Stanbic Bank Uganda',
+      accountName: 'Vitorra Holdings Limited',
+      accountNumber: '9030005678901',
+      branchName: 'Kampala Main Branch',
+      swiftCode: 'SBICUGKX',
+      bankAddress: 'Plot 17, Hannington Road, Kampala',
+      currency: 'UGX',
+      additionalInstructions: 'Please include your Order ID as payment reference.'
+    },
+    invoicing: {
+      companyTIN: '',
+      invoicePrefix: 'INV-',
+      proformaPrefix: 'PRO-',
+      invoiceFooter: 'Payment is due within the agreed terms. Thank you for your business.',
+      proformaValidityDays: 14,
+      showBankDetailsOnInvoice: true
     },
     financials: {
       currency: "UGX",
@@ -451,19 +565,21 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // 1. Try to load from LocalStorage first (for mock mode or fast initial load)
-    const localData = localStorage.getItem('vitorra_cms_state_v3');
+    const localData = localStorage.getItem('vitorra_cms_state_v4');
     if (localData) {
       try {
         const parsed = JSON.parse(localData);
         // Force update pageContent if version is older (Brand Voice & Layout Fixes)
-        if (!parsed.version || parsed.version < 4.5) {
-          console.warn("CMS: Outdated state version detected. Patching content...");
+        if (!parsed.version || parsed.version < 5.3) {
+          console.warn("CMS: Outdated state version detected. Patching content + products...");
           setState({
             ...parsed,
             pageContent: defaultState.pageContent,
             companyInfo: defaultState.companyInfo,
             blogs: defaultState.blogs,
-            version: 4.5
+            products: defaultState.products,
+            settings: { ...(parsed.settings || {}), banking: defaultState.settings.banking },
+            version: 5.3
           });
         } else {
           setState(parsed);
@@ -488,12 +604,26 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
             stats: defaultState.stats,
             coreValues: defaultState.coreValues,
             investmentPillars: defaultState.investmentPillars,
-            version: 2.4,
+            version: 5.3,
           });
 
           for (const cat of defaultState.categories) await setDoc(doc(db, 'categories', cat.id), cat);
           for (const prod of defaultState.products) await setDoc(doc(db, 'products', prod.id), prod);
           for (const c of defaultState.customers) await setDoc(doc(db, 'customers', c.id), c);
+          for (const blog of defaultState.blogs) await setDoc(doc(db, 'blogs', blog.id), blog);
+        } else {
+          // Patch existing Firebase data if outdated
+          const data = docSnap.data();
+          if (!data.version || data.version < 5.3) {
+            console.log("Firestore state out of date. Patching cloud data to v5.3...");
+            for (const prod of defaultState.products) {
+              await setDoc(doc(db, 'products', prod.id), prod);
+            }
+            for (const blog of defaultState.blogs) {
+              await setDoc(doc(db, 'blogs', blog.id), blog);
+            }
+            await updateDoc(contentRef, { version: 5.3 });
+          }
         }
 
         // Real-time listener for core system content
@@ -612,7 +742,7 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
   // Persistence for reliability across refreshes/tabs
   useEffect(() => {
     if (state !== defaultState) {
-      localStorage.setItem('vitorra_cms_state_v3', JSON.stringify(state));
+      localStorage.setItem('vitorra_cms_state_v4', JSON.stringify(state));
     }
   }, [state]);
 

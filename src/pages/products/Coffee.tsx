@@ -50,36 +50,36 @@ export default function Coffee() {
       {/* ═══════════════════════════════════════════
           SECTION 1 — HERO
           ═══════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden bg-vitorra-bg pt-48 pb-20">
+      <section className="relative min-h-[60vh] md:min-h-screen flex items-center overflow-hidden bg-vitorra-bg pt-32 md:pt-48 pb-12 md:pb-20">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-y-0 right-0 w-full md:w-[50%] overflow-hidden">
             <img
               src="/images/coffee_garden_new.png"
               alt="Ugandan Coffee Highlands"
-              className="w-full h-full object-cover opacity-100 transition-all duration-700"
+              className="w-full h-full object-cover opacity-30 md:opacity-100 transition-all duration-700"
             />
           </div>
           <div className="absolute inset-y-0 left-0 w-full md:w-[65%] bg-gradient-to-r from-vitorra-bg via-vitorra-bg via-[80%] to-transparent z-10" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full mb-20 md:mb-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full mb-8 md:mb-40">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="max-w-2xl">
             <div className="flex items-center gap-4 mb-6">
               <img src="/images/fair-trade-logo.png" alt="Fair Trade Certified" className="w-16 h-16 object-contain drop-shadow-lg" />
               <span className="text-sm font-bold text-vitorra-gold uppercase tracking-widest">Fair Trade Coming Soon</span>
             </div>
-            <h1 className="mb-8">
+            <h1 className="text-3xl md:text-5xl mb-6 md:mb-8">
               Experience the Ugandan <br />
               <span className="text-vitorra-gold">Arabica and Robusta Coffee</span>
             </h1>
-            <p className="text-vitorra-text/70 mb-6 max-w-xl leading-relaxed font-normal">
+            <p className="text-sm md:text-base text-vitorra-text/70 mb-4 md:mb-6 max-w-xl leading-relaxed font-normal">
               Vitorra is proud to bring Uganda's rich coffee heritage to international markets, unlocking new opportunities across Germany, Croatia, the Netherlands, and Belgium.
             </p>
-            <p className="text-vitorra-text/70 mb-10 max-w-xl leading-relaxed font-normal">
+            <p className="text-sm md:text-base text-vitorra-text/70 mb-8 md:mb-10 max-w-xl leading-relaxed font-normal">
               With access to a potential consumer base of over 7 million people, we are building structured export channels that connect Ugandan coffee producers directly to global buyers—ensuring quality, traceability, and sustainable growth for all partners.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link to="/contact" className="px-8 py-3.5 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:bg-vitorra-text hover:text-vitorra-bg transition-all duration-300 flex items-center gap-2 uppercase tracking-widest text-[10px] shadow-xl shadow-vitorra-gold/20">
+              <Link to="/contact" className="px-8 py-3.5 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:bg-vitorra-text hover:text-vitorra-bg transition-all duration-300 flex items-center gap-2 uppercase tracking-widest text-[11px] shadow-xl shadow-vitorra-gold/20">
                 Begin Your Coffee Journey <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -150,7 +150,7 @@ export default function Coffee() {
                   </div>
                   <h3 className="text-2xl text-vitorra-text mb-4">{grade.name}</h3>
                   <p className="text-sm text-vitorra-muted leading-relaxed mb-8">{grade.description}</p>
-                  <Link to="/contact" className="w-full inline-flex items-center justify-center gap-2 py-3 bg-vitorra-bg/5 text-vitorra-text font-bold rounded-xl hover:bg-vitorra-gold hover:text-black transition-all duration-300 uppercase tracking-widest text-[9px] border border-vitorra-border group-hover:border-vitorra-gold/50">
+                  <Link to="/contact" className="w-full inline-flex items-center justify-center gap-2 py-3 bg-vitorra-bg/5 text-vitorra-text font-bold rounded-xl hover:bg-vitorra-gold hover:text-black transition-all duration-300 uppercase tracking-widest text-[11px] border border-vitorra-border group-hover:border-vitorra-gold/50">
                     Begin Your Coffee Journey
                   </Link>
                 </div>
@@ -205,7 +205,7 @@ export default function Coffee() {
               <p className="text-lg text-vitorra-muted leading-relaxed mb-12">
                 We provide seamless bulk coffee export services tailored to international buyers. Whether you require specialty lots or large commercial volumes, our logistics and supply chain ensure timely and efficient delivery.
               </p>
-              <Link to="/contact" className="inline-flex items-center gap-3 px-10 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:bg-vitorra-text hover:text-vitorra-bg transition-all duration-300 uppercase tracking-widest text-[10px] shadow-xl shadow-vitorra-gold/20">
+              <Link to="/contact" className="inline-flex items-center gap-3 px-10 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:bg-vitorra-text hover:text-vitorra-bg transition-all duration-300 uppercase tracking-widest text-[11px] shadow-xl shadow-vitorra-gold/20">
                 Begin Your Coffee Journey <ArrowRight className="w-4 h-4" />
               </Link>
             </motion.div>
@@ -219,7 +219,7 @@ export default function Coffee() {
                 <p className="text-vitorra-muted leading-relaxed mb-8">
                   Access detailed product specifications including bean size, moisture content, grading details, and export certifications. We provide full transparency to help you make informed purchasing decisions.
                 </p>
-                <Link to="/contact" className="inline-flex items-center gap-3 px-8 py-3.5 bg-vitorra-bg/5 border border-vitorra-border text-vitorra-text font-bold rounded-xl hover:bg-vitorra-gold hover:text-black hover:border-vitorra-gold transition-all duration-300 uppercase tracking-widest text-[10px]">
+                <Link to="/contact" className="inline-flex items-center gap-3 px-8 py-3.5 bg-vitorra-bg/5 border border-vitorra-border text-vitorra-text font-bold rounded-xl hover:bg-vitorra-gold hover:text-black hover:border-vitorra-gold transition-all duration-300 uppercase tracking-widest text-[11px]">
                   Begin Your Coffee Journey <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

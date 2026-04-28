@@ -88,15 +88,26 @@ export default function Layout() {
                           transition={{ duration: 0.2 }}
                           className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-64 bg-vitorra-bg/90 backdrop-blur-xl border border-vitorra-border shadow-2xl rounded-2xl overflow-hidden"
                         >
-                          {navProducts.map((product) => (
-                            <Link
-                              key={product.path}
-                              to={product.path}
-                              className="block px-6 py-4 text-sm text-vitorra-text/80 hover:bg-vitorra-gold/10 hover:text-vitorra-gold transition-colors border-b border-vitorra-border last:border-0"
-                            >
-                              {product.name}
-                            </Link>
-                          ))}
+                          {navProducts.map((product) => {
+                            const isCoffee = product.path.includes('coffee');
+                            return isCoffee ? (
+                              <span
+                                key={product.path}
+                                className="flex items-center justify-between px-6 py-4 text-sm text-vitorra-muted/50 cursor-default border-b border-vitorra-border last:border-0"
+                              >
+                                {product.name}
+                                <span className="text-[9px] px-2 py-0.5 bg-vitorra-gold/10 text-vitorra-gold border border-vitorra-gold/20 rounded-full font-bold uppercase tracking-widest">Soon</span>
+                              </span>
+                            ) : (
+                              <Link
+                                key={product.path}
+                                to={product.path}
+                                className="block px-6 py-4 text-sm text-vitorra-text/80 hover:bg-vitorra-gold/10 hover:text-vitorra-gold transition-colors border-b border-vitorra-border last:border-0"
+                              >
+                                {product.name}
+                              </Link>
+                            );
+                          })}
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -127,15 +138,26 @@ export default function Layout() {
                           >
                             All Products
                           </Link>
-                          {shopProducts.map((product) => (
-                            <Link
-                              key={product.path}
-                              to={product.path}
-                              className="block px-6 py-4 text-sm text-vitorra-text/80 hover:bg-vitorra-gold/10 hover:text-vitorra-gold transition-colors border-b border-vitorra-border last:border-0"
-                            >
-                              {product.name}
-                            </Link>
-                          ))}
+                          {shopProducts.map((product) => {
+                            const isCoffee = product.path.includes('coffee');
+                            return isCoffee ? (
+                              <span
+                                key={product.path}
+                                className="flex items-center justify-between px-6 py-4 text-sm text-vitorra-muted/50 cursor-default border-b border-vitorra-border last:border-0"
+                              >
+                                {product.name}
+                                <span className="text-[9px] px-2 py-0.5 bg-vitorra-gold/10 text-vitorra-gold border border-vitorra-gold/20 rounded-full font-bold uppercase tracking-widest">Soon</span>
+                              </span>
+                            ) : (
+                              <Link
+                                key={product.path}
+                                to={product.path}
+                                className="block px-6 py-4 text-sm text-vitorra-text/80 hover:bg-vitorra-gold/10 hover:text-vitorra-gold transition-colors border-b border-vitorra-border last:border-0"
+                              >
+                                {product.name}
+                              </Link>
+                            );
+                          })}
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -223,31 +245,53 @@ export default function Layout() {
                   <div className="flex flex-col gap-2">
                     <span className="text-vitorra-muted text-lg font-medium">{t('products')}</span>
                     <div className="pl-4 flex flex-col gap-3 border-l border-vitorra-border ml-2">
-                      {navProducts.map((product) => (
-                        <Link
-                          key={product.path}
-                          to={product.path}
-                          className="text-base text-vitorra-muted hover:text-vitorra-gold transition-colors"
-                        >
-                          {product.name}
-                        </Link>
-                      ))}
+                      {navProducts.map((product) => {
+                        const isCoffee = product.path.includes('coffee');
+                        return isCoffee ? (
+                          <span
+                            key={product.path}
+                            className="flex items-center justify-between text-base text-vitorra-muted/40 cursor-default"
+                          >
+                            {product.name}
+                            <span className="text-[9px] px-2 py-0.5 bg-vitorra-gold/10 text-vitorra-gold border border-vitorra-gold/20 rounded-full font-bold uppercase tracking-widest">Soon</span>
+                          </span>
+                        ) : (
+                          <Link
+                            key={product.path}
+                            to={product.path}
+                            className="text-base text-vitorra-muted hover:text-vitorra-gold transition-colors"
+                          >
+                            {product.name}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-2">
                     <Link to="/shop" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium text-vitorra-text/80 hover:text-vitorra-gold transition-colors">Shop</Link>
                     <div className="pl-4 flex flex-col gap-3 border-l border-vitorra-border ml-2">
-                      {shopProducts.map((product) => (
-                        <Link
-                          key={product.path}
-                          to={product.path}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="text-base text-vitorra-muted hover:text-vitorra-gold transition-colors"
-                        >
-                          {product.name}
-                        </Link>
-                      ))}
+                      {shopProducts.map((product) => {
+                        const isCoffee = product.path.includes('coffee');
+                        return isCoffee ? (
+                          <span
+                            key={product.path}
+                            className="flex items-center justify-between text-base text-vitorra-muted/40 cursor-default"
+                          >
+                            {product.name}
+                            <span className="text-[9px] px-2 py-0.5 bg-vitorra-gold/10 text-vitorra-gold border border-vitorra-gold/20 rounded-full font-bold uppercase tracking-widest">Soon</span>
+                          </span>
+                        ) : (
+                          <Link
+                            key={product.path}
+                            to={product.path}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="text-base text-vitorra-muted hover:text-vitorra-gold transition-colors"
+                          >
+                            {product.name}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -329,10 +373,10 @@ export default function Layout() {
               <div className="col-span-1">
                 <h4 className="font-heading mb-4 sm:mb-6 text-vitorra-text font-bold uppercase tracking-widest text-[9px] sm:text-[11px] lg:text-label">{t('company')}</h4>
                 <ul className="space-y-2 sm:space-y-3">
-                  <li><Link to="/about" className="text-vitorra-muted hover:text-vitorra-gold transition-colors text-[10px] sm:text-sm lg:text-base leading-tight break-words">{t('about')}</Link></li>
-                  <li><Link to="/news" className="text-vitorra-muted hover:text-vitorra-gold transition-colors text-[10px] sm:text-sm lg:text-base leading-tight break-words">{t('news')}</Link></li>
-                  <li><Link to="/contact" className="text-vitorra-muted hover:text-vitorra-gold transition-colors text-[10px] sm:text-sm lg:text-base leading-tight break-words">{t('contact')}</Link></li>
-                  <li><Link to="/join-our-team" className="text-vitorra-muted hover:text-vitorra-gold transition-colors text-[10px] sm:text-sm lg:text-base leading-tight break-words">{t('join_our_team')}</Link></li>
+                  <li><Link to="/about" className="text-vitorra-muted hover:text-vitorra-gold transition-colors text-[11px] sm:text-sm lg:text-base leading-tight break-words">{t('about')}</Link></li>
+                  <li><Link to="/news" className="text-vitorra-muted hover:text-vitorra-gold transition-colors text-[11px] sm:text-sm lg:text-base leading-tight break-words">{t('news')}</Link></li>
+                  <li><Link to="/contact" className="text-vitorra-muted hover:text-vitorra-gold transition-colors text-[11px] sm:text-sm lg:text-base leading-tight break-words">{t('contact')}</Link></li>
+                  <li><Link to="/join-our-team" className="text-vitorra-muted hover:text-vitorra-gold transition-colors text-[11px] sm:text-sm lg:text-base leading-tight break-words">{t('join_our_team')}</Link></li>
                 </ul>
               </div>
 
@@ -342,7 +386,7 @@ export default function Layout() {
                 <ul className="space-y-2 sm:space-y-3">
                   {navProducts.map((product) => (
                     <li key={product.path}>
-                      <Link to={product.path} className="text-vitorra-muted hover:text-vitorra-gold transition-colors text-[10px] sm:text-sm lg:text-base leading-tight block break-words pr-1">
+                      <Link to={product.path} className="text-vitorra-muted hover:text-vitorra-gold transition-colors text-[11px] sm:text-sm lg:text-base leading-tight block break-words pr-1">
                         {product.name}
                       </Link>
                     </li>
@@ -353,7 +397,7 @@ export default function Layout() {
               {/* Contact — now driven from CMS */}
               <div className="col-span-1 text-left lg:text-left">
                 <h4 className="font-heading mb-4 sm:mb-6 text-vitorra-text font-bold uppercase tracking-widest text-[9px] sm:text-[11px] lg:text-label">{t('contact')}</h4>
-                <ul className="space-y-2 sm:space-y-3 text-[10px] sm:text-sm lg:text-base text-vitorra-muted leading-tight break-words">
+                <ul className="space-y-2 sm:space-y-3 text-[11px] sm:text-sm lg:text-base text-vitorra-muted leading-tight break-words">
                   {state.companyInfo.address.map((line, i) => (
                     <li key={i}>{line}</li>
                   ))}

@@ -1,5 +1,6 @@
 import React from 'react';
-import { CheckCircle2, Circle, Clock, Package, Truck, Check } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Package, Truck, Check, ExternalLink } from 'lucide-react';
+import { getCarrier, getTrackingUrl } from '../../lib/carriers';
 
 interface TimelineStep {
   status: string;
@@ -50,15 +51,21 @@ const steps: TimelineStep[] = [
 interface OrderTrackingTimelineProps {
   currentStatus: string;
   history?: { status: string; date: string; note?: string }[];
+  carrier?: string;
+  trackingNumber?: string;
 }
 
-export default function OrderTrackingTimeline({ currentStatus, history }: OrderTrackingTimelineProps) {
+export default function OrderTrackingTimeline({ currentStatus, history, carrier, trackingNumber }: OrderTrackingTimelineProps) {
   const getStatusIndex = (status: string) => {
     const idx = steps.findIndex(s => s.status === status);
     return idx === -1 ? 0 : idx;
   };
 
   const currentIndex = getStatusIndex(currentStatus);
+
+  // Resolve carrier info
+  const carrierInfo = carrier ? getCarrier(carrier) : null;
+  const trackUrl = carrier && trackingNumber ? getTrackingUrl(carrier, trackingNumber) : null;
 
   return (
     <div className="py-8">
@@ -79,6 +86,9 @@ export default function OrderTrackingTimeline({ currentStatus, history }: OrderT
             
             // Find date for this step from history
             const historyItem = history?.find(h => h.status === step.status);
+
+            // Show carrier info on the shipped step
+            const isShippedStep = step.status === 'shipped' && (isCurrent || isCompleted);
 
             return (
               <div key={idx} className="relative flex items-start gap-6 group">
@@ -108,8 +118,22 @@ export default function OrderTrackingTimeline({ currentStatus, history }: OrderT
                     )}
                   </div>
                   <p className={`text-sm ${isCurrent ? 'text-vitorra-text font-medium' : 'text-vitorra-muted'} max-w-sm leading-relaxed`}>
-                    {step.description}
+                    {isShippedStep && carrierInfo
+                      ? `Shipped via ${carrierInfo.name}${trackingNumber ? ` · ${trackingNumber}` : ''}`
+                      : step.description
+                    }
                   </p>
+                  {/* Carrier tracking link on shipped step */}
+                  {isShippedStep && trackUrl && (
+                    <a
+                      href={trackUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-vitorra-gold/10 border border-vitorra-gold/20 rounded-lg text-xs font-bold text-vitorra-gold hover:bg-vitorra-gold/20 transition-all"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Track Package
+                    </a>
+                  )}
                   {isCurrent && historyItem?.note && (
                     <div className="mt-3 p-3 bg-vitorra-gold/5 border border-vitorra-gold/10 rounded-xl">
                       <p className="text-[11px] italic text-vitorra-gold/80">Admin Note: {historyItem.note}</p>
@@ -124,3 +148,4 @@ export default function OrderTrackingTimeline({ currentStatus, history }: OrderT
     </div>
   );
 }
+

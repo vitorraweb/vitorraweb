@@ -39,7 +39,9 @@ export function getStatusLabel(status: string): string {
 export function mapPaymentStatus(status: string): BadgeStatus {
   switch (status) {
     case 'paid': return 'delivered';
-    case 'pending': case 'pending_transfer': return 'pending';
+    case 'partial': return 'confirmed';
+    case 'proforma_sent': case 'awaiting_payment': return 'processing';
+    case 'unpaid': case 'pending': case 'pending_transfer': return 'pending';
     case 'failed': case 'amount_mismatch': return 'error';
     case 'refunded': return 'refunded';
     default: return 'inactive';

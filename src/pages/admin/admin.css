@@ -8,11 +8,11 @@
 /* ── §2 COMPLETE COLOR SYSTEM ──────────────────────────────────────────── */
 .admin-shell {
   /* BACKGROUNDS */
-  --bg-canvas:       #0A0B0D;
-  --bg-surface:      #111318;
-  --bg-elevated:     #181C23;
-  --bg-overlay:      #1E2330;
-  --bg-subtle:       #252B3B;
+  --bg-canvas:       #1a1a1a;
+  --bg-surface:      #242424;
+  --bg-elevated:     #2b2b2b;
+  --bg-overlay:      #333333;
+  --bg-subtle:       #3b3b3b;
   --bg-inverse:      #F0F2F5;
 
   /* BORDERS */
@@ -30,12 +30,12 @@
   --text-link:       #4A8FFF;
   --text-link-hover: #7AADFF;
 
-  /* BRAND / PRIMARY */
-  --accent-primary:        #4A8FFF;
-  --accent-primary-hover:  #3A7AE8;
-  --accent-primary-active: #2A68D0;
-  --accent-primary-muted:  rgba(74,143,255,0.12);
-  --accent-primary-glow:   rgba(74,143,255,0.25);
+  /* BRAND / PRIMARY (Vitorra Gold) */
+  --accent-primary:        #c68958;
+  --accent-primary-hover:  #b67948;
+  --accent-primary-active: #a66938;
+  --accent-primary-muted:  rgba(198, 137, 88, 0.12);
+  --accent-primary-glow:   rgba(198, 137, 88, 0.25);
 
   /* SEMANTIC */
   --success:         #2ECC8A;

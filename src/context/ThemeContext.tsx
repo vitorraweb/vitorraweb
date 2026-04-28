@@ -12,10 +12,10 @@ export interface AestheticThemeColors {
 
 export const AESTHETIC_THEMES: Record<Exclude<AestheticMode, 'default'>, AestheticThemeColors> = {
   midnight: {
-    primary: '#0B1F3A',
-    secondary: '#1F3A5F',
-    gold: '#C9A24A',
-    goldHover: '#B69242'
+    primary: '#0A1628',
+    secondary: '#111D2E',
+    gold: '#D4A843',
+    goldHover: '#C49A3D'
   },
   charcoal: {
     primary: '#1A1A1A',
@@ -108,11 +108,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       root.style.setProperty('--bg-secondary', colors.secondary);
       root.style.setProperty('--vitorra-gold', colors.gold);
       root.style.setProperty('--vitorra-gold-hover', colors.goldHover);
-      root.style.setProperty('--text-primary', '#ffffff');
-      root.style.setProperty('--text-secondary', '#94a3b8');
-      root.style.setProperty('--card-bg', colors.secondary);
-      root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.1)');
+      root.style.setProperty('--text-primary', '#F0F2F5');
+      root.style.setProperty('--text-secondary', '#7A8BA0');
+      root.style.setProperty('--card-bg', aestheticMode === 'midnight' ? '#142237' : colors.secondary);
+      root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.08)');
       root.style.setProperty('--nav-bg', 'rgba(0, 0, 0, 0.5)');
+      // New semantic tokens
+      root.style.setProperty('--surface-elevated', aestheticMode === 'midnight' ? '#1A2D45' : colors.secondary);
+      root.style.setProperty('--text-tertiary', '#556578');
+      root.style.setProperty('--surface-interactive', 'rgba(212, 168, 67, 0.06)');
     }
   }, [theme, aestheticMode]);
 

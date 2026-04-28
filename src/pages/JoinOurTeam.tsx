@@ -22,7 +22,7 @@ export default function JoinOurTeam() {
       {/* ═══════════════════════════════════════════
           SECTION 1 — HERO
           ═══════════════════════════════════════════ */}
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden bg-vitorra-bg pt-32 pb-20">
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden bg-vitorra-bg pt-44 pb-20">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-y-0 right-0 w-full md:w-[60%] overflow-hidden">
             <img
@@ -37,11 +37,11 @@ export default function JoinOurTeam() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="max-w-2xl">
             <div className="flex items-center gap-4 mb-6">
-              <span className="px-4 py-1.5 rounded-full bg-vitorra-gold/10 border border-vitorra-gold/20 text-[10px] font-bold text-vitorra-gold uppercase tracking-[0.2em] flex items-center gap-2">
+              <span className="px-4 py-1.5 rounded-full bg-vitorra-gold/10 border border-vitorra-gold/20 text-[11px] font-bold text-vitorra-gold uppercase tracking-[0.2em] flex items-center gap-2">
                 <Briefcase className="w-3 h-3" /> {openJobs.length > 0 ? `${openJobs.length} Open Position${openJobs.length > 1 ? 's' : ''}` : 'Careers'}
               </span>
             </div>
-            <h1 className="mb-8 text-4xl md:text-5xl lg:text-6xl leading-tight">
+            <h1 className="text-3xl md:text-5xl mb-6 md:mb-8">
               Build the Future <br />
               <span className="text-vitorra-gold">With Us</span>
             </h1>
@@ -57,11 +57,11 @@ export default function JoinOurTeam() {
               </p>
             </div>
             {openJobs.length > 0 ? (
-              <a href="#positions" className="px-8 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:bg-vitorra-text hover:text-vitorra-bg transition-all duration-300 inline-flex items-center gap-2 uppercase tracking-widest text-[10px] shadow-xl shadow-vitorra-gold/20">
+              <a href="#positions" className="px-8 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:bg-vitorra-text hover:text-vitorra-bg transition-all duration-300 inline-flex items-center gap-2 uppercase tracking-widest text-[11px] shadow-xl shadow-vitorra-gold/20">
                 View Open Positions <ArrowRight className="w-4 h-4" />
               </a>
             ) : (
-              <Link to="/contact" className="px-8 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:bg-vitorra-text hover:text-vitorra-bg transition-all duration-300 inline-flex items-center gap-2 uppercase tracking-widest text-[10px] shadow-xl shadow-vitorra-gold/20">
+              <Link to="/contact" className="px-8 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:bg-vitorra-text hover:text-vitorra-bg transition-all duration-300 inline-flex items-center gap-2 uppercase tracking-widest text-[11px] shadow-xl shadow-vitorra-gold/20">
                 Contact Us <ArrowRight className="w-4 h-4" />
               </Link>
             )}
@@ -105,11 +105,11 @@ export default function JoinOurTeam() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${typeColors[job.type] || 'bg-white/5 text-gray-400 border-white/10'}`}>
+                          <span className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border ${typeColors[job.type] || 'bg-white/5 text-gray-400 border-white/10'}`}>
                             {typeLabels[job.type] || job.type}
                           </span>
                           {job.salary && (
-                            <span className="px-3 py-1.5 rounded-full bg-vitorra-gold/5 text-vitorra-gold border border-vitorra-gold/20 text-[10px] font-bold">
+                            <span className="px-3 py-1.5 rounded-full bg-vitorra-gold/5 text-vitorra-gold border border-vitorra-gold/20 text-[11px] font-bold">
                               {job.salary}
                             </span>
                           )}
@@ -122,7 +122,7 @@ export default function JoinOurTeam() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {job.requirements.length > 0 && (
                           <div>
-                            <h4 className="text-[10px] text-vitorra-muted uppercase font-bold tracking-widest mb-3">Requirements</h4>
+                            <h4 className="text-[11px] text-vitorra-muted uppercase font-bold tracking-widest mb-3">Requirements</h4>
                             <ul className="space-y-2">
                               {job.requirements.map((req, i) => (
                                 <li key={i} className="flex items-start gap-2 text-sm text-vitorra-text/80">
@@ -135,7 +135,7 @@ export default function JoinOurTeam() {
                         )}
                         {job.responsibilities.length > 0 && (
                           <div>
-                            <h4 className="text-[10px] text-vitorra-muted uppercase font-bold tracking-widest mb-3">Responsibilities</h4>
+                            <h4 className="text-[11px] text-vitorra-muted uppercase font-bold tracking-widest mb-3">Responsibilities</h4>
                             <ul className="space-y-2">
                               {job.responsibilities.map((resp, i) => (
                                 <li key={i} className="flex items-start gap-2 text-sm text-vitorra-text/80">
@@ -150,7 +150,7 @@ export default function JoinOurTeam() {
 
                       {/* Apply CTA */}
                       <div className="mt-6 pt-6 border-t border-vitorra-border/50">
-                        <Link to="/contact" className="inline-flex items-center gap-2 px-6 py-3 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:opacity-90 transition-all uppercase tracking-widest text-[10px] shadow-lg shadow-vitorra-gold/20">
+                        <Link to="/contact" className="inline-flex items-center gap-2 px-6 py-3 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:opacity-90 transition-all uppercase tracking-widest text-[11px] shadow-lg shadow-vitorra-gold/20">
                           Apply Now <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                       </div>
@@ -165,10 +165,11 @@ export default function JoinOurTeam() {
                 <UserPlus className="w-10 h-10 text-vitorra-gold" />
               </div>
               <h2 className="text-3xl md:text-4xl text-vitorra-text mb-6">No Open Positions Right Now</h2>
-              <p className="text-vitorra-muted leading-relaxed text-lg max-w-2xl mx-auto mb-8">
-                We're always looking for talented people. Check back soon or send us a message via the Contact page if you'd like to get in touch early.
+              <p className="text-vitorra-muted leading-relaxed text-lg max-w-2xl mx-auto mb-4">
+                We're always looking for talented people. Check back soon or send us your CV and we'll keep it on file for future opportunities.
               </p>
-              <Link to="/contact" className="px-8 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:opacity-90 transition-all inline-flex items-center gap-2 uppercase tracking-widest text-[10px] shadow-xl shadow-vitorra-gold/20">
+              <p className="text-sm text-vitorra-muted mb-8">Send your CV to <a href="mailto:careers@vitorra.org" className="text-vitorra-gold hover:underline font-semibold">careers@vitorra.org</a></p>
+              <Link to="/contact" className="px-8 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:opacity-90 transition-all inline-flex items-center gap-2 uppercase tracking-widest text-[11px] shadow-xl shadow-vitorra-gold/20">
                 Get in Touch <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

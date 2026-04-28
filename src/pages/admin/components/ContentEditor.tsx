@@ -6,7 +6,7 @@ function Section({ title, children, defaultOpen = false }: { title: string; chil
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="border border-white/5 rounded-2xl overflow-hidden">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-5 bg-black/40 hover:bg-black/60 transition-colors text-left">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-5 bg-[#2b2b2b] hover:bg-[#333333] transition-colors text-left">
         <h4 className="text-lg font-medium text-vitorra-gold">{title}</h4>
         {open ? <ChevronDown className="w-5 h-5 text-gray-500" /> : <ChevronRight className="w-5 h-5 text-gray-500" />}
       </button>
@@ -60,8 +60,8 @@ export default function ContentEditor() {
           <div className="grid grid-cols-2 gap-3">
             {state.stats.map((s, i) => (
               <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
-                <input value={s.stat} onChange={e => { const ns = [...state.stats]; ns[i] = { ...ns[i], stat: e.target.value }; updateStats(ns); }} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-lg font-bold outline-none focus:border-vitorra-gold/50" placeholder="4+" />
-                <input value={s.label} onChange={e => { const ns = [...state.stats]; ns[i] = { ...ns[i], label: e.target.value }; updateStats(ns); }} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-gray-300 text-xs outline-none focus:border-vitorra-gold/50" placeholder="Label" />
+                <input value={s.stat} onChange={e => { const ns = [...state.stats]; ns[i] = { ...ns[i], stat: e.target.value }; updateStats(ns); }} className="w-full bg-[#2b2b2b] border border-white/10 rounded-lg px-3 py-2 text-white text-lg font-bold outline-none focus:border-vitorra-gold/50" placeholder="4+" />
+                <input value={s.label} onChange={e => { const ns = [...state.stats]; ns[i] = { ...ns[i], label: e.target.value }; updateStats(ns); }} className="w-full bg-[#2b2b2b] border border-white/10 rounded-lg px-3 py-1.5 text-gray-300 text-xs outline-none focus:border-vitorra-gold/50" placeholder="Label" />
               </div>
             ))}
           </div>
@@ -85,8 +85,8 @@ export default function ContentEditor() {
       <Section title="ℹ️ About Page — Core Values">
         {state.coreValues.map((v, i) => (
           <div key={i} className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-2">
-            <input value={v.title} onChange={e => { const nv = [...state.coreValues]; nv[i] = { ...nv[i], title: e.target.value }; updateCoreValues(nv); }} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white font-semibold outline-none focus:border-vitorra-gold/50" />
-            <textarea value={v.description} onChange={e => { const nv = [...state.coreValues]; nv[i] = { ...nv[i], description: e.target.value }; updateCoreValues(nv); }} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-gray-300 text-sm outline-none focus:border-vitorra-gold/50 h-20 resize-y" />
+            <input value={v.title} onChange={e => { const nv = [...state.coreValues]; nv[i] = { ...nv[i], title: e.target.value }; updateCoreValues(nv); }} className="w-full bg-[#2b2b2b] border border-white/10 rounded-lg px-3 py-2 text-white font-semibold outline-none focus:border-vitorra-gold/50" />
+            <textarea value={v.description} onChange={e => { const nv = [...state.coreValues]; nv[i] = { ...nv[i], description: e.target.value }; updateCoreValues(nv); }} className="w-full bg-[#2b2b2b] border border-white/10 rounded-lg px-3 py-2 text-gray-300 text-sm outline-none focus:border-vitorra-gold/50 h-20 resize-y" />
           </div>
         ))}
       </Section>
@@ -103,8 +103,8 @@ export default function ContentEditor() {
         <Field label="Section Description" value={pc.investmentPhilosophyDescription} onChange={v => updatePageContent('investmentPhilosophyDescription', v)} multiline />
         {state.investmentPillars.map((p, i) => (
           <div key={i} className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-2">
-            <input value={p.title} onChange={e => { const np = [...state.investmentPillars]; np[i] = { ...np[i], title: e.target.value }; updateInvestmentPillars(np); }} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white font-semibold outline-none focus:border-vitorra-gold/50" />
-            <textarea value={p.description} onChange={e => { const np = [...state.investmentPillars]; np[i] = { ...np[i], description: e.target.value }; updateInvestmentPillars(np); }} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-gray-300 text-sm outline-none focus:border-vitorra-gold/50 h-20 resize-y" />
+            <input value={p.title} onChange={e => { const np = [...state.investmentPillars]; np[i] = { ...np[i], title: e.target.value }; updateInvestmentPillars(np); }} className="w-full bg-[#2b2b2b] border border-white/10 rounded-lg px-3 py-2 text-white font-semibold outline-none focus:border-vitorra-gold/50" />
+            <textarea value={p.description} onChange={e => { const np = [...state.investmentPillars]; np[i] = { ...np[i], description: e.target.value }; updateInvestmentPillars(np); }} className="w-full bg-[#2b2b2b] border border-white/10 rounded-lg px-3 py-2 text-gray-300 text-sm outline-none focus:border-vitorra-gold/50 h-20 resize-y" />
           </div>
         ))}
       </Section>

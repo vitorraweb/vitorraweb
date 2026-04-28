@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useCMS } from '../context/CMSContext';
-import { CalendarDays, User, ArrowLeft, Tag, Clock, Share2 } from 'lucide-react';
+import { CalendarDays, User, ArrowLeft, Tag, Clock, Share2, FileText, Download } from 'lucide-react';
 
 export default function BlogArticle() {
   const { id } = useParams<{ id: string }>();
@@ -80,11 +80,24 @@ export default function BlogArticle() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="prose prose-invert prose-lg max-w-none"
           >
-            {blog.content.split('\n\n').map((paragraph, i) => (
-              <p key={i} className="text-vitorra-text/80 text-lg leading-relaxed mb-6">
-                {paragraph}
-              </p>
-            ))}
+            <div dangerouslySetInnerHTML={{ __html: blog.content }} className="prose-content text-vitorra-text/80 text-lg leading-relaxed mb-6 [&>h1]:text-3xl [&>h1]:font-serif [&>h1]:text-white [&>h1]:mb-6 [&>h2]:text-2xl [&>h2]:font-serif [&>h2]:text-white [&>h2]:mb-4 [&>h2]:mt-8 [&>p]:mb-4 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-4" />
+
+            {blog.documentUrl && (
+              <div className="mt-12 p-6 bg-vitorra-bg/40 border border-vitorra-gold/20 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl shadow-black/20">
+                <div className="flex items-center gap-4 w-full">
+                  <div className="w-14 h-14 bg-vitorra-gold/10 flex items-center justify-center rounded-xl text-vitorra-gold shrink-0">
+                    <FileText className="w-7 h-7" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-white font-bold mb-1 truncate">Attached Document</h4>
+                    <p className="text-sm text-vitorra-muted truncate">{blog.documentName || 'Download reference material'}</p>
+                  </div>
+                </div>
+                <a href={blog.documentUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-full sm:w-auto px-6 py-3 bg-vitorra-gold text-vitorra-bg font-bold rounded-xl hover:bg-white hover:text-black transition-colors flex items-center justify-center gap-2">
+                  <Download className="w-4 h-4" /> Download PDF
+                </a>
+              </div>
+            )}
           </motion.article>
 
           {/* Share / Tags Bar */}

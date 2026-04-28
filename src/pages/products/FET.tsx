@@ -1,26 +1,27 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
 import { useRef, useEffect, useState, useMemo } from 'react';
+import { useExchangeRate } from '../../hooks/useExchangeRate';
 import {
   ChevronDown,
   ArrowRight,
 } from 'lucide-react';
 
 /* ──────────────────────────────────────────────────────────────────
-   Official FET Calculator — vehicle types & costs (from fuelecotech.com)
-   Currency adapted to UGX for the East African market.
+   Official FET Calculator — vehicle types & EUR base prices
+   Prices are converted to UGX using live exchange rates.
    ────────────────────────────────────────────────────────────────── */
-const VEHICLE_OPTIONS = {
+const VEHICLE_OPTIONS_EUR = {
   km: [
-    { value: 'PKW', label: 'Passenger car up to 2.0L displacement', cost: 937500 },
-    { value: 'SPRINTER_7_5T', label: 'Vans, trucks & SUVs up to 7.5t', cost: 1687500 },
-    { value: 'LKW_18T', label: 'Truck up to 18t', cost: 2812500 },
-    { value: 'LKW_40T', label: 'Truck up to 40t', cost: 5437500 },
+    { value: 'PKW', label: 'Passenger car up to 2.0L displacement', eurPrice: 250 },
+    { value: 'SPRINTER_7_5T', label: 'Vans, trucks & SUVs up to 7.5t', eurPrice: 450 },
+    { value: 'LKW_18T', label: 'Truck up to 18t', eurPrice: 750 },
+    { value: 'LKW_40T', label: 'Truck up to 40t', eurPrice: 1450 },
   ],
   h: [
-    { value: 'BM_SMALL', label: 'Small construction machinery 1-3 l/h', cost: 937500 },
-    { value: 'BM_MEDIUM', label: 'Medium construction machinery 4-8 l/h', cost: 2812500 },
-    { value: 'BM_LARGE', label: 'Large construction machinery 18-35 l/h', cost: 5437500 },
+    { value: 'BM_SMALL', label: 'Small construction machinery 1-3 l/h', eurPrice: 250 },
+    { value: 'BM_MEDIUM', label: 'Medium construction machinery 4-8 l/h', eurPrice: 750 },
+    { value: 'BM_LARGE', label: 'Large construction machinery 18-35 l/h', eurPrice: 1450 },
   ],
 };
 
@@ -248,13 +249,19 @@ export default function FET() {
     if (videoRef.current) videoRef.current.play().catch(() => {});
   }, [location.pathname]);
 
-  /* Get current vehicle cost */
-  const vehicleOptions = VEHICLE_OPTIONS[calcMode];
+  const { eurToUgx, rate } = useExchangeRate();
+
+  /* Convert EUR vehicle options to UGX using live rate */
+  const vehicleOptions = useMemo(() => VEHICLE_OPTIONS_EUR[calcMode].map(v => ({
+    ...v,
+    cost: eurToUgx(v.eurPrice),
+  })), [calcMode, eurToUgx]);
+
   const vehicleCost = vehicleOptions.find(v => v.value === vehicleValue)?.cost ?? vehicleOptions[0].cost;
 
   /* When mode changes, reset vehicle to first option */
   useEffect(() => {
-    setVehicleValue(VEHICLE_OPTIONS[calcMode][0].value);
+    setVehicleValue(VEHICLE_OPTIONS_EUR[calcMode][0].value);
   }, [calcMode]);
 
   /* Calculator results */
@@ -376,11 +383,11 @@ export default function FET() {
                 <div className="p-6">
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     {app.tags.map((tag, i) => (
-                      <span key={i} className="px-3 py-1 bg-vitorra-bg border border-vitorra-border rounded-full text-[10px] font-bold text-vitorra-muted tracking-wider">
+                      <span key={i} className="px-3 py-1 bg-vitorra-bg border border-vitorra-border rounded-full text-[11px] font-bold text-vitorra-muted tracking-wider">
                         {tag}
                       </span>
                     ))}
-                    <span className="ml-auto flex items-center gap-1.5 px-3 py-1 bg-vitorra-bg border border-vitorra-border rounded-full text-[10px] font-bold text-emerald-400 tracking-wider">
+                    <span className="ml-auto flex items-center gap-1.5 px-3 py-1 bg-vitorra-bg border border-vitorra-border rounded-full text-[11px] font-bold text-emerald-400 tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                       {app.tagRight}
                     </span>
@@ -426,7 +433,7 @@ export default function FET() {
               <div className="space-y-6">
                 {/* Mode */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Mode</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Mode</label>
                   <select
                     value={calcMode}
                     onChange={e => setCalcMode(e.target.value as 'km' | 'h')}
@@ -439,7 +446,7 @@ export default function FET() {
 
                 {/* Financing Model */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Financing model</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Financing model</label>
                   <select
                     value={financeModel}
                     onChange={e => setFinanceModel(e.target.value as 'purchase' | 'rental')}
@@ -452,7 +459,7 @@ export default function FET() {
 
                 {/* Vehicle Type */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Vehicle type</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Vehicle type</label>
                   <select
                     value={vehicleValue}
                     onChange={e => setVehicleValue(e.target.value)}
@@ -466,7 +473,7 @@ export default function FET() {
 
                 {/* Consumption */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">
                     {calcMode === 'h' ? 'Consumption (l/h)' : 'Consumption (l/100 km)'}
                   </label>
                   <input
@@ -480,7 +487,7 @@ export default function FET() {
 
                 {/* Annual mileage / hours */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">
                     {calcMode === 'h' ? 'Annual operating hours (h/year)' : 'Annual mileage (km/year)'}
                   </label>
                   <input
@@ -494,7 +501,7 @@ export default function FET() {
 
                 {/* Fuel price */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Fuel price (UGX/l)</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Fuel price (UGX/l)</label>
                   <input
                     type="number"
                     value={fuelPrice}
@@ -506,7 +513,7 @@ export default function FET() {
 
                 {/* FET Cost (auto) */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">FET cost (UGX)</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">FET cost (UGX)</label>
                   <input
                     type="text"
                     readOnly
@@ -517,7 +524,7 @@ export default function FET() {
 
                 {/* Savings % */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Fuel savings (%)</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Fuel savings (%)</label>
                   <input
                     type="number"
                     value={savingPct}
@@ -530,21 +537,21 @@ export default function FET() {
                 {financeModel === 'rental' && (
                   <>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Down payment (%)</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Down payment (%)</label>
                       <input
                         type="number" value={downPct} onChange={e => setDownPct(e.target.value)}
                         className="w-full bg-vitorra-bg border border-vitorra-border rounded-xl px-4 py-3.5 text-sm text-vitorra-text outline-none focus:border-vitorra-gold transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Rental duration (max. 48 months)</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Rental duration (max. 48 months)</label>
                       <input
                         type="number" min={1} max={48} value={rentalDuration} onChange={e => setRentalDuration(e.target.value)}
                         className="w-full bg-vitorra-bg border border-vitorra-border rounded-xl px-4 py-3.5 text-sm text-vitorra-text outline-none focus:border-vitorra-gold transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Finance rate p.a. (%)</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-widest text-vitorra-muted mb-2">Finance rate p.a. (%)</label>
                       <input
                         type="number" value={financeRate} onChange={e => setFinanceRate(e.target.value)}
                         className="w-full bg-vitorra-bg border border-vitorra-border rounded-xl px-4 py-3.5 text-sm text-vitorra-text outline-none focus:border-vitorra-gold transition-colors"
@@ -558,7 +565,7 @@ export default function FET() {
             {/* — Results — */}
             <div className="lg:col-span-5 space-y-6">
               <div className="p-8 md:p-10 rounded-3xl bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-500/20 relative overflow-hidden">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 block mb-6">Result</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400 block mb-6">Result</span>
 
                 {results ? (
                   <div className="space-y-6">
@@ -578,10 +585,10 @@ export default function FET() {
                     {/* Payback / Break-even */}
                     <div className="p-5 rounded-2xl bg-vitorra-bg/50 border border-vitorra-border">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted">
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted">
                           {results.type === 'purchase' ? 'Payback' : 'Rental break-even'}
                         </span>
-                        <span className="text-[9px] px-2 py-0.5 bg-emerald-500/10 rounded-full text-emerald-400 font-bold">&bull; Time</span>
+                        <span className="text-[11px] px-2 py-0.5 bg-emerald-500/10 rounded-full text-emerald-400 font-bold">&bull; Time</span>
                       </div>
                       <div className="text-xl font-bold text-vitorra-text">
                         {results.type === 'purchase'
@@ -594,10 +601,10 @@ export default function FET() {
                     {/* Cost with / without */}
                     <div className="p-5 rounded-2xl bg-vitorra-bg/50 border border-vitorra-border">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted">
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted">
                           {results.type === 'purchase' ? 'Cost/year' : 'Rental payment/month'}
                         </span>
-                        <span className="text-[9px] px-2 py-0.5 bg-emerald-500/10 rounded-full text-emerald-400 font-bold">
+                        <span className="text-[11px] px-2 py-0.5 bg-emerald-500/10 rounded-full text-emerald-400 font-bold">
                           &bull; {results.type === 'purchase' ? 'without / with' : 'per month'}
                         </span>
                       </div>
@@ -612,7 +619,7 @@ export default function FET() {
                     {/* Rental details panel */}
                     {results.type === 'rental' && results.rental && (
                       <div className="p-5 rounded-2xl bg-vitorra-bg/50 border border-vitorra-border space-y-3">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted block mb-2">Rental details</span>
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted block mb-2">Rental details</span>
                         {[
                           ['Down payment', fmt(results.rental.dp)],
                           ['Amount to finance', fmt(results.rental.principal)],
@@ -638,15 +645,15 @@ export default function FET() {
                     </div>
                     <div className="p-5 rounded-2xl bg-vitorra-bg/50 border border-vitorra-border">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted">Payback</span>
-                        <span className="text-[9px] px-2 py-0.5 bg-emerald-500/10 rounded-full text-emerald-400 font-bold">&bull; Time</span>
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted">Payback</span>
+                        <span className="text-[11px] px-2 py-0.5 bg-emerald-500/10 rounded-full text-emerald-400 font-bold">&bull; Time</span>
                       </div>
                       <div className="text-xl font-bold text-vitorra-muted/30">&mdash;</div>
                     </div>
                     <div className="p-5 rounded-2xl bg-vitorra-bg/50 border border-vitorra-border">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted">Cost/year</span>
-                        <span className="text-[9px] px-2 py-0.5 bg-emerald-500/10 rounded-full text-emerald-400 font-bold">&bull; without / with</span>
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted">Cost/year</span>
+                        <span className="text-[11px] px-2 py-0.5 bg-emerald-500/10 rounded-full text-emerald-400 font-bold">&bull; without / with</span>
                       </div>
                       <div className="text-xl font-bold text-vitorra-muted/30">&mdash; / &mdash;</div>
                     </div>
@@ -711,8 +718,8 @@ export default function FET() {
               </p>
               <div className="p-6 rounded-2xl bg-vitorra-bg border border-vitorra-border">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted">Winter Operation</span>
-                  <span className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full text-[10px] font-bold text-emerald-400">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted">Winter Operation</span>
+                  <span className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full text-[11px] font-bold text-emerald-400">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />l/Bh
                   </span>
                 </div>
@@ -728,8 +735,8 @@ export default function FET() {
               </p>
               <div className="p-6 rounded-2xl bg-vitorra-bg border border-vitorra-border">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted">Constant-Speed Run (Max.)</span>
-                  <span className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full text-[10px] font-bold text-emerald-400">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted">Constant-Speed Run (Max.)</span>
+                  <span className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full text-[11px] font-bold text-emerald-400">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />Lab
                   </span>
                 </div>
@@ -760,7 +767,7 @@ export default function FET() {
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
                 className="p-8 rounded-3xl bg-vitorra-card border border-vitorra-border"
               >
-                <span className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted block mb-6">{t.vehicle}</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted block mb-6">{t.vehicle}</span>
                 <p className="text-vitorra-text leading-relaxed mb-8">{t.quote}</p>
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl overflow-hidden border border-vitorra-border">
@@ -768,7 +775,7 @@ export default function FET() {
                   </div>
                   <div>
                     <div className="text-sm font-bold text-vitorra-text">{t.name}</div>
-                    <div className="text-[10px] text-vitorra-muted">{t.role}</div>
+                    <div className="text-[11px] text-vitorra-muted">{t.role}</div>
                   </div>
                 </div>
               </motion.div>
@@ -789,7 +796,7 @@ export default function FET() {
                   <img src={TESTIMONIALS[testimonialIdx].img} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-vitorra-muted block mb-3">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-vitorra-muted block mb-3">
                     {TESTIMONIALS[testimonialIdx].vehicle}
                   </span>
                   <p className="text-vitorra-text leading-relaxed mb-3">{TESTIMONIALS[testimonialIdx].quote}</p>
@@ -829,7 +836,7 @@ export default function FET() {
                 />
               </div>
               <div className="p-8">
-                <span className="inline-block px-4 py-1.5 bg-emerald-500/15 border border-emerald-500/25 rounded-full text-[10px] font-bold text-emerald-400 tracking-[0.2em] uppercase mb-5">
+                <span className="inline-block px-4 py-1.5 bg-emerald-500/15 border border-emerald-500/25 rounded-full text-[11px] font-bold text-emerald-400 tracking-[0.2em] uppercase mb-5">
                   FET System Impresses in Lab Test
                 </span>
                 <h3 className="text-xl md:text-2xl font-bold text-vitorra-text mb-4 group-hover:text-emerald-400 transition-colors">

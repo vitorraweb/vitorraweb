@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -18,6 +19,7 @@ let app;
 let auth: any = null;
 let db: any = null;
 let storage: any = null;
+let functions: any = null;
 
 if (isConfigValid) {
   try {
@@ -25,6 +27,7 @@ if (isConfigValid) {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+    functions = getFunctions(app);
   } catch (error) {
     console.error("Firebase initialization failed:", error);
   }
@@ -32,4 +35,4 @@ if (isConfigValid) {
   console.warn("Firebase configuration is missing or invalid. Application will run in mock mode.");
 }
 
-export { app, auth, db, storage };
+export { app, auth, db, storage, functions };

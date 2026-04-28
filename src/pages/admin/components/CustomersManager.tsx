@@ -1,7 +1,11 @@
 import { useState } from 'react';
-import { useCMS, Customer, Order } from '../../../context/CMSContext';
+import { useCMS, Customer } from '../../../context/CMSContext';
 import { useAuth } from '../../../context/AuthContext';
-import { Search, Plus, X, UserCheck, UserX, Edit3, Trash2, ChevronDown, ChevronRight, Check, Package, DollarSign, Truck, Eye, FileText, Phone, Mail, MapPin, Building2, TrendingUp, History, ShieldCheck } from 'lucide-react';
+import {
+  Search, Plus, X, UserCheck, UserX, Edit3, Trash2, ChevronDown, ChevronRight,
+  Check, Package, DollarSign, Phone, Mail, MapPin, Building2, TrendingUp,
+  History, ShieldCheck, FileText, Eye, Copy, Users
+} from 'lucide-react';
 
 export default function CustomersManager() {
   const { user } = useAuth();
@@ -11,6 +15,7 @@ export default function CustomersManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'b2b' | 'b2c'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'suspended'>('all');
   const [expandedCustomer, setExpandedCustomer] = useState<string | null>(null);
 
   const emptyForm: Partial<Customer> = { name: '', email: '', phone: '', role: 'b2c', companyName: '', status: 'active', totalOrders: 0, totalSpent: 0, address: '', notes: '' };
@@ -22,13 +27,17 @@ export default function CustomersManager() {
     const s = search.toLowerCase();
     const matchSearch = c.name.toLowerCase().includes(s) || c.email.toLowerCase().includes(s) || (c.companyName || '').toLowerCase().includes(s);
     const matchRole = filterRole === 'all' || c.role === filterRole;
-    return matchSearch && matchRole;
+    const matchStatus = filterStatus === 'all' || c.status === filterStatus;
+    return matchSearch && matchRole && matchStatus;
   });
 
   const totalRevenue = state.customers.reduce((s, c) => s + (c.totalSpent || 0), 0);
   const activeCustomers = state.customers.filter(c => c.status === 'active').length;
+  const b2bCount = state.customers.filter(c => c.role === 'b2b').length;
+  const avgLTV = state.customers.length > 0 ? totalRevenue / state.customers.length : 0;
 
   const startEdit = (c: Customer) => { setFormData({ ...c }); setEditingId(c.id); setShowForm(true); };
+  const cancelForm = () => { setShowForm(false); setEditingId(null); setFormData(emptyForm); };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,215 +55,467 @@ export default function CustomersManager() {
     setShowForm(false); setFormData(emptyForm);
   };
 
+  // Styles
+  const labelStyle: React.CSSProperties = {
+    display: 'block', fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)',
+    fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase',
+    letterSpacing: '0.08em', marginBottom: 8,
+  };
+  const inputStyle: React.CSSProperties = {
+    width: '100%', height: 42, padding: '0 14px',
+    background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+    borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-body)',
+    fontSize: 'var(--text-base)', color: 'var(--text-primary)', outline: 'none',
+  };
+  const selectStyle: React.CSSProperties = { ...inputStyle, cursor: 'pointer' };
+
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+      {/* ═══ Header ═══ */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h3 className="text-3xl font-serif text-vitorra-text mb-1">Customer CRM</h3>
-          <p className="text-vitorra-muted text-sm">Deep insights into customer relationships, lifetime value, and order history.</p>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>Customer CRM</h3>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', margin: 0 }}>
+            Deep insights into customer relationships, lifetime value, and order history.
+          </p>
         </div>
         {!isViewer && (
-          <button onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm); }}
-            className="px-6 py-3 bg-vitorra-gold text-vitorra-gold-text rounded-2xl font-bold shadow-lg shadow-vitorra-gold/20 hover:bg-yellow-500 transition-all flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Add Key Partner
-          </button>
+          <button onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm); }} style={{
+            padding: '10px 24px', background: 'var(--accent-primary)', color: 'white',
+            borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-body)', fontWeight: 700,
+            fontSize: 'var(--text-sm)', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 8,
+            boxShadow: '0 4px 12px rgba(198,137,88,0.3)', transition: 'var(--transition-fast)',
+          }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-primary-hover)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--accent-primary)'}
+          ><Plus size={16} /> Add Key Partner</button>
         )}
       </div>
 
-      {/* CRM KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="bg-vitorra-card border border-vitorra-border rounded-2xl p-6 hover:shadow-xl hover:shadow-emerald-500/5 transition-all shadow-sm">
-          <div className="flex items-center gap-2 text-emerald-400 mb-2"><UserCheck className="w-4 h-4" /><span className="text-[10px] font-bold uppercase tracking-widest">Active Members</span></div>
-          <div className="text-3xl font-serif text-vitorra-text">{activeCustomers}</div>
-        </div>
-        <div className="bg-vitorra-card border border-vitorra-border rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 text-blue-400 mb-2"><Building2 className="w-4 h-4" /><span className="text-[10px] font-bold uppercase tracking-widest">B2B Partners</span></div>
-          <div className="text-3xl font-serif text-vitorra-text">{state.customers.filter(c => c.role === 'b2b').length}</div>
-        </div>
-        <div className="bg-vitorra-card border border-vitorra-border rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 text-purple-400 mb-2"><TrendingUp className="w-4 h-4" /><span className="text-[10px] font-bold uppercase tracking-widest">Total LTV</span></div>
-          <div className="text-3xl font-serif text-vitorra-gold">{formatPrice(totalRevenue)}</div>
-        </div>
-        <div className="bg-vitorra-card border border-vitorra-border rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 text-vitorra-muted mb-2"><Package className="w-4 h-4" /><span className="text-[10px] font-bold uppercase tracking-widest">Avg. Orders</span></div>
-          <div className="text-3xl font-serif text-vitorra-text">{(totalRevenue / (state.customers.length || 1) / 1000000).toFixed(1)}M</div>
-        </div>
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center bg-vitorra-bg/40 border border-vitorra-border rounded-2xl p-4 backdrop-blur-md">
-        <div className="relative flex-1 w-full max-w-md bg-vitorra-bg/10 border border-vitorra-border rounded-xl">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-vitorra-muted" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, or company..."
-            className="w-full bg-transparent pl-10 pr-4 py-3 text-sm text-vitorra-text outline-none" />
-        </div>
-        <div className="flex items-center gap-2">
-          <select value={filterRole} onChange={e => setFilterRole(e.target.value as any)}
-            className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-vitorra-gold">
-            <option value="all">All Profiles</option><option value="b2b">Wholesale (B2B)</option><option value="b2c">Retail (B2C)</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Customer Form Overlay */}
-      {showForm && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-2xl bg-vitorra-card border border-vitorra-border rounded-3xl p-8 lg:p-12 relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-vitorra-gold/5 blur-[100px] rounded-full pointer-events-none" />
-            <div className="flex items-center justify-between mb-8">
-              <h4 className="text-2xl font-serif text-vitorra-text">{editingId ? 'Edit Profile' : 'New Customer Profile'}</h4>
-              <button onClick={() => setShowForm(false)} className="text-vitorra-muted hover:text-vitorra-text p-2 rounded-lg hover:bg-vitorra-bg/5"><X className="w-6 h-6" /></button>
+      {/* ═══ Metrics ═══ */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-4)' }}>
+        {[
+          { value: activeCustomers, label: 'Active Members', color: 'var(--success)', icon: <UserCheck size={18} /> },
+          { value: b2bCount, label: 'B2B Partners', color: '#4AB4FF', icon: <Building2 size={18} /> },
+          { value: formatPrice(totalRevenue), label: 'Total LTV', color: 'var(--accent-primary)', icon: <TrendingUp size={18} /> },
+          { value: formatPrice(avgLTV), label: 'Avg. LTV', color: 'var(--text-primary)', icon: <DollarSign size={18} /> },
+        ].map(m => (
+          <div key={m.label} style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-faint)',
+            borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)',
+            display: 'flex', alignItems: 'center', gap: 14, transition: 'var(--transition-fast)',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-dim)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-faint)'; e.currentTarget.style.boxShadow = 'none'; }}
+          >
+            <div style={{
+              width: 40, height: 40, borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: m.color,
+            }}>{m.icon}</div>
+            <div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: typeof m.value === 'string' ? 'var(--text-md)' : 'var(--text-xl)', fontWeight: 700, color: m.color }}>{m.value}</div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{m.label}</div>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2"><label className="block text-[10px] text-gray-500 uppercase font-bold tracking-widest">Consignee Name</label>
+          </div>
+        ))}
+      </div>
+
+      {/* ═══ Toolbar ═══ */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center',
+        background: 'var(--bg-surface)', border: '1px solid var(--border-faint)',
+        borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)',
+      }}>
+        <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
+          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, or company..."
+            style={{ ...inputStyle, paddingLeft: 36, height: 36, fontSize: 'var(--text-sm)' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', padding: 3, border: '1px solid var(--border-dim)' }}>
+          {(['all', 'b2b', 'b2c'] as const).map(r => (
+            <button key={r} onClick={() => setFilterRole(r)} style={{
+              padding: '4px 12px', borderRadius: 'var(--radius-sm)',
+              fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: filterRole === r ? 600 : 400,
+              border: 'none', cursor: 'pointer', textTransform: 'uppercase',
+              background: filterRole === r ? 'var(--accent-primary)' : 'transparent',
+              color: filterRole === r ? 'white' : 'var(--text-secondary)',
+              transition: 'var(--transition-fast)',
+            }}>{r === 'all' ? 'All' : r}</button>
+          ))}
+        </div>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as any)} style={{
+          ...selectStyle, width: 'auto', height: 36, fontSize: 'var(--text-xs)', padding: '0 12px',
+        }}>
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+        </select>
+      </div>
+
+      {/* ═══ Customer Form Modal ═══ */}
+      {showForm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 70,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+        }} onClick={cancelForm}>
+          <div onClick={e => e.stopPropagation()} style={{
+            width: '100%', maxWidth: 680, background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xl)',
+            padding: '32px 36px', position: 'relative', overflow: 'hidden',
+            boxShadow: 'var(--shadow-xl)',
+          }}>
+            <div style={{
+              position: 'absolute', top: -40, right: -40, width: 200, height: 200,
+              background: 'rgba(198,137,88,0.06)', filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none',
+            }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, position: 'relative', zIndex: 10 }}>
+              <div>
+                <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>
+                  {editingId ? 'Edit Customer Profile' : 'New Customer Profile'}
+                </h4>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: 0 }}>Register a new customer or update existing details.</p>
+              </div>
+              <button onClick={cancelForm} style={{
+                background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+                borderRadius: 'var(--radius-md)', width: 34, height: 34, cursor: 'pointer', color: 'var(--text-secondary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}><X size={16} /></button>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ position: 'relative', zIndex: 10 }}>
+              <SectionHeader icon={<Users size={13} />} title="Contact Information" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                <div>
+                  <label style={labelStyle}>Full Name *</label>
                   <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white outline-none focus:border-vitorra-gold" /></div>
-                <div className="space-y-2"><label className="block text-[10px] text-gray-500 uppercase font-bold tracking-widest">Email Address</label>
+                    placeholder="e.g. John Doe" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Email Address *</label>
                   <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white outline-none focus:border-vitorra-gold" /></div>
-                <div className="space-y-2"><label className="block text-[10px] text-vitorra-muted uppercase font-bold tracking-widest">Role Segment</label>
-                  <select value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value as any })}
-                    className="w-full bg-vitorra-bg-alt border border-vitorra-border rounded-xl px-4 py-3.5 text-vitorra-text outline-none focus:border-vitorra-gold">
+                    placeholder="john@company.com" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Phone Number</label>
+                  <input value={formData.phone || ''} onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+256 700 000 000" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Segment</label>
+                  <select value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value as any })} style={selectStyle}>
                     <option value="b2c">Retail (B2C)</option><option value="b2b">Wholesale (B2B)</option>
-                  </select></div>
-                <div className="space-y-2"><label className="block text-[10px] text-gray-500 uppercase font-bold tracking-widest">{formData.role === 'b2b' ? 'Company / Org' : 'Optional Tag'}</label>
+                  </select>
+                </div>
+              </div>
+
+              <SectionHeader icon={<Building2 size={13} />} title="Business Details" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                <div>
+                  <label style={labelStyle}>{formData.role === 'b2b' ? 'Company / Organization' : 'Optional Tag'}</label>
                   <input value={formData.companyName || ''} onChange={e => setFormData({ ...formData, companyName: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white outline-none focus:border-vitorra-gold placeholder:text-gray-700" placeholder="e.g. Acme Corp" /></div>
-                
+                    placeholder="e.g. Acme Corp" style={inputStyle} />
+                </div>
                 {formData.role === 'b2b' && (
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="block text-[10px] text-vitorra-gold uppercase font-bold tracking-widest">Tax ID / TIN (Required for B2B)</label>
+                  <div>
+                    <label style={{ ...labelStyle, color: 'var(--accent-primary)' }}>Tax ID / TIN</label>
                     <input value={(formData as any).taxId || ''} onChange={e => setFormData({ ...formData, taxId: e.target.value } as any)}
-                      placeholder="e.g. TIN-9988-77"
-                      className="w-full bg-vitorra-gold/5 border border-vitorra-gold/20 rounded-xl px-4 py-3.5 text-white outline-none focus:border-vitorra-gold placeholder:text-vitorra-gold/20" />
+                      placeholder="e.g. TIN-9988-77" style={{ ...inputStyle, borderColor: 'rgba(198,137,88,0.25)' }} />
                   </div>
                 )}
               </div>
-              <div className="space-y-2"><label className="block text-[10px] text-gray-500 uppercase font-bold tracking-widest">Physical Address</label>
+
+              <SectionHeader icon={<MapPin size={13} />} title="Address" />
+              <div style={{ marginBottom: 20 }}>
                 <input value={formData.address || ''} onChange={e => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white outline-none focus:border-vitorra-gold" /></div>
-              <div className="flex items-center gap-4 pt-6">
-                <button type="submit" className="flex-1 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-2xl hover:bg-yellow-500 transition-all shadow-xl shadow-vitorra-gold/10">
-                  {editingId ? 'Update Profile' : 'Register Customer'}
-                </button>
-                <button type="button" onClick={() => setShowForm(false)} className="px-8 py-4 bg-vitorra-bg/5 text-vitorra-text rounded-2xl border border-vitorra-border hover:bg-vitorra-bg/10 transition-all font-bold">Cancel</button>
+                  placeholder="Full physical address" style={inputStyle} />
+              </div>
+
+              <SectionHeader icon={<FileText size={13} />} title="Internal Notes" />
+              <div style={{ marginBottom: 24 }}>
+                <textarea value={formData.notes || ''} onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Internal annotations about this customer..." rows={3}
+                  style={{ ...inputStyle, height: 'auto', padding: 14, resize: 'vertical', minHeight: 72 } as any} />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: '1px solid var(--border-faint)' }}>
+                <button type="submit" style={{
+                  flex: 1, padding: '12px 0', background: 'var(--accent-primary)', color: 'white',
+                  borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-body)', fontWeight: 700,
+                  fontSize: 'var(--text-sm)', border: 'none', cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(198,137,88,0.3)',
+                }}>{editingId ? 'Update Profile' : 'Register Customer'}</button>
+                <button type="button" onClick={cancelForm} style={{
+                  padding: '12px 24px', background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-dim)', borderRadius: 'var(--radius-md)',
+                  fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 'var(--text-sm)',
+                  color: 'var(--text-secondary)', cursor: 'pointer',
+                }}>Cancel</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Customer List */}
-      <div className="space-y-4">
-        {filtered.map(c => (
-          <div key={c.id} className="bg-vitorra-card border border-vitorra-border rounded-3xl overflow-hidden transition-all hover:border-vitorra-gold/20 group shadow-sm">
-            <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 cursor-pointer" onClick={() => setExpandedCustomer(expandedCustomer === c.id ? null : c.id)}>
-              <div className="flex items-center gap-4 flex-1">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-serif font-bold border-2 ${c.status === 'active' ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/20 shadow-lg shadow-emerald-500/5' : 'bg-red-500/5 text-red-400 border-red-500/20'}`}>
-                  {c.name.charAt(0)}
-                </div>
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-lg font-bold text-white group-hover:text-vitorra-gold transition-colors">{c.name}</span>
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${c.role === 'b2b' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}`}>{c.role}</span>
-                    {(c as any).taxId && <span className="flex items-center gap-1 text-[9px] font-black text-emerald-400 uppercase tracking-tighter bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20"><ShieldCheck className="w-3 h-3" /> VETTED</span>}
-                  </div>
-                  <div className="text-xs text-gray-500 flex flex-wrap gap-4 items-center">
-                    <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> {c.email}</span>
-                    <span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> {c.phone || 'N/A'}</span>
-                    <span className="text-gray-700">• {c.joinDate}</span>
-                  </div>
-                </div>
-              </div>
+      {/* ═══ DATA TABLE ═══ */}
+      <div style={{
+        background: 'var(--bg-surface)', border: '1px solid var(--border-faint)',
+        borderRadius: 'var(--radius-lg)', overflow: 'hidden',
+      }}>
+        {/* Table header */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '48px 1fr 120px 120px 110px 100px 120px',
+          padding: '10px 20px', borderBottom: '1px solid var(--border-dim)',
+          fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', fontWeight: 700,
+          color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em',
+          background: 'var(--bg-elevated)',
+        }}>
+          <span />
+          <span>Customer</span>
+          <span>Segment</span>
+          <span style={{ textAlign: 'right' }}>LTV</span>
+          <span style={{ textAlign: 'center' }}>Orders</span>
+          <span>Status</span>
+          <span style={{ textAlign: 'right' }}>Actions</span>
+        </div>
 
-              <div className="flex items-center gap-8 px-6 border-l border-white/5 h-12">
-                <div className="text-right"><div className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">LTV</div><div className="text-lg font-serif text-white">{formatPrice(c.totalSpent || 0)}</div></div>
-                <div className="text-right shrink-0"><div className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">Orders</div><div className="text-lg font-serif text-white">{c.totalOrders}</div></div>
-              </div>
+        {filtered.map(c => {
+          const isExp = expandedCustomer === c.id;
+          return (
+            <div key={c.id} style={{ borderBottom: '1px solid var(--border-faint)' }}>
+              {/* Row */}
+              <div
+                onClick={() => setExpandedCustomer(isExp ? null : c.id)}
+                style={{
+                  display: 'grid', gridTemplateColumns: '48px 1fr 120px 120px 110px 100px 120px',
+                  padding: '12px 20px', alignItems: 'center', cursor: 'pointer',
+                  transition: 'var(--transition-fast)',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-elevated)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                {/* Avatar */}
+                <div style={{
+                  width: 36, height: 36, borderRadius: 'var(--radius-md)',
+                  background: c.status === 'active' ? 'var(--success-muted)' : 'var(--danger-muted)',
+                  color: c.status === 'active' ? 'var(--success)' : 'var(--danger)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', fontWeight: 700,
+                  border: `1px solid ${c.status === 'active' ? 'var(--success-border)' : 'var(--danger-border)'}`,
+                }}>{c.name.charAt(0)}</div>
 
-              <div className="flex items-center gap-2 shrink-0 border-l border-white/5 pl-6">
-                {!isViewer && (
-                  <>
-                    <button onClick={e => { e.stopPropagation(); startEdit(c) }} className="p-3 bg-white/5 border border-white/5 rounded-xl text-gray-400 hover:text-vitorra-gold hover:bg-vitorra-gold/10 transition-all"><Edit3 className="w-4 h-4" /></button>
-                    <button onClick={e => { e.stopPropagation(); if (confirm('Suspend customer?')) updateCustomer(c.id, { status: 'suspended' }) }} className="p-3 bg-white/5 border border-white/5 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-400/10 transition-all"><UserX className="w-4 h-4" /></button>
-                  </>
-                )}
-                {expandedCustomer === c.id ? <ChevronDown className="w-5 h-5 text-vitorra-gold" /> : <ChevronRight className="w-5 h-5 text-gray-600" />}
-              </div>
-            </div>
-
-            {/* Profile Dropdown */}
-            {expandedCustomer === c.id && (
-              <div className="border-t border-vitorra-border bg-vitorra-bg/40 p-8 pt-0 animate-in slide-in-from-top-2 duration-300">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-8">
-                  {/* Bio & Details */}
-                  <div className="space-y-8">
-                    <div>
-                      <h5 className="text-[10px] text-vitorra-muted uppercase font-bold tracking-widest mb-4">Entity Credentials</h5>
-                      <div className="space-y-3">
-                        <div className="flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                          <MapPin className="w-4 h-4 text-vitorra-gold shrink-0 mt-0.5" />
-                          <div className="text-sm text-gray-300 leading-relaxed font-medium">{c.address || 'No physical address specified on this account.'}</div>
-                        </div>
-                        {c.companyName && (
-                          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                            <Building2 className="w-4 h-4 text-blue-400" />
-                            <div className="text-sm text-white font-bold">{c.companyName}</div>
-                          </div>
-                        )}
-                        {(c as any).taxId && (
-                          <div className="flex items-center gap-3 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
-                            <FileText className="w-4 h-4 text-emerald-400" />
-                            <div className="text-xs text-emerald-400 font-black uppercase tracking-widest">Tax ID: {(c as any).taxId}</div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h5 className="text-[10px] text-gray-600 uppercase font-bold tracking-widest mb-4 flex justify-between">Relationship Status <span className="text-vitorra-gold cursor-pointer">Edit</span></h5>
-                      <p className="text-xs text-gray-500 italic bg-white/5 p-4 rounded-2xl border border-dashed border-white/10">{c.notes || 'No internal relationship annotations.'}</p>
-                    </div>
-                  </div>
-
-                  {/* Order History */}
-                  <div className="lg:col-span-2">
-                    <div className="flex items-center justify-between mb-6">
-                      <h5 className="text-[10px] text-vitorra-muted uppercase font-bold tracking-widest flex items-center gap-2"><History className="w-3 h-3" /> Transaction History</h5>
-                      <button className="text-[10px] font-bold text-vitorra-gold uppercase tracking-widest hover:text-vitorra-text transition-all">+ New Transaction</button>
-                    </div>
-                    {(c.orders || []).length > 0 ? (
-                      <div className="space-y-3">
-                        {(c.orders || []).map(o => (
-                          <div key={o.id} className="flex items-center justify-between p-4 bg-[#2b2b2b] border border-white/5 rounded-2xl group hover:border-white/10 transition-all">
-                            <div className="flex items-center gap-4">
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-gray-500 group-hover:text-vitorra-gold transition-colors"><Package className="w-5 h-5" /></div>
-                              <div>
-                                <div className="flex items-center gap-2 text-sm font-bold text-white font-mono">{o.id} <span className="text-gray-700 font-sans">•</span> <span className="text-gray-500 font-sans font-bold text-[10px] uppercase">{o.date}</span></div>
-                                <div className="text-[11px] text-gray-600 font-bold uppercase tracking-tighter">{o.items.length} units • {o.status}</div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-vitorra-text font-serif font-bold text-lg">{formatPrice(o.total)}</div>
-                              <div className="text-[9px] text-vitorra-gold font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity">View Receipt</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="py-12 border border-dashed border-vitorra-border rounded-3xl text-center">
-                        <History className="w-8 h-8 text-vitorra-muted/20 mx-auto mb-3" />
-                        <p className="text-sm text-vitorra-muted/60 italic">No transactions recorded yet.</p>
-                      </div>
+                {/* Name + contact */}
+                <div style={{ minWidth: 0, paddingRight: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>{c.name}</span>
+                    {(c as any).taxId && (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 2, padding: '1px 5px',
+                        borderRadius: 'var(--radius-full)', fontSize: '8px', fontWeight: 800,
+                        background: 'var(--success-muted)', color: 'var(--success)', border: '1px solid var(--success-border)',
+                        textTransform: 'uppercase',
+                      }}><ShieldCheck size={8} /> VETTED</span>
                     )}
                   </div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {c.email} {c.companyName ? `• ${c.companyName}` : ''}
+                  </div>
+                </div>
+
+                {/* Segment */}
+                <div>
+                  <span style={{
+                    padding: '3px 8px', borderRadius: 'var(--radius-full)',
+                    fontSize: 'var(--text-2xs)', fontWeight: 700, textTransform: 'uppercase',
+                    background: c.role === 'b2b' ? 'var(--info-muted)' : 'var(--success-muted)',
+                    color: c.role === 'b2b' ? 'var(--info)' : 'var(--success)',
+                    border: `1px solid ${c.role === 'b2b' ? 'var(--info-border)' : 'var(--success-border)'}`,
+                  }}>{c.role}</span>
+                </div>
+
+                {/* LTV */}
+                <div style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>
+                  {formatPrice(c.totalSpent || 0)}
+                </div>
+
+                {/* Orders */}
+                <div style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {c.totalOrders}
+                </div>
+
+                {/* Status */}
+                <div>
+                  <span style={{
+                    padding: '3px 8px', borderRadius: 'var(--radius-full)',
+                    fontSize: 'var(--text-2xs)', fontWeight: 700, textTransform: 'uppercase',
+                    background: c.status === 'active' ? 'var(--success-muted)' : 'var(--danger-muted)',
+                    color: c.status === 'active' ? 'var(--success)' : 'var(--danger)',
+                  }}>{c.status}</span>
+                </div>
+
+                {/* Actions */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+                  {!isViewer && (
+                    <>
+                      <ActionBtn onClick={e => { e.stopPropagation(); startEdit(c); }} title="Edit" hoverColor="var(--accent-primary)"><Edit3 size={14} /></ActionBtn>
+                      <ActionBtn onClick={e => { e.stopPropagation(); updateCustomer(c.id, { status: c.status === 'active' ? 'suspended' : 'active' }); }} title={c.status === 'active' ? 'Suspend' : 'Activate'} hoverColor={c.status === 'active' ? 'var(--danger)' : 'var(--success)'}>{c.status === 'active' ? <UserX size={14} /> : <UserCheck size={14} />}</ActionBtn>
+                    </>
+                  )}
+                  <div style={{ width: 1, height: 16, background: 'var(--border-dim)', margin: '0 2px' }} />
+                  <div style={{ color: isExp ? 'var(--accent-primary)' : 'var(--text-tertiary)', display: 'flex' }}>
+                    {isExp ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* ── Expanded Detail Panel ── */}
+              {isExp && (
+                <div style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border-faint)', padding: '20px 24px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 24 }}>
+                    {/* Profile details */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <DetailLabel>Entity Credentials</DetailLabel>
+                      <InfoRow icon={<Mail size={13} />} label="Email" value={c.email} />
+                      <InfoRow icon={<Phone size={13} />} label="Phone" value={c.phone || 'N/A'} />
+                      <InfoRow icon={<MapPin size={13} />} label="Address" value={c.address || 'Not provided'} />
+                      {c.companyName && <InfoRow icon={<Building2 size={13} />} label="Company" value={c.companyName} />}
+                      {(c as any).taxId && <InfoRow icon={<ShieldCheck size={13} />} label="Tax ID" value={(c as any).taxId} accent />}
+                      <InfoRow icon={<History size={13} />} label="Joined" value={c.joinDate || '—'} />
+
+                      {c.notes && (
+                        <div style={{ marginTop: 8 }}>
+                          <DetailLabel>Internal Notes</DetailLabel>
+                          <p style={{
+                            fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)',
+                            fontStyle: 'italic', padding: 12, background: 'var(--bg-surface)',
+                            border: '1px dashed var(--border-dim)', borderRadius: 'var(--radius-md)',
+                            margin: 0, lineHeight: 1.6,
+                          }}>{c.notes}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Order History */}
+                    <div>
+                      <DetailLabel>Transaction History ({(c.orders || []).length})</DetailLabel>
+                      {(c.orders || []).length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {(c.orders || []).map(o => (
+                            <div key={o.id} style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              padding: '10px 14px', background: 'var(--bg-surface)', border: '1px solid var(--border-faint)',
+                              borderRadius: 'var(--radius-md)', transition: 'var(--transition-fast)',
+                            }}
+                              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-dim)'}
+                              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-faint)'}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{
+                                  width: 32, height: 32, borderRadius: 'var(--radius-sm)',
+                                  background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  color: 'var(--text-tertiary)',
+                                }}><Package size={14} /></div>
+                                <div>
+                                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-primary)' }}>{o.id}</div>
+                                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)' }}>{o.date} • {o.items.length} item(s) • <span style={{ textTransform: 'capitalize' }}>{o.status}</span></div>
+                                </div>
+                              </div>
+                              <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                {formatPrice(o.total)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{
+                          textAlign: 'center', padding: '40px 16px',
+                          border: '1px dashed var(--border-dim)', borderRadius: 'var(--radius-md)',
+                        }}>
+                          <History size={24} style={{ color: 'var(--text-tertiary)', margin: '0 auto 8px', opacity: 0.3 }} />
+                          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', fontStyle: 'italic', margin: 0 }}>No transactions recorded yet.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {filtered.length === 0 && (
+          <div style={{
+            textAlign: 'center', padding: '48px 20px',
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)',
+          }}>No customers match your filters.</div>
+        )}
       </div>
     </div>
+  );
+}
+
+/* ═══ HELPER COMPONENTS ═══ */
+function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)',
+      fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em',
+      color: 'var(--accent-primary)', marginBottom: 12, paddingBottom: 8,
+      borderBottom: '1px solid var(--border-faint)',
+    }}>{icon} {title}</div>
+  );
+}
+
+function DetailLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)',
+      fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+      color: 'var(--text-tertiary)', marginBottom: 8,
+    }}>{children}</div>
+  );
+}
+
+function InfoRow({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent?: boolean }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+      background: accent ? 'var(--success-muted)' : 'var(--bg-surface)',
+      border: `1px solid ${accent ? 'var(--success-border)' : 'var(--border-faint)'}`,
+      borderRadius: 'var(--radius-md)',
+    }}>
+      <div style={{ color: accent ? 'var(--success)' : 'var(--accent-primary)', display: 'flex', flexShrink: 0 }}>{icon}</div>
+      <div>
+        <div style={{ fontFamily: 'var(--font-body)', fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 1 }}>{label}</div>
+        <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 500, color: accent ? 'var(--success)' : 'var(--text-primary)' }}>{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function ActionBtn({ children, onClick, title, hoverColor }: {
+  children: React.ReactNode; onClick: (e: React.MouseEvent) => void; title: string; hoverColor?: string;
+}) {
+  return (
+    <button onClick={onClick} title={title} style={{
+      width: 32, height: 32, borderRadius: 'var(--radius-md)',
+      background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+      cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-fast)',
+    }}
+      onMouseEnter={e => {
+        e.currentTarget.style.color = hoverColor || 'var(--text-primary)';
+        e.currentTarget.style.borderColor = hoverColor || 'var(--border-strong)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.color = 'var(--text-tertiary)';
+        e.currentTarget.style.borderColor = 'var(--border-dim)';
+      }}
+    >{children}</button>
   );
 }

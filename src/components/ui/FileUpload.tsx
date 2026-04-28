@@ -3,7 +3,7 @@ import { UploadCloud, CheckCircle, XCircle, Loader2, FileText, File as FileIcon 
 import { uploadFile } from '../../services/uploadService';
 
 interface FileUploadProps {
-  onUploadSuccess: (url: string) => void;
+  onUploadSuccess: (url: string, file?: File) => void;
   label?: string;
   currentFile?: string;
   currentImage?: string;
@@ -37,7 +37,7 @@ export default function FileUpload({
     try {
       // Perform the actual "upload"
       const uploadedUrl = await uploadFile(file);
-      onUploadSuccess(uploadedUrl);
+      onUploadSuccess(uploadedUrl, file);
       setPreview(uploadedUrl);
     } catch (err: any) {
       setError(err.message || 'Upload failed');

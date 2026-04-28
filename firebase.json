@@ -2,10 +2,13 @@
   "firestore": {
     "rules": "firestore.rules"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "functions": {
     "source": "functions",
     "codebase": "vitorra-backend",
-    "runtime": "nodejs18"
+    "runtime": "nodejs20"
   },
   "hosting": {
     "public": "dist",

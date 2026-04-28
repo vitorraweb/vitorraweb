@@ -15,6 +15,7 @@ import {
   Mail, Flag, Trash2, Download, ChevronDown, ArrowUpRight,
 } from 'lucide-react';
 import { uploadFile } from '../../../services/uploadService';
+import { CARRIER_GROUPS, getCarrier, getTrackingUrl } from '../../../lib/carriers';
 
 /* ── Styles (using CSS vars, no hardcodes) ─────────────────────────── */
 const S = {
@@ -56,15 +57,17 @@ export default function OrdersManager() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; order: Order } | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+  const [statusSubOpen, setStatusSubOpen] = useState(false);
 
   // Modals
   const [fulfillModal, setFulfillModal] = useState<Order | null>(null);
   const [forwardModal, setForwardModal] = useState<Order | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Order | null>(null);
-  const [fulfillData, setFulfillData] = useState({ carrier: '', trackingNumber: '' });
+  const [paymentModal, setPaymentModal] = useState<Order | null>(null);
+  const [fulfillData, setFulfillData] = useState({ carrier: '', trackingNumber: '', estimatedDelivery: '' });
   const [forwardData, setForwardData] = useState({ supplier: '', department: '', priority: 'Normal', message: '' });
+  const [paymentData, setPaymentData] = useState({ method: 'bank_transfer' as string, amount: 0, reference: '' });
   const [modalLoading, setModalLoading] = useState(false);
-  const [uploading, setUploading] = useState<'proforma' | 'invoice' | null>(null);
 
   /* ── Derived ───────────────────────────────────────────────── */
   const allOrders = useMemo(() =>
@@ -87,11 +90,13 @@ export default function OrdersManager() {
 
   // KPIs
   const totalRevenue = allOrders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0);
+  const awaitingPayment = allOrders.filter(o => !o.paymentStatus || o.paymentStatus === 'unpaid' || o.paymentStatus === 'proforma_sent' || o.paymentStatus === 'awaiting_payment').filter(o => o.status !== 'cancelled').length;
+  const paidOrders = allOrders.filter(o => o.paymentStatus === 'paid').length;
   const kpis = [
     { label: 'Total Orders', value: allOrders.length, color: 'var(--text-primary)' },
-    { label: 'Pending', value: allOrders.filter(o => o.status === 'pending').length, color: 'var(--order-pending)' },
+    { label: 'Awaiting Payment', value: awaitingPayment, color: 'var(--order-pending)' },
+    { label: 'Paid', value: paidOrders, color: 'var(--order-delivered)' },
     { label: 'In Transit', value: allOrders.filter(o => o.status === 'shipped').length, color: 'var(--order-shipped)' },
-    { label: 'Delivered', value: allOrders.filter(o => o.status === 'delivered').length, color: 'var(--order-delivered)' },
   ];
 
   const statusOptions = [
@@ -140,11 +145,12 @@ export default function OrdersManager() {
         status: 'shipped', date: new Date().toISOString(),
         note: `Shipped via ${fulfillData.carrier}. Tracking: ${fulfillData.trackingNumber}`,
       }];
-      await updateOrder(fulfillModal.id, { status: 'shipped', carrier: fulfillData.carrier, trackingNumber: fulfillData.trackingNumber, statusHistory: timeline });
-      const updated = { ...fulfillModal, status: 'shipped' as const, carrier: fulfillData.carrier, trackingNumber: fulfillData.trackingNumber, statusHistory: timeline };
+      const carrierName = getCarrier(fulfillData.carrier)?.name || fulfillData.carrier;
+      await updateOrder(fulfillModal.id, { status: 'shipped', carrier: fulfillData.carrier, trackingNumber: fulfillData.trackingNumber, estimatedDelivery: fulfillData.estimatedDelivery || undefined, statusHistory: timeline });
+      const updated = { ...fulfillModal, status: 'shipped' as const, carrier: fulfillData.carrier, trackingNumber: fulfillData.trackingNumber, estimatedDelivery: fulfillData.estimatedDelivery || undefined, statusHistory: timeline };
       if (drawerOrder?.id === fulfillModal.id) setDrawerOrder(updated);
       setFulfillModal(null);
-      setFulfillData({ carrier: '', trackingNumber: '' });
+      setFulfillData({ carrier: '', trackingNumber: '', estimatedDelivery: '' });
       addToast('success', 'Order marked as shipped', 'Customer will be notified.');
     } catch { addToast('error', 'Failed to update order'); }
     finally { setModalLoading(false); }
@@ -168,25 +174,34 @@ export default function OrdersManager() {
     finally { setModalLoading(false); }
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'proforma' | 'invoice') => {
-    if (!e.target.files?.length || !drawerOrder) return;
-    setUploading(type);
-    try {
-      const url = await uploadFile(e.target.files[0], `orders/${drawerOrder.id}`);
-      const data = type === 'proforma' ? { proformaUrl: url } : { invoiceUrl: url };
-      await updateOrder(drawerOrder.id, data);
-      setDrawerOrder({ ...drawerOrder, ...data } as Order);
-      addToast('success', `${type === 'proforma' ? 'Proforma' : 'Invoice'} uploaded`);
-    } catch { addToast('error', 'Upload failed'); }
-    finally { setUploading(null); e.target.value = ''; }
-  };
+
 
   // Close context menu on click outside
   useEffect(() => {
-    const h = () => setContextMenu(null);
+    const h = () => { setContextMenu(null); setStatusSubOpen(false); };
     document.addEventListener('click', h);
     return () => document.removeEventListener('click', h);
   }, []);
+
+  // Smart context menu positioning — keeps menu within viewport
+  const openContextMenu = (clickX: number, clickY: number, order: Order) => {
+    const menuW = 240, menuH = 420;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const x = clickX + menuW > vw ? Math.max(8, clickX - menuW) : clickX;
+    const y = clickY + menuH > vh ? Math.max(8, vh - menuH - 8) : clickY;
+    setContextMenu({ x, y, order });
+    setStatusSubOpen(false);
+  };
+
+  // Change order status directly
+  const changeStatus = (order: Order, newStatus: string) => {
+    const timeline = [...(order.statusHistory || []), { status: newStatus, date: new Date().toISOString(), note: `Status set to ${getStatusLabel(newStatus)} by ${user?.name || 'Admin'}` }];
+    updateOrder(order.id, { status: newStatus as any, statusHistory: timeline });
+    if (drawerOrder?.id === order.id) setDrawerOrder({ ...order, status: newStatus as any, statusHistory: timeline });
+    addToast('success', `Status updated to ${getStatusLabel(newStatus)}`);
+    setContextMenu(null);
+    setStatusSubOpen(false);
+  };
 
   /* ════════════════════════════════════════════════════════════════════
      RENDER
@@ -311,7 +326,7 @@ export default function OrdersManager() {
                     onMouseEnter={() => setHoveredRow(o.id)}
                     onMouseLeave={() => setHoveredRow(null)}
                     onClick={() => setDrawerOrder(o)}
-                    onContextMenu={e => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, order: o }); }}
+                    onContextMenu={e => { e.preventDefault(); openContextMenu(e.clientX, e.clientY, o); }}
                     style={{
                       height: 52, cursor: 'pointer',
                       borderBottom: '1px solid var(--border-faint)',
@@ -353,12 +368,12 @@ export default function OrdersManager() {
                     <td style={{ ...S.td, textAlign: 'center' }}><StatusBadge status={mapPaymentStatus(payStatus)} label={getStatusLabel(payStatus)} /></td>
                     <td style={{ ...S.td, textAlign: 'center' }}><StatusBadge status={o.status as any} /></td>
                     <td style={{ ...S.td, textAlign: 'right' }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4, opacity: isHovered ? 1 : 0, transition: 'opacity 0.15s' }}>
-                        <button onClick={() => setDrawerOrder(o)} style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-fast)' }}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
+                        <button onClick={() => setDrawerOrder(o)} style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'none', border: '1px solid var(--border-dim)', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-fast)' }}
                           onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-tertiary)'; }}
                           title="View Details"><Eye size={16} /></button>
-                        <button onClick={e => { e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, order: o }); }} style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-fast)' }}
+                        <button onClick={e => { e.stopPropagation(); openContextMenu(e.clientX, e.clientY, o); }} style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'none', border: '1px solid var(--border-dim)', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-fast)' }}
                           onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-tertiary)'; }}
                           title="More Actions"><MoreHorizontal size={16} /></button>
@@ -412,21 +427,83 @@ export default function OrdersManager() {
 
       {/* ── CONTEXT MENU ─────────────────────────────────────────────── */}
       {contextMenu && (
-        <div style={{
+        <div onClick={e => e.stopPropagation()} style={{
           position: 'fixed', left: contextMenu.x, top: contextMenu.y,
-          zIndex: 'var(--z-dropdown)' as any,
+          zIndex: 9999,
           background: 'var(--bg-elevated)', border: '1px solid var(--border-default)',
           borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)',
-          minWidth: 220, padding: 'var(--space-1)',
+          minWidth: 240, padding: 'var(--space-1)',
           animation: 'admin-fade-in 0.15s ease both',
+          maxHeight: 'calc(100vh - 16px)', overflowY: 'auto',
         }}>
+          {/* Current status indicator */}
+          <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-faint)', marginBottom: 4 }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Current Status</span>
+            <StatusBadge status={contextMenu.order.status as any} />
+          </div>
+
           <CtxItem icon={<Eye size={16} />} label="View Details" onClick={() => { setDrawerOrder(contextMenu.order); setContextMenu(null); }} />
           <CtxItem icon={<Edit3 size={16} />} label="Edit Order" onClick={() => { setDrawerOrder(contextMenu.order); setContextMenu(null); }} />
           <CtxItem icon={<ClipboardCopy size={16} />} label="Duplicate Order" onClick={() => { addToast('info', 'Order duplicated'); setContextMenu(null); }} />
+
+          {/* ── Change Status Section ── */}
           <div style={{ height: 1, background: 'var(--border-faint)', margin: '4px 0' }} />
-          <CtxItem icon={<Truck size={16} />} label="Mark as Shipped" onClick={() => { setFulfillModal(contextMenu.order); setContextMenu(null); }} />
-          <CtxItem icon={<CheckCircle2 size={16} />} label="Mark as Delivered" onClick={() => { advanceStatus(contextMenu.order); setContextMenu(null); }} />
-          <CtxItem icon={<Send size={16} />} label="Forward Order" onClick={() => { setForwardModal(contextMenu.order); setContextMenu(null); }} />
+          <div style={{ padding: '6px 12px 4px' }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Change Status</span>
+          </div>
+          {[
+            { status: 'pending',    label: 'Pending',    color: 'var(--order-pending)' },
+            { status: 'confirmed',  label: 'Confirmed',  color: 'var(--order-confirmed)' },
+            { status: 'processing', label: 'Processing', color: 'var(--order-processing)' },
+            { status: 'shipped',    label: 'Shipped',    color: 'var(--order-shipped)' },
+            { status: 'delivered',  label: 'Delivered',  color: 'var(--order-delivered)' },
+            { status: 'cancelled',  label: 'Cancelled',  color: 'var(--order-cancelled)' },
+            { status: 'refunded',   label: 'Refunded',   color: 'var(--order-refunded)' },
+          ].map(s => {
+            const isCurrent = contextMenu.order.status === s.status;
+            return (
+              <button key={s.status} onClick={() => { if (!isCurrent) changeStatus(contextMenu.order, s.status); }} disabled={isCurrent} style={{
+                width: '100%', height: 32, display: 'flex', alignItems: 'center', gap: 10,
+                padding: '0 12px', border: 'none', borderRadius: 'var(--radius-sm)',
+                background: isCurrent ? 'var(--accent-primary-muted)' : 'transparent', cursor: isCurrent ? 'default' : 'pointer',
+                fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: isCurrent ? 600 : 400,
+                color: isCurrent ? 'var(--accent-primary)' : 'var(--text-primary)',
+                transition: 'var(--transition-fast)', opacity: isCurrent ? 0.8 : 1,
+              }}
+                onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = 'var(--bg-overlay)'; }}
+                onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = 'transparent'; }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                {s.label}
+                {isCurrent && <span style={{ marginLeft: 'auto', fontSize: 'var(--text-2xs)', color: 'var(--accent-primary)' }}>Current</span>}
+              </button>
+            );
+          })}
+
+          <div style={{ height: 1, background: 'var(--border-faint)', margin: '4px 0' }} />
+          {/* ── Payment Actions ── */}
+          <div style={{ height: 1, background: 'var(--border-faint)', margin: '4px 0' }} />
+          <div style={{ padding: '6px 12px 4px' }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Payment</span>
+          </div>
+          <CtxItem icon={<Clock size={16} />} label="Mark Proforma Sent" onClick={() => {
+            changeStatus(contextMenu.order, 'awaiting_invoice');
+            updateOrder(contextMenu.order.id, { paymentStatus: 'proforma_sent' });
+            addToast('info', 'Proforma marked as sent — auto-generated for customer');
+          }} />
+          <CtxItem icon={<Clock size={16} />} label="Mark Awaiting Payment" onClick={() => {
+            updateOrder(contextMenu.order.id, { paymentStatus: 'awaiting_payment' });
+            addToast('info', 'Payment status: Awaiting Payment');
+            setContextMenu(null);
+          }} />
+          <CtxItem icon={<DollarSign size={16} />} label="Record Payment…" onClick={() => {
+            setPaymentModal(contextMenu.order);
+            setPaymentData({ method: contextMenu.order.paymentMethod || 'bank_transfer', amount: contextMenu.order.total, reference: contextMenu.order.paymentReference || '' });
+            setContextMenu(null);
+          }} />
+          <div style={{ height: 1, background: 'var(--border-faint)', margin: '4px 0' }} />
+          <CtxItem icon={<Truck size={16} />} label="Ship with Tracking…" onClick={() => { setFulfillModal(contextMenu.order); setContextMenu(null); }} />
+          <CtxItem icon={<Send size={16} />} label="Forward to Supplier" onClick={() => { setForwardModal(contextMenu.order); setContextMenu(null); }} />
           <div style={{ height: 1, background: 'var(--border-faint)', margin: '4px 0' }} />
           <CtxItem icon={<Download size={16} />} label="Export as PDF" onClick={() => { addToast('info', 'Exporting…'); setContextMenu(null); }} />
           <CtxItem icon={<Mail size={16} />} label="Resend Confirmation" onClick={() => { addToast('success', 'Email sent'); setContextMenu(null); }} />
@@ -544,6 +621,48 @@ export default function OrdersManager() {
               </div>
             </div>
 
+            {/* ── Payment & Documents ── */}
+            <div style={{ ...S.card, padding: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
+              <p style={{ ...S.sectionLabel, margin: '0 0 var(--space-3)', display: 'flex', alignItems: 'center', gap: 4 }}><CreditCard size={12} /> Payment & Documents</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
+                <div style={{ padding: 'var(--space-3)', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-dim)' }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', margin: '0 0 4px', fontWeight: 600 }}>Payment Status</p>
+                  <StatusBadge status={mapPaymentStatus(drawerOrder.paymentStatus || 'unpaid')} label={getStatusLabel(drawerOrder.paymentStatus || 'unpaid')} />
+                </div>
+                <div style={{ padding: 'var(--space-3)', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-dim)' }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', margin: '0 0 4px', fontWeight: 600 }}>Method</p>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-primary)', margin: 0, fontWeight: 500 }}>{getStatusLabel(drawerOrder.paymentMethod || 'pending')}</p>
+                </div>
+              </div>
+              {drawerOrder.paymentAmount != null && drawerOrder.paymentAmount > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
+                  <div style={{ padding: 'var(--space-3)', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-dim)' }}>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', margin: '0 0 4px', fontWeight: 600 }}>Amount Received</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-md)', color: 'var(--success)', margin: 0, fontWeight: 600 }}>{fmt(drawerOrder.paymentAmount)}</p>
+                  </div>
+                  <div style={{ padding: 'var(--space-3)', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-dim)' }}>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', margin: '0 0 4px', fontWeight: 600 }}>Reference</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--text-primary)', margin: 0 }}>{drawerOrder.paymentReference || '—'}</p>
+                  </div>
+                </div>
+              )}
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                {!isViewer && (
+                  <button onClick={() => { setPaymentModal(drawerOrder); setPaymentData({ method: drawerOrder.paymentMethod || 'bank_transfer', amount: drawerOrder.total, reference: drawerOrder.paymentReference || '' }); }} style={{
+                    padding: '6px 12px', background: 'var(--accent-primary-muted)', border: '1px solid var(--accent-primary)',
+                    borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                    fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--accent-primary)',
+                  }}>
+                    <DollarSign size={12} /> Record Payment
+                  </button>
+                )}
+                {drawerOrder.proformaUrl && <a href={drawerOrder.proformaUrl} target="_blank" rel="noreferrer" style={{ padding: '6px 12px', background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-link)', textDecoration: 'none' }}><ExternalLink size={10} /> View Proforma</a>}
+                {drawerOrder.invoiceUrl && <a href={drawerOrder.invoiceUrl} target="_blank" rel="noreferrer" style={{ padding: '6px 12px', background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-link)', textDecoration: 'none' }}><ExternalLink size={10} /> View Invoice</a>}
+                {drawerOrder.paymentReceiptUrl && <a href={drawerOrder.paymentReceiptUrl} target="_blank" rel="noreferrer" style={{ padding: '6px 12px', background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-link)', textDecoration: 'none' }}><ExternalLink size={10} /> Payment Receipt</a>}
+              </div>
+            </div>
+
             {/* Customer + Shipping in 2 cols */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
               <div style={{ ...S.card, padding: 'var(--space-4)' }}>
@@ -555,10 +674,14 @@ export default function OrdersManager() {
               <div style={{ ...S.card, padding: 'var(--space-4)' }}>
                 <p style={{ ...S.sectionLabel, margin: '0 0 var(--space-2)', display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> Shipping</p>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-primary)', margin: 0 }}>{drawerOrder.shippingAddress || 'Not provided'}</p>
-                {drawerOrder.carrier && <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', margin: '4px 0 0' }}>Carrier: {drawerOrder.carrier}</p>}
-                {drawerOrder.trackingNumber && <p style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--text-link)', margin: '2px 0 0' }}>Tracking: {drawerOrder.trackingNumber}</p>}
+                {drawerOrder.estimatedDelivery && <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', margin: '4px 0 0' }}>Est. Delivery: {new Date(drawerOrder.estimatedDelivery).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
               </div>
             </div>
+
+            {/* Shipment Tracking Card */}
+            {drawerOrder.carrier && drawerOrder.trackingNumber && (
+              <ShipmentCard carrier={drawerOrder.carrier} trackingNumber={drawerOrder.trackingNumber} status={drawerOrder.status} />
+            )}
 
             {/* Notes */}
             <div style={{ marginBottom: 'var(--space-6)' }}>
@@ -622,15 +745,35 @@ export default function OrdersManager() {
           </>
         }
       >
-        <AdminSelect label="Carrier" required value={fulfillData.carrier} onChange={e => setFulfillData({ ...fulfillData, carrier: e.target.value })}
-          options={[
-            { value: '', label: 'Select carrier…' },
-            { value: 'Vitorra Express', label: 'Vitorra Express' },
-            { value: 'DHL', label: 'DHL' }, { value: 'FedEx', label: 'FedEx' },
-            { value: 'UPS', label: 'UPS' }, { value: 'Warehouse Pickup', label: 'Warehouse Pickup' },
-          ]} />
-        <AdminInput label="Tracking Number" required placeholder="e.g. VIT-TRK-00001"
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>Carrier <span style={{ color: 'var(--danger)' }}>*</span></p>
+          <select
+            value={fulfillData.carrier}
+            onChange={e => setFulfillData({ ...fulfillData, carrier: e.target.value })}
+            style={{
+              width: '100%', padding: '10px 12px', background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-dim)', borderRadius: 'var(--radius-md)',
+              fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-primary)',
+              outline: 'none', cursor: 'pointer',
+            }}
+          >
+            <option value="">Select carrier…</option>
+            {CARRIER_GROUPS.map(group => (
+              <optgroup key={group.label} label={group.label}>
+                {group.carriers.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+        <AdminInput label="Tracking Number" required placeholder="e.g. 1234567890 or VIT-TRK-00001"
           value={fulfillData.trackingNumber} onChange={e => setFulfillData({ ...fulfillData, trackingNumber: e.target.value })} />
+        <AdminInput label="Estimated Delivery Date" type="date"
+          value={fulfillData.estimatedDelivery} onChange={e => setFulfillData({ ...fulfillData, estimatedDelivery: e.target.value })} />
+        {fulfillData.carrier && (
+          <CarrierPreview carrierId={fulfillData.carrier} />
+        )}
       </Modal>
 
       {/* ── FORWARD MODAL §15.8 ──────────────────────────────────────── */}
@@ -718,6 +861,84 @@ export default function OrdersManager() {
           <AlertTriangle size={40} style={{ color: 'var(--danger)', margin: '0 auto var(--space-3)' }} />
         </div>
       </Modal>
+
+      {/* ── RECORD PAYMENT MODAL ──────────────────────────────────────── */}
+      <Modal
+        open={!!paymentModal}
+        onClose={() => setPaymentModal(null)}
+        title={`Record Payment — ${paymentModal?.id || ''}`}
+        subtitle="Log an offline payment received for this order."
+        footer={
+          <>
+            <AdminButton variant="secondary" onClick={() => setPaymentModal(null)}>Cancel</AdminButton>
+            <AdminButton variant="primary" loading={modalLoading} disabled={!paymentData.amount || !paymentData.reference}
+              icon={<DollarSign size={14} />} onClick={async () => {
+                if (!paymentModal) return;
+                setModalLoading(true);
+                try {
+                  const isPaid = paymentData.amount >= paymentModal.total;
+                  const payStatus = isPaid ? 'paid' : 'partial';
+                  const timeline = [...(paymentModal.statusHistory || []), {
+                    status: payStatus, date: new Date().toISOString(),
+                    note: `Payment of ${fmt(paymentData.amount)} recorded via ${getStatusLabel(paymentData.method)}. Ref: ${paymentData.reference}`,
+                  }];
+                  const update: Partial<Order> = {
+                    paymentStatus: payStatus as any,
+                    paymentMethod: paymentData.method as any,
+                    paymentAmount: paymentData.amount,
+                    paymentReference: paymentData.reference,
+                    paymentDate: new Date().toISOString(),
+                    statusHistory: timeline,
+                  };
+                  // Auto-advance to processing if fully paid and still pending
+                  if (isPaid && ['pending', 'awaiting_invoice', 'awaiting_payment'].includes(paymentModal.status)) {
+                    update.status = 'processing';
+                  }
+                  await updateOrder(paymentModal.id, update);
+                  if (drawerOrder?.id === paymentModal.id) setDrawerOrder({ ...paymentModal, ...update } as Order);
+                  setPaymentModal(null);
+                  addToast('success', isPaid ? 'Payment recorded — order fully paid' : 'Partial payment recorded', `${fmt(paymentData.amount)} via ${getStatusLabel(paymentData.method)}`);
+                } catch { addToast('error', 'Failed to record payment'); }
+                finally { setModalLoading(false); }
+              }}>Record Payment</AdminButton>
+          </>
+        }
+      >
+        {paymentModal && (
+          <div>
+            <div style={{ ...S.card, padding: 'var(--space-4)', marginBottom: 'var(--space-5)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', margin: '0 0 2px', fontWeight: 600 }}>Order Total</p>
+                <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{fmt(paymentModal.total)}</p>
+              </div>
+              <StatusBadge status={mapPaymentStatus(paymentModal.paymentStatus || 'unpaid')} label={getStatusLabel(paymentModal.paymentStatus || 'unpaid')} size="md" />
+            </div>
+            <AdminSelect label="Payment Method" required value={paymentData.method}
+              onChange={e => setPaymentData({ ...paymentData, method: e.target.value })}
+              options={[
+                { value: 'bank_transfer', label: 'Bank Transfer' },
+                { value: 'mobile_money', label: 'Mobile Money (MTN/Airtel)' },
+                { value: 'cash', label: 'Cash' },
+                { value: 'cheque', label: 'Cheque' },
+                { value: 'other', label: 'Other' },
+              ]} />
+            <AdminInput label="Amount Received" required type="number" placeholder="0"
+              value={String(paymentData.amount)} onChange={e => setPaymentData({ ...paymentData, amount: Number(e.target.value) })} />
+            {paymentData.amount > 0 && paymentData.amount < paymentModal.total && (
+              <div style={{
+                padding: 'var(--space-3)', background: 'var(--warning-muted)', border: '1px solid var(--warning-border)',
+                borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-4)',
+                fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--warning)',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <AlertTriangle size={14} /> This is a partial payment. Balance remaining: {fmt(paymentModal.total - paymentData.amount)}
+              </div>
+            )}
+            <AdminInput label="Payment Reference / Transaction ID" required placeholder="e.g. TXN-2024-00123 or Bank Ref"
+              value={paymentData.reference} onChange={e => setPaymentData({ ...paymentData, reference: e.target.value })} />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
@@ -755,5 +976,51 @@ function CtxItem({ icon, label, danger, onClick }: { icon: React.ReactNode; labe
       <span style={{ color: danger ? 'var(--danger)' : 'var(--text-secondary)', display: 'flex', flexShrink: 0 }}>{icon}</span>
       {label}
     </button>
+  );
+}
+
+function ShipmentCard({ carrier, trackingNumber, status }: { carrier: string; trackingNumber: string; status: string }) {
+  const carrierInfo = getCarrier(carrier);
+  const trackUrl = getTrackingUrl(carrier, trackingNumber);
+  const carrierName = carrierInfo?.name || carrier;
+  const carrierColor = carrierInfo?.color || 'var(--accent-primary)';
+  const S2 = { card: { background: 'var(--bg-surface)', border: '1px solid var(--border-faint)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)' } as React.CSSProperties };
+  return (
+    <div style={{ ...S2.card, padding: 'var(--space-4)', marginBottom: 'var(--space-4)', borderLeft: `3px solid ${carrierColor}` }}>
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 'var(--space-3)', display: 'flex', alignItems: 'center', gap: 6 }}><Truck size={12} /> Shipment Tracking</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+        <div>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{carrierName}</p>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--text-link)', margin: '2px 0 0', letterSpacing: '0.05em' }}>{trackingNumber}</p>
+        </div>
+        <StatusBadge status={status === 'delivered' ? 'delivered' : 'shipped'} label={status === 'delivered' ? 'Delivered' : 'In Transit'} />
+      </div>
+      {trackUrl && (
+        <a href={trackUrl} target="_blank" rel="noopener noreferrer" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          padding: '8px 16px', background: 'var(--accent-primary-muted)', border: '1px solid var(--accent-primary)',
+          borderRadius: 'var(--radius-md)', textDecoration: 'none', cursor: 'pointer',
+          fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--accent-primary)',
+        }}>
+          <ExternalLink size={12} /> Track on {carrierName}
+        </a>
+      )}
+    </div>
+  );
+}
+
+function CarrierPreview({ carrierId }: { carrierId: string }) {
+  const c = getCarrier(carrierId);
+  if (!c) return null;
+  return (
+    <div style={{ padding: 'var(--space-3)', background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+      <div style={{ width: 8, height: 8, borderRadius: '50%', background: c.color, flexShrink: 0 }} />
+      <div>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{c.name}</p>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: 0 }}>
+          {c.trackingUrl ? 'Customer will get a direct tracking link' : 'No live tracking available for this carrier'}
+        </p>
+      </div>
+    </div>
   );
 }

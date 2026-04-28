@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCMS, Product, ProductVariant, ProductCategory, ProductSection } from '../../../context/CMSContext';
-import FileUpload from '../../../components/ui/FileUpload';
+import MediaPickerButton from '../ui/MediaPickerButton';
 import {
   Plus, X, Edit3, Trash2, Check, Search, Package, DollarSign,
   BarChart3, Eye, EyeOff, Copy, ChevronDown, ChevronRight,
@@ -149,7 +149,7 @@ export default function CategoryCatalog({ categoryId }: Props) {
       {/* ─── Category Settings ─── */}
       {editingCategory ? (
         <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
-          className="bg-[#0d0d0d] border border-vitorra-gold/20 rounded-2xl p-6 lg:p-8 relative">
+          className="bg-[#242424] border border-vitorra-gold/20 rounded-2xl p-6 lg:p-8 relative">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-serif text-white flex items-center gap-2">
               <Settings className="w-5 h-5 text-vitorra-gold" /> Category Settings
@@ -181,7 +181,7 @@ export default function CategoryCatalog({ categoryId }: Props) {
           </form>
         </motion.div>
       ) : (
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-[#0d0d0d] border border-white/5 rounded-2xl p-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-[#242424] border border-white/5 rounded-2xl p-6">
           <div className="flex items-center gap-5">
             <div className={`w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center ${category.color}`}>
               <Package className="w-7 h-7" />
@@ -211,7 +211,7 @@ export default function CategoryCatalog({ categoryId }: Props) {
           { label: 'Variants', value: totalVariants, color: 'text-blue-400' },
           { label: 'Total Stock', value: totalStock, color: 'text-vitorra-gold' },
         ].map(m => (
-          <div key={m.label} className="bg-black/40 border border-white/5 rounded-xl p-4">
+          <div key={m.label} className="bg-[#2b2b2b] border border-white/5 rounded-xl p-4">
             <div className={`text-2xl font-serif ${m.color}`}>{m.value}</div>
             <div className="text-xs text-gray-500 uppercase tracking-wider">{m.label}</div>
           </div>
@@ -222,7 +222,7 @@ export default function CategoryCatalog({ categoryId }: Props) {
       <AnimatePresence>
         {showProductForm && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-            className="bg-[#0b0b0b] border border-white/10 rounded-[2.5rem] p-6 lg:p-10 relative overflow-hidden shadow-2xl">
+            className="bg-[#242424] border border-white/10 rounded-[2.5rem] p-6 lg:p-10 relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-vitorra-gold/5 blur-[120px] rounded-full pointer-events-none" />
 
             <div className="flex items-center justify-between mb-8 relative z-10 border-b border-white/5 pb-6">
@@ -262,13 +262,13 @@ export default function CategoryCatalog({ categoryId }: Props) {
                           className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-vitorra-gold font-mono" /></div>
                       <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Status</label>
                         <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as any })}
-                          className="w-full bg-black border border-white/10 rounded-xl p-4 text-white outline-none focus:border-vitorra-gold">
+                          className="w-full bg-[#1e1e1e] border border-white/10 rounded-xl p-4 text-white outline-none focus:border-vitorra-gold">
                           <option value="active">Active</option><option value="draft">Draft</option><option value="archived">Archived</option>
                         </select></div>
                     </div>
                   </div>
                   <div className="space-y-6">
-                    <FileUpload label="Main Feature Image" currentImage={formData.imageUrl} onUploadSuccess={url => setFormData({ ...formData, imageUrl: url })} />
+                    <MediaPickerButton label="Main Feature Image" value={formData.imageUrl} onChange={url => setFormData({ ...formData, imageUrl: url })} accept="image" />
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
                       <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                         <Layout className="w-3 h-3" /> Page Config
@@ -316,17 +316,17 @@ export default function CategoryCatalog({ categoryId }: Props) {
                           <div>
                             <label className="block text-[10px] text-gray-500 uppercase mb-1">Title</label>
                             <input value={sec.title || ''} onChange={e => updateSection(sec.id, { title: e.target.value })}
-                              className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vitorra-gold" />
+                              className="w-full bg-[#1e1e1e] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vitorra-gold" />
                           </div>
                           <div>
                             <label className="block text-[10px] text-gray-500 uppercase mb-1">Subtitle</label>
                             <input value={sec.subtitle || ''} onChange={e => updateSection(sec.id, { subtitle: e.target.value })}
-                              className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vitorra-gold" />
+                              className="w-full bg-[#1e1e1e] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vitorra-gold" />
                           </div>
                           <div className="md:col-span-2">
                             <label className="block text-[10px] text-gray-500 uppercase mb-1">Content / Body</label>
                             <textarea value={sec.content || ''} onChange={e => updateSection(sec.id, { content: e.target.value })}
-                              className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vitorra-gold h-20 resize-none" />
+                              className="w-full bg-[#1e1e1e] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vitorra-gold h-20 resize-none" />
                           </div>
                         </div>
                       </div>
@@ -371,7 +371,7 @@ export default function CategoryCatalog({ categoryId }: Props) {
       </AnimatePresence>
 
       {/* ─── Product List ─── */}
-      <div className="flex items-center bg-black/30 border border-white/5 rounded-2xl p-4">
+      <div className="flex items-center bg-[#2b2b2b] border border-white/5 rounded-2xl p-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${category.name} catalog...`}
@@ -381,7 +381,7 @@ export default function CategoryCatalog({ categoryId }: Props) {
 
       <div className="space-y-4">
         {filtered.map(p => (
-          <div key={p.id} className="bg-[#0d0d0d] border border-white/5 rounded-3xl overflow-hidden transition-all hover:border-white/10 shadow-lg">
+          <div key={p.id} className="bg-[#242424] border border-white/5 rounded-3xl overflow-hidden transition-all hover:border-white/10 shadow-lg">
             {/* Product Row */}
             <div className="flex items-center gap-4 p-6 cursor-pointer" onClick={() => setExpandedProduct(expandedProduct === p.id ? null : p.id)}>
               <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 shrink-0 hidden sm:block">
@@ -412,7 +412,7 @@ export default function CategoryCatalog({ categoryId }: Props) {
 
             {/* Expanded Content: Variants & Deep Stats */}
             {expandedProduct === p.id && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border-t border-white/5 bg-black/40 overflow-hidden">
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border-t border-white/5 bg-[#2b2b2b] overflow-hidden">
                 <div className="p-8 space-y-8">
                   <div className="flex items-center justify-between border-b border-white/5 pb-4">
                     <h5 className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">

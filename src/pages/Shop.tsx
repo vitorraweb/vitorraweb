@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useCMS, Product } from '../context/CMSContext';
 import { motion } from 'motion/react';
 import { ShoppingBag, ChevronRight } from 'lucide-react';
+import { useExchangeRate, parseEurPrice } from '../hooks/useExchangeRate';
 
 export default function Shop() {
   const { state } = useCMS();
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const { eurToUgx } = useExchangeRate();
 
   const formatPrice = (n: number) =>
     new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', maximumFractionDigits: 0 }).format(n);
@@ -21,7 +23,10 @@ export default function Shop() {
 
   const getLowestPrice = (p: Product) => {
     if (!p.variants || p.variants.length === 0) return p.price || 0;
-    return Math.min(...p.variants.map(v => v.price));
+    return Math.min(...p.variants.map(v => {
+      const eurPrice = parseEurPrice(v.attributes?.['RRP (EUR)']);
+      return eurPrice ? eurToUgx(eurPrice) : v.price;
+    }));
   };
 
   return (
@@ -65,49 +70,63 @@ export default function Shop() {
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filtered.map(product => (
-            <Link
-              key={product.id}
-              to={`/shop/${product.id}`}
-              className="group text-left bg-vitorra-card border border-vitorra-border rounded-3xl overflow-hidden hover:border-vitorra-gold/30 hover:shadow-2xl hover:shadow-vitorra-gold/5 transition-all duration-300 flex flex-col"
-            >
-              {/* Image */}
-              <div className="relative h-64 overflow-hidden bg-vitorra-bg/50">
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-vitorra-card via-transparent to-transparent opacity-80" />
-                {/* Category badge */}
-                <div className="absolute top-4 left-4">
-                  <span className="text-[10px] px-3 py-1 bg-vitorra-bg/80 backdrop-blur-md text-vitorra-gold border border-vitorra-gold/20 rounded-full font-bold uppercase tracking-widest">
-                    {product.categoryId}
-                  </span>
-                </div>
-                {/* Variant count */}
-                <div className="absolute bottom-4 right-4 z-10">
-                  <span className="text-[10px] px-3 py-1.5 bg-vitorra-bg/80 backdrop-blur-md text-vitorra-muted border border-vitorra-border rounded-full font-bold uppercase tracking-widest">
-                    {product.variants?.length} variant{(product.variants?.length || 0) > 1 ? 's' : ''}
-                  </span>
-                </div>
-              </div>
+          {filtered.map(product => {
+            const isCoffee = product.categoryId === 'coffee' || product.id === 'coffee';
+            const Wrapper = isCoffee ? 'div' : Link;
+            const wrapperProps = isCoffee
+              ? { className: 'group text-left bg-vitorra-card border border-vitorra-border rounded-3xl overflow-hidden relative cursor-default flex flex-col opacity-60' }
+              : { to: `/shop/${product.id}`, className: 'group text-left bg-vitorra-card border border-vitorra-border rounded-3xl overflow-hidden hover:border-vitorra-gold/30 hover:shadow-2xl hover:shadow-vitorra-gold/5 transition-all duration-300 flex flex-col' };
 
-              {/* Info */}
-              <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-xl font-serif text-vitorra-text mb-2 group-hover:text-vitorra-gold transition-colors">{product.name}</h3>
-                <p className="text-sm text-vitorra-muted line-clamp-2 mb-6 leading-relaxed flex-1">{product.description}</p>
-                <div className="flex items-center justify-between pt-4 border-t border-vitorra-border/50">
-                  <span className="text-lg font-bold text-vitorra-gold">
-                    From {formatPrice(getLowestPrice(product))}
-                  </span>
-                  <span className="text-[11px] text-vitorra-muted uppercase tracking-widest font-bold group-hover:text-vitorra-gold transition-colors flex items-center gap-1">
-                    Select <ChevronRight className="w-4 h-4" />
-                  </span>
+            return (
+              // @ts-ignore
+              <Wrapper key={product.id} {...wrapperProps}>
+                {/* Coming Soon overlay for coffee */}
+                {isCoffee && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-vitorra-bg/40 backdrop-blur-[2px]">
+                    <div className="px-6 py-3 bg-vitorra-card/90 backdrop-blur-md border border-vitorra-gold/30 rounded-2xl shadow-xl">
+                      <span className="text-vitorra-gold text-sm font-bold uppercase tracking-[0.2em]">Coming Soon</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Image */}
+                <div className="relative h-64 overflow-hidden bg-vitorra-bg/50">
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className={`w-full h-full object-cover ${isCoffee ? '' : 'group-hover:scale-105'} transition-transform duration-500`}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-vitorra-card via-transparent to-transparent opacity-80" />
+                  {/* Category badge */}
+                  <div className="absolute top-4 left-4">
+                    <span className="text-[11px] px-3 py-1 bg-vitorra-bg/80 backdrop-blur-md text-vitorra-gold border border-vitorra-gold/20 rounded-full font-bold uppercase tracking-widest">
+                      {product.categoryId}
+                    </span>
+                  </div>
+                  {/* Variant count */}
+                  <div className="absolute bottom-4 right-4 z-10">
+                    <span className="text-[11px] px-3 py-1.5 bg-vitorra-bg/80 backdrop-blur-md text-vitorra-muted border border-vitorra-border rounded-full font-bold uppercase tracking-widest">
+                      {product.variants?.length} variant{(product.variants?.length || 0) > 1 ? 's' : ''}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+
+                {/* Info */}
+                <div className="p-6 flex-1 flex flex-col">
+                  <h3 className={`text-xl font-serif text-vitorra-text mb-2 ${isCoffee ? '' : 'group-hover:text-vitorra-gold'} transition-colors`}>{product.name}</h3>
+                  <p className="text-sm text-vitorra-muted line-clamp-2 mb-6 leading-relaxed flex-1">{product.description}</p>
+                  <div className="flex items-center justify-between pt-4 border-t border-vitorra-border/50">
+                    <span className="text-lg font-bold text-vitorra-gold">
+                      From {formatPrice(getLowestPrice(product))}
+                    </span>
+                    <span className={`text-[11px] text-vitorra-muted uppercase tracking-widest font-bold ${isCoffee ? '' : 'group-hover:text-vitorra-gold'} transition-colors flex items-center gap-1`}>
+                      {isCoffee ? 'Soon' : 'Select'} <ChevronRight className="w-4 h-4" />
+                    </span>
+                  </div>
+                </div>
+              </Wrapper>
+            );
+          })}
         </div>
 
         {filtered.length === 0 && (

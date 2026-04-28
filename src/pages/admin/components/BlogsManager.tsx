@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useCMS, BlogPost } from '../../../context/CMSContext';
-import FileUpload from '../../../components/ui/FileUpload';
+import MediaPickerButton from '../ui/MediaPickerButton';
 import { useAuth } from '../../../context/AuthContext';
-import { Search, Plus, X, Edit3, Trash2, Eye, EyeOff, Check, CalendarDays, User, Tag } from 'lucide-react';
+import { Search, Plus, X, Edit3, Trash2, Eye, EyeOff, Check, CalendarDays, User, Tag, FileText } from 'lucide-react';
+import RichTextEditor from './RichTextEditor';
 
 export default function BlogsManager() {
   const { state, addBlog, updateBlog, removeBlog } = useCMS();
@@ -13,7 +14,7 @@ export default function BlogsManager() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft'>('all');
   const [tagInput, setTagInput] = useState('');
 
-  const emptyForm: Partial<BlogPost> = { title: '', excerpt: '', content: '', imageUrl: '', status: 'draft', tags: [], category: 'News' };
+  const emptyForm: Partial<BlogPost> = { title: '', excerpt: '', content: '', imageUrl: '', documentUrl: '', documentName: '', status: 'draft', tags: [], category: 'News' };
   const [formData, setFormData] = useState<Partial<BlogPost>>(emptyForm);
 
   const filtered = state.blogs.filter(b => {
@@ -67,170 +68,398 @@ export default function BlogsManager() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h3 className="text-3xl font-serif text-white mb-1">News & Publications</h3>
-          <p className="text-gray-400 text-sm">Create, edit, and manage articles, press releases, and company updates.</p>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>News & Publications</h3>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>Create, edit, and manage articles, press releases, and company updates.</p>
         </div>
         <button onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm); }}
-          className="px-6 py-3 bg-vitorra-gold text-[#242424] rounded-xl font-bold shadow-lg shadow-vitorra-gold/20 hover:bg-yellow-500 transition-colors flex items-center gap-2 shrink-0">
+          style={{
+            padding: '10px 24px', background: 'var(--accent-primary)', color: 'white',
+            borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-body)', fontWeight: 700,
+            fontSize: 'var(--text-sm)', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 8,
+            boxShadow: '0 4px 12px rgba(198,137,88,0.3)',
+            transition: 'var(--transition-fast)',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-primary-hover)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--accent-primary)'}
+        >
           <Plus className="w-4 h-4" /> Write New Post
         </button>
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-black/40 border border-white/5 rounded-xl p-4">
-          <div className="text-2xl font-serif text-white">{state.blogs.length}</div>
-          <div className="text-xs text-gray-500 uppercase tracking-wider">Total Posts</div>
-        </div>
-        <div className="bg-black/40 border border-white/5 rounded-xl p-4">
-          <div className="text-2xl font-serif text-emerald-400">{state.blogs.filter(b => (b.status || 'published') === 'published').length}</div>
-          <div className="text-xs text-gray-500 uppercase tracking-wider">Published</div>
-        </div>
-        <div className="bg-black/40 border border-white/5 rounded-xl p-4">
-          <div className="text-2xl font-serif text-amber-400">{state.blogs.filter(b => b.status === 'draft').length}</div>
-          <div className="text-xs text-gray-500 uppercase tracking-wider">Drafts</div>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-4)' }}>
+        {[
+          { value: state.blogs.length, label: 'Total Posts', color: 'var(--text-primary)' },
+          { value: state.blogs.filter(b => (b.status || 'published') === 'published').length, label: 'Published', color: 'var(--success)' },
+          { value: state.blogs.filter(b => b.status === 'draft').length, label: 'Drafts', color: 'var(--warning)' },
+        ].map(m => (
+          <div key={m.label} style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-faint)',
+            borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)',
+          }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: m.color }}>{m.value}</div>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{m.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-black/30 border border-white/5 rounded-2xl p-4">
-        <div className="relative flex-1 w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)',
+        alignItems: 'center', background: 'var(--bg-surface)',
+        border: '1px solid var(--border-faint)', borderRadius: 'var(--radius-lg)',
+        padding: 'var(--space-4)',
+      }}>
+        <div style={{ position: 'relative', flex: '1 1 280px', maxWidth: 360 }}>
+          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search posts..."
-            className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white outline-none focus:border-vitorra-gold" />
+            style={{
+              width: '100%', height: 38, paddingLeft: 36, paddingRight: 12,
+              background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+              borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
+              fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', outline: 'none',
+            }} />
         </div>
-        <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1 border border-white/10">
+        <div style={{
+          display: 'flex', gap: 4, background: 'var(--bg-elevated)',
+          borderRadius: 'var(--radius-md)', padding: 4, border: '1px solid var(--border-dim)',
+        }}>
           {(['all', 'published', 'draft'] as const).map(s => (
-            <button key={s} onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors capitalize ${filterStatus === s ? 'bg-vitorra-gold text-black' : 'text-gray-400 hover:text-white'}`}>{s}</button>
+            <button key={s} onClick={() => setFilterStatus(s)} style={{
+              padding: '5px 14px', borderRadius: 'var(--radius-sm)',
+              fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: filterStatus === s ? 600 : 400,
+              border: 'none', cursor: 'pointer', textTransform: 'capitalize',
+              background: filterStatus === s ? 'var(--accent-primary)' : 'transparent',
+              color: filterStatus === s ? 'white' : 'var(--text-secondary)',
+              transition: 'var(--transition-fast)',
+            }}>{s}</button>
           ))}
         </div>
       </div>
 
       {/* Form */}
       {showForm && (
-        <div className="bg-[#0d0d0d] border border-white/10 rounded-2xl p-6 lg:p-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-vitorra-gold/5 blur-[100px] rounded-full pointer-events-none" />
-          <div className="flex items-center justify-between mb-6 relative z-10">
-            <h4 className="text-xl font-serif text-white">{editingId ? 'Edit Post' : 'New Publication'}</h4>
-            <button onClick={cancelForm} className="text-gray-500 hover:text-white p-2 rounded-lg hover:bg-white/5"><X className="w-5 h-5" /></button>
+        <div style={{
+          background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
+          borderRadius: 'var(--radius-xl)', padding: '24px 28px', position: 'relative',
+        }}>
+          {/* Gold glow accent */}
+          <div style={{
+            position: 'absolute', top: -40, right: -40, width: 200, height: 200,
+            background: 'rgba(198,137,88,0.06)', filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none',
+          }} />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, position: 'relative', zIndex: 10 }}>
+            <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+              {editingId ? 'Edit Post' : 'New Publication'}
+            </h4>
+            <button onClick={cancelForm} style={{
+              background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+              borderRadius: 'var(--radius-md)', width: 32, height: 32, cursor: 'pointer', color: 'var(--text-secondary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-fast)',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--danger-muted)'; e.currentTarget.style.color = 'var(--danger)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            ><X size={16} /></button>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-5">
-                <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Post Title *</label>
+
+          <form onSubmit={handleSubmit} style={{ position: 'relative', zIndex: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24 }}>
+              {/* Left column — content */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {/* Title */}
+                <div>
+                  <label style={labelStyle}>Post Title *</label>
                   <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg outline-none focus:border-vitorra-gold" placeholder="Enter a compelling headline..." /></div>
-                <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Excerpt (shows on card) *</label>
+                    placeholder="Enter a compelling headline..."
+                    style={{ ...inputStyle, fontSize: 'var(--text-lg)', fontWeight: 600, height: 48 }} />
+                </div>
+
+                {/* Excerpt */}
+                <div>
+                  <label style={labelStyle}>Excerpt (shows on card) *</label>
                   <textarea required value={formData.excerpt} onChange={e => setFormData({...formData, excerpt: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold h-20 resize-none" placeholder="A brief summary for the news grid..." /></div>
-                <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Full Content *</label>
-                  <textarea required value={formData.content} onChange={e => setFormData({...formData, content: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold h-72 font-mono text-sm resize-none" placeholder="Write the full publication here..." /></div>
+                    placeholder="A brief summary for the news grid..."
+                    style={{ ...inputStyle, height: 72, resize: 'none', paddingTop: 10 }} />
+                </div>
+
+                {/* Rich Text Editor */}
+                <div>
+                  <label style={labelStyle}>Full Content *</label>
+                  <RichTextEditor
+                    value={formData.content || ''}
+                    onChange={(html) => setFormData({...formData, content: html})}
+                    placeholder="Write your full publication here..."
+                  />
+                </div>
+
                 {/* Tags */}
                 <div>
-                  <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Tags</label>
-                  <div className="flex flex-wrap gap-2 mb-3">
+                  <label style={labelStyle}>Tags</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
                     {(formData.tags || []).map(tag => (
-                      <span key={tag} className="flex items-center gap-1.5 px-3 py-1 bg-vitorra-gold/10 text-vitorra-gold border border-vitorra-gold/20 rounded-full text-xs font-medium">
-                        <Tag className="w-3 h-3" />{tag}
-                        <button type="button" onClick={() => removeTag(tag)} className="hover:text-red-400"><X className="w-3 h-3" /></button>
+                      <span key={tag} style={{
+                        display: 'flex', alignItems: 'center', gap: 4, padding: '3px 10px',
+                        background: 'var(--accent-primary-muted)', color: 'var(--accent-primary)',
+                        border: '1px solid rgba(198,137,88,0.25)', borderRadius: 'var(--radius-full)',
+                        fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: 500,
+                      }}>
+                        <Tag size={11} />{tag}
+                        <button type="button" onClick={() => removeTag(tag)} style={{
+                          background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, display: 'flex',
+                        }}
+                          onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'var(--accent-primary)'}
+                        ><X size={11} /></button>
                       </span>
                     ))}
                   </div>
-                  <div className="flex gap-2">
-                    <input value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={e => { if(e.key === 'Enter') { e.preventDefault(); addTag(); }}}
-                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vitorra-gold" placeholder="Add a tag..." />
-                    <button type="button" onClick={addTag} className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white hover:bg-white/10 transition">Add</button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input value={tagInput} onChange={e => setTagInput(e.target.value)}
+                      onKeyDown={e => { if(e.key === 'Enter') { e.preventDefault(); addTag(); }}}
+                      placeholder="Add a tag..."
+                      style={{ ...inputStyle, flex: 1, height: 36, fontSize: 'var(--text-sm)' }} />
+                    <button type="button" onClick={addTag} style={{
+                      padding: '0 16px', height: 36, background: 'var(--bg-elevated)',
+                      border: '1px solid var(--border-dim)', borderRadius: 'var(--radius-md)',
+                      fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 500,
+                      color: 'var(--text-secondary)', cursor: 'pointer', transition: 'var(--transition-fast)',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-overlay)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                    >Add</button>
                   </div>
                 </div>
               </div>
-              <div className="space-y-5">
-                <FileUpload label="Cover Image" currentImage={formData.imageUrl} onUploadSuccess={url => setFormData({...formData, imageUrl: url})} />
-                <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Publish Status</label>
+
+              {/* Right column — metadata */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Cover Image */}
+                <MediaPickerButton label="Cover Image" value={formData.imageUrl} onChange={url => setFormData({...formData, imageUrl: url})} accept="image" />
+
+                {/* Document attachment */}
+                <div style={{
+                  background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+                  borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)',
+                }}>
+                  <label style={labelStyle}>Attached Document (PDF)</label>
+                  {formData.documentUrl ? (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 12px', background: 'var(--bg-overlay)', borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border-dim)',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflow: 'hidden' }}>
+                        <FileText size={16} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
+                        <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {formData.documentName || 'Document attached'}
+                        </span>
+                      </div>
+                      <button type="button" onClick={() => setFormData({...formData, documentUrl: '', documentName: ''})}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4, display: 'flex', flexShrink: 0 }}>
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <MediaPickerButton label="Upload PDF" value="" onChange={(url) => setFormData({...formData, documentUrl: url, documentName: 'Attached Document'})} accept="document" />
+                  )}
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label style={labelStyle}>Publish Status</label>
                   <select value={formData.status || 'draft'} onChange={e => setFormData({...formData, status: e.target.value as any})}
-                    className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold">
-                    <option value="published">Published</option><option value="draft">Draft</option>
-                  </select></div>
-                <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Category</label>
+                    style={{ ...inputStyle, height: 42, cursor: 'pointer' }}>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                  </select>
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label style={labelStyle}>Category</label>
                   <select value={formData.category || 'News'} onChange={e => setFormData({...formData, category: e.target.value})}
-                    className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold">
+                    style={{ ...inputStyle, height: 42, cursor: 'pointer' }}>
                     <option value="News">News</option>
                     <option value="Corporate">Corporate</option>
                     <option value="Press Release">Press Release</option>
                     <option value="Industry Insights">Industry Insights</option>
-                  </select></div>
-                <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Author</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-vitorra-gold/20 text-vitorra-gold flex items-center justify-center font-bold text-xs">{user?.name.charAt(0) || 'A'}</div>
-                    <span className="text-white text-sm font-medium">{user?.name || 'Administrator'}</span>
+                  </select>
+                </div>
+
+                {/* Author */}
+                <div style={{
+                  background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+                  borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)',
+                }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, margin: '0 0 8px' }}>Author</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: '50%',
+                      background: 'var(--accent-primary-muted)', color: 'var(--accent-primary)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', fontWeight: 700,
+                    }}>{user?.name.charAt(0) || 'A'}</div>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>{user?.name || 'Administrator'}</span>
                   </div>
-                  {editingId && <p className="text-xs text-gray-500 mt-3">Originally by: {state.blogs.find(b => b.id === editingId)?.author}</p>}
+                  {editingId && (
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', marginTop: 10 }}>
+                      Originally by: {state.blogs.find(b => b.id === editingId)?.author}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 pt-4 border-t border-white/10">
-              <button type="submit" className="px-8 py-3 bg-vitorra-gold text-black font-bold rounded-xl hover:bg-yellow-500 shadow-lg transition-colors flex items-center gap-2">
-                <Check className="w-4 h-4" /> {editingId ? 'Update Post' : formData.status === 'published' ? 'Publish Now' : 'Save as Draft'}
+
+            {/* Action buttons */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              paddingTop: 20, marginTop: 24, borderTop: '1px solid var(--border-faint)',
+            }}>
+              <button type="submit" style={{
+                padding: '10px 28px', background: 'var(--accent-primary)', color: 'white',
+                borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-body)', fontWeight: 700,
+                fontSize: 'var(--text-sm)', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8,
+                boxShadow: '0 4px 12px rgba(198,137,88,0.3)',
+                transition: 'var(--transition-fast)',
+              }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-primary-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--accent-primary)'}
+              >
+                <Check size={16} /> {editingId ? 'Update Post' : formData.status === 'published' ? 'Publish Now' : 'Save as Draft'}
               </button>
-              <button type="button" onClick={cancelForm} className="px-6 py-3 bg-white/5 text-white rounded-xl hover:bg-white/10 transition-colors border border-white/10">Cancel</button>
+              <button type="button" onClick={cancelForm} style={{
+                padding: '10px 20px', background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-dim)', borderRadius: 'var(--radius-md)',
+                fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 'var(--text-sm)',
+                color: 'var(--text-secondary)', cursor: 'pointer', transition: 'var(--transition-fast)',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-overlay)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              >Cancel</button>
             </div>
           </form>
         </div>
       )}
 
       {/* Posts List */}
-      <div className="space-y-3">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         {filtered.map(b => (
-          <div key={b.id} className="group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 bg-[#0d0d0d] border border-white/5 hover:border-vitorra-gold/20 rounded-2xl transition-all">
-            <div className="flex gap-4 items-start sm:items-center w-full">
+          <div key={b.id} style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: 'var(--space-5)', background: 'var(--bg-surface)',
+            border: '1px solid var(--border-faint)', borderRadius: 'var(--radius-lg)',
+            transition: 'var(--transition-fast)', cursor: 'default',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(198,137,88,0.25)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.2)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-faint)'; e.currentTarget.style.boxShadow = 'none'; }}
+          >
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flex: 1, minWidth: 0 }}>
               {b.imageUrl ? (
-                <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-white/10 hidden sm:block">
-                  <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                <div style={{ width: 56, height: 56, borderRadius: 'var(--radius-md)', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--border-dim)' }}>
+                  <img src={b.imageUrl} alt={b.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 hidden sm:flex items-center justify-center text-gray-600 text-xs font-bold">V</div>
+                <div style={{
+                  width: 56, height: 56, borderRadius: 'var(--radius-md)', flexShrink: 0,
+                  background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text-tertiary)',
+                }}>V</div>
               )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="text-base font-medium text-white group-hover:text-vitorra-gold transition-colors truncate">{b.title}</h4>
-                  <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${(b.status || 'published') === 'published' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                    {b.status || 'published'}
-                  </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <h4 style={{
+                    fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', fontWeight: 600,
+                    color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>{b.title}</h4>
+                  <span style={{
+                    flexShrink: 0, padding: '2px 8px', borderRadius: 'var(--radius-full)',
+                    fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', fontWeight: 700, textTransform: 'uppercase',
+                    background: (b.status || 'published') === 'published' ? 'var(--success-muted)' : 'var(--warning-muted)',
+                    color: (b.status || 'published') === 'published' ? 'var(--success)' : 'var(--warning)',
+                  }}>{b.status || 'published'}</span>
                 </div>
-                <p className="text-sm text-gray-400 truncate max-w-lg mb-2">{b.excerpt}</p>
-                <div className="flex items-center flex-wrap gap-3 text-xs text-gray-500">
-                  <span className="flex items-center gap-1"><CalendarDays className="w-3 h-3" />{b.date}</span>
-                  <span className="flex items-center gap-1"><User className="w-3 h-3" />{b.author}</span>
+                <p style={{
+                  fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)',
+                  margin: '0 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 500,
+                }}>{b.excerpt}</p>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 12, fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><CalendarDays size={12} />{b.date}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><User size={12} />{b.author}</span>
                   {b.tags && b.tags.length > 0 && b.tags.slice(0, 3).map(t => (
-                    <span key={t} className="px-1.5 py-0.5 bg-white/5 rounded text-[10px]">{t}</span>
+                    <span key={t} style={{
+                      padding: '1px 6px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)',
+                      fontSize: 'var(--text-2xs)',
+                    }}>{t}</span>
                   ))}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-              <button onClick={() => toggleStatus(b)} title={b.status === 'published' ? 'Unpublish' : 'Publish'}
-                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/10">
-                {(b.status || 'published') === 'published' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-              <button onClick={() => startEdit(b)}
-                className="p-2 rounded-lg bg-white/5 hover:bg-vitorra-gold/10 text-gray-400 hover:text-vitorra-gold transition-colors border border-white/10">
-                <Edit3 className="w-4 h-4" />
-              </button>
-              <button onClick={() => { if(confirm(`Delete "${b.title}"?`)) removeBlog(b.id) }}
-                className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors border border-white/10">
-                <Trash2 className="w-4 h-4" />
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 16 }}>
+              <ActionBtn onClick={() => toggleStatus(b)} title={b.status === 'published' ? 'Unpublish' : 'Publish'}>
+                {(b.status || 'published') === 'published' ? <EyeOff size={15} /> : <Eye size={15} />}
+              </ActionBtn>
+              <ActionBtn onClick={() => startEdit(b)} title="Edit" hoverColor="var(--accent-primary)">
+                <Edit3 size={15} />
+              </ActionBtn>
+              <ActionBtn onClick={() => { if(confirm(`Delete "${b.title}"?`)) removeBlog(b.id) }} title="Delete" hoverColor="var(--danger)">
+                <Trash2 size={15} />
+              </ActionBtn>
             </div>
           </div>
         ))}
         {filtered.length === 0 && (
-          <div className="text-center py-16 border border-dashed border-white/10 rounded-2xl text-gray-500">
+          <div style={{
+            textAlign: 'center', padding: '60px 20px',
+            border: '1px dashed var(--border-dim)', borderRadius: 'var(--radius-lg)',
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)',
+          }}>
             {search || filterStatus !== 'all' ? 'No posts match your filters.' : 'No publications yet. Create your first post!'}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+/* ── Shared styles ─────────────────────────────────────────── */
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)',
+  fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase',
+  letterSpacing: '0.08em', marginBottom: 8,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', height: 42, padding: '0 14px',
+  background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+  borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-body)',
+  fontSize: 'var(--text-base)', color: 'var(--text-primary)', outline: 'none',
+};
+
+/* ── Small action button ──────────────────────────────────── */
+function ActionBtn({ children, onClick, title, hoverColor }: {
+  children: React.ReactNode; onClick: () => void; title: string; hoverColor?: string;
+}) {
+  return (
+    <button onClick={onClick} title={title} style={{
+      width: 34, height: 34, borderRadius: 'var(--radius-md)',
+      background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+      cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-fast)',
+    }}
+      onMouseEnter={e => {
+        e.currentTarget.style.color = hoverColor || 'var(--text-primary)';
+        e.currentTarget.style.borderColor = hoverColor || 'var(--border-strong)';
+        e.currentTarget.style.background = hoverColor ? `${hoverColor}15` : 'var(--bg-overlay)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.color = 'var(--text-tertiary)';
+        e.currentTarget.style.borderColor = 'var(--border-dim)';
+        e.currentTarget.style.background = 'var(--bg-elevated)';
+      }}
+    >{children}</button>
   );
 }

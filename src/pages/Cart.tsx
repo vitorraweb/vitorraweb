@@ -28,11 +28,11 @@ export default function Cart() {
             <div className="w-24 h-24 mx-auto bg-vitorra-gold/10 rounded-3xl flex items-center justify-center mb-8 border border-vitorra-gold/20">
               <ShoppingBag className="w-10 h-10 text-vitorra-gold" />
             </div>
-            <h1 className="text-vitorra-text mb-4">Your Cart is Empty</h1>
+            <h1 className="text-2xl font-bold text-vitorra-text mb-4">Your Cart is Empty</h1>
             <p className="text-vitorra-muted max-w-md mx-auto mb-10">
               Explore our product range and add items to get started.
             </p>
-            <Link to="/portal?tab=shop" className="inline-flex items-center gap-3 px-10 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:opacity-90 transition-all uppercase tracking-widest text-sm shadow-lg shadow-vitorra-gold/20">
+            <Link to="/shop" className="inline-flex items-center gap-3 px-10 py-4 bg-vitorra-gold text-vitorra-gold-text font-bold rounded-xl hover:opacity-90 transition-all uppercase tracking-widest text-sm shadow-lg shadow-vitorra-gold/20">
               <ArrowLeft className="w-4 h-4" /> Browse Products
             </Link>
           </motion.div>
@@ -47,7 +47,7 @@ export default function Cart() {
         {/* Header */}
         <div className="mb-10">
           <span className="text-vitorra-muted text-[11px] font-bold tracking-[0.25em] uppercase block mb-4">Shopping Cart</span>
-          <h1 className="text-vitorra-text">Your Cart <span className="text-vitorra-gold">({totalItems})</span></h1>
+          <h1 className="text-2xl font-bold text-vitorra-text">Your Cart <span className="text-vitorra-gold">({totalItems})</span></h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -81,7 +81,7 @@ export default function Cart() {
                         <h3 className="text-vitorra-text font-bold text-sm mb-1 truncate">{item.name}</h3>
                         <p className="text-vitorra-muted text-xs uppercase tracking-wider font-medium">{item.category}</p>
                         {item.isB2B && (
-                          <span className="inline-block mt-1 text-[9px] px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full font-bold uppercase tracking-wider">B2B</span>
+                          <span className="inline-block mt-1 text-[11px] px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full font-bold uppercase tracking-wider">B2B</span>
                         )}
                       </div>
                       <button
@@ -114,7 +114,7 @@ export default function Cart() {
                       <div className="text-right">
                         <div className="text-vitorra-text font-bold">{formatPrice(item.price * item.quantity)}</div>
                         {item.quantity > 1 && (
-                          <div className="text-vitorra-muted text-[10px] font-medium">{formatPrice(item.price)} each</div>
+                          <div className="text-vitorra-muted text-[11px] font-medium">{formatPrice(item.price)} each</div>
                         )}
                       </div>
                     </div>
@@ -165,7 +165,7 @@ export default function Cart() {
 
               {/* Payment Info */}
               <div className="mt-6 pt-6 border-t border-vitorra-border">
-                <p className="text-[10px] text-vitorra-muted/60 uppercase tracking-widest font-bold mb-2">Payment Method</p>
+                <p className="text-[11px] text-vitorra-muted/60 uppercase tracking-widest font-bold mb-2">Payment Method</p>
                 <p className="text-xs text-vitorra-muted">Bank Wire Transfer</p>
               </div>
             </div>

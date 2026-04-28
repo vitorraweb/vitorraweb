@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { useCMS, Product, ProductVariant } from '../../../context/CMSContext';
-import FileUpload from '../../../components/ui/FileUpload';
-import { Search, Plus, X, Package, Edit3, Trash2, Eye, EyeOff, MoreVertical, DollarSign, Archive, Check, ChevronDown, ChevronUp, ImagePlus } from 'lucide-react';
+import MediaPickerButton from '../ui/MediaPickerButton';
+import RichTextEditor from './RichTextEditor';
+import {
+  Search, Plus, X, Package, Edit3, Trash2, Eye, EyeOff, Check, ChevronDown, ChevronRight,
+  DollarSign, Archive, LayoutGrid, List, AlertTriangle, Copy, Hash, ImagePlus,
+  Info, MapPin, Palette, Settings, Tag, BarChart3, Layers
+} from 'lucide-react';
 
-type ViewMode = 'grid' | 'table';
+type ViewMode = 'table' | 'grid';
 
 export default function ProductsManager() {
   const { state, addProduct, updateProduct, removeProduct } = useCMS();
@@ -11,7 +16,9 @@ export default function ProductsManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'draft' | 'archived'>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [variantsOpen, setVariantsOpen] = useState(true);
 
   const emptyForm: Partial<Product> = {
@@ -26,7 +33,8 @@ export default function ProductsManager() {
   const filtered = state.products.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase());
     const matchCat = filterCategory === 'all' || p.category === filterCategory;
-    return matchSearch && matchCat;
+    const matchStatus = filterStatus === 'all' || (p.status || 'active') === filterStatus;
+    return matchSearch && matchCat && matchStatus;
   });
 
   const formatPrice = (n?: number) => n ? new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX', maximumFractionDigits: 0 }).format(n) : '—';
@@ -51,363 +59,649 @@ export default function ProductsManager() {
     setFormData(emptyForm);
   };
 
-  const cancelForm = () => {
-    setShowForm(false);
-    setEditingId(null);
-    setFormData(emptyForm);
+  const cancelForm = () => { setShowForm(false); setEditingId(null); setFormData(emptyForm); };
+
+  const duplicateProduct = (p: Product) => {
+    addProduct({ ...p, id: Date.now().toString(), name: `${p.name} (Copy)`, status: 'draft' });
   };
 
-  // ─── Variant Helpers ───
+  // Variant helpers
   const addVariant = () => {
-    const newVariant: ProductVariant = {
-      id: `var-${Date.now()}`,
-      name: '',
-      price: 0,
-      sku: '',
-      stock: 0,
-      image: '',
-      description: '',
-      isB2B: false,
-    };
-    setFormData({ ...formData, variants: [...(formData.variants || []), newVariant] });
+    const nv: ProductVariant = { id: `var-${Date.now()}`, name: '', price: 0, sku: '', stock: 0, description: '', isB2B: false };
+    setFormData({ ...formData, variants: [...(formData.variants || []), nv] });
+  };
+  const updateVariant = (vid: string, updates: Partial<ProductVariant>) => {
+    setFormData({ ...formData, variants: (formData.variants || []).map(v => v.id === vid ? { ...v, ...updates } : v) });
+  };
+  const removeVariant = (vid: string) => {
+    setFormData({ ...formData, variants: (formData.variants || []).filter(v => v.id !== vid) });
   };
 
-  const updateVariant = (variantId: string, updates: Partial<ProductVariant>) => {
-    setFormData({
-      ...formData,
-      variants: (formData.variants || []).map(v => v.id === variantId ? { ...v, ...updates } : v)
-    });
+  // Stats
+  const totalProducts = state.products.length;
+  const activeProducts = state.products.filter(p => p.status !== 'archived' && p.status !== 'draft').length;
+  const totalVariants = state.products.reduce((s, p) => s + (p.variants?.length || 0), 0);
+  const lowStock = state.products.filter(p => (p.stock || 0) < 10 && p.status === 'active').length;
+
+  const stockBadge = (stock?: number) => {
+    const s = stock || 0;
+    if (s === 0) return { label: 'Out of Stock', color: 'var(--danger)', bg: 'var(--danger-muted)' };
+    if (s < 10) return { label: `Low (${s})`, color: 'var(--warning)', bg: 'var(--warning-muted)' };
+    return { label: `${s} in stock`, color: 'var(--success)', bg: 'var(--success-muted)' };
   };
 
-  const removeVariant = (variantId: string) => {
-    setFormData({
-      ...formData,
-      variants: (formData.variants || []).filter(v => v.id !== variantId)
-    });
+  // Shared styles
+  const labelStyle: React.CSSProperties = {
+    display: 'block', fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)',
+    fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase',
+    letterSpacing: '0.08em', marginBottom: 8,
   };
+  const inputStyle: React.CSSProperties = {
+    width: '100%', height: 42, padding: '0 14px',
+    background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+    borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-body)',
+    fontSize: 'var(--text-base)', color: 'var(--text-primary)', outline: 'none',
+  };
+  const selectStyle: React.CSSProperties = { ...inputStyle, cursor: 'pointer' };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+      {/* ═══ Header ═══ */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h3 className="text-3xl font-serif text-white mb-1">Products & Subsidiaries</h3>
-          <p className="text-gray-400 text-sm">Manage your entire product catalog with full control over details, pricing, variants, and inventory.</p>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>
+            Products & Subsidiaries
+          </h3>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', margin: 0 }}>
+            Manage your entire product catalog — details, pricing, variants, and inventory.
+          </p>
         </div>
-        <button onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm); }}
-          className="px-6 py-3 bg-vitorra-gold text-[#2b2b2b] rounded-xl font-bold shadow-lg shadow-vitorra-gold/20 hover:bg-yellow-500 transition-colors flex items-center gap-2 shrink-0">
-          <Plus className="w-4 h-4" /> Add Product
-        </button>
+        <button onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm); }} style={{
+          padding: '10px 24px', background: 'var(--accent-primary)', color: 'white',
+          borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-body)', fontWeight: 700,
+          fontSize: 'var(--text-sm)', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 8,
+          boxShadow: '0 4px 12px rgba(198,137,88,0.3)', transition: 'var(--transition-fast)',
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-primary-hover)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--accent-primary)'}
+        ><Plus size={16} /> Add Product</button>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-black/30 border border-white/5 rounded-2xl p-4">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..."
-              className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white outline-none focus:border-vitorra-gold" />
+      {/* ═══ Metrics ═══ */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-4)' }}>
+        {[
+          { value: totalProducts, label: 'Total Products', color: 'var(--text-primary)', icon: <Package size={18} /> },
+          { value: activeProducts, label: 'Active', color: 'var(--success)', icon: <Eye size={18} /> },
+          { value: totalVariants, label: 'Total Variants', color: '#4AB4FF', icon: <Layers size={18} /> },
+          { value: lowStock, label: 'Low Stock', color: 'var(--warning)', icon: <AlertTriangle size={18} /> },
+        ].map(m => (
+          <div key={m.label} style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-faint)',
+            borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)',
+            display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: m.color,
+            }}>{m.icon}</div>
+            <div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, color: m.color }}>{m.value}</div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{m.label}</div>
+            </div>
           </div>
-          <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-vitorra-gold capitalize">
-            {categories.map(c => <option key={c} value={c}>{c === 'all' ? 'All Categories' : c}</option>)}
-          </select>
+        ))}
+      </div>
+
+      {/* ═══ Toolbar ═══ */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center',
+        background: 'var(--bg-surface)', border: '1px solid var(--border-faint)',
+        borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)',
+      }}>
+        <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 300 }}>
+          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..."
+            style={{ ...inputStyle, paddingLeft: 36, height: 36, fontSize: 'var(--text-sm)' }} />
         </div>
-        <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1 border border-white/10">
-          <button onClick={() => setViewMode('grid')} className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${viewMode === 'grid' ? 'bg-vitorra-gold text-black' : 'text-gray-400 hover:text-white'}`}>Grid</button>
-          <button onClick={() => setViewMode('table')} className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${viewMode === 'table' ? 'bg-vitorra-gold text-black' : 'text-gray-400 hover:text-white'}`}>Table</button>
+        <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={{
+          ...selectStyle, width: 'auto', height: 36, fontSize: 'var(--text-xs)', padding: '0 12px',
+        }}>
+          {categories.map(c => <option key={c} value={c}>{c === 'all' ? 'All Categories' : c}</option>)}
+        </select>
+        <div style={{ display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', padding: 3, border: '1px solid var(--border-dim)' }}>
+          {(['all', 'active', 'draft', 'archived'] as const).map(s => (
+            <button key={s} onClick={() => setFilterStatus(s)} style={{
+              padding: '4px 12px', borderRadius: 'var(--radius-sm)',
+              fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: filterStatus === s ? 600 : 400,
+              border: 'none', cursor: 'pointer', textTransform: 'capitalize',
+              background: filterStatus === s ? 'var(--accent-primary)' : 'transparent',
+              color: filterStatus === s ? 'white' : 'var(--text-secondary)',
+              transition: 'var(--transition-fast)',
+            }}>{s}</button>
+          ))}
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', padding: 3, border: '1px solid var(--border-dim)' }}>
+          <button onClick={() => setViewMode('table')} style={{
+            padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+            background: viewMode === 'table' ? 'var(--accent-primary)' : 'transparent',
+            color: viewMode === 'table' ? 'white' : 'var(--text-secondary)',
+            display: 'flex', alignItems: 'center', transition: 'var(--transition-fast)',
+          }}><List size={14} /></button>
+          <button onClick={() => setViewMode('grid')} style={{
+            padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+            background: viewMode === 'grid' ? 'var(--accent-primary)' : 'transparent',
+            color: viewMode === 'grid' ? 'white' : 'var(--text-secondary)',
+            display: 'flex', alignItems: 'center', transition: 'var(--transition-fast)',
+          }}><LayoutGrid size={14} /></button>
         </div>
       </div>
 
-      {/* Metrics Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-black/40 border border-white/5 rounded-xl p-4">
-          <div className="text-2xl font-serif text-white">{state.products.length}</div>
-          <div className="text-xs text-gray-500 uppercase tracking-wider">Total Products</div>
-        </div>
-        <div className="bg-black/40 border border-white/5 rounded-xl p-4">
-          <div className="text-2xl font-serif text-emerald-400">{state.products.filter(p => p.status !== 'archived').length}</div>
-          <div className="text-xs text-gray-500 uppercase tracking-wider">Active</div>
-        </div>
-        <div className="bg-black/40 border border-white/5 rounded-xl p-4">
-          <div className="text-2xl font-serif text-white">{state.products.reduce((s, p) => s + (p.variants?.length || 0), 0)}</div>
-          <div className="text-xs text-gray-500 uppercase tracking-wider">Total Variants</div>
-        </div>
-        <div className="bg-black/40 border border-white/5 rounded-xl p-4">
-          <div className="text-2xl font-serif text-vitorra-gold">{state.products.filter(p => (p.stock || 0) < 10).length}</div>
-          <div className="text-xs text-gray-500 uppercase tracking-wider">Low Stock</div>
-        </div>
-      </div>
-
-      {/* Add/Edit Form */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          PRODUCT FORM
+         ═══════════════════════════════════════════════════════════════════ */}
       {showForm && (
-        <div className="bg-[#0d0d0d] border border-white/10 rounded-2xl p-6 lg:p-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-vitorra-gold/5 blur-[100px] rounded-full pointer-events-none" />
-          <div className="flex items-center justify-between mb-8 relative z-10">
-            <h4 className="text-xl font-serif text-white">{editingId ? 'Edit Product' : 'New Product'}</h4>
-            <button onClick={cancelForm} className="text-gray-500 hover:text-white p-2 rounded-lg hover:bg-white/5"><X className="w-5 h-5" /></button>
+        <div style={{
+          background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
+          borderRadius: 'var(--radius-xl)', padding: '28px 32px', position: 'relative',
+        }}>
+          <div style={{
+            position: 'absolute', top: -40, right: -40, width: 200, height: 200,
+            background: 'rgba(198,137,88,0.06)', filter: 'blur(80px)', borderRadius: '50%', pointerEvents: 'none',
+          }} />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28, position: 'relative', zIndex: 10 }}>
+            <div>
+              <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>
+                {editingId ? 'Edit Product' : 'Create New Product'}
+              </h4>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: 0 }}>
+                Configure product details, pricing, inventory, and variants.
+              </p>
+            </div>
+            <button onClick={cancelForm} style={{
+              background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+              borderRadius: 'var(--radius-md)', width: 34, height: 34, cursor: 'pointer', color: 'var(--text-secondary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}><X size={16} /></button>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Product Name *</label>
+
+          <form onSubmit={handleSubmit} style={{ position: 'relative', zIndex: 10 }}>
+
+            {/* ── Basic Info ── */}
+            <SectionHeader icon={<Info size={13} />} title="Basic Information" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, marginBottom: 28 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={labelStyle}>Product Name *</label>
                     <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold transition-colors" placeholder="e.g. SEAL Wound Care" /></div>
-                  <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">SKU Code</label>
+                      placeholder="e.g. SEAL Wound Care" style={{ ...inputStyle, fontSize: 'var(--text-lg)', fontWeight: 600, height: 48 }} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>SKU Code</label>
                     <input value={formData.sku || ''} onChange={e => setFormData({ ...formData, sku: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold transition-colors font-mono" placeholder="e.g. SEAL-OTC-001" /></div>
+                      placeholder="e.g. SEAL-OTC-001" style={{ ...inputStyle, fontFamily: 'var(--font-mono)' }} />
+                  </div>
                 </div>
-                <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Description *</label>
-                  <textarea required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold transition-colors h-28 resize-none" /></div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Base Price (UGX)</label>
-                    <input type="number" value={formData.price || ''} onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold" placeholder="0" /></div>
-                  <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Stock Qty</label>
-                    <input type="number" value={formData.stock ?? ''} onChange={e => setFormData({ ...formData, stock: Number(e.target.value) })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold" /></div>
-                  <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Category</label>
-                    <select value={formData.categoryId || ''} onChange={e => {
-                      const cat = state.categories.find(c => c.id === e.target.value);
-                      setFormData({ ...formData, categoryId: e.target.value, category: cat?.name || e.target.value });
-                    }}
-                      className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold">
-                      <option value="">Select...</option>
-                      {state.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select></div>
-                  <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Status</label>
-                    <select value={formData.status || 'active'} onChange={e => setFormData({ ...formData, status: e.target.value as any })}
-                      className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold">
-                      <option value="active">Active</option><option value="draft">Draft</option><option value="archived">Archived</option>
-                    </select></div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Route Path</label>
-                    <input value={formData.path} onChange={e => setFormData({ ...formData, path: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-sm outline-none focus:border-vitorra-gold" /></div>
-                  <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Grid Type</label>
-                    <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value as any })}
-                      className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold">
-                      <option value="square">Standard (1 Col)</option><option value="wide">Featured (2 Cols)</option>
-                    </select></div>
-                  <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Icon</label>
-                    <select value={formData.icon} onChange={e => setFormData({ ...formData, icon: e.target.value })}
-                      className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold">
-                      <option value="Globe">Globe</option><option value="Truck">Truck</option><option value="Leaf">Leaf</option><option value="ShieldCheck">Shield</option>
-                    </select></div>
+                <div>
+                  <label style={labelStyle}>Description *</label>
+                  <RichTextEditor value={formData.description || ''} onChange={html => setFormData({ ...formData, description: html })}
+                    placeholder="Full product description, features, and positioning..." />
                 </div>
               </div>
-              <div className="space-y-5">
-                <FileUpload label="Product Image" currentImage={formData.imageUrl} onUploadSuccess={url => setFormData({ ...formData, imageUrl: url })} />
-                <div><label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Accent Color</label>
-                  <select value={formData.color || 'text-vitorra-gold'} onChange={e => setFormData({ ...formData, color: e.target.value })}
-                    className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-vitorra-gold">
-                    <option value="text-vitorra-gold">Gold</option><option value="text-blue-400">Blue</option><option value="text-emerald-400">Green</option>
-                    <option value="text-red-500">Red</option><option value="text-purple-400">Purple</option>
-                  </select></div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <MediaPickerButton label="Product Image" value={formData.imageUrl} onChange={url => setFormData({ ...formData, imageUrl: url })} accept="image" />
+                <div>
+                  <label style={labelStyle}>Category</label>
+                  <select value={formData.categoryId || ''} onChange={e => {
+                    const cat = state.categories.find(c => c.id === e.target.value);
+                    setFormData({ ...formData, categoryId: e.target.value, category: cat?.name || e.target.value });
+                  }} style={selectStyle}>
+                    <option value="">Select...</option>
+                    {state.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Status</label>
+                  <select value={formData.status || 'active'} onChange={e => setFormData({ ...formData, status: e.target.value as any })} style={selectStyle}>
+                    <option value="active">Active</option><option value="draft">Draft</option><option value="archived">Archived</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* ═══════ VARIANTS EDITOR ═══════ */}
-            <div className="border border-white/10 rounded-2xl overflow-hidden">
-              <button type="button" onClick={() => setVariantsOpen(!variantsOpen)}
-                className="w-full flex items-center justify-between px-6 py-4 bg-white/5 hover:bg-white/10 transition-colors">
-                <div className="flex items-center gap-3">
-                  <Package className="w-4 h-4 text-vitorra-gold" />
-                  <span className="text-sm font-bold text-white">Product Variants</span>
-                  <span className="text-[10px] px-2 py-0.5 bg-white/10 text-gray-400 rounded-full font-bold">{(formData.variants || []).length}</span>
+            {/* ── Pricing & Inventory ── */}
+            <SectionHeader icon={<DollarSign size={13} />} title="Pricing & Inventory" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+              <div>
+                <label style={labelStyle}>Base Price (UGX)</label>
+                <input type="number" value={formData.price || ''} onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                  placeholder="0" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Stock Qty</label>
+                <input type="number" value={formData.stock ?? ''} onChange={e => setFormData({ ...formData, stock: Number(e.target.value) })}
+                  style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Grid Type</label>
+                <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value as any })} style={selectStyle}>
+                  <option value="square">Standard (1 Col)</option><option value="wide">Featured (2 Cols)</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Route Path</label>
+                <input value={formData.path} onChange={e => setFormData({ ...formData, path: e.target.value })}
+                  style={{ ...inputStyle, fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }} />
+              </div>
+            </div>
+
+            {/* ── Variants ── */}
+            <div style={{
+              border: '1px solid var(--border-dim)', borderRadius: 'var(--radius-lg)',
+              overflow: 'hidden', marginBottom: 28,
+            }}>
+              <button type="button" onClick={() => setVariantsOpen(!variantsOpen)} style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '14px 20px', background: 'var(--bg-elevated)', border: 'none', cursor: 'pointer',
+                transition: 'var(--transition-fast)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Layers size={15} style={{ color: 'var(--accent-primary)' }} />
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>Product Variants</span>
+                  <span style={{
+                    padding: '2px 8px', borderRadius: 'var(--radius-full)',
+                    fontSize: 'var(--text-2xs)', fontWeight: 700,
+                    background: 'var(--bg-overlay)', color: 'var(--text-tertiary)',
+                  }}>{(formData.variants || []).length}</span>
                 </div>
-                {variantsOpen ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                <div style={{ color: 'var(--text-tertiary)' }}>
+                  {variantsOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </div>
               </button>
-
               {variantsOpen && (
-                <div className="p-6 space-y-4">
+                <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {(formData.variants || []).length === 0 && (
-                    <div className="text-center py-8 text-gray-500 text-sm">
-                      No variants yet. Add variants to define different sizes, configurations, or pricing tiers.
-                    </div>
+                    <div style={{
+                      textAlign: 'center', padding: '32px 16px',
+                      fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)',
+                    }}>No variants — add variants for different sizes, configurations, or pricing tiers.</div>
                   )}
-
                   {(formData.variants || []).map((variant, idx) => (
-                    <div key={variant.id} className="bg-black/40 border border-white/10 rounded-xl p-5 space-y-4 relative">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] text-vitorra-gold font-bold uppercase tracking-widest">Variant {idx + 1}</span>
-                        <button type="button" onClick={() => removeVariant(variant.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition-colors">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                    <div key={variant.id} style={{
+                      background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+                      borderRadius: 'var(--radius-md)', padding: 16,
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Variant {idx + 1}</span>
+                        <button type="button" onClick={() => removeVariant(variant.id)} style={{
+                          background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 4, display: 'flex',
+                        }}
+                          onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
+                        ><Trash2 size={14} /></button>
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Variant Name *</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 12 }}>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: '9px', marginBottom: 4 }}>Name *</label>
                           <input value={variant.name} onChange={e => updateVariant(variant.id, { name: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-vitorra-gold" placeholder="e.g. SEAL™ OTC Spray (1.5 oz)" /></div>
-                        <div><label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">SKU</label>
-                          <input value={variant.sku} onChange={e => updateVariant(variant.id, { sku: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-vitorra-gold font-mono" placeholder="SEAL-OTC-001" /></div>
-                      </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div><label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Price (UGX)</label>
-                          <input type="number" value={variant.price || ''} onChange={e => updateVariant(variant.id, { price: Number(e.target.value) })}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-vitorra-gold" /></div>
-                        <div><label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Stock</label>
-                          <input type="number" value={variant.stock ?? ''} onChange={e => updateVariant(variant.id, { stock: Number(e.target.value) })}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-vitorra-gold" /></div>
-                        <div className="flex items-end gap-3">
-                          <label className="flex items-center gap-2 cursor-pointer py-2.5">
-                            <input type="checkbox" checked={variant.isB2B || false} onChange={e => updateVariant(variant.id, { isB2B: e.target.checked })}
-                              className="w-4 h-4 rounded border-white/20 bg-white/5 text-vitorra-gold focus:ring-vitorra-gold" />
-                            <span className="text-xs text-gray-400 font-bold">B2B Only</span>
-                          </label>
+                            placeholder="e.g. SEAL™ OTC Spray (1.5 oz)" style={{ ...inputStyle, height: 36, fontSize: 'var(--text-sm)' }} />
                         </div>
-                        <div><label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Tag</label>
-                          <input value={variant.tag || ''} onChange={e => updateVariant(variant.id, { tag: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-vitorra-gold" placeholder="e.g. Best Seller" /></div>
-                      </div>
-
-                      <div><label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Variant Description</label>
-                        <textarea value={variant.description || ''} onChange={e => updateVariant(variant.id, { description: e.target.value })}
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-vitorra-gold h-16 resize-none" placeholder="Optional description for this variant..." /></div>
-
-                      <div><label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Image URL</label>
-                        <div className="flex items-center gap-3">
-                          <input value={variant.image || ''} onChange={e => updateVariant(variant.id, { image: e.target.value })}
-                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-vitorra-gold font-mono" placeholder="https://..." />
-                          {variant.image && (
-                            <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 shrink-0">
-                              <img src={variant.image} alt="" className="w-full h-full object-cover" />
-                            </div>
-                          )}
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: '9px', marginBottom: 4 }}>Price (UGX)</label>
+                          <input type="number" value={variant.price || ''} onChange={e => updateVariant(variant.id, { price: Number(e.target.value) })}
+                            style={{ ...inputStyle, height: 36, fontSize: 'var(--text-sm)' }} />
+                        </div>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: '9px', marginBottom: 4 }}>SKU</label>
+                          <input value={variant.sku} onChange={e => updateVariant(variant.id, { sku: e.target.value })}
+                            style={{ ...inputStyle, height: 36, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)' }} />
+                        </div>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: '9px', marginBottom: 4 }}>Stock</label>
+                          <input type="number" value={variant.stock ?? ''} onChange={e => updateVariant(variant.id, { stock: Number(e.target.value) })}
+                            style={{ ...inputStyle, height: 36, fontSize: 'var(--text-sm)' }} />
                         </div>
                       </div>
                     </div>
                   ))}
-
-                  <button type="button" onClick={addVariant}
-                    className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-sm text-gray-400 hover:text-vitorra-gold hover:border-vitorra-gold/30 transition-colors flex items-center justify-center gap-2">
-                    <Plus className="w-4 h-4" /> Add Variant
-                  </button>
+                  <button type="button" onClick={addVariant} style={{
+                    width: '100%', padding: '10px 0',
+                    border: '2px dashed var(--border-dim)', borderRadius: 'var(--radius-md)',
+                    background: 'transparent', cursor: 'pointer',
+                    fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 500,
+                    color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    transition: 'var(--transition-fast)',
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent-primary)'; e.currentTarget.style.color = 'var(--accent-primary)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-dim)'; e.currentTarget.style.color = 'var(--text-tertiary)'; }}
+                  ><Plus size={15} /> Add Variant</button>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-3 pt-4 border-t border-white/10">
-              <button type="submit" className="px-8 py-3 bg-vitorra-gold text-black font-bold rounded-xl hover:bg-yellow-500 shadow-lg transition-colors flex items-center gap-2">
-                <Check className="w-4 h-4" /> {editingId ? 'Save Changes' : 'Create Product'}
+            {/* ── Actions ── */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              paddingTop: 20, borderTop: '1px solid var(--border-faint)',
+            }}>
+              <button type="submit" style={{
+                padding: '10px 28px', background: 'var(--accent-primary)', color: 'white',
+                borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-body)', fontWeight: 700,
+                fontSize: 'var(--text-sm)', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8,
+                boxShadow: '0 4px 12px rgba(198,137,88,0.3)', transition: 'var(--transition-fast)',
+              }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-primary-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--accent-primary)'}
+              >
+                <Check size={16} /> {editingId ? 'Save Changes' : 'Create Product'}
               </button>
-              <button type="button" onClick={cancelForm} className="px-6 py-3 bg-white/5 text-white rounded-xl hover:bg-white/10 transition-colors border border-white/10">
-                Cancel
-              </button>
+              <button type="button" onClick={cancelForm} style={{
+                padding: '10px 20px', background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-dim)', borderRadius: 'var(--radius-md)',
+                fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 'var(--text-sm)',
+                color: 'var(--text-secondary)', cursor: 'pointer',
+              }}>Discard</button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Table View */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          TABLE VIEW (Default — Professional Inventory Style)
+         ═══════════════════════════════════════════════════════════════════ */}
       {viewMode === 'table' && (
-        <div className="bg-black/30 border border-white/5 rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-white/5 text-xs uppercase tracking-widest text-gray-500 border-b border-white/10">
-                  <th className="p-4 font-medium">Product</th>
-                  <th className="p-4 font-medium">SKU</th>
-                  <th className="p-4 font-medium">Category</th>
-                  <th className="p-4 font-medium text-center">Variants</th>
-                  <th className="p-4 font-medium text-right">Price</th>
-                  <th className="p-4 font-medium">Status</th>
-                  <th className="p-4 font-medium text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {filtered.map(p => (
-                  <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 shrink-0">
-                          <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-                        </div>
-                        <div><div className="font-medium text-white">{p.name}</div><div className="text-gray-500 text-xs truncate max-w-[200px]">{p.description}</div></div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-gray-400 font-mono text-xs">{p.sku || '—'}</td>
-                    <td className="p-4"><span className="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-gray-300">{p.category || '—'}</span></td>
-                    <td className="p-4 text-center"><span className="text-white font-bold">{p.variants?.length || 0}</span></td>
-                    <td className="p-4 text-right text-white font-medium">{formatPrice(p.price)}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${p.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : p.status === 'archived' ? 'bg-gray-500/10 text-gray-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                        {p.status || 'active'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center gap-1 justify-end">
-                        <button onClick={() => startEdit(p)} className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-vitorra-gold transition-colors"><Edit3 className="w-4 h-4" /></button>
-                        <button onClick={() => updateProduct(p.id, { status: p.status === 'archived' ? 'active' : 'archived' })} className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-amber-400 transition-colors"><Archive className="w-4 h-4" /></button>
-                        <button onClick={() => { if (confirm(`Delete ${p.name}?`)) removeProduct(p.id) }} className="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {filtered.length === 0 && <div className="p-12 text-center text-gray-500">No products match your search.</div>}
+        <div style={{
+          background: 'var(--bg-surface)', border: '1px solid var(--border-faint)',
+          borderRadius: 'var(--radius-lg)', overflow: 'hidden',
+        }}>
+          {/* Table header */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '56px 1fr 120px 100px 80px 110px 100px 130px',
+            padding: '10px 20px', borderBottom: '1px solid var(--border-dim)',
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', fontWeight: 700,
+            color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em',
+            background: 'var(--bg-elevated)',
+          }}>
+            <span />
+            <span>Product</span>
+            <span>Category</span>
+            <span style={{ textAlign: 'center' }}>Variants</span>
+            <span style={{ textAlign: 'center' }}>Stock</span>
+            <span style={{ textAlign: 'right' }}>Price</span>
+            <span>Status</span>
+            <span style={{ textAlign: 'right' }}>Actions</span>
           </div>
+
+          {/* Rows */}
+          {filtered.map(p => {
+            const sb = stockBadge(p.stock || (p.variants?.reduce((s, v) => s + v.stock, 0) || 0));
+            const isExp = expandedRow === p.id;
+            return (
+              <div key={p.id} style={{ borderBottom: '1px solid var(--border-faint)' }}>
+                <div
+                  onClick={() => setExpandedRow(isExp ? null : p.id)}
+                  style={{
+                    display: 'grid', gridTemplateColumns: '56px 1fr 120px 100px 80px 110px 100px 130px',
+                    padding: '12px 20px', alignItems: 'center', cursor: 'pointer',
+                    transition: 'var(--transition-fast)',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-elevated)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  {/* Thumbnail */}
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 'var(--radius-md)',
+                    overflow: 'hidden', border: '1px solid var(--border-dim)', flexShrink: 0,
+                  }}>
+                    {p.imageUrl ? (
+                      <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', background: 'var(--bg-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Package size={16} style={{ color: 'var(--text-tertiary)' }} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Name & description */}
+                  <div style={{ minWidth: 0, paddingRight: 12 }}>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {p.sku ? <span style={{ fontFamily: 'var(--font-mono)', marginRight: 8 }}>{p.sku}</span> : null}
+                      {p.description?.replace(/<[^>]*>/g, '').slice(0, 60)}
+                    </div>
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <span style={{
+                      padding: '3px 8px', borderRadius: 'var(--radius-sm)',
+                      fontSize: 'var(--text-2xs)', fontWeight: 600,
+                      background: 'var(--bg-overlay)', color: 'var(--text-secondary)',
+                      border: '1px solid var(--border-dim)',
+                    }}>{p.category || '—'}</span>
+                  </div>
+
+                  {/* Variants */}
+                  <div style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {p.variants?.length || 0}
+                  </div>
+
+                  {/* Stock */}
+                  <div style={{ textAlign: 'center' }}>
+                    <span style={{
+                      padding: '2px 8px', borderRadius: 'var(--radius-full)',
+                      fontSize: 'var(--text-2xs)', fontWeight: 700,
+                      background: sb.bg, color: sb.color,
+                    }}>{(p.stock || p.variants?.reduce((s, v) => s + v.stock, 0) || 0)}</span>
+                  </div>
+
+                  {/* Price */}
+                  <div style={{ textAlign: 'right', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>
+                    {formatPrice(p.price)}
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <span style={{
+                      padding: '3px 8px', borderRadius: 'var(--radius-full)',
+                      fontSize: 'var(--text-2xs)', fontWeight: 700, textTransform: 'uppercase',
+                      background: (p.status || 'active') === 'active' ? 'var(--success-muted)' : (p.status === 'archived' ? 'var(--neutral-muted)' : 'var(--warning-muted)'),
+                      color: (p.status || 'active') === 'active' ? 'var(--success)' : (p.status === 'archived' ? 'var(--neutral)' : 'var(--warning)'),
+                    }}>{p.status || 'active'}</span>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+                    <ActionBtn onClick={e => { e.stopPropagation(); duplicateProduct(p); }} title="Duplicate"><Copy size={14} /></ActionBtn>
+                    <ActionBtn onClick={e => { e.stopPropagation(); startEdit(p); }} title="Edit" hoverColor="var(--accent-primary)"><Edit3 size={14} /></ActionBtn>
+                    <ActionBtn onClick={e => { e.stopPropagation(); updateProduct(p.id, { status: p.status === 'archived' ? 'active' : 'archived' }); }} title="Archive"><Archive size={14} /></ActionBtn>
+                    <ActionBtn onClick={e => { e.stopPropagation(); if (confirm(`Delete ${p.name}?`)) removeProduct(p.id); }} title="Delete" hoverColor="var(--danger)"><Trash2 size={14} /></ActionBtn>
+                    <div style={{ width: 1, height: 16, background: 'var(--border-dim)', margin: '0 2px' }} />
+                    <div style={{ color: isExp ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}>
+                      {isExp ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded variant table */}
+                {isExp && (
+                  <div style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border-faint)', padding: '16px 24px 16px 76px' }}>
+                    {(p.variants || []).length > 0 ? (
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)' }}>
+                        <thead>
+                          <tr style={{ fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 'var(--text-2xs)' }}>
+                            <th style={{ padding: '6px 0', textAlign: 'left' }}>SKU</th>
+                            <th style={{ padding: '6px 0', textAlign: 'left' }}>Variant</th>
+                            <th style={{ padding: '6px 0', textAlign: 'right' }}>Price</th>
+                            <th style={{ padding: '6px 0', textAlign: 'right' }}>Stock</th>
+                            <th style={{ padding: '6px 0', textAlign: 'center' }}>B2B</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {p.variants!.map(v => {
+                            const vs = stockBadge(v.stock);
+                            return (
+                              <tr key={v.id} style={{ borderTop: '1px solid var(--border-faint)' }}>
+                                <td style={{ padding: '8px 0', fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', opacity: 0.7 }}>{v.sku || '—'}</td>
+                                <td style={{ padding: '8px 0', color: 'var(--text-primary)', fontWeight: 500 }}>{v.name}</td>
+                                <td style={{ padding: '8px 0', textAlign: 'right', color: 'var(--text-secondary)' }}>{formatPrice(v.price)}</td>
+                                <td style={{ padding: '8px 0', textAlign: 'right' }}>
+                                  <span style={{ padding: '2px 6px', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-2xs)', fontWeight: 700, background: vs.bg, color: vs.color }}>{v.stock}</span>
+                                </td>
+                                <td style={{ padding: '8px 0', textAlign: 'center', color: v.isB2B ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}>{v.isB2B ? '✓' : '—'}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', fontStyle: 'italic', padding: '8px 0' }}>
+                        No variants configured for this product.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {filtered.length === 0 && (
+            <div style={{
+              textAlign: 'center', padding: '48px 20px',
+              fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)',
+            }}>No products match your filters.</div>
+          )}
         </div>
       )}
 
-      {/* Grid View */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          GRID VIEW (Compact cards)
+         ═══════════════════════════════════════════════════════════════════ */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map(p => (
-            <div key={p.id} className={`group relative overflow-hidden flex flex-col bg-[#0d0d0d] border border-white/5 hover:border-vitorra-gold/30 rounded-2xl transition-all duration-300 ${p.type === 'wide' ? 'md:col-span-2' : ''} ${p.status === 'archived' ? 'opacity-50' : ''}`}>
-              {/* Image Header */}
-              <div className="relative h-40 overflow-hidden bg-[#242424]">
-                <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-transparent" />
-                <div className="absolute top-3 right-3 flex gap-1.5">
-                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase backdrop-blur-md ${p.status === 'active' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : p.status === 'archived' ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
-                    {p.status || 'active'}
-                  </span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          {filtered.map(p => {
+            const sb = stockBadge(p.stock || (p.variants?.reduce((s, v) => s + v.stock, 0) || 0));
+            return (
+              <div key={p.id} style={{
+                background: 'var(--bg-surface)', border: '1px solid var(--border-faint)',
+                borderRadius: 'var(--radius-lg)', overflow: 'hidden',
+                transition: 'var(--transition-fast)', opacity: p.status === 'archived' ? 0.5 : 1,
+              }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(198,137,88,0.3)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-faint)'}
+              >
+                {/* Image */}
+                <div style={{ position: 'relative', height: 120, background: 'var(--bg-elevated)', overflow: 'hidden' }}>
+                  {p.imageUrl && <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />}
+                  <div style={{ position: 'absolute', top: 8, left: 8 }}>
+                    <span style={{
+                      padding: '2px 8px', borderRadius: 'var(--radius-sm)',
+                      fontSize: 'var(--text-2xs)', fontWeight: 700, textTransform: 'uppercase',
+                      background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+                      color: 'var(--text-secondary)', border: '1px solid var(--border-dim)',
+                    }}>{p.category || '—'}</span>
+                  </div>
+                  <div style={{ position: 'absolute', top: 8, right: 8 }}>
+                    <span style={{
+                      padding: '2px 8px', borderRadius: 'var(--radius-full)',
+                      fontSize: 'var(--text-2xs)', fontWeight: 700, textTransform: 'uppercase',
+                      background: (p.status || 'active') === 'active' ? 'var(--success-muted)' : 'var(--warning-muted)',
+                      color: (p.status || 'active') === 'active' ? 'var(--success)' : 'var(--warning)',
+                    }}>{p.status || 'active'}</span>
+                  </div>
                 </div>
-                <div className="absolute top-3 left-3">
-                  <span className="px-2.5 py-1 bg-black/60 backdrop-blur-md rounded text-[10px] font-bold uppercase text-gray-300 border border-white/10">{p.category || 'Uncategorized'}</span>
+
+                {/* Content */}
+                <div style={{ padding: 16 }}>
+                  <h4 style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>{p.name}</h4>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: '0 0 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {p.description?.replace(/<[^>]*>/g, '').slice(0, 80) || '—'}
+                  </p>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, padding: '10px 0', borderTop: '1px solid var(--border-faint)', borderBottom: '1px solid var(--border-faint)', marginBottom: 12 }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 2 }}>Price</div>
+                      <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>{formatPrice(p.price)}</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 2 }}>Variants</div>
+                      <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>{p.variants?.length || 0}</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 2 }}>Stock</div>
+                      <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: sb.color }}>{p.stock || p.variants?.reduce((s, v) => s + v.stock, 0) || 0}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => startEdit(p)} style={{
+                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      padding: '7px 0', borderRadius: 'var(--radius-md)',
+                      background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+                      fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: 500,
+                      color: 'var(--text-secondary)', cursor: 'pointer', transition: 'var(--transition-fast)',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent-primary)'; e.currentTarget.style.borderColor = 'var(--accent-primary)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.borderColor = 'var(--border-dim)'; }}
+                    ><Edit3 size={13} /> Edit</button>
+                    <ActionBtn onClick={() => duplicateProduct(p)} title="Duplicate"><Copy size={13} /></ActionBtn>
+                    <ActionBtn onClick={() => updateProduct(p.id, { status: p.status === 'archived' ? 'active' : 'archived' })} title="Archive"><Archive size={13} /></ActionBtn>
+                    <ActionBtn onClick={() => { if (confirm(`Delete ${p.name}?`)) removeProduct(p.id); }} title="Delete" hoverColor="var(--danger)"><Trash2 size={13} /></ActionBtn>
+                  </div>
                 </div>
               </div>
-
-              {/* Content */}
-              <div className="p-5 flex-1 flex flex-col">
-                <h4 className="text-lg font-serif text-white mb-1 group-hover:text-vitorra-gold transition-colors">{p.name}</h4>
-                <p className="text-sm text-gray-400 line-clamp-2 mb-4 flex-1">{p.description}</p>
-
-                <div className="grid grid-cols-3 gap-3 text-center mb-4 py-3 bg-white/5 rounded-xl">
-                  <div><div className="text-xs text-gray-500 uppercase mb-1">Price</div><div className="text-sm text-white font-medium">{p.price ? formatPrice(p.price) : '—'}</div></div>
-                  <div><div className="text-xs text-gray-500 uppercase mb-1">Variants</div><div className="text-sm text-white font-medium">{p.variants?.length || 0}</div></div>
-                  <div><div className="text-xs text-gray-500 uppercase mb-1">SKU</div><div className="text-sm text-gray-400 font-mono">{p.sku || '—'}</div></div>
-                </div>
-
-                <div className="flex items-center gap-2 pt-3 border-t border-white/10">
-                  <button onClick={() => startEdit(p)} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-white/5 hover:bg-vitorra-gold/10 text-gray-400 hover:text-vitorra-gold text-sm font-medium transition-colors border border-white/10 hover:border-vitorra-gold/30">
-                    <Edit3 className="w-3.5 h-3.5" /> Edit
-                  </button>
-                  <button onClick={() => updateProduct(p.id, { status: p.status === 'archived' ? 'active' : 'archived' })}
-                    className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-amber-400 transition-colors border border-white/10">
-                    <Archive className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => { if (confirm(`Delete ${p.name}?`)) removeProduct(p.id) }}
-                    className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors border border-white/10">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
+          {filtered.length === 0 && (
+            <div style={{
+              gridColumn: '1 / -1', textAlign: 'center', padding: '48px 20px',
+              border: '1px dashed var(--border-dim)', borderRadius: 'var(--radius-lg)',
+              fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)',
+            }}>No products match your filters.</div>
+          )}
         </div>
-      )}
-      {filtered.length === 0 && viewMode === 'grid' && (
-        <div className="text-center py-16 border border-dashed border-white/10 rounded-2xl text-gray-500">No products match your filters.</div>
       )}
     </div>
+  );
+}
+
+/* ═══ HELPER COMPONENTS ═══ */
+
+function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)',
+      fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em',
+      color: 'var(--accent-primary)', marginBottom: 12, paddingBottom: 8,
+      borderBottom: '1px solid var(--border-faint)',
+    }}>{icon} {title}</div>
+  );
+}
+
+function ActionBtn({ children, onClick, title, hoverColor }: {
+  children: React.ReactNode; onClick: (e: React.MouseEvent) => void; title: string; hoverColor?: string;
+}) {
+  return (
+    <button onClick={onClick} title={title} style={{
+      width: 32, height: 32, borderRadius: 'var(--radius-md)',
+      background: 'var(--bg-elevated)', border: '1px solid var(--border-dim)',
+      cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-fast)',
+    }}
+      onMouseEnter={e => {
+        e.currentTarget.style.color = hoverColor || 'var(--text-primary)';
+        e.currentTarget.style.borderColor = hoverColor || 'var(--border-strong)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.color = 'var(--text-tertiary)';
+        e.currentTarget.style.borderColor = 'var(--border-dim)';
+      }}
+    >{children}</button>
   );
 }

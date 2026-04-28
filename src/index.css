@@ -26,6 +26,8 @@
   --color-vitorra-muted: var(--text-secondary);
   --color-vitorra-border: var(--border-color);
   --color-vitorra-card: var(--card-bg);
+  --color-vitorra-elevated: var(--surface-elevated);
+  --color-vitorra-tertiary: var(--text-tertiary);
 }
 
 :root {
@@ -33,25 +35,31 @@
   --bg-secondary: #f2f0ea;
   --text-primary: #1a1a1a;
   --text-secondary: #4b5563;
+  --text-tertiary: #9ca3af;
   --border-color: rgba(0, 0, 0, 0.08);
   --nav-bg: rgba(250, 249, 246, 0.7);
   --card-bg: #faf9f6;
+  --surface-elevated: #ffffff;
+  --surface-interactive: rgba(166, 134, 59, 0.06);
   --vitorra-gold: #A6863B;
   --vitorra-gold-hover: #917431;
   --vitorra-gold-text: #1a1a1a;
 }
 
 .dark {
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #242424;
-  --text-primary: #ffffff;
-  --text-secondary: #94a3b8;
-  --border-color: rgba(255, 255, 255, 0.1);
+  --bg-primary: #0A1628;
+  --bg-secondary: #111D2E;
+  --text-primary: #F0F2F5;
+  --text-secondary: #7A8BA0;
+  --text-tertiary: #556578;
+  --border-color: rgba(255, 255, 255, 0.08);
   --nav-bg: rgba(0, 0, 0, 0.5);
-  --card-bg: #2b2b2b;
-  --vitorra-gold: #CFB53B;
-  --vitorra-gold-hover: #d4b26f;
-  --vitorra-gold-text: #1a1a1a;
+  --card-bg: #142237;
+  --surface-elevated: #1A2D45;
+  --surface-interactive: rgba(212, 168, 67, 0.06);
+  --vitorra-gold: #D4A843;
+  --vitorra-gold-hover: #C49A3D;
+  --vitorra-gold-text: #0A1628;
 }
 
 @layer base {
@@ -85,7 +93,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-medium tracking-tight drop-shadow-sm;
+    @apply font-heading font-semibold tracking-tight;
     font-family: var(--font-heading);
     line-height: 1.25;
   }
@@ -125,14 +133,30 @@
     line-height: 1.3;
   }
 
-  /* Utility classes for specific typography needs */
-  .text-label {
-    font-size: 13px;
+  /* =========================================
+     Typography Utility Classes
+     ========================================= */
+  
+  /* Micro labels — smallest text on the site (badges, timestamps) — min 11px */
+  .text-micro {
+    font-size: 11px;
     font-family: var(--font-body);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* Form labels — field labels, section headers — min 12px */
+  .text-label {
+    font-size: 12px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
   @media (min-width: 1024px) {
     .text-label {
-      font-size: 14px;
+      font-size: 13px;
     }
   }
 
@@ -147,25 +171,190 @@
   }
 
   .btn-text {
-    @apply font-bold uppercase tracking-widest;
-    font-size: 14px;
+    @apply font-bold uppercase;
+    letter-spacing: 0.15em;
+    font-size: 13px;
     font-family: var(--font-heading);
   }
   @media (min-width: 1024px) {
     .btn-text {
-      font-size: 16px;
+      font-size: 14px;
     }
   }
 
-  /* Focus states for input fields across the app */
-  input:focus,
+  /* =========================================
+     Enhanced Form Input Styles
+     Inputs are now clearly visible on dark backgrounds
+     ========================================= */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    background: rgba(10, 22, 40, 0.5);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: border-color 200ms ease, background-color 200ms ease, box-shadow 200ms ease;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):focus,
   select:focus,
   textarea:focus {
-    @apply ring-1 ring-vitorra-gold shadow-[0_0_15px_rgba(197,160,89,0.1)];
+    border-color: var(--vitorra-gold);
+    background: rgba(10, 22, 40, 0.7);
+    box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.12);
+    outline: none;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):disabled,
+  select:disabled,
+  textarea:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-tertiary);
   }
 }
 
-/* Refined Custom Scrollbar */
+/* =========================================
+   Card Elevation System
+   ========================================= */
+
+/* Standard card — for list items, product cards, portal sections */
+.card-base {
+  background: var(--card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Elevated card — for modals, expanded sections, popovers */
+.card-elevated {
+  background: var(--surface-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Interactive card — hover-ready card with transition */
+.card-interactive {
+  background: var(--card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: all 250ms ease;
+}
+.card-interactive:hover {
+  border-color: rgba(212, 168, 67, 0.2);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(212, 168, 67, 0.1);
+  transform: translateY(-1px);
+}
+
+/* =========================================
+   Button Tiers — use as utility classes
+   ========================================= */
+
+/* .btn-primary — gold fill, dark text: main CTAs */
+.btn-primary {
+  background: var(--vitorra-gold);
+  color: var(--vitorra-gold-text);
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 12px 24px;
+  min-height: 44px;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 16px rgba(212, 168, 67, 0.25);
+  transition: all 200ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-primary:hover {
+  background: var(--vitorra-gold-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(212, 168, 67, 0.35);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* .btn-secondary — transparent bg, gold border & text: secondary actions */
+.btn-secondary {
+  background: transparent;
+  color: var(--vitorra-gold);
+  font-weight: 700;
+  border: 1.5px solid var(--vitorra-gold);
+  border-radius: 12px;
+  padding: 12px 24px;
+  min-height: 44px;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 200ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-secondary:hover {
+  background: rgba(212, 168, 67, 0.08);
+  transform: translateY(-1px);
+}
+
+/* .btn-ghost — subtle border, muted text: tertiary actions */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px 20px;
+  min-height: 44px;
+  font-size: 13px;
+  transition: all 200ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--surface-interactive);
+}
+
+/* .btn-danger — red tint: destructive actions */
+.btn-danger {
+  background: rgba(248, 113, 113, 0.08);
+  color: #F87171;
+  font-weight: 700;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 12px;
+  padding: 10px 20px;
+  min-height: 44px;
+  font-size: 13px;
+  transition: all 200ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-danger:hover {
+  background: rgba(248, 113, 113, 0.15);
+}
+
+/* =========================================
+   Refined Custom Scrollbar
+   ========================================= */
 ::-webkit-scrollbar {
   width: 8px;
 }
