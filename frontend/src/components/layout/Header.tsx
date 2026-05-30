@@ -2,149 +2,200 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
-import { LinkButton } from "@/components/ui/link-button";
+import { useState, useEffect } from "react";
+import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NAV_LINKS } from "@/lib/constants";
+
+const products = [
+  { label: "Fuel Eco Tech", href: "/products/fuel-eco-tech", desc: "Fleet fuel efficiency technology" },
+  { label: "SEAL Wound Spray", href: "/products/seal-wound-spray", desc: "Hemostatic emergency care" },
+  { label: "Vitorra Coffee", href: "/products/coffee", desc: "Premium Ugandan coffee" },
+  { label: "Logistics Services", href: "/products/logistics", desc: "End-to-end freight & supply chain" },
+];
+
+const navLinks = [
+  { label: "About", href: "/about" },
+  { label: "Products", href: "#", hasDropdown: true },
+  { label: "Coffee Shop", href: "/shop" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
+];
 
 export default function Header() {
+  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="fixed inset-x-0 top-0 z-50 bg-charcoal/95 backdrop-blur-sm border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
+    <>
+      {/* ── Floating Pill Navigation (Mastercard signature) ───────────── */}
+      <header
+        className={cn(
+          "fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4 md:px-6 md:pt-5 transition-all duration-300",
+          mobileOpen && "inset-x-0 bg-transparent"
+        )}
+      >
+        {/* The pill itself */}
+        <nav
+          className={cn(
+            "w-full max-w-6xl bg-white rounded-[999px] transition-shadow duration-300",
+            scrolled ? "shadow-[rgba(0,0,0,0.10)_0px_8px_32px_0px]" : "shadow-pill-nav"
+          )}
+        >
+          <div className="flex items-center justify-between px-5 md:px-8 h-14">
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          {/* mix-blend-mode: screen makes white transparent on dark backgrounds */}
-          <Image
-            src="/logo.png"
-            alt="Vitorra Holdings Limited"
-            width={44}
-            height={44}
-            className="mix-blend-screen"
-            priority
-          />
-          <span className="font-serif text-white text-lg leading-tight hidden sm:block">
-            Vitorra<span className="text-gold"> Holdings</span>
-          </span>
-        </Link>
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2.5 shrink-0">
+              <Image
+                src="/logo.png"
+                alt="Vitorra Holdings Limited"
+                width={38}
+                height={38}
+                className="mix-blend-multiply"
+                priority
+              />
+              <span
+                className="font-serif text-charcoal text-base leading-tight hidden sm:block"
+                style={{ fontFamily: "var(--font-playfair, Georgia, serif)", letterSpacing: "-0.01em" }}
+              >
+                Vitorra<span className="text-[#A89255]"> Holdings</span>
+              </span>
+            </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-8">
-          {NAV_LINKS.map((link) =>
-            "children" in link ? (
-              <div key={link.label} className="relative group">
-                <button
-                  className="flex items-center gap-1 text-sm text-white/80 hover:text-gold transition-colors"
-                  onMouseEnter={() => setProductsOpen(true)}
-                  onMouseLeave={() => setProductsOpen(false)}
-                >
-                  {link.label}
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </button>
-                <div
-                  className={cn(
-                    "absolute top-full left-1/2 -translate-x-1/2 pt-2 transition-all duration-200",
-                    productsOpen
-                      ? "opacity-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 -translate-y-1 pointer-events-none"
-                  )}
-                  onMouseEnter={() => setProductsOpen(true)}
-                  onMouseLeave={() => setProductsOpen(false)}
-                >
-                  <div className="bg-charcoal border border-white/10 rounded-lg shadow-xl p-2 w-52">
-                    {link.children.map((child) => (
+            {/* Desktop links — center */}
+            <div className="hidden lg:flex items-center gap-7">
+              {navLinks.map((link) =>
+                link.hasDropdown ? (
+                  <div
+                    key={link.label}
+                    className="relative"
+                    onMouseEnter={() => setProductsOpen(true)}
+                    onMouseLeave={() => setProductsOpen(false)}
+                  >
+                    <button className="flex items-center gap-1 text-sm font-medium text-charcoal/80 hover:text-charcoal transition-colors">
+                      {link.label}
+                      <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200", productsOpen && "rotate-180")} />
+                    </button>
+
+                    {/* Dropdown */}
+                    <div
+                      className={cn(
+                        "absolute top-full left-1/2 -translate-x-1/2 pt-3 transition-all duration-200",
+                        productsOpen
+                          ? "opacity-100 translate-y-0 pointer-events-auto"
+                          : "opacity-0 -translate-y-2 pointer-events-none"
+                      )}
+                    >
+                      <div className="bg-white rounded-[24px] shadow-[rgba(0,0,0,0.12)_0px_16px_40px] p-3 w-64 border border-black/5">
+                        {products.map((p) => (
+                          <Link
+                            key={p.href}
+                            href={p.href}
+                            className="group flex items-start gap-3 px-4 py-3 rounded-[16px] hover:bg-[#F2F2F2] transition-colors"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-charcoal group-hover:text-[#A89255] transition-colors">
+                                {p.label}
+                              </p>
+                              <p className="text-xs text-charcoal/50 mt-0.5 leading-relaxed">
+                                {p.desc}
+                              </p>
+                            </div>
+                            <ArrowRight className="w-3.5 h-3.5 text-charcoal/30 group-hover:text-gold mt-0.5 shrink-0 transition-all group-hover:translate-x-0.5" />
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className="text-sm font-medium text-charcoal/80 hover:text-charcoal transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
+            </div>
+
+            {/* CTA + mobile toggle — right */}
+            <div className="flex items-center gap-3">
+              <Link
+                href="/enquire"
+                className="hidden lg:inline-flex btn-primary text-sm"
+                style={{ padding: "8px 22px", fontSize: "14px", borderRadius: "20px" }}
+              >
+                Request a Quote
+              </Link>
+              <button
+                className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full bg-charcoal/5 hover:bg-charcoal/10 transition-colors text-charcoal"
+                onClick={() => setMobileOpen(!mobileOpen)}
+                aria-label="Toggle menu"
+              >
+                {mobileOpen ? <X className="w-4.5 h-4.5" /> : <Menu className="w-4.5 h-4.5" />}
+              </button>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* ── Mobile menu ──────────────────────────────────────────────────── */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 pt-24 px-4 bg-[#F2F2F2]">
+          <div className="bg-white rounded-[32px] shadow-card p-6">
+            <nav className="flex flex-col gap-1">
+              <p className="eyebrow mb-3 px-3">Navigation</p>
+              {navLinks.map((link) =>
+                link.hasDropdown ? (
+                  <div key={link.label}>
+                    <p className="px-3 py-1 text-xs font-bold uppercase tracking-widest text-charcoal/40 mt-4 mb-1">
+                      Products
+                    </p>
+                    {products.map((p) => (
                       <Link
-                        key={child.href}
-                        href={child.href}
-                        className="block px-4 py-2.5 text-sm text-white/80 hover:text-gold hover:bg-white/5 rounded-md transition-colors"
+                        key={p.href}
+                        href={p.href}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-[16px] hover:bg-[#F2F2F2] transition-colors"
                       >
-                        {child.label}
+                        <div>
+                          <p className="text-sm font-semibold text-charcoal">{p.label}</p>
+                          <p className="text-xs text-charcoal/50">{p.desc}</p>
+                        </div>
                       </Link>
                     ))}
                   </div>
-                </div>
-              </div>
-            ) : (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-sm text-white/80 hover:text-gold transition-colors"
-              >
-                {link.label}
-              </Link>
-            )
-          )}
-        </nav>
-
-        {/* Desktop CTA */}
-        <div className="hidden lg:flex items-center gap-3">
-          <LinkButton
-            href="/enquire"
-            size="sm"
-            className="bg-gold text-charcoal hover:bg-gold-light font-medium"
-          >
-            Request a Quote
-          </LinkButton>
-        </div>
-
-        {/* Mobile hamburger */}
-        <button
-          className="lg:hidden text-white p-1"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="lg:hidden bg-charcoal border-t border-white/10 px-6 pb-6 pt-4">
-          <nav className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) =>
-              "children" in link ? (
-                <div key={link.label}>
-                  <p className="text-xs uppercase tracking-widest text-white/40 mt-4 mb-2 px-3">
+                ) : (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="px-3 py-3 text-sm font-medium text-charcoal rounded-[16px] hover:bg-[#F2F2F2] transition-colors"
+                  >
                     {link.label}
-                  </p>
-                  {link.children.map((child) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="block px-3 py-2.5 text-sm text-white/80 hover:text-gold transition-colors rounded-md"
-                    >
-                      {child.label}
-                    </Link>
-                  ))}
-                </div>
-              ) : (
+                  </Link>
+                )
+              )}
+              <div className="pt-4 mt-2 border-t border-black/5">
                 <Link
-                  key={link.label}
-                  href={link.href}
+                  href="/enquire"
                   onClick={() => setMobileOpen(false)}
-                  className="block px-3 py-2.5 text-sm text-white/80 hover:text-gold transition-colors rounded-md"
+                  className="btn-primary w-full justify-center"
                 >
-                  {link.label}
+                  Request a Quote
                 </Link>
-              )
-            )}
-            <div className="pt-4 border-t border-white/10 mt-4">
-              <LinkButton
-                href="/enquire"
-                onClick={() => setMobileOpen(false)}
-                className="w-full bg-gold text-charcoal hover:bg-gold-light font-medium"
-              >
-                Request a Quote
-              </LinkButton>
-            </div>
-          </nav>
+              </div>
+            </nav>
+          </div>
         </div>
       )}
-    </header>
+    </>
   );
 }

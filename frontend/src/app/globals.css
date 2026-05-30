@@ -4,107 +4,111 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── Vitorra Design Tokens ─────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   VITORRA DESIGN SYSTEM — Mastercard architecture × Vitorra Gold identity
+   ══════════════════════════════════════════════════════════════════════════ */
+
 @theme inline {
-  /* Colour aliases → Tailwind utility classes */
-  --color-background:               var(--background);
-  --color-foreground:               var(--foreground);
-  --color-card:                     var(--card);
-  --color-card-foreground:          var(--card-foreground);
-  --color-popover:                  var(--popover);
-  --color-popover-foreground:       var(--popover-foreground);
-  --color-primary:                  var(--primary);
-  --color-primary-foreground:       var(--primary-foreground);
-  --color-secondary:                var(--secondary);
-  --color-secondary-foreground:     var(--secondary-foreground);
-  --color-muted:                    var(--muted);
-  --color-muted-foreground:         var(--muted-foreground);
-  --color-accent:                   var(--accent);
-  --color-accent-foreground:        var(--accent-foreground);
-  --color-destructive:              var(--destructive);
-  --color-border:                   var(--border);
-  --color-input:                    var(--input);
-  --color-ring:                     var(--ring);
 
-  /* Brand colours — use as bg-gold, text-gold, etc. */
-  --color-gold:                     #C5B27A;
-  --color-gold-light:               #D4C49A;
-  --color-gold-dark:                #A89255;
-  --color-ivory:                    #F2F2F2;
-  --color-charcoal:                 #1E1E1E;
+  /* ── Colors: Vitorra brand tokens ─────────────────────────────────────── */
+  --color-gold:           #C5B27A;   /* Primary CTA, accents, arcs        */
+  --color-gold-light:     #D4C49A;   /* CTA hover                         */
+  --color-gold-dark:      #A89255;   /* CTA pressed, dark section accent  */
+  --color-ivory:          #F2F2F2;   /* Page canvas — warm, never sterile */
+  --color-ivory-lifted:   #FAFAF8;   /* Raised sections / nested cards    */
+  --color-charcoal:       #1E1E1E;   /* Footer, heroes, heading text      */
+  --color-body:           #454545;   /* Default body text                 */
+  --color-muted:          #696969;   /* Captions, disabled, muted labels  */
 
-  /* Chart */
-  --color-chart-1:                  var(--chart-1);
-  --color-chart-2:                  var(--chart-2);
-  --color-chart-3:                  var(--chart-3);
-  --color-chart-4:                  var(--chart-4);
-  --color-chart-5:                  var(--chart-5);
-
-  /* Sidebar */
-  --color-sidebar:                  var(--sidebar);
-  --color-sidebar-foreground:       var(--sidebar-foreground);
-  --color-sidebar-primary:          var(--sidebar-primary);
+  /* ── Colors: shadcn semantic tokens ─────────────────────────────────── */
+  --color-background:              var(--background);
+  --color-foreground:              var(--foreground);
+  --color-card:                    var(--card);
+  --color-card-foreground:         var(--card-foreground);
+  --color-popover:                 var(--popover);
+  --color-popover-foreground:      var(--popover-foreground);
+  --color-primary:                 var(--primary);
+  --color-primary-foreground:      var(--primary-foreground);
+  --color-secondary:               var(--secondary);
+  --color-secondary-foreground:    var(--secondary-foreground);
+  --color-muted-foreground:        var(--muted-foreground);
+  --color-accent:                  var(--accent);
+  --color-accent-foreground:       var(--accent-foreground);
+  --color-destructive:             var(--destructive);
+  --color-border:                  var(--border);
+  --color-input:                   var(--input);
+  --color-ring:                    var(--ring);
+  --color-chart-1:                 var(--chart-1);
+  --color-chart-2:                 var(--chart-2);
+  --color-chart-3:                 var(--chart-3);
+  --color-chart-4:                 var(--chart-4);
+  --color-chart-5:                 var(--chart-5);
+  --color-sidebar:                 var(--sidebar);
+  --color-sidebar-foreground:      var(--sidebar-foreground);
+  --color-sidebar-primary:         var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent:           var(--sidebar-accent);
+  --color-sidebar-accent:          var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border:           var(--sidebar-border);
-  --color-sidebar-ring:             var(--sidebar-ring);
+  --color-sidebar-border:          var(--sidebar-border);
+  --color-sidebar-ring:            var(--sidebar-ring);
 
-  /* Border radius — tighter = more premium */
-  --radius-sm:  calc(var(--radius) * 0.6);
-  --radius-md:  calc(var(--radius) * 0.8);
-  --radius-lg:  var(--radius);
-  --radius-xl:  calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* ── Border radius: Mastercard scale (skip 8-16px generic zone) ───────
+     4-6px → 20px → 40px → 50% → 999px                                    */
+  --radius-xs:   4px;           /* Tiny chips                              */
+  --radius-btn:  20px;          /* All CTAs — Mastercard signature button  */
+  --radius-card: 40px;          /* Stadium cards, hero frames              */
+  --radius-pill: 9999px;        /* Floating nav, full-pill tags            */
+  --radius-sm:   calc(var(--radius) * 0.6);
+  --radius-md:   calc(var(--radius) * 0.8);
+  --radius-lg:   var(--radius);
+  --radius-xl:   calc(var(--radius) * 1.4);
 
-  /* Typography */
+  /* ── Typography ───────────────────────────────────────────────────────── */
   --font-sans:    var(--font-inter);
   --font-serif:   var(--font-playfair);
-  --font-mono:    ui-monospace, monospace;
   --font-heading: var(--font-playfair);
+  --font-mono:    ui-monospace, monospace;
 }
 
-/* ─── Light Mode (Vitorra Brand) ────────────────────────────────────────── */
+/* ── Light Mode: Vitorra × Mastercard ─────────────────────────────────── */
 :root {
-  --background:              oklch(1 0 0);                  /* #FFFFFF       */
-  --foreground:              oklch(0.145 0 0);              /* #1E1E1E       */
-  --card:                    oklch(0.964 0 0);              /* #F2F2F2 ivory */
+  --background:              oklch(0.965 0 0);     /* Vitorra Ivory #F2F2F2   */
+  --foreground:              oklch(0.145 0 0);     /* Charcoal #1E1E1E        */
+  --card:                    oklch(0.982 0 0);     /* Lifted ivory #FAFAF8    */
   --card-foreground:         oklch(0.145 0 0);
   --popover:                 oklch(1 0 0);
   --popover-foreground:      oklch(0.145 0 0);
-  --primary:                 oklch(0.749 0.075 83);         /* Vitorra Gold  */
-  --primary-foreground:      oklch(0.145 0 0);              /* dark on gold  */
-  --secondary:               oklch(0.964 0 0);              /* ivory         */
+  --primary:                 oklch(0.749 0.075 83);/* Vitorra Gold #C5B27A    */
+  --primary-foreground:      oklch(0.145 0 0);     /* Dark text on gold       */
+  --secondary:               oklch(0.982 0 0);     /* Lifted ivory            */
   --secondary-foreground:    oklch(0.205 0 0);
   --muted:                   oklch(0.97 0 0);
-  --muted-foreground:        oklch(0.48 0 0);
-  --accent:                  oklch(0.87 0.03 83);           /* soft gold     */
+  --muted-foreground:        oklch(0.48 0 0);      /* Muted text #696969      */
+  --accent:                  oklch(0.87 0.03 83);  /* Soft gold tint          */
   --accent-foreground:       oklch(0.145 0 0);
   --destructive:             oklch(0.577 0.245 27.325);
-  --border:                  oklch(0.9 0 0);
-  --input:                   oklch(0.9 0 0);
-  --ring:                    oklch(0.749 0.075 83);         /* gold focus    */
-  --radius:                  0.375rem;                      /* premium tight */
+  --border:                  oklch(0.91 0 0);      /* Subtle warm border      */
+  --input:                   oklch(0.91 0 0);
+  --ring:                    oklch(0.749 0.075 83);/* Gold focus ring         */
+  --radius:                  1.25rem;              /* base for shadcn calcs   */
 
   --chart-1: oklch(0.749 0.075 83);
   --chart-2: oklch(0.62 0.05 83);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --chart-3: oklch(0.5 0.04 83);
+  --chart-4: oklch(0.4 0.03 83);
+  --chart-5: oklch(0.3 0 0);
 
-  --sidebar:                    oklch(0.985 0 0);
+  --sidebar:                    oklch(0.97 0 0);
   --sidebar-foreground:         oklch(0.145 0 0);
   --sidebar-primary:            oklch(0.749 0.075 83);
   --sidebar-primary-foreground: oklch(0.145 0 0);
-  --sidebar-accent:             oklch(0.964 0 0);
+  --sidebar-accent:             oklch(0.97 0 0);
   --sidebar-accent-foreground:  oklch(0.205 0 0);
-  --sidebar-border:             oklch(0.9 0 0);
+  --sidebar-border:             oklch(0.91 0 0);
   --sidebar-ring:               oklch(0.749 0.075 83);
 }
 
-/* ─── Dark Mode ─────────────────────────────────────────────────────────── */
+/* ── Dark Mode ──────────────────────────────────────────────────────────── */
 .dark {
   --background:              oklch(0.12 0 0);
   --foreground:              oklch(0.985 0 0);
@@ -124,13 +128,6 @@
   --border:                  oklch(1 0 0 / 10%);
   --input:                   oklch(1 0 0 / 12%);
   --ring:                    oklch(0.749 0.075 83);
-
-  --chart-1: oklch(0.749 0.075 83);
-  --chart-2: oklch(0.62 0.05 83);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-
   --sidebar:                    oklch(0.18 0 0);
   --sidebar-foreground:         oklch(0.985 0 0);
   --sidebar-primary:            oklch(0.749 0.075 83);
@@ -141,61 +138,242 @@
   --sidebar-ring:               oklch(0.749 0.075 83);
 }
 
-/* ─── Base Styles ───────────────────────────────────────────────────────── */
+/* ── Base Styles ───────────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   html {
-    @apply font-sans scroll-smooth;
+    @apply scroll-smooth;
+    background-color: #F2F2F2; /* ivory canvas — instant paint */
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: var(--font-inter), system-ui, sans-serif;
   }
+
+  /* Headings: Playfair Display, tight tracking */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif tracking-tight;
+    font-family: var(--font-playfair), Georgia, serif;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
   }
 }
 
-/* ─── Vitorra Utility Classes ───────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   VITORRA UTILITY CLASSES — Mastercard gestures × Vitorra identity
+   ══════════════════════════════════════════════════════════════════════════ */
 @layer utilities {
-  /* Gold gradient — hero backgrounds, section dividers */
-  .bg-gold-gradient {
-    background: linear-gradient(135deg, #C5B27A 0%, #D4C49A 50%, #A89255 100%);
-  }
 
-  /* Dark hero sections */
+  /* ── Section spacing ────────────────────────────────────────────────── */
+  .section-padding    { @apply py-24 md:py-32 px-6 md:px-12 lg:px-20; }
+  .section-padding-sm { @apply py-14 md:py-20 px-6 md:px-12 lg:px-20; }
+  .container-max      { @apply max-w-[1280px] mx-auto; }
+
+  /* ── Page canvas surfaces ───────────────────────────────────────────── */
+  .bg-canvas          { background-color: #F2F2F2; }   /* ivory page floor */
+  .bg-canvas-lifted   { background-color: #FAFAF8; }   /* raised sections  */
+  .bg-canvas-dark     { background-color: #1E1E1E; }   /* dark sections    */
+
+  /* Gradients */
   .bg-hero-dark {
-    background: linear-gradient(160deg, #1E1E1E 0%, #2D2D2D 100%);
+    background: linear-gradient(160deg, #1A1A1A 0%, #252525 100%);
+  }
+  .bg-gold-strip {
+    background-color: #C5B27A;
   }
 
-  /* Subtle gold shimmer on text */
+  /* ── Eyebrow label pattern (Mastercard signature) ───────────────────── */
+  /* Usage: <span class="eyebrow">Our Portfolio</span>                    */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-inter), sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #C5B27A;
+  }
+  .eyebrow::before {
+    content: '•';
+    font-size: 14px;
+    line-height: 1;
+    color: #C5B27A;
+  }
+
+  /* Dark-surface eyebrow */
+  .eyebrow-light {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-inter), sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #C5B27A;
+  }
+  .eyebrow-light::before {
+    content: '•';
+    font-size: 14px;
+    color: #C5B27A;
+  }
+
+  /* ── Ghost watermark text (Mastercard signature gesture) ────────────── */
+  /* Large section-theme text layered behind content, ivory-on-ivory      */
+  .ghost-text {
+    font-family: var(--font-playfair), Georgia, serif;
+    font-size: clamp(80px, 10vw, 140px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: #E2DDD8;       /* ivory-on-ivory — barely visible              */
+    user-select: none;
+    pointer-events: none;
+  }
+  .ghost-text-dark {
+    font-family: var(--font-playfair), Georgia, serif;
+    font-size: clamp(80px, 10vw, 140px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: rgba(255,255,255,0.04);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ── Vitorra Gold text gradient ─────────────────────────────────────── */
   .text-gold-gradient {
-    background: linear-gradient(90deg, #C5B27A, #D4C49A, #A89255);
+    background: linear-gradient(90deg, #C5B27A 0%, #D4C49A 50%, #A89255 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Gold underline decoration */
+  /* ── Gold underline decoration ──────────────────────────────────────── */
   .gold-underline {
     position: relative;
+    padding-bottom: 16px;
   }
   .gold-underline::after {
     content: '';
     position: absolute;
-    bottom: -4px;
+    bottom: 0;
     left: 0;
-    width: 3rem;
+    width: 40px;
     height: 2px;
     background: #C5B27A;
+    border-radius: 999px;
   }
 
-  /* Section spacing consistency */
-  .section-padding {
-    @apply py-20 md:py-28 px-6 md:px-12 lg:px-24;
+  /* ── Circular portrait (Mastercard team card treatment) ─────────────── */
+  .portrait-circle {
+    border-radius: 50%;
+    overflow: hidden;
+    aspect-ratio: 1;
+    position: relative;
   }
-  .section-padding-sm {
-    @apply py-12 md:py-16 px-6 md:px-12 lg:px-24;
+
+  /* ── Satellite CTA — docked on portrait circle ──────────────────────── */
+  /* White circle with arrow, bottom-right of portrait                    */
+  .satellite-cta {
+    position: absolute;
+    bottom: 4%;
+    right: -8%;
+    width: 48px;
+    height: 48px;
+    background: #FFFFFF;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    color: #1E1E1E;
+    transition: transform 0.2s ease;
+  }
+  .satellite-cta:hover { transform: scale(1.08); }
+
+  /* ── Gold orbital arc (SVG line between circular cards) ─────────────── */
+  .orbital-arc {
+    stroke: #C5B27A;
+    stroke-width: 1.2;
+    fill: none;
+    opacity: 0.6;
+  }
+
+  /* ── Mastercard button radii ─────────────────────────────────────────── */
+  .btn-primary {
+    border-radius: 20px;
+    padding: 10px 28px;
+    font-family: var(--font-inter), sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    background-color: #C5B27A;
+    color: #1E1E1E;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { background-color: #D4C49A; }
+
+  .btn-secondary {
+    border-radius: 20px;
+    padding: 9px 28px;
+    font-family: var(--font-inter), sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    background-color: #FFFFFF;
+    color: #1E1E1E;
+    border: 1.5px solid #1E1E1E;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .btn-secondary:hover { background-color: #F2F2F2; }
+
+  .btn-ghost-dark {
+    border-radius: 20px;
+    padding: 9px 28px;
+    font-family: var(--font-inter), sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    background-color: transparent;
+    color: #FFFFFF;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .btn-ghost-dark:hover { background-color: rgba(255,255,255,0.08); }
+
+  /* ── Stadium card (40px radius — Mastercard hero/card frame) ─────────── */
+  .card-stadium {
+    border-radius: 40px;
+    overflow: hidden;
+  }
+
+  /* ── Floating nav shadow (Mastercard Level 1 elevation) ─────────────── */
+  .shadow-pill-nav {
+    box-shadow: rgba(0,0,0,0.04) 0px 4px 24px 0px;
+  }
+
+  /* ── Mastercard Level 2 card shadow ────────────────────────────────── */
+  .shadow-card {
+    box-shadow: rgba(0,0,0,0.08) 0px 24px 48px 0px;
   }
 }
