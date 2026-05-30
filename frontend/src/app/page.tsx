@@ -152,7 +152,7 @@ export default function HomePage() {
 
         {/* ══ GOLD TRUST BAR ═════════════════════════════════════════════ */}
         <section className="bg-gold-strip py-4 px-6">
-          <div className="container-max mx-auto flex flex-wrap items-center justify-center gap-x-10 gap-y-1.5 text-charcoal text-sm font-semibold">
+          <div className="container-max mx-auto flex flex-wrap items-center justify-center gap-x-10 gap-y-1.5 text-sm font-semibold" style={{ color: "#1E1E1E" }}>
             {["Uganda · East Africa · International", "4 Product Lines", "Verified Certifications", "B2B & B2C"].map(
               (item, i) => <span key={i}>{item}</span>
             )}
@@ -208,7 +208,7 @@ export default function HomePage() {
                     {product.label}
                   </h3>
 
-                  <p className="text-sm font-semibold text-gold mb-3">
+                  <p className="text-sm font-semibold mb-3" style={{ color: "#7A6020" }}>
                     {product.tagline}
                   </p>
 
@@ -251,8 +251,8 @@ export default function HomePage() {
               {differentiators.map((item) => (
                 <div key={item.number} className="bg-white rounded-[32px] p-8 border border-black/[0.04]">
                   <span
-                    className="block text-gold/25 mb-5"
-                    style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "52px", fontWeight: 700, lineHeight: 1, letterSpacing: "-0.03em" }}
+                    className="block mb-5"
+                    style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "52px", fontWeight: 700, lineHeight: 1, letterSpacing: "-0.03em", color: "#D4C49A" }}
                   >
                     {item.number}
                   </span>
@@ -339,8 +339,8 @@ export default function HomePage() {
                   href="/about"
                   className="w-28 h-28 md:w-32 md:h-32 rounded-full border-2 border-dashed border-gold/35 flex flex-col items-center justify-center text-center hover:border-gold/70 hover:bg-gold/[0.04] transition-all"
                 >
-                  <span className="text-gold text-lg mb-0.5">+</span>
-                  <span className="text-[11px] text-charcoal/45 font-medium leading-tight px-3">
+                  <span style={{ color: "#C5B27A", fontSize: "18px", marginBottom: "2px" }}>+</span>
+                  <span style={{ fontSize: "11px", color: "#666666", fontWeight: 500, lineHeight: 1.3, padding: "0 12px", display: "block" }}>
                     Meet the team
                   </span>
                 </Link>
@@ -394,7 +394,7 @@ export default function HomePage() {
         ═══════════════════════════════════════════════════════════════ */}
         <section className="section-padding bg-canvas">
           <div className="container-max">
-            <div className="bg-canvas-dark rounded-[40px] px-8 md:px-16 py-16 md:py-20 text-center">
+            <div className="bg-canvas-dark rounded-[40px] px-8 md:px-16 py-16 md:py-20 text-center" style={{ color: "#FFFFFF" }}>
               <span className="eyebrow-light block mb-5">Get Started</span>
               <h2
                 className="text-white mb-5 max-w-xl mx-auto"

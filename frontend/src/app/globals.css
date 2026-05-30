@@ -11,9 +11,10 @@
 @theme inline {
 
   /* ── Colors: Vitorra brand tokens ─────────────────────────────────────── */
-  --color-gold:           #C5B27A;   /* Primary CTA, accents, arcs        */
-  --color-gold-light:     #D4C49A;   /* CTA hover                         */
-  --color-gold-dark:      #A89255;   /* CTA pressed, dark section accent  */
+  --color-gold:           #C5B27A;   /* CTA fills, accents, arcs (NOT body text on light bg) */
+  --color-gold-light:     #D4C49A;   /* CTA hover                                            */
+  --color-gold-dark:      #A89255;   /* CTA pressed, dark section accent                     */
+  --color-gold-text:      #7A6020;   /* Readable gold for text on light bg — 5.9:1 on white  */
   --color-ivory:          #F2F2F2;   /* Page canvas — warm, never sterile */
   --color-ivory-lifted:   #FAFAF8;   /* Raised sections / nested cards    */
   --color-charcoal:       #1E1E1E;   /* Footer, heroes, heading text      */
@@ -171,20 +172,19 @@
   .container-max      { @apply max-w-[1280px] mx-auto; }
 
   /* ── Page canvas surfaces ───────────────────────────────────────────── */
-  .bg-canvas          { background-color: #F2F2F2; }   /* ivory page floor */
-  .bg-canvas-lifted   { background-color: #FAFAF8; }   /* raised sections  */
-  .bg-canvas-dark     { background-color: #1E1E1E; }   /* dark sections    */
-
-  /* Gradients */
+  .bg-canvas          { background-color: #F2F2F2; color: #1E1E1E; }
+  .bg-canvas-lifted   { background-color: #FAFAF8; color: #1E1E1E; }
+  /* Dark sections: set colour cascade to white so all children inherit  */
+  .bg-canvas-dark     { background-color: #1E1E1E; color: #FFFFFF; }
   .bg-hero-dark {
     background: linear-gradient(160deg, #1A1A1A 0%, #252525 100%);
+    color: #FFFFFF;
   }
-  .bg-gold-strip {
-    background-color: #C5B27A;
-  }
+  .bg-gold-strip      { background-color: #C5B27A; color: #1E1E1E; }
 
   /* ── Eyebrow label pattern (Mastercard signature) ───────────────────── */
   /* Usage: <span class="eyebrow">Our Portfolio</span>                    */
+  /* Eyebrow on LIGHT backgrounds — charcoal text (21:1 on white), gold dot */
   .eyebrow {
     display: inline-flex;
     align-items: center;
@@ -194,16 +194,16 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #C5B27A;
+    color: #1E1E1E;
   }
   .eyebrow::before {
     content: '•';
     font-size: 14px;
     line-height: 1;
-    color: #C5B27A;
+    color: #C5B27A;   /* gold dot only */
   }
 
-  /* Dark-surface eyebrow */
+  /* Eyebrow on DARK backgrounds — gold text (visible on dark) */
   .eyebrow-light {
     display: inline-flex;
     align-items: center;
