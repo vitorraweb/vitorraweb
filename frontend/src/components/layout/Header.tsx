@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { LinkButton } from "@/components/ui/link-button";
@@ -16,13 +17,16 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 shrink-0">
-          <div className="w-8 h-8 relative">
-            {/* Logo placeholder — replace src once John drops the file */}
-            <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center text-charcoal font-serif font-bold text-sm">
-              V
-            </div>
-          </div>
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          {/* mix-blend-mode: screen makes white transparent on dark backgrounds */}
+          <Image
+            src="/logo.png"
+            alt="Vitorra Holdings Limited"
+            width={44}
+            height={44}
+            className="mix-blend-screen"
+            priority
+          />
           <span className="font-serif text-white text-lg leading-tight hidden sm:block">
             Vitorra<span className="text-gold"> Holdings</span>
           </span>

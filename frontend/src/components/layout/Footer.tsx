@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/constants";
 
 const products = [
@@ -32,8 +33,15 @@ export default function Footer() {
 
         {/* Brand column */}
         <div className="lg:col-span-1">
-          <Link href="/" className="inline-block mb-4">
-            <span className="font-serif text-white text-xl">
+          <Link href="/" className="inline-flex items-center gap-2 mb-4">
+            <Image
+              src="/logo.png"
+              alt="Vitorra Holdings Limited"
+              width={40}
+              height={40}
+              className="mix-blend-screen"
+            />
+            <span className="font-serif text-white text-lg">
               Vitorra<span className="text-gold"> Holdings</span>
             </span>
           </Link>
