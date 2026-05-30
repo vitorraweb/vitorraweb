@@ -406,7 +406,7 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
-          </div>
+          </Reveal>
         </section>
 
       </main>
