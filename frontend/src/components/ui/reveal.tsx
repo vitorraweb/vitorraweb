@@ -29,7 +29,7 @@ export function Reveal({
   direction = "up",
   delay = 0,
   distance = 24,
-  as: Tag = "div",
+  as = "div",
   className,
   once = true,
 }: RevealProps) {
@@ -73,11 +73,11 @@ export function Reveal({
     }
   })();
 
-  const Component = Tag as React.ElementType;
+  const Component = as as React.ElementType;
 
   return (
-    <Tag
-      ref={ref as React.Ref<HTMLDivElement>}
+    <Component
+      ref={ref}
       className={cn(className)}
       style={{
         opacity: visible ? 1 : 0,
