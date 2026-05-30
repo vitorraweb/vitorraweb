@@ -1,0 +1,201 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─── Vitorra Design Tokens ─────────────────────────────────────────────── */
+@theme inline {
+  /* Colour aliases → Tailwind utility classes */
+  --color-background:               var(--background);
+  --color-foreground:               var(--foreground);
+  --color-card:                     var(--card);
+  --color-card-foreground:          var(--card-foreground);
+  --color-popover:                  var(--popover);
+  --color-popover-foreground:       var(--popover-foreground);
+  --color-primary:                  var(--primary);
+  --color-primary-foreground:       var(--primary-foreground);
+  --color-secondary:                var(--secondary);
+  --color-secondary-foreground:     var(--secondary-foreground);
+  --color-muted:                    var(--muted);
+  --color-muted-foreground:         var(--muted-foreground);
+  --color-accent:                   var(--accent);
+  --color-accent-foreground:        var(--accent-foreground);
+  --color-destructive:              var(--destructive);
+  --color-border:                   var(--border);
+  --color-input:                    var(--input);
+  --color-ring:                     var(--ring);
+
+  /* Brand colours — use as bg-gold, text-gold, etc. */
+  --color-gold:                     #C5B27A;
+  --color-gold-light:               #D4C49A;
+  --color-gold-dark:                #A89255;
+  --color-ivory:                    #F2F2F2;
+  --color-charcoal:                 #1E1E1E;
+
+  /* Chart */
+  --color-chart-1:                  var(--chart-1);
+  --color-chart-2:                  var(--chart-2);
+  --color-chart-3:                  var(--chart-3);
+  --color-chart-4:                  var(--chart-4);
+  --color-chart-5:                  var(--chart-5);
+
+  /* Sidebar */
+  --color-sidebar:                  var(--sidebar);
+  --color-sidebar-foreground:       var(--sidebar-foreground);
+  --color-sidebar-primary:          var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent:           var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border:           var(--sidebar-border);
+  --color-sidebar-ring:             var(--sidebar-ring);
+
+  /* Border radius — tighter = more premium */
+  --radius-sm:  calc(var(--radius) * 0.6);
+  --radius-md:  calc(var(--radius) * 0.8);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Typography */
+  --font-sans:    var(--font-inter);
+  --font-serif:   var(--font-playfair);
+  --font-mono:    ui-monospace, monospace;
+  --font-heading: var(--font-playfair);
+}
+
+/* ─── Light Mode (Vitorra Brand) ────────────────────────────────────────── */
+:root {
+  --background:              oklch(1 0 0);                  /* #FFFFFF       */
+  --foreground:              oklch(0.145 0 0);              /* #1E1E1E       */
+  --card:                    oklch(0.964 0 0);              /* #F2F2F2 ivory */
+  --card-foreground:         oklch(0.145 0 0);
+  --popover:                 oklch(1 0 0);
+  --popover-foreground:      oklch(0.145 0 0);
+  --primary:                 oklch(0.749 0.075 83);         /* Vitorra Gold  */
+  --primary-foreground:      oklch(0.145 0 0);              /* dark on gold  */
+  --secondary:               oklch(0.964 0 0);              /* ivory         */
+  --secondary-foreground:    oklch(0.205 0 0);
+  --muted:                   oklch(0.97 0 0);
+  --muted-foreground:        oklch(0.48 0 0);
+  --accent:                  oklch(0.87 0.03 83);           /* soft gold     */
+  --accent-foreground:       oklch(0.145 0 0);
+  --destructive:             oklch(0.577 0.245 27.325);
+  --border:                  oklch(0.9 0 0);
+  --input:                   oklch(0.9 0 0);
+  --ring:                    oklch(0.749 0.075 83);         /* gold focus    */
+  --radius:                  0.375rem;                      /* premium tight */
+
+  --chart-1: oklch(0.749 0.075 83);
+  --chart-2: oklch(0.62 0.05 83);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+
+  --sidebar:                    oklch(0.985 0 0);
+  --sidebar-foreground:         oklch(0.145 0 0);
+  --sidebar-primary:            oklch(0.749 0.075 83);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent:             oklch(0.964 0 0);
+  --sidebar-accent-foreground:  oklch(0.205 0 0);
+  --sidebar-border:             oklch(0.9 0 0);
+  --sidebar-ring:               oklch(0.749 0.075 83);
+}
+
+/* ─── Dark Mode ─────────────────────────────────────────────────────────── */
+.dark {
+  --background:              oklch(0.12 0 0);
+  --foreground:              oklch(0.985 0 0);
+  --card:                    oklch(0.18 0 0);
+  --card-foreground:         oklch(0.985 0 0);
+  --popover:                 oklch(0.18 0 0);
+  --popover-foreground:      oklch(0.985 0 0);
+  --primary:                 oklch(0.749 0.075 83);
+  --primary-foreground:      oklch(0.145 0 0);
+  --secondary:               oklch(0.22 0 0);
+  --secondary-foreground:    oklch(0.985 0 0);
+  --muted:                   oklch(0.22 0 0);
+  --muted-foreground:        oklch(0.65 0 0);
+  --accent:                  oklch(0.25 0.03 83);
+  --accent-foreground:       oklch(0.985 0 0);
+  --destructive:             oklch(0.704 0.191 22.216);
+  --border:                  oklch(1 0 0 / 10%);
+  --input:                   oklch(1 0 0 / 12%);
+  --ring:                    oklch(0.749 0.075 83);
+
+  --chart-1: oklch(0.749 0.075 83);
+  --chart-2: oklch(0.62 0.05 83);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+
+  --sidebar:                    oklch(0.18 0 0);
+  --sidebar-foreground:         oklch(0.985 0 0);
+  --sidebar-primary:            oklch(0.749 0.075 83);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent:             oklch(0.22 0 0);
+  --sidebar-accent-foreground:  oklch(0.985 0 0);
+  --sidebar-border:             oklch(1 0 0 / 10%);
+  --sidebar-ring:               oklch(0.749 0.075 83);
+}
+
+/* ─── Base Styles ───────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans scroll-smooth;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif tracking-tight;
+  }
+}
+
+/* ─── Vitorra Utility Classes ───────────────────────────────────────────── */
+@layer utilities {
+  /* Gold gradient — hero backgrounds, section dividers */
+  .bg-gold-gradient {
+    background: linear-gradient(135deg, #C5B27A 0%, #D4C49A 50%, #A89255 100%);
+  }
+
+  /* Dark hero sections */
+  .bg-hero-dark {
+    background: linear-gradient(160deg, #1E1E1E 0%, #2D2D2D 100%);
+  }
+
+  /* Subtle gold shimmer on text */
+  .text-gold-gradient {
+    background: linear-gradient(90deg, #C5B27A, #D4C49A, #A89255);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Gold underline decoration */
+  .gold-underline {
+    position: relative;
+  }
+  .gold-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 3rem;
+    height: 2px;
+    background: #C5B27A;
+  }
+
+  /* Section spacing consistency */
+  .section-padding {
+    @apply py-20 md:py-28 px-6 md:px-12 lg:px-24;
+  }
+  .section-padding-sm {
+    @apply py-12 md:py-16 px-6 md:px-12 lg:px-24;
+  }
+}
