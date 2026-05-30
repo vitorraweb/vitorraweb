@@ -376,4 +376,67 @@
   .shadow-card {
     box-shadow: rgba(0,0,0,0.08) 0px 24px 48px 0px;
   }
+
+  /* ── Card hover lift — subtle rise + shadow on interactive cards ─────── */
+  .hover-lift {
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.35s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: rgba(0,0,0,0.10) 0px 20px 44px 0px;
+  }
+
+  /* ── Button press feedback ──────────────────────────────────────────── */
+  .btn-primary, .btn-secondary, .btn-ghost-dark {
+    transition: background-color 0.2s ease, transform 0.12s ease,
+                box-shadow 0.2s ease;
+  }
+  .btn-primary:active, .btn-secondary:active, .btn-ghost-dark:active {
+    transform: scale(0.97);
+  }
+
+  /* ── CTA arrow nudge on hover (pairs with group-hover utilities) ─────── */
+  .arrow-nudge { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+  .group:hover .arrow-nudge { transform: translateX(3px); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   KEYFRAMES — used by hero + ambient motion
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes vitorra-fade-up {
+  from { opacity: 0; transform: translate3d(0, 24px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes vitorra-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Slow zoom for video/poster backgrounds — Ken Burns effect */
+@keyframes vitorra-ken-burns {
+  from { transform: scale(1); }
+  to   { transform: scale(1.08); }
+}
+
+/* Hero text entrance — applied to the active slide's content */
+.hero-enter {
+  animation: vitorra-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-enter-1 { animation-delay: 0.05s; }
+.hero-enter-2 { animation-delay: 0.18s; }
+.hero-enter-3 { animation-delay: 0.31s; }
+.hero-enter-4 { animation-delay: 0.44s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-enter,
+  .hover-lift,
+  .btn-primary, .btn-secondary, .btn-ghost-dark,
+  .arrow-nudge {
+    animation: none !important;
+    transition: none !important;
+  }
 }
