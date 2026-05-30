@@ -60,16 +60,79 @@ The platform has a working foundation — orders process, payments go through, a
 - Complete BRD written: `planning/04-brd-complete.md`
 - Phase 1 System Design written: `planning/05-phase1-system-design.md`
 
-**Phase 0 status: COMPLETE.**
+**Phase 0 status: COMPLETE.** BRD signed off by Marketing + Director (Solomon).
 
-**Current state:** Ready for Phase 1 — Information Architecture & System Design.
+### Week 1 — Build Started (2026-05-30)
 
-**Next actions:**
-1. Get Marketing Lead sign-off on `04-brd-complete.md`
-2. Get Solomon's sign-off on homepage, product page, and CEO dashboard wireframes
-3. Write tone of voice guide (Marketing team)
-4. Draft all legal pages (Privacy Policy, T&C, Returns Policy, Cookie Policy)
-5. Begin low-fidelity wireframes for 5 core public pages + admin panel
+**BRD signed off — Phase 1 & Phase 2 build underway.** John acts as co-developer;
+Claude is Business System Engineer / Development Lead and makes implementation decisions.
+
+**Branch strategy:**
+- `master` — the old React/Firebase site (preserved, untouched, live on GitHub)
+- `rebuild` — all new work. The legacy codebase has been **removed from `rebuild`**
+  and from the local machine (recover any old file via `git checkout master -- <path>`).
+
+**Repo is now a clean monorepo:**
+- `frontend/` — Next.js 16 + React 19 + TypeScript + Tailwind v4 + shadcn/ui (base-ui)
+- `backend/` — Laravel 13 + PHP 8.3 (scaffolded; PostgreSQL planned, not yet wired)
+- `planning/` — BRD, system design, design system, animation plan
+- `assets/` — raw brand/product/team source files
+
+**Design system — DECIDED & IMPLEMENTED:**
+- Adopted **Mastercard's design language** (chosen over Tesla/Ferrari/Wise/Revolut for
+  multi-product fit + warm editorial premium feel) adapted to Vitorra's identity.
+- Kept Vitorra: **Playfair Display** headings, **Inter** body, **Vitorra Gold `#C5B27A`**.
+- Mastercard gestures in use: ivory canvas `#F2F2F2`, floating pill nav, ghost watermarks,
+  stadium cards (40px / 28px radius), circular team portraits + satellite CTAs, dark warm footer.
+- Full spec: `planning/06-design-system.md`. Colour rule: gold is for FILLS, not body text
+  on light bg (use `#1E1E1E`/`#454545`/`#7A6020` for text).
+
+**Homepage — BUILT (`frontend/src/app/page.tsx`):**
+- Hero is a **video carousel** (`components/sections/HeroCarousel.tsx`): slide 1 = brand text
+  ("Innovative products. Dependable solutions."), slide 2 = FET video full-bleed with overlay.
+  Data-driven via `available` flag — drop `{id}.mp4` + `{id}-poster.jpg` and flip the flag to add slides.
+- Sections: hero carousel → gold trust bar → products (4 stadium cards) → why Vitorra
+  (headline-left/copy-right) → team (circular portraits) → certifications (dark) → final CTA.
+- Header (floating pill nav + Products dropdown), Footer (4-col dark).
+
+**Animations — Wave 1 SHIPPED (`planning/07-animation-interaction-plan.md`):**
+- `components/ui/reveal.tsx` — scroll-reveal (fade+rise, staggered, respects reduced-motion)
+- Hero staggered text entrance, Ken Burns zoom on video, card hover-lift, button press, arrow nudge.
+
+**Assets received & wired:** logo (`logo.png`), 5 team photos, SEAL product image, FET video + poster.
+
+**Build status:** `npm run build` clean (zero errors). Dev server runs on `localhost:3000`.
+
+---
+
+**PENDING (next up):**
+
+_Frontend pages not yet built:_
+1. **Enquiry / quote form (`/enquire`)** — highest priority; every CTA points here
+2. Product pages: FET, SEAL, Coffee, Logistics
+3. Coffee shop + cart + checkout (Flutterwave UGX + PayPal USD + live FX rate)
+4. About, Contact, Blog (list + post), Certifications/Trust page
+5. Legal pages: Privacy, T&C, Returns & Warranty, Cookie Policy + cookie banner
+6. Customer portal (order tracking, invoices, enquiry status, profile)
+7. Admin panel (CEO dashboard, Ops dashboard, orders, enquiries, products, blog CMS)
+8. 404 already done; need branded error states elsewhere
+
+_Backend (Laravel) — scaffolded only, not yet built:_
+9. Database schema + migrations (products, orders, enquiries, quotes, invoices, blog, users)
+10. API endpoints per `planning/05` API contract; auth (Sanctum); role-based access
+11. Integrations: Flutterwave, PayPal, exchange-rate API, DHL, WhatsApp Business, Mailgun/Postmark
+
+_Assets still needed from team:_
+12. FET + Coffee product photos; SEAL/Coffee/Logistics videos (for hero slides 2–4)
+13. Certifications/lab results (to be presented by management)
+14. Approved testimonials + case studies (with written permission)
+
+_Ops / pre-launch:_
+15. Sentry, uptime monitoring, automated DB backups, CI/CD pipeline
+16. Tone-of-voice guide (Marketing); push `rebuild` branch to GitHub for remote backup
+
+_Housekeeping:_
+17. Animation Waves 2–3 (hero progress bar, count-up stats, swipe gestures, sticky mobile CTA)
 
 ---
 
