@@ -6,9 +6,9 @@ import { Play, Pause, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react
 import { cn } from "@/lib/utils";
 
 /* ─── Slide registry ────────────────────────────────────────────────────────
-   To add a new video:
-   1. Drop `{id}.mp4` + `{id}-poster.jpg` into public/videos/
-   2. Set available: true on the corresponding entry below
+   To activate a new video:
+     1. Drop `{id}.mp4` + `{id}-poster.jpg` into public/videos/
+     2. Set available: true on the matching entry below
    ─────────────────────────────────────────────────────────────────────── */
 
 interface Slide {
@@ -28,7 +28,7 @@ const ALL_SLIDES: Slide[] = [
     id: "fet",
     available: true,
     eyebrow: "Fuel Eco Technology",
-    headline: "Proven fuel savings.\nMeasurable results.",
+    headline: "Proven fuel savings. Measurable results.",
     description:
       "See how Fuel Eco Tech reduces fuel consumption and extends engine life for commercial fleets across East Africa.",
     videoSrc: "/videos/fet.mp4",
@@ -38,9 +38,9 @@ const ALL_SLIDES: Slide[] = [
   },
   {
     id: "seal",
-    available: false, // ← change to true + drop seal.mp4 to activate
+    available: false,
     eyebrow: "SEAL Hemostatic Spray",
-    headline: "Stop bleeding fast.\nSave lives.",
+    headline: "Stop bleeding fast. Save lives.",
     description:
       "Clinical-grade hemostatic wound control for hospitals, emergency responders, and military procurement.",
     videoSrc: "/videos/seal.mp4",
@@ -50,11 +50,11 @@ const ALL_SLIDES: Slide[] = [
   },
   {
     id: "coffee",
-    available: false, // ← change to true + drop coffee.mp4 to activate
+    available: false,
     eyebrow: "Vitorra Coffee",
-    headline: "Premium Ugandan coffee.\nFarm to cup.",
+    headline: "Premium Ugandan coffee. Farm to cup.",
     description:
-      "Traceable, responsibly sourced coffee from the heart of Uganda — for consumers and international importers.",
+      "Traceable, responsibly sourced coffee for consumers, hospitality businesses, and international importers.",
     videoSrc: "/videos/coffee.mp4",
     posterSrc: "/videos/coffee-poster.jpg",
     href: "/products/coffee",
@@ -62,9 +62,9 @@ const ALL_SLIDES: Slide[] = [
   },
   {
     id: "logistics",
-    available: false, // ← change to true + drop logistics.mp4 to activate
+    available: false,
     eyebrow: "Logistics Services",
-    headline: "Move goods\nwith confidence.",
+    headline: "Move goods with confidence.",
     description:
       "End-to-end freight, warehousing, customs clearance, and supply chain management across East Africa.",
     videoSrc: "/videos/logistics.mp4",
@@ -74,7 +74,7 @@ const ALL_SLIDES: Slide[] = [
   },
 ];
 
-/* ─── Component ──────────────────────────────────────────────────────────── */
+/* ─── Component ─────────────────────────────────────────────────────────── */
 
 export default function VideoShowcase() {
   const slides = ALL_SLIDES.filter((s) => s.available);
@@ -83,15 +83,11 @@ export default function VideoShowcase() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const multiSlide = slides.length > 1;
 
-  /* Navigate — always pause before switching */
   const goTo = useCallback((idx: number) => {
     videoRef.current?.pause();
     setPlaying(false);
     setCurrent(idx);
   }, []);
-
-  const prev = () => goTo((current - 1 + slides.length) % slides.length);
-  const next = () => goTo((current + 1) % slides.length);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -107,164 +103,198 @@ export default function VideoShowcase() {
   const slide = slides[current];
   if (!slide) return null;
 
+  /* ── Single-slide layout ─────────────────────────────────────────────────
+     One video = feature section: eyebrow + headline centred above,
+     full-width stadium video, description + CTA below.
+  ── Multi-slide layout ──────────────────────────────────────────────────
+     Two or more videos = editorial grid: video left (2fr), info panel right.
+  ─────────────────────────────────────────────────────────────────────── */
+
   return (
-    <section className="section-padding bg-canvas">
+    <section className="section-padding" style={{ backgroundColor: "#F8F7F5" }}>
       <div className="container-max">
 
-        {/* ── Section header ───────────────────────────────────────────── */}
-        <div className="mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
-          <div>
-            <span className="eyebrow block mb-4">Products in Action</span>
-            <h2
-              style={{
-                fontFamily: "var(--font-playfair, Georgia, serif)",
-                fontSize: "clamp(36px, 4.5vw, 56px)",
-                fontWeight: 700,
-                letterSpacing: "-0.025em",
-                lineHeight: 0.97,
-                color: "#1E1E1E",
-              }}
-            >
-              See what we deliver.
-            </h2>
-          </div>
-
-          {/* Circular prev / next — only when >1 slide */}
-          {multiSlide && (
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                onClick={prev}
-                aria-label="Previous"
-                className="w-11 h-11 rounded-full border border-black/15 flex items-center justify-center hover:bg-black/[0.04] transition-colors"
-                style={{ color: "#1E1E1E" }}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={next}
-                aria-label="Next"
-                className="w-11 h-11 rounded-full border border-black/15 flex items-center justify-center hover:bg-black/[0.04] transition-colors"
-                style={{ color: "#1E1E1E" }}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+        {multiSlide ? (
+          /* ── MULTI-SLIDE: grid layout ────────────────────────────────── */
+          <>
+            <div className="mb-10 flex items-end justify-between gap-6">
+              <div>
+                <span className="eyebrow block mb-4">Products in Action</span>
+                <h2 style={styles.sectionH2}>See what we deliver.</h2>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => goTo((current - 1 + slides.length) % slides.length)}
+                  aria-label="Previous"
+                  className="w-10 h-10 rounded-full flex items-center justify-center border border-black/12 hover:bg-black/[0.04] transition-colors"
+                  style={{ color: "#1E1E1E" }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => goTo((current + 1) % slides.length)}
+                  aria-label="Next"
+                  className="w-10 h-10 rounded-full flex items-center justify-center border border-black/12 hover:bg-black/[0.04] transition-colors"
+                  style={{ color: "#1E1E1E" }}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* ── Video + info grid ────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_340px] gap-8 xl:gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-center">
+              <VideoPlayer
+                slide={slide}
+                playing={playing}
+                videoRef={videoRef}
+                onToggle={togglePlay}
+                onEnded={() => setPlaying(false)}
+              />
+              <div>
+                <span className="eyebrow block mb-4">{slide.eyebrow}</span>
+                <h3 className="mb-4" style={styles.slideH3}>{slide.headline}</h3>
+                <p className="mb-7" style={styles.body}>{slide.description}</p>
+                <Link href={slide.href} className="inline-flex items-center gap-2 font-semibold text-sm hover:opacity-70 transition-opacity" style={{ color: "#1E1E1E" }}>
+                  {slide.ctaLabel}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <div className="flex items-center gap-2 mt-8 pt-6 border-t border-black/[0.07]">
+                  {slides.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => goTo(i)}
+                      aria-label={`Slide ${i + 1}`}
+                      className="rounded-full transition-all duration-300"
+                      style={{
+                        width: i === current ? "24px" : "8px",
+                        height: "8px",
+                        backgroundColor: i === current ? "#C5B27A" : "#1E1E1E",
+                        opacity: i === current ? 1 : 0.18,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* ── SINGLE-SLIDE: feature section layout ───────────────────── */
+          <>
+            <div className="text-center mb-10">
+              <span className="eyebrow mb-4 inline-flex">{slide.eyebrow}</span>
+              <h2 className="max-w-xl mx-auto" style={styles.sectionH2}>{slide.headline}</h2>
+            </div>
 
-          {/* Video container — stadium card, Mastercard Image 1 style */}
-          <div
-            className={cn(
-              "relative aspect-video rounded-[40px] overflow-hidden cursor-pointer group",
-              "bg-[#1A1A1A] shadow-card"
-            )}
-            onClick={togglePlay}
-            role="button"
-            aria-label={playing ? "Pause video" : "Play video"}
-          >
-            <video
-              ref={videoRef}
-              key={slide.id}
-              src={slide.videoSrc}
-              poster={slide.posterSrc}
-              preload="none"
-              playsInline
+            <VideoPlayer
+              slide={slide}
+              playing={playing}
+              videoRef={videoRef}
+              onToggle={togglePlay}
               onEnded={() => setPlaying(false)}
-              className="absolute inset-0 w-full h-full object-cover"
             />
 
-            {/* Play / Pause overlay */}
-            <div
-              className={cn(
-                "absolute inset-0 flex items-center justify-center transition-opacity duration-300",
-                playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"
-              )}
-            >
-              <div className="w-[72px] h-[72px] rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-[0_8px_40px_rgba(0,0,0,0.28)] transition-transform duration-200 group-hover:scale-105">
-                {playing ? (
-                  <Pause className="w-6 h-6" style={{ color: "#1E1E1E" }} />
-                ) : (
-                  <Play className="w-6 h-6 ml-1" style={{ color: "#1E1E1E" }} />
-                )}
-              </div>
+            <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+              <p style={{ ...styles.body, maxWidth: "520px" }}>{slide.description}</p>
+              <Link
+                href={slide.href}
+                className="btn-primary shrink-0"
+              >
+                {slide.ctaLabel}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
-
-            {/* Gold brand dot — top-left corner accent */}
-            <div
-              className="absolute top-4 left-4 w-7 h-7 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: "#C5B27A" }}
-            >
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#1E1E1E" }} />
-            </div>
-          </div>
-
-          {/* Info panel */}
-          <div className="flex flex-col">
-            <span className="eyebrow block mb-5">{slide.eyebrow}</span>
-
-            <h3
-              style={{
-                fontFamily: "var(--font-playfair, Georgia, serif)",
-                fontSize: "clamp(26px, 2.5vw, 36px)",
-                fontWeight: 700,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.05,
-                color: "#1E1E1E",
-                whiteSpace: "pre-line",
-                marginBottom: "16px",
-              }}
-            >
-              {slide.headline}
-            </h3>
-
-            <p
-              style={{
-                fontSize: "15px",
-                lineHeight: 1.7,
-                color: "#454545",
-                marginBottom: "28px",
-              }}
-            >
-              {slide.description}
-            </p>
-
-            <Link
-              href={slide.href}
-              className="inline-flex items-center gap-2 font-semibold transition-colors hover:opacity-70"
-              style={{ fontSize: "14px", color: "#1E1E1E" }}
-            >
-              {slide.ctaLabel}
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-
-            {/* Dot indicators — only when >1 slide */}
-            {multiSlide && (
-              <div className="flex items-center gap-2 mt-8 pt-8 border-t border-black/[0.06]">
-                {slides.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={(e) => { e.stopPropagation(); goTo(i); }}
-                    aria-label={`Go to slide ${i + 1}`}
-                    className={cn(
-                      "rounded-full transition-all duration-300 focus-visible:outline-none",
-                      i === current
-                        ? "w-6 h-2"
-                        : "w-2 h-2 hover:opacity-60"
-                    )}
-                    style={{
-                      backgroundColor: i === current ? "#C5B27A" : "#1E1E1E",
-                      opacity: i === current ? 1 : 0.2,
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </section>
   );
 }
+
+/* ─── VideoPlayer sub-component ─────────────────────────────────────────── */
+
+function VideoPlayer({
+  slide,
+  playing,
+  videoRef,
+  onToggle,
+  onEnded,
+}: {
+  slide: Slide;
+  playing: boolean;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  onToggle: () => void;
+  onEnded: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden cursor-pointer group",
+        "bg-[#161616] rounded-[32px] aspect-video"
+      )}
+      onClick={onToggle}
+      role="button"
+      aria-label={playing ? "Pause video" : "Play video"}
+    >
+      <video
+        ref={videoRef}
+        key={slide.id}
+        src={slide.videoSrc}
+        poster={slide.posterSrc}
+        preload="none"
+        playsInline
+        onEnded={onEnded}
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {/* Play / Pause button */}
+      <div
+        className={cn(
+          "absolute inset-0 flex items-center justify-center transition-opacity duration-200",
+          playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"
+        )}
+      >
+        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.22)] transition-transform duration-150 group-hover:scale-105">
+          {playing ? (
+            <Pause className="w-5 h-5" style={{ color: "#1E1E1E" }} />
+          ) : (
+            <Play className="w-5 h-5 ml-0.5" style={{ color: "#1E1E1E" }} />
+          )}
+        </div>
+      </div>
+
+      {/* Gold brand badge */}
+      <div
+        className="absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
+        style={{ backgroundColor: "#C5B27A", color: "#1E1E1E", letterSpacing: "0.07em" }}
+      >
+        Vitorra
+      </div>
+    </div>
+  );
+}
+
+/* ─── Shared style tokens ───────────────────────────────────────────────── */
+
+const styles = {
+  sectionH2: {
+    fontFamily: "var(--font-playfair, Georgia, serif)",
+    fontSize: "clamp(28px, 3.2vw, 44px)",
+    fontWeight: 700,
+    letterSpacing: "-0.02em",
+    lineHeight: 1.12,
+    color: "#1E1E1E",
+  } as React.CSSProperties,
+  slideH3: {
+    fontFamily: "var(--font-playfair, Georgia, serif)",
+    fontSize: "clamp(22px, 2.2vw, 30px)",
+    fontWeight: 600,
+    letterSpacing: "-0.015em",
+    lineHeight: 1.15,
+    color: "#1E1E1E",
+  } as React.CSSProperties,
+  body: {
+    fontSize: "15px",
+    lineHeight: 1.7,
+    color: "#555555",
+  } as React.CSSProperties,
+};
