@@ -214,10 +214,9 @@ The marketing team has flagged that the current website:
 - [x] Marketing Discovery Workshop completed (Trello board)
 - [x] Business Requirements Document (BRD) completed — `planning/04-brd-complete.md`
 - [x] Phase 1 System Design completed — `planning/05-phase1-system-design.md`
-- [ ] BRD signed off by Marketing Lead
-- [ ] Homepage + product wireframes signed off by Solomon
+- [x] BRD signed off by Marketing Lead + Director (Solomon)
 
-**Phase 1 begins after sign-off.**
+**Phase 1 & 2 build underway — see "Week 1 — Build Started" log above.**
 
 ---
 
