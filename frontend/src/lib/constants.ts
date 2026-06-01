@@ -1,7 +1,9 @@
 export const SITE_NAME = "Vitorra Holdings Limited";
 export const SITE_URL = "https://vitorra.org";
-export const CONTACT_EMAIL = "info@vitorra.org";
-export const CONTACT_PHONE = "";
+export const CONTACT_EMAIL = "support@vitorra.org";
+export const CONTACT_PHONE = "+256 740 026 118";
+export const CONTACT_ADDRESS = ["Padre Pio House, Plot 32", "Lumumba Avenue", "Kampala, Uganda"];
+export const COMPANY_REG_NO = "80034340923220";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
