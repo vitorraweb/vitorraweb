@@ -77,7 +77,29 @@ function MagneticButton({ href, children }: { href: string; children: React.Reac
   );
 }
 
-export default function FinalCTA() {
+interface FinalCTAProps {
+  eyebrow?: string;
+  titleLead?: string;
+  titleAccent?: string;
+  body?: string;
+  primaryLabel?: string;
+  primaryHref?: string;
+  secondaryLabel?: string;
+  secondaryHref?: string;
+  caption?: string;
+}
+
+export default function FinalCTA({
+  eyebrow = "Get Started",
+  titleLead = "Ready to work with",
+  titleAccent = "Vitorra?",
+  body = "Whether you need a fuel savings assessment, a logistics quote, or premium Ugandan coffee — our team responds within 24 hours.",
+  primaryLabel = "Request a Quote",
+  primaryHref = "/enquire",
+  secondaryLabel = "Contact Us",
+  secondaryHref = "/contact",
+  caption = "Uganda · East Africa · International  ·  Typical reply within 24 hours",
+}: FinalCTAProps = {}) {
   return (
     <section className="section-padding" style={{ backgroundColor: "#F2F2F2" }}>
       <Reveal className="container-max">
@@ -108,7 +130,7 @@ export default function FinalCTA() {
 
           {/* Content */}
           <div className="relative z-10">
-            <span className="eyebrow-light justify-center mb-5">Get Started</span>
+            <span className="eyebrow-light justify-center mb-5">{eyebrow}</span>
             <h2
               className="max-w-2xl mx-auto mb-5"
               style={{
@@ -120,24 +142,23 @@ export default function FinalCTA() {
                 color: "#FFFFFF",
               }}
             >
-              Ready to work with{" "}
-              <span className="text-gold-gradient">Vitorra?</span>
+              {titleLead}{" "}
+              <span className="text-gold-gradient">{titleAccent}</span>
             </h2>
             <p className="max-w-md mx-auto mb-10" style={{ fontSize: "16px", lineHeight: 1.7, color: "rgba(255,255,255,0.6)" }}>
-              Whether you need a fuel savings assessment, a logistics quote, or
-              premium Ugandan coffee — our team responds within 24 hours.
+              {body}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <MagneticButton href="/enquire">Request a Quote</MagneticButton>
-              <Link href="/contact" className="btn-ghost-dark inline-flex items-center gap-2">
-                Contact Us
+              <MagneticButton href={primaryHref}>{primaryLabel}</MagneticButton>
+              <Link href={secondaryHref} className="btn-ghost-dark inline-flex items-center gap-2">
+                {secondaryLabel}
               </Link>
             </div>
 
             {/* Trust caption */}
             <p className="mt-9" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
-              Uganda · East Africa · International &nbsp;·&nbsp; Typical reply within 24 hours
+              {caption}
             </p>
           </div>
         </div>
