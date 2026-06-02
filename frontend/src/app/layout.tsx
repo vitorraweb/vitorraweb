@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { CookieBanner } from "@/components/ui/cookie-banner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -64,7 +65,10 @@ export default function RootLayout({
       className={`${inter.variable} ${playfair.variable} h-full`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col antialiased">{children}</body>
+      <body className="min-h-full flex flex-col antialiased">
+        {children}
+        <CookieBanner />
+      </body>
     </html>
   );
 }
