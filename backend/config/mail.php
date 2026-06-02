@@ -111,8 +111,11 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'address' => env('MAIL_FROM_ADDRESS', 'no-reply@vitorra.org'),
+        'name'    => env('MAIL_FROM_NAME', 'Vitorra Holdings'),
     ],
+
+    // Inbox that receives new enquiries and contact messages
+    'team_address' => env('MAIL_TEAM_ADDRESS', 'support@vitorra.org'),
 
 ];

@@ -84,6 +84,22 @@ export async function submitEnquiry(data: EnquiryFormData): Promise<Enquiry> {
   return res.data;
 }
 
+/* ─── Contact ───────────────────────────────────────────────────────────── */
+
+export interface ContactFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export async function submitContact(data: ContactFormData): Promise<{ message: string }> {
+  return request<{ message: string }>("/contact", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 /* ─── Orders (Customer Portal — requires auth) ──────────────────────────── */
 
 export async function getMyOrders(token: string): Promise<Order[]> {

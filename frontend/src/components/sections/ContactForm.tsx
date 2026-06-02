@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Check, Loader2, ArrowRight } from "lucide-react";
+import { submitContact } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -37,8 +38,7 @@ export default function ContactForm() {
     if (!validate()) return;
     setStatus("submitting");
     try {
-      // await submitContact(form); // ← enable when the backend endpoint is live
-      await new Promise((r) => setTimeout(r, 900)); // simulated submission
+            await submitContact(form);
       setStatus("success");
     } catch {
       setStatus("error");

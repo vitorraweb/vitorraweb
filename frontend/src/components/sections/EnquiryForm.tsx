@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { EnquiryFormData, ProductCategory } from "@/types";
-// import { submitEnquiry } from "@/lib/api"; // ← enable once the Laravel /enquiries endpoint is live
+import { submitEnquiry } from "@/lib/api";
 
 /* ─── Enquiry / quote form ────────────────────────────────────────────────────
    Premium 3-step form (Interest → Details → Contact) that builds an
@@ -79,9 +79,7 @@ export default function EnquiryForm() {
       product_category: category === "GENERAL" ? "" : (category as ProductCategory),
     };
     try {
-      // await submitEnquiry(payload); // ← enable when the backend is live
-      await new Promise((r) => setTimeout(r, 900)); // simulated submission
-      void payload;
+      await submitEnquiry(payload);
       setStatus("success");
     } catch {
       setStatus("error");
