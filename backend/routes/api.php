@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\EnquiryController;
+use App\Http\Controllers\Api\ExchangeRateController;
 use App\Http\Controllers\Api\ProductController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,14 +18,16 @@ Route::get('/products',          [ProductController::class, 'index']);
 Route::get('/products/{slug}',   [ProductController::class, 'show']);
 Route::get('/coffee/products',   [ProductController::class, 'coffee']);
 
+// Blog
+Route::get('/blog/posts',         [BlogController::class, 'index']);
+Route::get('/blog/posts/{slug}',  [BlogController::class, 'show']);
+
 // Forms — submit enquiry or contact message
 Route::post('/enquiries', [EnquiryController::class, 'store']);
 Route::post('/contact',   [ContactController::class, 'store']);
 
-// Exchange rate placeholder (returns a fallback until a live FX endpoint is wired)
-Route::get('/exchange-rate', fn () => response()->json([
-    'data' => ['ugx_per_usd' => 3750],
-]));
+// Live exchange rate (cached 1 hr; falls back to config if API key not set)
+Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);
 
 /*
 |--------------------------------------------------------------------------

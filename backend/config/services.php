@@ -35,4 +35,21 @@ return [
         ],
     ],
 
+    'exchange_rate' => [
+        'key'               => env('EXCHANGE_RATE_API_KEY'),
+        'fallback_ugx_per_usd' => env('EXCHANGE_RATE_FALLBACK', 3750),
+    ],
+
+    'flutterwave' => [
+        'public_key'      => env('FLUTTERWAVE_PUBLIC_KEY'),
+        'secret_key'      => env('FLUTTERWAVE_SECRET_KEY'),
+        'encryption_key'  => env('FLUTTERWAVE_ENCRYPTION_KEY'),
+    ],
+
+    'paypal' => [
+        'client_id'     => env('PAYPAL_CLIENT_ID'),
+        'client_secret' => env('PAYPAL_CLIENT_SECRET'),
+        'mode'          => env('PAYPAL_MODE', 'sandbox'),
+    ],
+
 ];
