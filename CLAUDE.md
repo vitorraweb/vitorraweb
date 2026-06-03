@@ -4,7 +4,7 @@
 
 **Company:** Vitorra Holdings Limited  
 **Website:** vitorra.org  
-**Business:** Multi-sector holdings company operating across agriculture (FET biostimulant, SEAL product line, coffee export), logistics (e-ticketing platform), and B2B/B2C commerce.  
+**Business:** Multi-sector holdings company operating across fuel technology (FET), healthcare (SEAL Wound Spray), premium coffee (Ugandan export), and logistics (freight & supply chain).  
 **Primary Market:** Uganda (UGX) + International (USD via PayPal)
 
 ---
@@ -13,27 +13,34 @@
 
 | Role | Name | Contact |
 |------|------|---------|
-| Director / Boss | Solomon | Decision-maker. Non-technical entrepreneur. Speak in business outcomes, never technical jargon. |
-| Engineer / You | John | john@vitorra.org / leojohnseyi@gmail.com |
-| Teams in Loop | Ops, Marketing | CC on all major project communications |
+| Director / Boss | Solomon Okello | Decision-maker. Non-technical entrepreneur. Speak in business outcomes, never technical jargon. |
+| Engineer / You | John Oluwaseyi | john@vitorra.org / leojohnseyi@gmail.com |
+| Head of Operations | Victor Lojum | — |
+| Senior Finance Officer | Joseph Rwabu | — |
+| Senior Marketing Officer | Thurayya Nakayima | — |
+| Finance Officer | Daniel Tuke | — |
+| Marketing Officers | Sarah Nuwamanya, Nagawa Shakirah | — |
+| IT Officer | John Oluwaseyi | — |
+| Brand Designer | Olivia Sandra | — |
 
 > Solomon does not want to hear technical words. Always frame everything as a business problem and business solution — impact on revenue, customers, brand, and risk.
 
 ---
 
-## Current State (May 2026)
+## Current State (June 2026)
 
-### Overall Readiness: 35% Done / 65% Remaining
+### Overall Readiness: ~65% Done / 35% Remaining
 
-The platform has a working foundation — orders process, payments go through, and the admin panel functions. But the website is not production-ready at the level Vitorra demands as a premium holdings company.
+Major frontend build sprint completed. The public-facing website is now near production-ready from a design and UI perspective. Backend is scaffolded but not yet fully wired.
 
 | Area | Done | Remaining | Status |
 |------|------|-----------|--------|
-| Brand Identity & Visual Design | 20% | 80% | Full redesign needed |
-| Customer Communication & Content | 20% | 80% | Not serving customers |
-| Technology Foundation (SEO & Growth) | 40% | 60% | Limiting growth |
-| Security & Customer Trust | 55% | 45% | Active risks present |
-| Business Operations (Orders, Admin) | 70% | 30% | Functional, needs polish |
+| Brand Identity & Visual Design | **85%** | 15% | Premium redesign shipped |
+| Public Pages (Frontend) | **80%** | 20% | Homepage, About, 4 product pages, Enquire, Blog done |
+| Technology Foundation (SEO & Growth) | 50% | 50% | ISR on blog/homepage; sitemap pending |
+| Security & Customer Trust | 55% | 45% | Active risks remain (see Known Issues) |
+| Business Operations (Orders, Admin) | 70% | 30% | Admin panel functional, needs polish |
+| Backend API & Integrations | 25% | 75% | Scaffolded; payments/email not wired |
 | Reliability & Uptime Systems | 30% | 70% | No monitoring in place |
 
 ---
@@ -42,223 +49,259 @@ The platform has a working foundation — orders process, payments go through, a
 
 ### Week 0 — Discovery Planning (2026-05-20 to 2026-05-21)
 
-**Decision:** Full rebuild using Next.js (frontend) + Laravel (backend). The current React/Firebase codebase is being set aside. No code from the existing site will be carried over into the rebuild.
-
-**What was done:**
-- Full audit of existing codebase completed (products, routes, admin panel, user roles, Firestore collections, order flow)
-- Rebuild strategy documented and agreed
+- Full audit of existing codebase completed
+- Rebuild strategy documented and agreed (Next.js + Laravel)
 - Marketing Discovery framework designed — 55 structured questions across 7 categories
-- Three planning documents created in `planning/`
+- Planning documents created in `planning/`
 
-### Week 1 — Discovery Complete & Phase 1 Ready (2026-05-30)
+### Week 1 — Discovery Complete & BRD Signed Off (2026-05-30)
 
-**Marketing Discovery Session:** Completed via Trello board (public board reviewed and extracted in full). All 55 discovery questions answered by Marketing team and Director.
-
-**What was done:**
-- Full Trello board extracted — all card descriptions and comments reviewed
-- Remaining gaps filled directly by John (Director sign-off session)
+- Full Trello board extracted — all 55 discovery questions answered by Marketing + Director
 - Complete BRD written: `planning/04-brd-complete.md`
 - Phase 1 System Design written: `planning/05-phase1-system-design.md`
-
-**Phase 0 status: COMPLETE.** BRD signed off by Marketing + Director (Solomon).
+- **Phase 0 status: COMPLETE.**
 
 ### Week 1 — Build Started (2026-05-30)
 
-**BRD signed off — Phase 1 & Phase 2 build underway.** John acts as co-developer;
-Claude is Business System Engineer / Development Lead and makes implementation decisions.
+- Frontend scaffolded: Next.js 16 + React 19 + TypeScript + Tailwind v4 + shadcn/ui
+- Backend scaffolded: Laravel 13 + PHP 8.3 (SQLite for dev; PostgreSQL planned for prod)
+- Design system adopted: Mastercard architecture × Vitorra Gold identity
+- Initial homepage built, Hero carousel, trust bar, product cards
 
-**Branch strategy:**
-- `master` — the old React/Firebase site (preserved, untouched, live on GitHub)
-- `rebuild` — all new work. The legacy codebase has been **removed from `rebuild`**
-  and from the local machine (recover any old file via `git checkout master -- <path>`).
+### Week 2–3 — Major UI Sprint (2026-06-03 to present)
 
-**Repo is now a clean monorepo:**
-- `frontend/` — Next.js 16 + React 19 + TypeScript + Tailwind v4 + shadcn/ui (base-ui)
-- `backend/` — Laravel 13 + PHP 8.3 (scaffolded; PostgreSQL planned, not yet wired)
-- `planning/` — BRD, system design, design system, animation plan
-- `assets/` — raw brand/product/team source files
-
-**Design system — DECIDED & IMPLEMENTED:**
-- Adopted **Mastercard's design language** (chosen over Tesla/Ferrari/Wise/Revolut for
-  multi-product fit + warm editorial premium feel) adapted to Vitorra's identity.
-- Kept Vitorra: **Playfair Display** headings, **Inter** body, **Vitorra Gold `#C5B27A`**.
-- Mastercard gestures in use: ivory canvas `#F2F2F2`, floating pill nav, ghost watermarks,
-  stadium cards (40px / 28px radius), circular team portraits + satellite CTAs, dark warm footer.
-- Full spec: `planning/06-design-system.md`. Colour rule: gold is for FILLS, not body text
-  on light bg (use `#1E1E1E`/`#454545`/`#7A6020` for text).
-
-**Homepage — BUILT (`frontend/src/app/page.tsx`):**
-- Hero is a **video carousel** (`components/sections/HeroCarousel.tsx`): slide 1 = brand text
-  ("Innovative products. Dependable solutions."), slide 2 = FET video full-bleed with overlay.
-  Data-driven via `available` flag — drop `{id}.mp4` + `{id}-poster.jpg` and flip the flag to add slides.
-- Sections: hero carousel → gold trust bar → products (4 stadium cards) → why Vitorra
-  (headline-left/copy-right) → team (circular portraits) → certifications (dark) → final CTA.
-- Header (floating pill nav + Products dropdown), Footer (4-col dark).
-
-**Animations — Wave 1 SHIPPED (`planning/07-animation-interaction-plan.md`):**
-- `components/ui/reveal.tsx` — scroll-reveal (fade+rise, staggered, respects reduced-motion)
-- Hero staggered text entrance, Ken Burns zoom on video, card hover-lift, button press, arrow nudge.
-
-**Assets received & wired:** logo (`logo.png`), 5 team photos, SEAL product image, FET video + poster.
-
-**Build status:** `npm run build` clean (zero errors). Dev server runs on `localhost:3000`.
+**This is the most significant build sprint to date.** Full premium redesign across all public pages.
 
 ---
 
-**PENDING (next up):**
+## Design System — CURRENT (Updated June 2026)
 
-_Frontend pages not yet built:_
-1. **Enquiry / quote form (`/enquire`)** — highest priority; every CTA points here
-2. Product pages: FET, SEAL, Coffee, Logistics
-3. Coffee shop + cart + checkout (Flutterwave UGX + PayPal USD + live FX rate)
-4. About, Contact, Blog (list + post), Certifications/Trust page
-5. Legal pages: Privacy, T&C, Returns & Warranty, Cookie Policy + cookie banner
-6. Customer portal (order tracking, invoices, enquiry status, profile)
-7. Admin panel (CEO dashboard, Ops dashboard, orders, enquiries, products, blog CMS)
-8. 404 already done; need branded error states elsewhere
+### Typography (Upgraded from Playfair + Inter)
 
-_Backend (Laravel) — scaffolded only, not yet built:_
-9. Database schema + migrations (products, orders, enquiries, quotes, invoices, blog, users)
-10. API endpoints per `planning/05` API contract; auth (Sanctum); role-based access
-11. Integrations: Flutterwave, PayPal, exchange-rate API, DHL, WhatsApp Business, Mailgun/Postmark
+| Role | Font | Notes |
+|------|------|-------|
+| Headings H1–H6 | **Cormorant Garamond** | Luxury serif — used by LVMH, premium agencies. High-contrast thin/thick strokes at display sizes. Weights 300–700, normal + italic. CSS var: `--font-playfair` |
+| Body + UI | **DM Sans** | Geometric humanist — Notion's font, Google product pages. More distinctive than Inter. Variable font. CSS var: `--font-inter` |
 
-_Assets still needed from team:_
-12. FET + Coffee product photos; SEAL/Coffee/Logistics videos (for hero slides 2–4)
-13. Certifications/lab results (to be presented by management)
-14. Approved testimonials + case studies (with written permission)
+> Both fonts reuse the existing CSS variable names (`--font-playfair`, `--font-inter`) so all components inherit automatically — no component-level changes needed.
 
-_Ops / pre-launch:_
-15. Sentry, uptime monitoring, automated DB backups, CI/CD pipeline
-16. Tone-of-voice guide (Marketing); push `rebuild` branch to GitHub for remote backup
+### Colour Palette
 
-_Housekeeping:_
-17. Animation Waves 2–3 (hero progress bar, count-up stats, swipe gestures, sticky mobile CTA)
+| Token | Hex | Use |
+|-------|-----|-----|
+| Vitorra Gold | `#C5B27A` | CTA fills, accents, decorative elements |
+| Gold Light | `#D4C49A` | Hover states |
+| Gold Dark / Text | `#7A6020` | Readable gold on light surfaces |
+| Ivory Canvas | `#F2F2F2` | Default page background |
+| Lifted Ivory | `#FAFAF8` | Nested cards, raised sections |
+| Charcoal | `#1E1E1E` | Headings, footer, dark hero |
+| Body Text | `#454545` | Default body paragraphs |
 
----
+### Design Language
 
-## Current Tech Stack (To Be Replaced)
+- **Stripe-inspired** section flow: dramatic dark/light alternation, aurora gradient meshes, clean white product sections
+- **Mastercard gestures**: floating pill nav, ghost watermarks, circular team portraits, orbital arcs, stadium cards (40px radius)
+- **Premium effects implemented** (see globals.css):
+  - `hero-aurora-right` — drifting gold glow on right side of all dark heroes
+  - `hero-grain` — film-grain texture overlay on dark sections
+  - `float-element` — levitating animation for FET product image
+  - `glow-card` — gold border glow on product card hover
+  - `stat-card` / `stat-orb` — glassmorphism stat cards with radial gold orb
+  - `cta-aurora-1/2/3` — three drifting aurora blobs in Final CTA
+  - `auth-cert` — hover gold-left-border on certification list items
+  - `authority-grid-bg` — subtle gold grid pattern for authority sections
+  - `line-draw` keyframe — gold underline draws left-to-right on stat completion
+  - Corner bracket SVGs — luxury editorial framing in FinalCTA
+  - Inverted semicircle arc vectors in FinalCTA (mirrors Why Vitorra rising arcs)
+  - Digit scramble animation in StatsBand (numbers cycle through random digits then lock)
 
-- **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS 4
-- **Backend:** Firebase (Firestore, Auth, Cloud Functions, Storage)
-- **Payments:** Flutterwave (UGX) + PayPal (USD) + Bank Transfer
-- **Hosting:** Firebase Hosting (CDN)
-- **PDF Generation:** jsPDF
-- **Animations:** Framer Motion
-- **Routing:** React Router DOM
+### Section Flow Principle (All Pages)
 
-### Why the Current Stack Is Being Replaced
-
-The current React SPA (Single Page Application) architecture makes it very difficult for Google and other search engines to index the website. This directly limits organic customer discovery. Firebase, while functional, limits full control over security tooling, server-side logic, and advanced integrations that Vitorra will need as it grows.
-
----
-
-## Target Tech Stack (Rebuild)
-
-- **Frontend:** Next.js (React-based, SEO-optimised, server-side rendering)
-- **Backend:** Laravel (PHP) — full control over security, APIs, integrations, and business logic
-- **Database:** MySQL or PostgreSQL (via Laravel) — structured, scalable, fully queryable
-- **Payments:** Retain Flutterwave + PayPal integrations, rebuild on Laravel
-- **Hosting:** TBD — options include Vercel (frontend) + a managed PHP host or VPS (backend)
-- **Media:** Cloudinary or S3-compatible storage for images and documents
-- **Email:** Transactional email via Mailgun or Postmark
-- **Monitoring:** Sentry (errors) + UptimeRobot or BetterStack (uptime alerts)
+Dark → Gold strip → White → Dark → White → Ivory → Dark → Ivory → White. Never two heavy dark sections consecutively.
 
 ---
 
-## Known Issues (From Audit)
+## Pages Built (Frontend — `rebuild` branch)
 
-### Critical — Fix Before Any Marketing Push
-1. **Security gap in blog content rendering** — malicious content could run in visitors' browsers if exploited. Fix: sanitise all HTML output.
-2. **File storage open to all logged-in users** — any registered user can upload files to the company's media storage. Fix: restrict to admin roles only.
+### Fully Built & Designed
 
-### High Priority
-3. **No error or uptime monitoring** — the team only finds out about problems when customers complain.
-4. **No automated data backups** — a data loss event would be unrecoverable.
-5. **No CI/CD pipeline** — all deployments are manual and error-prone.
+| Page | Route | Status | Notes |
+|------|-------|--------|-------|
+| Homepage | `/` | ✅ Complete | 11-section premium layout |
+| About | `/about` | ✅ Complete | 8-section, all 9 team members with photos |
+| Fuel Eco Tech | `/products/fuel-eco-tech` | ✅ Complete | VW T5 test report data section |
+| SEAL Wound Spray | `/products/seal-wound-spray` | ✅ Complete | Aligned with design system |
+| Vitorra Coffee | `/products/coffee` | ✅ Complete | Aligned with design system |
+| Logistics | `/products/logistics` | ✅ Complete | Aligned with design system |
+| Enquiry / Quote | `/enquire` | ✅ Complete | Dark hero, sector-adaptive, 3-step form |
+| Blog (list) | `/blog` | ✅ Complete | ISR, placeholder state when backend offline |
+| Blog (post) | `/blog/[slug]` | ✅ Complete | Dynamic, fetches from API |
+| Legal pages | `/legal/*` | ✅ Complete | Privacy, T&C, Returns, Cookie Policy |
+| Cookie Banner | (component) | ✅ Complete | GDPR-compliant |
+| Certifications | `/trust/certifications` | ✅ Complete | URSB registration + cert cards |
+| 404 | `/_not-found` | ✅ Complete | Branded |
+| Admin panel | `/admin/*` | ✅ Functional | Dashboard, enquiries, messages, orders |
+| Admin login | `/admin/login` | ✅ Complete | Sanctum auth |
+| Contact | `/contact` | ✅ Built | Needs design alignment |
+
+### Pending Build
+
+| Page | Route | Priority |
+|------|-------|---------|
+| Coffee Shop | `/shop` | High — every Coffee CTA points here |
+| Customer Portal | `/portal/*` | Medium |
+| Careers | `/careers` | Low |
+
+---
+
+## Homepage Sections (Current — 11 sections)
+
+1. **Hero** — Cinematic sector-switching (5 sectors, auto-advance, video for FET). Aurora + grain.
+2. **Trust Marquee** — Gold strip, seamless credentials ticker, pauses on hover.
+3. **Authority** — Compact split panel. Left: "Independently certified. Internationally proven." + large "6" number. Right: 6 certification list items with hover gold-left-border effect.
+4. **FET Spotlight** — Dark, gold aurora. Floating product image with 2 badge chips. 3 proof points + quick-fact pills.
+5. **Product Suite** — 3 cards (SEAL, Coffee, Logistics) on white with `glow-card` hover.
+6. **Testimonials / Proven Results** — VW T5 test report data (13.9% reduction, CTI GmbH signed November 2025). Before/after CSS bars, key findings, 3 metric chips.
+7. **Stats Band** — 4 glassmorphism cards on warm ivory. Digit-scramble animation fires on scroll-in. Gold completion line draws after lock.
+8. **Sectors Strip** — Centered, Stripe mixed-weight headline. 6 sector icon pills.
+9. **Why Vitorra** — Dark glass panels, semi-circle arc vectors.
+10. **Team Teaser** — 9 overlapping portrait avatars, tooltip on hover.
+11. **Blog Preview** — 3 recent posts (server component). Falls back to editorial placeholders when backend offline.
+12. **Certifications** — URSB incorporation credential card.
+13. **Final CTA** — White, corner bracket SVGs, inverted arc vectors, 3 aurora clouds, magnetic button.
+
+---
+
+## Key Product Data — FET (Priority Revenue Product)
+
+**VW T5 Test Report (CTI GmbH — November 2025):**
+- Vehicle: VW T5, Landesbaubehörde Stadthagen, Hannover, Germany
+- Period: January–October 2025
+- **Before FET:** 11.52 l/100km over 13,468 km
+- **With FET:** 9.92 l/100km (first full month)
+- **Reduction: 13.9%** — well above normal operational variation (±3–5%)
+- Signed by: Holger Walprecht, CTI GmbH, Lippstadt, 10.11.2025
+- Financial: €900–€1,300 annual savings, 3–5 month payback
+- Report file: `FUEL ECO TECH PRESENTATION.pdf` + `FET-Test-Report-VW-T5.pdf` in project root
+
+**FET Certifications (all independently issued):**
+ISO 9001:2015, ISO 14001:2015, ISO 27001, Zurich Product Liability, AVL Technologies (lab validated), qm-solutions GmbH (German certified)
+
+---
+
+## Team — All Members (Photos in `frontend/public/team/`)
+
+| Name | Role | Tier |
+|------|------|------|
+| Solomon Okello | Chief Executive Officer | CEO |
+| Victor Lojum | Head of Operations | Leadership |
+| Joseph Rwabu | Senior Finance Officer | Leadership |
+| Thurayya Nakayima | Senior Marketing Officer | Leadership |
+| John Oluwaseyi | IT Officer | Officers |
+| Sarah Nuwamanya | Marketing Officer | Officers |
+| Olivia Sandra | Brand Designer | Officers |
+| Daniel Tuke | Finance Officer | Officers |
+| Nagawa Shakirah | Marketing Officer | Officers |
+
+All 9 members now have real photos. No placeholder slots remain.
+
+---
+
+## Backend Status (Laravel — `backend/`)
+
+- **Auth:** Sanctum installed, `personal_access_tokens` migration created and run ✅
+- **Database:** SQLite for development (file at `backend/database/database.sqlite`)
+- **Migrations run:** users, personal_access_tokens
+- **Admin accounts seeded:** `admin@vitorra.org` (Admin), `ops@vitorra.org` (Ops)
+- **API:** Scaffolded but most endpoints not yet implemented
+- **Pending:** Products, orders, enquiries, blog, Flutterwave, PayPal, Mailgun, DHL
+
+---
+
+## Branch Strategy
+
+| Branch | Purpose |
+|--------|---------|
+| `master` | Old React/Firebase site — preserved, untouched |
+| `rebuild` | All new work — the active development branch |
+
+Recover any old file: `git checkout master -- <path>`
+
+---
+
+## Key Files & Components
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/app/globals.css` | All design system utilities, keyframes, premium effects |
+| `frontend/src/app/layout.tsx` | Font loading (Cormorant Garamond + DM Sans) |
+| `frontend/src/app/page.tsx` | Homepage — 11-section layout |
+| `frontend/src/components/sections/StatsBand.tsx` | Digit-scramble stat cards |
+| `frontend/src/components/sections/Testimonials.tsx` | VW T5 test data section |
+| `frontend/src/components/sections/BlogPreview.tsx` | Server component, ISR blog preview |
+| `frontend/src/components/sections/FinalCTA.tsx` | White CTA with corner brackets + arc vectors |
+| `frontend/src/components/sections/Team.tsx` | Full team constellation (hierarchical) |
+| `frontend/src/components/sections/TeamTeaser.tsx` | Homepage 9-avatar stack |
+| `frontend/src/components/sections/Hero.tsx` | Sector-switching cinematic hero |
+| `frontend/src/lib/constants.ts` | CONTACT_EMAIL, CONTACT_PHONE, API_BASE_URL, PRODUCTS |
+| `planning/04-brd-complete.md` | Business Requirements Document (signed off) |
+| `planning/05-phase1-system-design.md` | System design + API contract |
+| `planning/06-design-system.md` | Design system spec |
+
+---
+
+## PENDING — What Remains
+
+### High Priority (Revenue-blocking)
+
+1. **Coffee Shop** (`/shop`) — every Coffee CTA points here; not built
+2. **Backend API endpoints** — products, orders, enquiries, blog CRUD
+3. **Payment integrations** — Flutterwave (UGX) + PayPal (USD) + live exchange rate API
+4. **WhatsApp Business** — enquiry notifications to Marketing team
+5. **Transactional email** — Mailgun or Postmark (order confirmations, enquiry acknowledgements)
 
 ### Medium Priority
-6. **Hardcoded currency exchange rate** — PayPal payments use a fixed UGX/USD rate that is months out of date, risking overcharging or undercharging international customers.
-7. **Coffee product listed as "Coming Soon"** in the shop — creates an unfinished impression. Either complete or remove.
-8. **No 404 / error pages** — broken URLs show a blank page, not a branded experience.
+
+6. **Contact page** — built but needs design alignment with homepage
+7. **Customer portal** — order tracking, invoices, enquiry status
+8. **Blog content** — team needs to write and publish posts
+9. **Testimonials** — written client consent needed before publishing real quotes
+10. **Coffee photos** — product photography pending
+11. **SEAL/Coffee/Logistics videos** — for hero slides 2–4
+
+### Operations / Pre-Launch
+
+12. **Sentry** error monitoring
+13. **UptimeRobot / BetterStack** uptime alerts
+14. **Automated daily DB backups**
+15. **CI/CD pipeline** (GitHub Actions)
+16. **Sitemap + robots.txt** — SEO critical
+17. **Social sharing metadata** (Open Graph) — WhatsApp/LinkedIn preview cards
+18. **Push `rebuild` branch to GitHub** for remote backup
 
 ### Lower Priority
-9. No automated test coverage (zero tests in the codebase)
-10. No sitemap or robots.txt for search engines
-11. No social sharing metadata (WhatsApp/LinkedIn previews don't display correctly)
-12. No abandoned cart recovery emails
-13. No newsletter unsubscribe flow (GDPR risk)
-14. Blog admin editor uses a deprecated browser API — will eventually stop working
+
+19. Animation Waves 2–3 (swipe gestures, sticky mobile CTA)
+20. Tone-of-voice guide (Marketing)
+21. Newsletter unsubscribe flow (GDPR)
+22. Careers page
 
 ---
 
-## What Marketing Has Said
+## Known Issues (Active — From Original Audit)
 
-The marketing team has flagged that the current website:
-- Does not clearly communicate what Vitorra does or offers
-- Does not help customers understand the products
-- Does not match the brand identity of a premium holdings company
-- Feels generic — could belong to any startup
+### Critical
+1. **Security gap in blog content rendering** — sanitise all HTML output before backend goes live
+2. **File storage open to all logged-in users** — restrict uploads to admin roles only
 
-**This confirms a full UI/UX redesign is required**, not just a visual refresh. The redesign must be grounded in customer research and structured around how visitors actually make decisions.
+### High Priority
+3. No error or uptime monitoring
+4. No automated data backups
+5. No CI/CD pipeline
 
----
-
-## The Rebuild Plan
-
-### Phase 0 — Marketing Discovery (COMPLETE — Week 0–1)
-> **Status: Complete. BRD written and ready for sign-off.**
-- [x] Rebuild strategy agreed (Next.js + Laravel)
-- [x] Existing codebase audited and documented
-- [x] Discovery framework designed (55 questions, 7 categories)
-- [x] Planning documents created (`planning/` folder)
-- [x] Marketing Discovery Workshop completed (Trello board)
-- [x] Business Requirements Document (BRD) completed — `planning/04-brd-complete.md`
-- [x] Phase 1 System Design completed — `planning/05-phase1-system-design.md`
-- [x] BRD signed off by Marketing Lead + Director (Solomon)
-
-**Phase 1 & 2 build underway — see "Week 1 — Build Started" log above.**
-
----
-
-### Phase 1 — Information Architecture & System Design (Week 1–2)
-> Pending BRD sign-off.
-- Map every page, user journey, and admin screen from BRD outputs
-- Full system design: Next.js frontend + Laravel backend architecture
-- Low-fidelity wireframes reviewed and approved by Marketing
-- Database schema design
-- API contract design (frontend ↔ backend)
-
-### Phase 2 — Build: Core System (Week 3–10)
-> Pending Phase 1 completion.
-- Frontend (Next.js): public site, product pages, shop, checkout, blog, contact, careers
-- Backend (Laravel): API, authentication, product management, order processing
-- Payment integrations: Flutterwave (UGX) + PayPal (USD) with live exchange rate
-- Admin panel: orders, products, customers, content, reports
-- Customer portal: order tracking, invoices, account management
-
-### Phase 3 — Operations & Go-Live (Week 8–16, parallel with Phase 2)
-> Pending Phase 2 start.
-- Sentry error monitoring
-- Uptime alerts (BetterStack or UptimeRobot)
-- Automated daily database backups
-- CI/CD pipeline
-- Data migration from Firebase → new database
-- End-to-end payment testing
-
-**Target: Full production launch by Week 14–16**
-
----
-
-## What "Production Ready" Looks Like for Vitorra
-
-A finished product means:
-- Visitors immediately understand who Vitorra is, what it does, and why it matters
-- The design commands the authority of a premium African holdings company
-- Google can find and rank every page — driving organic enquiries without ad spend
-- Customers can browse, enquire, and order without confusion
-- The team is alerted to any issue before a customer notices it
-- Business data is backed up and recoverable
-- The platform can scale with business growth without an engineering rewrite
+### Medium
+6. Exchange rate currently hardcoded — live rate API not yet wired
+7. No sitemap or robots.txt
 
 ---
 
@@ -272,11 +315,12 @@ A finished product means:
 
 ---
 
-## Repository Notes
+## What "Production Ready" Looks Like for Vitorra
 
-- **Repo:** `vitorraweb` (current codebase — the 35% that exists)
-- **Branch:** `master`
-- **Firebase Project:** vitorra (linked via `.firebaserc`)
-- **Environment:** Variables in `.env` (not committed). Template in `.env.example`
-- **Deploy command:** `npm run build && firebase deploy`
-- All Firestore security rules are version-controlled in `firestore.rules` and `storage.rules`
+- Visitors immediately understand who Vitorra is, what it does, and why it matters
+- The design commands the authority of a premium African holdings company
+- Google can find and rank every page — driving organic enquiries without ad spend
+- Customers can browse, enquire, and order without confusion
+- The team is alerted to any issue before a customer notices it
+- Business data is backed up and recoverable
+- The platform can scale with business growth without an engineering rewrite
