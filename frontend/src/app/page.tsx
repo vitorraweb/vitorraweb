@@ -1,84 +1,90 @@
 import Link from "next/link";
+import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Hero from "@/components/sections/Hero";
 import TrustMarquee from "@/components/sections/TrustMarquee";
+import StatsBand from "@/components/sections/StatsBand";
+import Testimonials from "@/components/sections/Testimonials";
+import BlogPreview from "@/components/sections/BlogPreview";
 import { Reveal } from "@/components/ui/reveal";
 import { ParallaxImage } from "@/components/ui/parallax-image";
-import WhyVitorra from "@/components/sections/WhyVitorra";
 import TeamTeaser from "@/components/sections/TeamTeaser";
 import Certifications from "@/components/sections/Certifications";
 import FinalCTA from "@/components/sections/FinalCTA";
-import { ArrowRight } from "lucide-react";
-
-/* ─── Typography tokens ─────────────────────────────────────────────────── */
-
-const T = {
-  sectionH2: {
-    fontFamily: "var(--font-playfair, Georgia, serif)",
-    fontSize: "clamp(28px, 3.2vw, 44px)",
-    fontWeight: 700,
-    letterSpacing: "-0.02em",
-    lineHeight: 1.12,
-    color: "#1E1E1E",
-  } as React.CSSProperties,
-
-  cardH3: {
-    fontFamily: "var(--font-playfair, Georgia, serif)",
-    fontSize: "22px",
-    fontWeight: 600,
-    letterSpacing: "-0.015em",
-    lineHeight: 1.15,
-    color: "#1E1E1E",
-  } as React.CSSProperties,
-};
+import {
+  ArrowRight, ArrowUpRight, ShieldCheck,
+  Truck, Tractor, Bus, Ship, Factory, Building2,
+} from "lucide-react";
 
 /* ─── Data ──────────────────────────────────────────────────────────────── */
 
-const products = [
+const certBadges = [
+  { code: "ISO 9001:2015",    label: "Quality Management"   },
+  { code: "ISO 14001:2015",   label: "Environmental"        },
+  { code: "ISO 27001",        label: "Information Security" },
+  { code: "AVL Technologies", label: "Lab Validated"        },
+  { code: "Zurich Insurance", label: "Product Liability"    },
+  { code: "qm-solutions",     label: "German Certified"     },
+];
+
+const fetProofPoints = [
+  "Patented swirl chamber — improves oxygen integration on every cycle",
+  "Independently validated by AVL Technologies automotive lab",
+  "ISO 9001 · ISO 14001 · ISO 27001 certified · Zurich Product Liability",
+];
+
+const otherProducts = [
   {
-    label: "Fuel Eco Tech",
-    badge: "B2B · Fleet",
-    image: "/products/fet/in-hand.png",
-    tagline: "Reduce fuel costs. Extend engine life.",
-    description:
-      "Validated fuel-saving technology trusted by fleet operators across East Africa. Measurable ROI, proven results.",
-    href: "/products/fuel-eco-tech",
-    cta: "Request a Fuel Savings Assessment",
-    salesMotion: "Enquiry · Consultation · Quote",
+    label:       "SEAL Wound Spray",
+    badge:       "Medical · B2B",
+    image:       "/products/seal/trauma-tray.png",
+    tagline:     "Stop bleeding fast. Save lives.",
+    description: "Clinically validated hemostatic wound spray for hospitals, emergency responders, NGOs, and military procurement.",
+    href:        "/products/seal-wound-spray",
+    cta:         "Request Product Information",
   },
   {
-    label: "SEAL Wound Spray",
-    badge: "Medical · B2B",
-    image: "/products/seal/trauma-tray.png",
-    tagline: "Stop bleeding fast. Save lives.",
-    description:
-      "Clinically validated hemostatic wound spray for hospitals, emergency responders, NGOs, and military procurement.",
-    href: "/products/seal-wound-spray",
-    cta: "Request Product Information",
-    salesMotion: "Enquiry · Quote · Contract",
+    label:       "Vitorra Coffee",
+    badge:       "B2B · B2C",
+    image:       "/products/coffee/lifestyle.png",
+    tagline:     "Premium Ugandan coffee. Farm to cup.",
+    description: "Traceable, responsibly sourced coffee for consumers, hospitality businesses, and international importers.",
+    href:        "/products/coffee",
+    cta:         "Shop Coffee",
   },
   {
-    label: "Vitorra Coffee",
-    badge: "B2B · B2C",
-    image: "/products/coffee/lifestyle.png",
-    tagline: "Premium Ugandan coffee. Farm to cup.",
-    description:
-      "Traceable, responsibly sourced coffee from Uganda — for consumers, hospitality businesses, and international importers.",
-    href: "/products/coffee",
-    cta: "Shop Coffee",
-    salesMotion: "Shop Online · Wholesale · Export",
+    label:       "Logistics Services",
+    badge:       "B2B · Enterprise",
+    image:       "/products/logistics/truck-day.png",
+    tagline:     "Move goods with confidence.",
+    description: "End-to-end freight, warehousing, customs clearance, and supply chain management across Uganda and East Africa.",
+    href:        "/products/logistics",
+    cta:         "Request a Logistics Quote",
+  },
+];
+
+const sectors = [
+  { icon: Truck,     label: "Fleet Operators"         },
+  { icon: Tractor,   label: "Agriculture"              },
+  { icon: Bus,       label: "Public Transport"         },
+  { icon: Factory,   label: "Construction & Industry"  },
+  { icon: Ship,      label: "Marine"                   },
+  { icon: Building2, label: "Healthcare & NGOs"        },
+];
+
+const whyPoints = [
+  {
+    headline: "Performance you can measure",
+    body: "Every FET installation is benchmarked before and after — so the savings are in data, not marketing copy.",
   },
   {
-    label: "Logistics Services",
-    badge: "B2B · Enterprise",
-    image: "/products/logistics/truck-day.png",
-    tagline: "Move goods with confidence.",
-    description:
-      "End-to-end freight, warehousing, customs clearance, and supply chain management across Uganda, East Africa, and beyond.",
-    href: "/products/logistics",
-    cta: "Request a Logistics Quote",
-    salesMotion: "Enquiry · Quote · Contract",
+    headline: "Certified at every level",
+    body: "ISO 9001 · 14001 · 27001, Zurich-insured, AVL-validated. Our products carry independent international certification.",
+  },
+  {
+    headline: "East Africa, built for scale",
+    body: "Serving Uganda and six markets across the region — with the infrastructure and local knowledge to grow alongside you.",
   },
 ];
 
@@ -90,165 +96,631 @@ export default function HomePage() {
       <Header />
       <main className="flex-1" style={{ backgroundColor: "#F2F2F2" }}>
 
-        {/* ══ HERO ════════════════════════════════════════════════════════
-            Cinematic single hero (no auto-rotation). One brand statement +
-            a persistent sector rail (Overview · FET · SEAL · Coffee · Logistics)
-            the visitor clicks to swap copy + background.
-            Add/upgrade a sector's media: drop the file in public/ and change its
-            `media` field in Hero.tsx (gradient → image/video). No other changes.
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════════════════════════
+            1. HERO  —  dark · aurora · grain
+        ══════════════════════════════════════════════════════════════════ */}
         <Hero />
 
-        {/* ══ TRUST BAR ═══════════════════════════════════════════════════
-            Seamless credentials ticker — pauses on hover, scrolls (not wraps)
-            on mobile, static when reduce-motion is on. Edit items in TrustMarquee.
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════════════════════════
+            2. TRUST MARQUEE  —  gold strip
+        ══════════════════════════════════════════════════════════════════ */}
         <TrustMarquee />
 
-        {/* ══ PRODUCTS ════════════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════════════════════════
+            3. AUTHORITY  —  compact split panel · dark left / warm right
+            Option B: earn trust BEFORE showing the product.
+            Dark editorial statement left; certification evidence right.
+            Tight, no wasted space — authority sections should be confident,
+            not padded.
+        ══════════════════════════════════════════════════════════════════ */}
         <section
-          className="section-padding relative overflow-hidden"
-          style={{ backgroundColor: "#F2F2F2" }}
+          className="relative overflow-hidden"
+          style={{ boxShadow: "inset 0 1px 0 rgba(0,0,0,0.07), inset 0 -1px 0 rgba(0,0,0,0.07)" }}
         >
-          {/* Background watermark */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 flex items-center overflow-hidden pointer-events-none select-none z-0"
-          >
-            <span
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+
+            {/* ── LEFT: light editorial panel ──────────────────────────────── */}
+            <div
+              className="relative overflow-hidden flex flex-col justify-center px-8 md:px-14 lg:px-16 py-14 md:py-16"
               style={{
-                fontFamily: "var(--font-playfair, Georgia, serif)",
-                fontSize: "clamp(80px, 12vw, 160px)",
-                fontWeight: 700,
-                letterSpacing: "-0.03em",
-                lineHeight: 1,
-                color: "rgba(30,30,30,0.04)",
-                userSelect: "none",
-                paddingLeft: "clamp(24px, 5vw, 80px)",
-                whiteSpace: "nowrap",
+                /* Warm directional gradient — white core, ivory edge */
+                background:  "linear-gradient(145deg, #FFFFFF 0%, #FAF8F4 100%)",
+                minHeight:   "300px",
               }}
             >
-              Portfolio
-            </span>
-          </div>
-
-          <div className="container-max relative z-10">
-            <Reveal className="mb-16 lg:mb-24">
-              <span className="eyebrow block mb-3">Our Portfolio</span>
-              <h2 style={T.sectionH2} className="gold-underline max-w-md">
-                Four product lines.<br />One trusted name.
-              </h2>
-            </Reveal>
-
-            {/* Alternating editorial feature rows — image parallax + staggered text */}
-            <div className="flex flex-col gap-20 md:gap-28 lg:gap-32">
-              {products.map((p, i) => {
-                const imageLeft = i % 2 === 0;
-                const num = String(i + 1).padStart(2, "0");
-                return (
+              {/* Very faint concentric rings — depth on light surface */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
+              >
+                {[220, 380, 540].map((d) => (
                   <div
-                    key={p.label}
-                    className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center"
-                  >
-                    {/* Image */}
-                    <Reveal
-                      direction={imageLeft ? "right" : "left"}
-                      className={imageLeft ? "lg:order-1" : "lg:order-2"}
+                    key={d}
+                    className="absolute rounded-full"
+                    style={{ width: d, height: d, border: "1px solid rgba(197,178,122,0.07)" }}
+                  />
+                ))}
+              </div>
+
+              {/* Single corner bracket — top-left */}
+              <svg
+                aria-hidden="true"
+                className="absolute top-6 left-6 pointer-events-none"
+                width={44} height={44} fill="none"
+              >
+                <path
+                  d="M44 2 L2 2 L2 44"
+                  stroke="rgba(197,178,122,0.55)"
+                  strokeWidth="1.5"
+                  strokeLinecap="square"
+                />
+              </svg>
+
+              <Reveal>
+                {/* Large "6" — gold on white, establishes scale immediately */}
+                <div
+                  style={{
+                    fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                    fontSize:      "clamp(52px, 6vw, 80px)",
+                    fontWeight:    700,
+                    letterSpacing: "-0.04em",
+                    lineHeight:    1,
+                    color:         "#C5B27A",
+                    marginBottom:  8,
+                  }}
+                >
+                  6
+                </div>
+
+                {/* Eyebrow — charcoal + gold dot (correct for light bg) */}
+                <span className="eyebrow mb-4 inline-flex">
+                  Independent certifications
+                </span>
+
+                <h2
+                  style={{
+                    fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                    fontSize:      "clamp(26px, 2.8vw, 40px)",
+                    fontWeight:    700,
+                    letterSpacing: "-0.02em",
+                    lineHeight:    1.15,
+                    color:         "#1E1E1E",
+                    maxWidth:      "380px",
+                  }}
+                >
+                  Independently certified.{" "}
+                  <span className="text-gold-gradient">Internationally proven.</span>
+                </h2>
+
+                <p
+                  className="mt-4"
+                  style={{
+                    fontSize:   "14px",
+                    lineHeight: 1.72,
+                    color:      "#777777",
+                    maxWidth:   "340px",
+                  }}
+                >
+                  Every certification is externally issued — not self-declared.
+                  FET has been verified by the institutions that the industry trusts.
+                </p>
+
+                <Link
+                  href="/trust/certifications"
+                  className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold group"
+                  style={{ color: "#7A6020" }}
+                >
+                  View all certifications &amp; test reports
+                  <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </Link>
+              </Reveal>
+            </div>
+
+            {/* ── RIGHT: warm certification list ───────────────────────────── */}
+            <div
+              className="flex flex-col justify-center px-8 md:px-14 lg:px-16 py-14 md:py-16"
+              style={{
+                backgroundColor: "#FAFAF8",
+                borderLeft:      "1px solid rgba(0,0,0,0.06)",
+              }}
+            >
+              <Reveal className="mb-5">
+                <span className="eyebrow block">Verified by</span>
+              </Reveal>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0.5">
+                {certBadges.map((c, i) => (
+                  <Reveal key={c.code} delay={i * 55}>
+                    <div
+                      className="auth-cert flex items-start gap-3 px-3 py-3.5"
                     >
-                      <ParallaxImage
-                        src={p.image}
-                        alt={p.label}
-                        priority={i === 0}
-                        className="aspect-[4/3] rounded-[40px] shadow-card"
+                      {/* Gold dot */}
+                      <div
+                        style={{
+                          width:           5,
+                          height:          5,
+                          borderRadius:    "50%",
+                          backgroundColor: "#C5B27A",
+                          marginTop:       7,
+                          flexShrink:      0,
+                        }}
                       />
-                    </Reveal>
-
-                    {/* Content */}
-                    <div className={imageLeft ? "lg:order-2 lg:pl-2" : "lg:order-1 lg:pr-2"}>
-                      <Reveal direction={imageLeft ? "left" : "right"}>
-                        <div className="flex items-center gap-4 mb-5">
-                          <span
-                            style={{
-                              fontFamily: "var(--font-playfair, Georgia, serif)",
-                              fontSize: "clamp(34px, 4vw, 48px)",
-                              fontWeight: 700,
-                              lineHeight: 1,
-                              letterSpacing: "-0.03em",
-                              color: "#D4C49A",
-                            }}
-                          >
-                            {num}
-                          </span>
-                          <span className="eyebrow">{p.badge}</span>
-                        </div>
-
-                        <h3
-                          className="mb-3"
+                      <div>
+                        {/* Cert name */}
+                        <div
                           style={{
-                            fontFamily: "var(--font-playfair, Georgia, serif)",
-                            fontSize: "clamp(26px, 3vw, 40px)",
-                            fontWeight: 700,
-                            letterSpacing: "-0.02em",
-                            lineHeight: 1.1,
-                            color: "#1E1E1E",
+                            fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                            fontSize:   "15px",
+                            fontWeight: 600,
+                            color:      "#1E1E1E",
+                            lineHeight: 1.3,
                           }}
                         >
-                          {p.label}
-                        </h3>
-
-                        <p className="font-medium mb-4" style={{ fontSize: "16px", color: "#7A6020" }}>
-                          {p.tagline}
-                        </p>
-
-                        <p className="mb-7 max-w-md" style={{ fontSize: "15px", lineHeight: 1.75, color: "#555555" }}>
-                          {p.description}
-                        </p>
-                      </Reveal>
-
-                      <Reveal direction="up" delay={120}>
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                          <Link href={p.href} className="btn-secondary group">
-                            {p.cta}
-                            <ArrowRight className="w-4 h-4 arrow-nudge" />
-                          </Link>
-                          <span
-                            className="text-[11px] font-semibold uppercase"
-                            style={{ letterSpacing: "0.08em", color: "#B7B7B7" }}
-                          >
-                            {p.salesMotion}
-                          </span>
+                          {c.code}
                         </div>
-                      </Reveal>
+                        {/* Category label */}
+                        <div
+                          style={{
+                            fontSize:      "11px",
+                            fontWeight:    500,
+                            color:         "#AAAAAA",
+                            marginTop:     2,
+                            letterSpacing: "0.02em",
+                          }}
+                        >
+                          {c.label}
+                        </div>
+                      </div>
                     </div>
+                  </Reveal>
+                ))}
+              </div>
+
+              {/* Subtle separator + note */}
+              <Reveal delay={360}>
+                <div
+                  className="mt-5 pt-5 flex items-center gap-3"
+                  style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}
+                >
+                  <div
+                    style={{
+                      width:           8,
+                      height:          8,
+                      borderRadius:    "50%",
+                      backgroundColor: "#C5B27A",
+                      flexShrink:      0,
+                    }}
+                  />
+                  <p style={{ fontSize: "12px", color: "#AAAAAA", lineHeight: 1.55 }}>
+                    All certifications are externally issued and independently audited.
+                    No self-certification.
+                  </p>
+                </div>
+              </Reveal>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            4. FET SPOTLIGHT  —  dark · gold aurora
+            Now seen AFTER the trust is established — the visitor already
+            knows FET is certified before they read the product pitch.
+        ══════════════════════════════════════════════════════════════════ */}
+        <section
+          className="section-padding relative overflow-hidden"
+          style={{ backgroundColor: "#121212" }}
+        >
+          {/* Gold aurora */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse at 80% 35%, rgba(197,178,122,0.22) 0%, transparent 50%)," +
+                "radial-gradient(ellipse at 10% 90%, rgba(197,178,122,0.08) 0%, transparent 45%)",
+            }}
+          />
+          <div aria-hidden="true" className="hero-grain" />
+
+          <div className="container-max relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+
+            {/* Left: content */}
+            <Reveal>
+              <span className="eyebrow-light mb-5 inline-flex">
+                Featured product · Fuel Eco Tech
+              </span>
+              <h2
+                style={{
+                  fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                  fontSize:      "clamp(38px, 5vw, 68px)",
+                  fontWeight:    700,
+                  letterSpacing: "-0.025em",
+                  lineHeight:    1.06,
+                  color:         "#FFFFFF",
+                  maxWidth:      "520px",
+                }}
+              >
+                Lower fuel costs.{" "}
+                <span className="text-gold-gradient">Proven in the lab.</span>
+              </h2>
+
+              <p
+                className="mt-6 mb-8 max-w-[440px]"
+                style={{ fontSize: "16px", lineHeight: 1.8, color: "rgba(255,255,255,0.55)" }}
+              >
+                FET is a patented, ISO-certified fuel optimisation system —
+                validated by AVL Technologies and trusted by fleet operators
+                across East Africa. No engine modification. Measurable ROI.
+              </p>
+
+              <ul className="flex flex-col gap-3.5 mb-10">
+                {fetProofPoints.map((pt) => (
+                  <li key={pt} className="flex items-start gap-3">
+                    <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#C5B27A" }} />
+                    <span style={{ fontSize: "14px", lineHeight: 1.65, color: "rgba(255,255,255,0.60)" }}>
+                      {pt}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Quick-fact pills */}
+              <div className="flex flex-wrap gap-2 mb-10">
+                {["Fitted in under 1 hour", "No engine modification", "1-year warranty"].map((f) => (
+                  <span
+                    key={f}
+                    style={{
+                      fontSize:      "11px",
+                      fontWeight:    600,
+                      letterSpacing: "0.04em",
+                      color:         "rgba(255,255,255,0.5)",
+                      border:        "1px solid rgba(255,255,255,0.12)",
+                      borderRadius:  "999px",
+                      padding:       "5px 14px",
+                    }}
+                  >
+                    {f}
+                  </span>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Link href="/enquire?sector=FET" className="btn-primary">
+                  Request a Fuel Savings Assessment
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/products/fuel-eco-tech" className="btn-ghost-dark">
+                  Learn more
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </Reveal>
+
+            {/* Right: floating product image */}
+            <Reveal direction="left" delay={150}>
+              <div className="relative float-element">
+                <div
+                  className="rounded-[40px] overflow-hidden"
+                  style={{
+                    border:     "1px solid rgba(255,255,255,0.09)",
+                    boxShadow:  "0 48px 96px rgba(0,0,0,0.55)",
+                  }}
+                >
+                  <ParallaxImage
+                    src="/products/fet/in-hand.png"
+                    alt="Fuel Eco Tech device — installed on a commercial engine"
+                    className="aspect-[4/3]"
+                  />
+                </div>
+
+                {/* Floating badge — bottom-left */}
+                <div
+                  className="absolute -bottom-5 -left-4 md:-bottom-6 md:-left-6 bg-white rounded-[18px] px-4 py-3"
+                  style={{ boxShadow: "0 12px 40px rgba(0,0,0,0.18)" }}
+                >
+                  <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#7A6020", marginBottom: "2px" }}>
+                    AVL Technologies Validated
                   </div>
-                );
-              })}
+                  <div style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "15px", fontWeight: 600, color: "#1E1E1E" }}>
+                    Lab-proven performance
+                  </div>
+                </div>
+
+                {/* Floating badge — top-right */}
+                <div
+                  className="absolute -top-4 -right-3 md:-top-5 md:-right-4 bg-white rounded-[16px] px-4 py-2.5"
+                  style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.14)" }}
+                >
+                  <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#7A6020", marginBottom: "2px" }}>
+                    Certified
+                  </div>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#1E1E1E" }}>
+                    ISO 9001 · 14001 · 27001
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            5. PRODUCT SUITE  —  white
+            Three product cards. White after dark FET = breathing room.
+        ══════════════════════════════════════════════════════════════════ */}
+        <section className="section-padding" style={{ backgroundColor: "#FFFFFF" }}>
+          <div className="container-max">
+            <Reveal className="mb-12 lg:mb-16">
+              <span className="eyebrow block mb-3">Our portfolio</span>
+              <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-10">
+                <h2
+                  style={{
+                    fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                    fontSize:      "clamp(30px, 3.5vw, 48px)",
+                    fontWeight:    700,
+                    letterSpacing: "-0.025em",
+                    lineHeight:    1.1,
+                    color:         "#1E1E1E",
+                  }}
+                >
+                  More from Vitorra.
+                </h2>
+                <Link
+                  href="/enquire"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold shrink-0 pb-1"
+                  style={{ color: "#7A6020" }}
+                >
+                  Request a quote for any product
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </Reveal>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
+              {otherProducts.map((p, i) => (
+                <Reveal key={p.label} delay={i * 80}>
+                  <Link
+                    href={p.href}
+                    className="group block rounded-[28px] overflow-hidden h-full glow-card"
+                    style={{ backgroundColor: "#FAFAF8", border: "1px solid rgba(0,0,0,0.06)" }}
+                  >
+                    <div className="relative overflow-hidden" style={{ aspectRatio: "4/3" }}>
+                      <Image
+                        src={p.image}
+                        alt={p.label}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                      />
+                      <div
+                        className="absolute inset-0"
+                        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.28) 0%, transparent 50%)" }}
+                      />
+                      <span
+                        className="absolute top-4 left-4"
+                        style={{
+                          fontSize:       "10px",
+                          fontWeight:     700,
+                          letterSpacing:  "0.06em",
+                          textTransform:  "uppercase",
+                          color:          "#1E1E1E",
+                          background:     "rgba(255,255,255,0.9)",
+                          backdropFilter: "blur(8px)",
+                          borderRadius:   "999px",
+                          padding:        "4px 12px",
+                        }}
+                      >
+                        {p.badge}
+                      </span>
+                    </div>
+                    <div className="p-6 lg:p-7">
+                      <h3
+                        className="mb-1"
+                        style={{
+                          fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                          fontSize:      "22px",
+                          fontWeight:    600,
+                          letterSpacing: "-0.01em",
+                          color:         "#1E1E1E",
+                        }}
+                      >
+                        {p.label}
+                      </h3>
+                      <p className="mb-3" style={{ fontSize: "13px", fontWeight: 600, color: "#7A6020" }}>
+                        {p.tagline}
+                      </p>
+                      <p className="mb-6" style={{ fontSize: "13px", lineHeight: 1.7, color: "#666666" }}>
+                        {p.description}
+                      </p>
+                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#1E1E1E" }}>
+                        {p.cta}
+                        <ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
+                      </span>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* ══ WHY VITORRA ════════════════════════════════════════════════
-            Sticky-narrative section — headline pins left, points scroll past
-            right and light up as they reach centre. See WhyVitorra.tsx.
-        ═══════════════════════════════════════════════════════════════ */}
-        <WhyVitorra />
+        {/* ══════════════════════════════════════════════════════════════════
+            6. TESTIMONIALS  —  white · client quotes
+            Placed after products so visitors see the range THEN hear from
+            real clients who use those products. Social proof confirms belief
+            already forming — not trying to create it from scratch.
+        ══════════════════════════════════════════════════════════════════ */}
+        <Testimonials />
 
-        {/* ══ TEAM TEASER ═════════════════════════════════════════════════
-            Slim leadership teaser — overlapping avatars + CTA. Full team
-            constellation lives on /about (TeamTeaser.tsx / Team.tsx).
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════════════════════════
+            7. STATS BAND  —  warm ivory · count-up + scramble
+            Stats land HERE — after the visitor has seen the certifications
+            and the products. Numbers now CONFIRM belief, not try to CREATE
+            it. See StatsBand.tsx.
+        ══════════════════════════════════════════════════════════════════ */}
+        <StatsBand />
+
+        {/* ══════════════════════════════════════════════════════════════════
+            7. SECTORS STRIP  —  ivory · centered
+        ══════════════════════════════════════════════════════════════════ */}
+        <section className="section-padding-sm" style={{ backgroundColor: "#F2F2F2" }}>
+          <div className="container-max text-center">
+            <Reveal>
+              <span className="eyebrow block mb-5">Who we serve</span>
+              <h2
+                style={{
+                  fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                  fontSize:      "clamp(28px, 3.8vw, 52px)",
+                  fontWeight:    700,
+                  letterSpacing: "-0.02em",
+                  lineHeight:    1.15,
+                }}
+              >
+                <span style={{ color: "#1E1E1E" }}>Serving businesses </span>
+                <span style={{ color: "#AAAAAA" }}>across every sector.</span>
+              </h2>
+            </Reveal>
+
+            <Reveal delay={120} className="mt-10 flex flex-wrap justify-center gap-3">
+              {sectors.map((s) => (
+                <div
+                  key={s.label}
+                  className="flex items-center gap-2 px-5 py-3 rounded-full bg-white"
+                  style={{ border: "1px solid rgba(0,0,0,0.07)" }}
+                >
+                  <s.icon className="w-4 h-4 shrink-0" style={{ color: "#C5B27A" }} />
+                  <span style={{ fontSize: "13px", fontWeight: 500, color: "#1E1E1E", whiteSpace: "nowrap" }}>
+                    {s.label}
+                  </span>
+                </div>
+              ))}
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            8. WHY VITORRA  —  dark · 3-panel glass grid + arc vectors
+        ══════════════════════════════════════════════════════════════════ */}
+        <section
+          className="section-padding relative overflow-hidden"
+          style={{ backgroundColor: "#141414" }}
+        >
+          {/* Semi-circle arcs rising from bottom */}
+          <div
+            aria-hidden="true"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-none"
+          >
+            {[180, 340, 520, 700, 900].map((d) => (
+              <div
+                key={d}
+                className="absolute"
+                style={{
+                  width:         d,
+                  height:        d / 2,
+                  bottom:        0,
+                  left:          "50%",
+                  transform:     "translateX(-50%)",
+                  borderRadius:  `${d / 2}px ${d / 2}px 0 0`,
+                  border:        "1px solid rgba(197,178,122,0.065)",
+                  borderBottom:  "none",
+                }}
+              />
+            ))}
+          </div>
+
+          <div aria-hidden="true" className="hero-grain" style={{ opacity: 0.025 }} />
+
+          <div className="container-max relative z-10">
+            <Reveal className="text-center mb-14 md:mb-16">
+              <span className="eyebrow-light mb-4 inline-flex">Why Vitorra</span>
+              <h2
+                className="max-w-2xl mx-auto"
+                style={{
+                  fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                  fontSize:      "clamp(32px, 4.2vw, 58px)",
+                  fontWeight:    700,
+                  letterSpacing: "-0.025em",
+                  lineHeight:    1.08,
+                  color:         "#FFFFFF",
+                }}
+              >
+                Innovative products.{" "}
+                <span style={{ color: "#C5B27A" }}>Dependable solutions.</span>
+              </h2>
+              <p
+                className="mt-5 max-w-lg mx-auto"
+                style={{ fontSize: "16px", lineHeight: 1.78, color: "rgba(255,255,255,0.42)" }}
+              >
+                From fuel efficiency to emergency medicine, premium coffee to
+                end-to-end logistics — Vitorra serves businesses that demand
+                proven performance, not promises.
+              </p>
+            </Reveal>
+
+            <div
+              className="grid grid-cols-1 md:grid-cols-3 overflow-hidden rounded-[24px]"
+              style={{ border: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              {whyPoints.map((pt, i) => (
+                <Reveal key={pt.headline} delay={i * 90}>
+                  <div
+                    className="p-8 md:p-10 h-full"
+                    style={{
+                      background:  "rgba(255,255,255,0.03)",
+                      borderRight: i < 2 ? "1px solid rgba(255,255,255,0.07)" : "none",
+                    }}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full mb-7" style={{ backgroundColor: "#C5B27A" }} />
+                    <h3
+                      className="mb-3"
+                      style={{
+                        fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                        fontSize:      "clamp(18px, 1.8vw, 22px)",
+                        fontWeight:    600,
+                        letterSpacing: "-0.01em",
+                        lineHeight:    1.25,
+                        color:         "#FFFFFF",
+                      }}
+                    >
+                      {pt.headline}
+                    </h3>
+                    <p style={{ fontSize: "14px", lineHeight: 1.75, color: "rgba(255,255,255,0.42)" }}>
+                      {pt.body}
+                    </p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+
+            <Reveal className="mt-10 text-center">
+              <Link href="/about" className="btn-ghost-dark inline-flex">
+                About Vitorra
+                <ArrowUpRight className="w-4 h-4" />
+              </Link>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            9. TEAM TEASER  —  lifted ivory
+        ══════════════════════════════════════════════════════════════════ */}
         <TeamTeaser />
 
-        {/* ══ CERTIFICATIONS ══════════════════════════════════════════════
-            Official-registration credential card (real URSB incorporation
-            details) + cursor tilt. See Certifications.tsx.
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════════════════════════
+            10. BLOG PREVIEW  —  lifted ivory · 3 recent posts
+            Server component — fetches from API, falls back to editorial
+            placeholders when backend is not yet live. See BlogPreview.tsx.
+        ══════════════════════════════════════════════════════════════════ */}
+        <BlogPreview />
+
+        {/* ══════════════════════════════════════════════════════════════════
+            11. CERTIFICATIONS  —  URSB incorporation credential card
+        ══════════════════════════════════════════════════════════════════ */}
         <Certifications />
 
-        {/* ══ FINAL CTA ══════════════════════════════════════════════════
-            Premium closing card — gold aurora, magnetic primary button.
-            See FinalCTA.tsx.
-        ═══════════════════════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════════════════════════
+            11. FINAL CTA  —  white · corner brackets · arc vectors
+        ══════════════════════════════════════════════════════════════════ */}
         <FinalCTA />
 
       </main>

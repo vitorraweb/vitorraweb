@@ -5,19 +5,22 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
 
-/* ─── Final CTA ───────────────────────────────────────────────────────────────
-   Premium closing card (Linear / Stripe / Apple): dark stadium card with a slow
-   drifting gold aurora, faint ghost watermark, a kinetic headline, and a
-   MAGNETIC primary button that eases toward the cursor. Reduced-motion safe;
-   magnetic effect is desktop-only.
+/* ─── Magnetic primary button ────────────────────────────────────────────────
+   Eases toward the cursor on desktop (pointer:fine) only.
+   Falls back to a static button on touch / reduced-motion.
    ─────────────────────────────────────────────────────────────────────────── */
-
-function MagneticButton({ href, children }: { href: string; children: React.ReactNode }) {
+function MagneticButton({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
   const zone = useRef<HTMLSpanElement>(null);
   const move = useRef<HTMLSpanElement>(null);
-  const cur = useRef({ x: 0, y: 0 });
-  const target = useRef({ x: 0, y: 0 });
-  const raf = useRef(0);
+  const cur  = useRef({ x: 0, y: 0 });
+  const tgt  = useRef({ x: 0, y: 0 });
+  const raf  = useRef(0);
 
   useEffect(() => {
     const z = zone.current;
@@ -26,40 +29,34 @@ function MagneticButton({ href, children }: { href: string; children: React.Reac
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (!window.matchMedia("(pointer: fine)").matches) return;
 
-    const apply = () => {
-      m.style.transform = `translate3d(${cur.current.x.toFixed(2)}px, ${cur.current.y.toFixed(2)}px, 0)`;
-    };
     const loop = () => {
-      const t = target.current;
       const c = cur.current;
-      c.x += (t.x - c.x) * 0.2;
-      c.y += (t.y - c.y) * 0.2;
-      apply();
+      const t = tgt.current;
+      c.x += (t.x - c.x) * 0.18;
+      c.y += (t.y - c.y) * 0.18;
+      m.style.transform = `translate3d(${c.x.toFixed(2)}px,${c.y.toFixed(2)}px,0)`;
       if (Math.abs(t.x - c.x) > 0.01 || Math.abs(t.y - c.y) > 0.01) {
         raf.current = requestAnimationFrame(loop);
       } else {
         raf.current = 0;
       }
     };
-    const start = () => {
-      if (!raf.current) raf.current = requestAnimationFrame(loop);
-    };
     const onMove = (e: PointerEvent) => {
       const r = z.getBoundingClientRect();
-      const relX = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
-      const relY = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
-      target.current = { x: relX * 14, y: relY * 14 };
-      start();
+      tgt.current = {
+        x: ((e.clientX - (r.left + r.width / 2))  / (r.width  / 2)) * 14,
+        y: ((e.clientY - (r.top  + r.height / 2)) / (r.height / 2)) * 14,
+      };
+      if (!raf.current) raf.current = requestAnimationFrame(loop);
     };
     const onLeave = () => {
-      target.current = { x: 0, y: 0 };
-      start();
+      tgt.current = { x: 0, y: 0 };
+      if (!raf.current) raf.current = requestAnimationFrame(loop);
     };
-
     z.addEventListener("pointermove", onMove);
     z.addEventListener("pointerleave", onLeave);
     return () => {
-      if (raf.current) cancelAnimationFrame(raf.current);
+      cancelAnimationFrame(raf.current);
       z.removeEventListener("pointermove", onMove);
       z.removeEventListener("pointerleave", onLeave);
     };
@@ -77,92 +74,261 @@ function MagneticButton({ href, children }: { href: string; children: React.Reac
   );
 }
 
-interface FinalCTAProps {
-  eyebrow?: string;
-  titleLead?: string;
-  titleAccent?: string;
-  body?: string;
-  primaryLabel?: string;
-  primaryHref?: string;
-  secondaryLabel?: string;
-  secondaryHref?: string;
-  caption?: string;
+/* ─── Corner bracket ─────────────────────────────────────────────────────────
+   L-shaped SVG lines at each corner — a luxury editorial framing device.
+   On a white background the gold reads crisply at higher opacity.
+   ─────────────────────────────────────────────────────────────────────────── */
+function CornerBracket({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
+  const S = 56;
+  const G = 2;
+
+  const paths: Record<string, string> = {
+    tl: `M${S} ${G} L${G} ${G} L${G} ${S}`,
+    tr: `M${G} ${G} L${S} ${G} L${S} ${S}`,
+    bl: `M${S} ${S - G} L${G} ${S - G} L${G} ${G}`,
+    br: `M${G} ${S - G} L${S - G} ${S - G} L${S - G} ${G}`,
+  };
+
+  const pos: Record<string, string> = {
+    tl: "top-8 left-8 md:top-12 md:left-12",
+    tr: "top-8 right-8 md:top-12 md:right-12",
+    bl: "bottom-8 left-8 md:bottom-12 md:left-12",
+    br: "bottom-8 right-8 md:bottom-12 md:right-12",
+  };
+
+  return (
+    <svg
+      aria-hidden="true"
+      className={`absolute ${pos[position]} pointer-events-none`}
+      width={S} height={S} fill="none"
+    >
+      <path
+        d={paths[position]}
+        stroke="rgba(197,178,122,0.65)"
+        strokeWidth="1.5"
+        strokeLinecap="square"
+      />
+    </svg>
+  );
 }
 
+/* ─── Props ──────────────────────────────────────────────────────────────── */
+
+interface FinalCTAProps {
+  eyebrow?:        string;
+  titleLead?:      string;
+  titleAccent?:    string;
+  body?:           string;
+  primaryLabel?:   string;
+  primaryHref?:    string;
+  secondaryLabel?: string;
+  secondaryHref?:  string;
+  caption?:        string;
+}
+
+/* ─── Component ──────────────────────────────────────────────────────────── */
+
 export default function FinalCTA({
-  eyebrow = "Get Started",
-  titleLead = "Ready to work with",
-  titleAccent = "Vitorra?",
-  body = "Whether you need a fuel savings assessment, a logistics quote, or premium Ugandan coffee — our team responds within 24 hours.",
-  primaryLabel = "Request a Quote",
-  primaryHref = "/enquire",
+  eyebrow        = "Get Started",
+  titleLead      = "Ready to work with",
+  titleAccent    = "Vitorra?",
+  body           = "Whether you need a fuel savings assessment, a logistics quote, or premium Ugandan coffee — our team responds within 24 hours.",
+  primaryLabel   = "Request a Quote",
+  primaryHref    = "/enquire",
   secondaryLabel = "Contact Us",
-  secondaryHref = "/contact",
-  caption = "Uganda · East Africa · International  ·  Typical reply within 24 hours",
+  secondaryHref  = "/contact",
+  caption        = "Uganda · East Africa · International  ·  Typical reply within 24 hours",
 }: FinalCTAProps = {}) {
   return (
-    <section className="section-padding" style={{ backgroundColor: "#F2F2F2" }}>
-      <Reveal className="container-max">
-        <div
-          className="relative overflow-hidden rounded-[36px] px-8 md:px-16 py-16 md:py-24 text-center"
-          style={{ backgroundColor: "#1A1A1A", color: "#FFFFFF" }}
+    <section
+      className="relative overflow-hidden"
+      style={{
+        backgroundColor: "#FFFFFF",
+        /* Hairline separator from the section above */
+        boxShadow: "inset 0 1px 0 rgba(0,0,0,0.07)",
+        paddingTop:    "clamp(80px, 10vw, 140px)",
+        paddingBottom: "clamp(80px, 10vw, 140px)",
+        paddingLeft:   "clamp(24px, 5vw, 80px)",
+        paddingRight:  "clamp(24px, 5vw, 80px)",
+      }}
+    >
+      {/* ── Gold aurora blobs — re-tuned for white background ─────────────────
+          On white, blurred gold radial gradients read as warm amber glows —
+          like natural studio light warming the canvas. Opacity is raised vs
+          the dark version so they stay visible against white.               */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute", borderRadius: "50%",
+          width: 720, height: 720,
+          top: -260, left: -200,
+          filter: "blur(90px)",
+          opacity: 0.20,
+          background: "radial-gradient(circle, rgba(197,178,122,0.7) 0%, transparent 65%)",
+          animation: "cta-drift-1 20s ease-in-out infinite alternate",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute", borderRadius: "50%",
+          width: 580, height: 580,
+          bottom: -210, right: -170,
+          filter: "blur(90px)",
+          opacity: 0.14,
+          background: "radial-gradient(circle, rgba(168,146,85,0.65) 0%, transparent 65%)",
+          animation: "cta-drift-2 26s ease-in-out infinite alternate",
+          pointerEvents: "none",
+        }}
+      />
+      {/* Centre bloom — very subtle warm heart */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute", borderRadius: "50%",
+          width: 420, height: 420,
+          top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          filter: "blur(80px)",
+          opacity: 0.07,
+          background: "radial-gradient(circle, rgba(197,178,122,0.6) 0%, transparent 68%)",
+          animation: "cta-drift-1 34s ease-in-out infinite alternate-reverse",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* ── Grain — multiply blend works on light surfaces ────────────────── */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute", inset: 0,
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")",
+          backgroundRepeat: "repeat",
+          backgroundSize: "180px 180px",
+          opacity: 0.035,
+          mixBlendMode: "multiply" as const,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* ── Inverted arc vectors — hang from the top centre ─────────────────
+          Visible on white at higher opacity; gold reads clearly against the
+          clean canvas. Mirrors the rising arcs in "Why Vitorra".            */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 pointer-events-none"
+        style={{ transform: "translateX(-50%)" }}
+      >
+        {[200, 360, 540, 740, 960].map((d) => (
+          <div
+            key={d}
+            className="absolute"
+            style={{
+              width:  d,
+              height: d / 2,
+              top:    0,
+              left:   "50%",
+              transform:    "translateX(-50%)",
+              borderRadius: `0 0 ${d / 2}px ${d / 2}px`,
+              border:    "1px solid rgba(197,178,122,0.13)",
+              borderTop: "none",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* ── Corner bracket frames ─────────────────────────────────────────── */}
+      <CornerBracket position="tl" />
+      <CornerBracket position="tr" />
+      <CornerBracket position="bl" />
+      <CornerBracket position="br" />
+
+      {/* ── Ghost watermark — dark ink on white ──────────────────────────── */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none select-none"
+      >
+        <span
+          style={{
+            fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+            fontSize:      "clamp(120px, 20vw, 300px)",
+            fontWeight:    700,
+            letterSpacing: "-0.04em",
+            lineHeight:    1,
+            /* On white: dark ink at ultra-low opacity reads as a subtle emboss */
+            color:         "rgba(0,0,0,0.03)",
+            whiteSpace:    "nowrap",
+          }}
         >
-          {/* Drifting gold aurora */}
-          <div aria-hidden="true" className="cta-aurora cta-aurora-1" />
-          <div aria-hidden="true" className="cta-aurora cta-aurora-2" />
+          Vitorra
+        </span>
+      </div>
 
-          {/* Ghost watermark */}
-          <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none select-none">
-            <span
-              style={{
-                fontFamily: "var(--font-playfair, Georgia, serif)",
-                fontSize: "clamp(120px, 18vw, 260px)",
-                fontWeight: 700,
-                letterSpacing: "-0.04em",
-                lineHeight: 1,
-                color: "rgba(255,255,255,0.03)",
-                whiteSpace: "nowrap",
-              }}
+      {/* ── Main content ─────────────────────────────────────────────────── */}
+      <div className="container-max relative z-10 text-center">
+        <Reveal>
+          {/* Eyebrow — gold dot + charcoal text (standard eyebrow class) */}
+          <span className="eyebrow justify-center mb-5 inline-flex">
+            {eyebrow}
+          </span>
+
+          {/* Headline — dark Cormorant with gold gradient accent word */}
+          <h2
+            className="max-w-3xl mx-auto mb-6"
+            style={{
+              fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+              fontSize:      "clamp(38px, 5.5vw, 72px)",
+              fontWeight:    700,
+              letterSpacing: "-0.025em",
+              lineHeight:    1.06,
+              color:         "#1E1E1E",
+            }}
+          >
+            {titleLead}{" "}
+            <span className="text-gold-gradient">{titleAccent}</span>
+          </h2>
+
+          {/* Body */}
+          <p
+            className="max-w-md mx-auto mb-11"
+            style={{
+              fontSize:   "16px",
+              lineHeight: 1.78,
+              color:      "#666666",
+            }}
+          >
+            {body}
+          </p>
+
+          {/* CTAs — primary gold / secondary charcoal outline */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <MagneticButton href={primaryHref}>{primaryLabel}</MagneticButton>
+            {/* btn-secondary: white bg + charcoal border — correct on light canvas */}
+            <Link
+              href={secondaryHref}
+              className="btn-secondary inline-flex items-center gap-2"
             >
-              Vitorra
-            </span>
+              {secondaryLabel}
+            </Link>
           </div>
 
-          {/* Content */}
-          <div className="relative z-10">
-            <span className="eyebrow-light justify-center mb-5">{eyebrow}</span>
-            <h2
-              className="max-w-2xl mx-auto mb-5"
-              style={{
-                fontFamily: "var(--font-playfair, Georgia, serif)",
-                fontSize: "clamp(30px, 4vw, 54px)",
-                fontWeight: 700,
-                letterSpacing: "-0.025em",
-                lineHeight: 1.08,
-                color: "#FFFFFF",
-              }}
-            >
-              {titleLead}{" "}
-              <span className="text-gold-gradient">{titleAccent}</span>
-            </h2>
-            <p className="max-w-md mx-auto mb-10" style={{ fontSize: "16px", lineHeight: 1.7, color: "rgba(255,255,255,0.6)" }}>
-              {body}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <MagneticButton href={primaryHref}>{primaryLabel}</MagneticButton>
-              <Link href={secondaryHref} className="btn-ghost-dark inline-flex items-center gap-2">
-                {secondaryLabel}
-              </Link>
-            </div>
-
-            {/* Trust caption */}
-            <p className="mt-9" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
-              {caption}
-            </p>
-          </div>
-        </div>
-      </Reveal>
+          {/* Trust caption */}
+          <p
+            className="mt-11"
+            style={{
+              fontSize:      "11px",
+              fontWeight:    600,
+              letterSpacing: "0.09em",
+              textTransform: "uppercase",
+              color:         "rgba(0,0,0,0.35)",
+            }}
+          >
+            {caption}
+          </p>
+        </Reveal>
+      </div>
     </section>
   );
 }

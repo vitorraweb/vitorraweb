@@ -11,14 +11,16 @@ import { cn } from "@/lib/utils";
    ─────────────────────────────────────────────────────────────────────────── */
 
 const avatars = [
-  { name: "Solomon Okello", role: "Chief Executive Officer", file: "Solomon Okello - CEO.jpg" },
-  { name: "Joseph Rwabu", role: "Senior Finance Officer", file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
-  { name: "Thurayya Nakayima", role: "Senior Marketing Officer", file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
-  { name: "John Oluwaseyi", role: "IT Officer", file: "John Oluwaseyi - IT Officer.jpeg" },
-  { name: "Sarah Nuwamanya", role: "Marketing Officer", file: "Sarah Nuwamanya - Marketing Officer.jpg" },
-  { name: "Olivia Sandra", role: "Brand Designer", file: "Olivia Sandra - Brand Designer.jpeg" },
+  { name: "Solomon Okello",    role: "Chief Executive Officer",   file: "Solomon Okello - CEO.jpg" },
+  { name: "Victor Lojum",      role: "Head of Operations",        file: "Victor Lojum - Head of Operations.jpg" },
+  { name: "Joseph Rwabu",      role: "Senior Finance Officer",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
+  { name: "Thurayya Nakayima", role: "Senior Marketing Officer",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
+  { name: "John Oluwaseyi",    role: "IT Officer",                file: "John Oluwaseyi - IT Officer.jpeg" },
+  { name: "Sarah Nuwamanya",   role: "Marketing Officer",         file: "Sarah Nuwamanya - Marketing Officer.jpg" },
+  { name: "Olivia Sandra",     role: "Brand Designer",            file: "Olivia Sandra - Brand Designer.jpeg" },
+  { name: "Daniel Tuke",       role: "Finance Officer",           file: "Daniel Tuke - Finance Officer.jpeg" },
+  { name: "Nagawa Shakirah",   role: "Marketing Officer",         file: "Nagawa Shakirah - Marketing Officer.jpeg" },
 ];
-const MORE = 3; // Ops lead + 2 officers joining
 
 export default function TeamTeaser() {
   return (
@@ -56,7 +58,7 @@ export default function TeamTeaser() {
               </div>
             ))}
 
-            {/* +N more */}
+            {/* "Meet the team" arrow chip */}
             <Link
               href="/about"
               className="av-item relative -ml-6 sm:-ml-5 group-hover:ml-1.5 transition-all duration-500 flex items-center justify-center w-16 h-16 md:w-[72px] md:h-[72px] rounded-full"
@@ -64,13 +66,11 @@ export default function TeamTeaser() {
                 zIndex: 0,
                 background: "#C5B27A",
                 color: "#1E1E1E",
-                fontWeight: 700,
-                fontSize: "15px",
                 boxShadow: "0 0 0 4px #F8F7F5, 0 6px 18px rgba(0,0,0,0.12)",
               }}
               aria-label="Meet the full team"
             >
-              +{MORE}
+              <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
 

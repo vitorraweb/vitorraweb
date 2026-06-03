@@ -199,6 +199,12 @@ export default function Hero() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
+      {/* ── Persistent gold aurora — right-side glow visible on all sectors ── */}
+      <div aria-hidden="true" className="hero-aurora-right" />
+
+      {/* ── Film grain texture — adds tactility on high-DPI screens ────────── */}
+      <div aria-hidden="true" className="hero-grain" />
+
       {/* ── Background layers — cross-fade, only active one visible ───────── */}
       {SECTORS.map((s, i) => {
         const isActive = i === index;

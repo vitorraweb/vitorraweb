@@ -25,17 +25,17 @@ const ceo: Member = {
 };
 
 const leadership: Member[] = [
-  { role: "Head of Operations", placeholder: true }, // photo coming
-  { name: "Joseph Rwabu", role: "Senior Finance Officer", file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
-  { name: "Thurayya Nakayima", role: "Senior Marketing Officer", file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
+  { name: "Victor Lojum",      role: "Head of Operations",       file: "Victor Lojum - Head of Operations.jpg" },
+  { name: "Joseph Rwabu",      role: "Senior Finance Officer",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
+  { name: "Thurayya Nakayima", role: "Senior Marketing Officer",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
 ];
 
 const officers: Member[] = [
-  { name: "John Oluwaseyi", role: "IT Officer", file: "John Oluwaseyi - IT Officer.jpeg" },
-  { name: "Sarah Nuwamanya", role: "Marketing Officer", file: "Sarah Nuwamanya - Marketing Officer.jpg" },
-  { name: "Olivia Sandra", role: "Brand Designer", file: "Olivia Sandra - Brand Designer.jpeg" },
-  { role: "Officer", placeholder: true }, // photo coming
-  { role: "Officer", placeholder: true }, // photo coming
+  { name: "John Oluwaseyi",   role: "IT Officer",               file: "John Oluwaseyi - IT Officer.jpeg" },
+  { name: "Sarah Nuwamanya",  role: "Marketing Officer",         file: "Sarah Nuwamanya - Marketing Officer.jpg" },
+  { name: "Olivia Sandra",    role: "Brand Designer",            file: "Olivia Sandra - Brand Designer.jpeg" },
+  { name: "Daniel Tuke",      role: "Finance Officer",           file: "Daniel Tuke - Finance Officer.jpeg" },
+  { name: "Nagawa Shakirah",  role: "Marketing Officer",         file: "Nagawa Shakirah - Marketing Officer.jpeg" },
 ];
 
 export default function Team() {
@@ -100,7 +100,7 @@ export default function Team() {
               maxWidth: "520px",
             }}
           >
-            The leadership behind Vitorra.
+            The team behind Vitorra.
           </h2>
         </Reveal>
 

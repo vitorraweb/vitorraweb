@@ -1,18 +1,27 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { DM_Sans, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { CookieBanner } from "@/components/ui/cookie-banner";
 
-const inter = Inter({
-  variable: "--font-inter",
+/* ── Body: DM Sans — geometric humanist, cleaner and more distinctive than
+   Inter. Used by Notion, Google product pages, and many premium SaaS brands.
+   Variable font: supports optical-size axis for precise weight control.     */
+const dmSans = DM_Sans({
+  variable: "--font-inter",   /* reuses existing CSS var — no component changes needed */
   subsets: ["latin"],
   display: "swap",
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+/* ── Headings: Cormorant Garamond — high-contrast luxury serif. Used by
+   LVMH, premium agencies, and editorial publications. At 60-80px the thin/
+   thick stroke contrast creates visual richness that Playfair Display can't
+   match. Weight 600-700 gives authority at smaller card-title sizes too.   */
+const cormorant = Cormorant_Garamond({
+  variable: "--font-playfair", /* reuses existing CSS var — no component changes needed */
   subsets: ["latin"],
   display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -62,7 +71,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfair.variable} h-full`}
+      className={`${dmSans.variable} ${cormorant.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased">
