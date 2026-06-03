@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\EnquiryController;
@@ -31,10 +33,27 @@ Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated routes (Sanctum — added as auth work is built)
+| Auth
 |--------------------------------------------------------------------------
 */
-// Route::middleware('auth:sanctum')->group(function () {
-//     Route::get('/account/orders',    [AccountController::class, 'orders']);
-//     Route::get('/account/enquiries', [AccountController::class, 'enquiries']);
-// });
+Route::post('/auth/login',  [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::get('/auth/me',      [AuthController::class, 'me']);
+
+    /*
+    |----------------------------------------------------------------------
+    | Admin routes (ops + admin roles only)
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('role:admin,ops')->prefix('admin')->group(function () {
+        Route::get('/stats',                            [AdminController::class, 'stats']);
+        Route::get('/enquiries',                        [AdminController::class, 'enquiries']);
+        Route::patch('/enquiries/{enquiry}',            [AdminController::class, 'updateEnquiry']);
+        Route::get('/messages',                         [AdminController::class, 'messages']);
+        Route::patch('/messages/{message}/read',        [AdminController::class, 'markRead']);
+        Route::get('/orders',                           [AdminController::class, 'orders']);
+        Route::patch('/orders/{order}',                 [AdminController::class, 'updateOrder']);
+    });
+});
