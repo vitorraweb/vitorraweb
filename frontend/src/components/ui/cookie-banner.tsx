@@ -32,7 +32,7 @@ export function CookieBanner() {
       aria-label="Cookie consent"
       aria-live="polite"
       className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-sm z-50 rounded-2xl p-4 md:p-5"
-      style={{ backgroundColor: "#1E1E1E", boxShadow: "0 20px 60px rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}
+      style={{ backgroundColor: "#1E1E1E", boxShadow: "0 20px 60px rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.08)", marginBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>

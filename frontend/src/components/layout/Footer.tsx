@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, MapPin, Mail, Phone } from "lucide-react";
 import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_ADDRESS, COMPANY_REG_NO, SITE_NAME } from "@/lib/constants";
+import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
 const cols = [
   {
@@ -17,9 +18,11 @@ const cols = [
     heading: "Company",
     links: [
       { label: "About Us", href: "/about" },
-      { label: "Coffee Shop", href: "/shop" },
+      // Coffee Shop hidden until retail prices are confirmed (see lib/config).
+      ...(COFFEE_SHOP_ENABLED ? [{ label: "Coffee Shop", href: "/shop" }] : []),
       { label: "Blog & Insights", href: "/blog" },
       { label: "Certifications", href: "/trust/certifications" },
+      { label: "My Account", href: "/account/dashboard" },
       { label: "Contact Us", href: "/contact" },
     ],
   },

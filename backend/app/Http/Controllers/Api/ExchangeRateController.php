@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -13,12 +14,19 @@ class ExchangeRateController extends Controller
     /* UGX per 1 USD. Cached for 1 hour to avoid hammering the API. */
     public function show(): JsonResponse
     {
+        // Admin manual override (System Settings) takes precedence over the live rate.
+        if (Setting::get('exchange_rate_mode') === 'manual') {
+            return response()->json([
+                'data' => ['ugx_per_usd' => (float) Setting::get('exchange_rate_manual'), 'source' => 'manual'],
+            ]);
+        }
+
         $ugxPerUsd = Cache::remember('fx_ugx_usd', 3600, function () {
             return $this->fetchLive();
         });
 
         return response()->json([
-            'data' => ['ugx_per_usd' => $ugxPerUsd],
+            'data' => ['ugx_per_usd' => $ugxPerUsd, 'source' => 'live'],
         ]);
     }
 

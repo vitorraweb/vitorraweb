@@ -3,8 +3,33 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
+import { Menu, X, ChevronDown, ArrowRight, ShoppingBag, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/lib/cart";
+import { COFFEE_SHOP_ENABLED } from "@/lib/config";
+
+/* ── Cart button with live count badge (Mastercard pill style) ──────────── */
+function CartButton({ onNavigate }: { onNavigate?: () => void }) {
+  const { count, ready } = useCart();
+  return (
+    <Link
+      href="/shop/cart"
+      onClick={onNavigate}
+      aria-label={`Cart${ready && count ? `, ${count} item${count === 1 ? "" : "s"}` : ""}`}
+      className="relative flex items-center justify-center w-9 h-9 rounded-full bg-charcoal/5 hover:bg-charcoal/10 transition-colors text-charcoal"
+    >
+      <ShoppingBag className="w-[18px] h-[18px]" />
+      {ready && count > 0 && (
+        <span
+          className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white"
+          style={{ backgroundColor: "#C5B27A" }}
+        >
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 const products = [
   { label: "Fuel Eco Tech", href: "/products/fuel-eco-tech", desc: "Fleet fuel efficiency technology" },
@@ -16,7 +41,8 @@ const products = [
 const navLinks = [
   { label: "About", href: "/about" },
   { label: "Products", href: "#", hasDropdown: true },
-  { label: "Coffee Shop", href: "/shop" },
+  // Coffee Shop hidden until retail prices are confirmed (see lib/config).
+  ...(COFFEE_SHOP_ENABLED ? [{ label: "Coffee Shop", href: "/shop" }] : []),
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ];
@@ -37,9 +63,10 @@ export default function Header() {
       {/* ── Floating Pill Navigation (Mastercard signature) ───────────── */}
       <header
         className={cn(
-          "fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4 md:px-6 md:pt-5 transition-all duration-300",
+          "fixed inset-x-0 top-0 z-50 flex justify-center px-4 md:px-6 transition-all duration-300",
           mobileOpen && "inset-x-0 bg-transparent"
         )}
+        style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
       >
         {/* The pill itself */}
         <nav
@@ -127,6 +154,14 @@ export default function Header() {
 
             {/* CTA + mobile toggle — right */}
             <div className="flex items-center gap-3">
+              {COFFEE_SHOP_ENABLED && <CartButton />}
+              <Link
+                href="/account/dashboard"
+                aria-label="My account"
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-charcoal/5 hover:bg-charcoal/10 transition-colors text-charcoal"
+              >
+                <User className="w-[18px] h-[18px]" />
+              </Link>
               <Link
                 href="/enquire"
                 className="hidden lg:inline-flex btn-primary text-sm"
@@ -183,7 +218,14 @@ export default function Header() {
                   </Link>
                 )
               )}
-              <div className="pt-4 mt-2 border-t border-black/5">
+              <div className="pt-4 mt-2 border-t border-black/5 space-y-2">
+                <Link
+                  href="/account/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-3 text-sm font-medium text-charcoal rounded-[16px] hover:bg-[#F2F2F2] transition-colors"
+                >
+                  <User className="w-4 h-4" />My Account
+                </Link>
                 <Link
                   href="/enquire"
                   onClick={() => setMobileOpen(false)}

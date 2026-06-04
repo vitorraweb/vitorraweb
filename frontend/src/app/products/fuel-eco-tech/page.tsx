@@ -7,6 +7,8 @@ import { Reveal } from "@/components/ui/reveal";
 import { ParallaxImage } from "@/components/ui/parallax-image";
 import { Faq } from "@/components/ui/faq";
 import FinalCTA from "@/components/sections/FinalCTA";
+import FetCalculator from "@/components/sections/FetCalculator";
+import FetPricing from "@/components/sections/FetPricing";
 import {
   Fuel, Wrench, Leaf, LineChart,
   Truck, Boxes, Factory, Tractor, Bus, Ship,
@@ -114,7 +116,7 @@ const certifications = [
 ];
 
 const faqs = [
-  { q: "What vehicles is Fuel Eco Tech suitable for?",  a: "It is designed for diesel and petrol engines across commercial fleets — from single vehicles to large operations. We confirm suitability for your specific vehicles during your free assessment." },
+  { q: "What vehicles is Fuel Eco Tech suitable for?",  a: "Petrol and diesel engines right across the range — from small cars, mini-buses, and vans, through SUVs and light trucks, up to heavy long-haul trucks of 40 tonnes. Four device sizes cover every class; we confirm the exact fit for your specific vehicles during your free assessment." },
   { q: "Do I need to modify my engine?",                a: "No. Fuel Eco Tech works outside the high-pressure fuel system — no changes to your engine, injection system, or electronics. Your factory configuration stays completely intact." },
   { q: "Will this affect my vehicle warranty?",         a: "No. Because FET does not modify your engine or any factory-set components, your manufacturer warranty is not affected. It is a physical optimisation of the fuel preparation process only." },
   { q: "How do you prove the savings?",                 a: "We establish your current fuel consumption as a baseline, then measure consumption after fitting — so the difference is transparent and tied to real data from your fleet." },
@@ -135,7 +137,7 @@ export default function FuelEcoTechPage() {
             right + grain texture match the homepage hero treatment exactly.
         ═══════════════════════════════════════════════════════════════════════ */}
         <section
-          className="relative overflow-hidden flex flex-col justify-end"
+          className="relative overflow-hidden flex flex-col"
           style={{ minHeight: "88vh", backgroundColor: "#111111" }}
         >
           {/* Background: product image + cinematic overlay */}
@@ -159,7 +161,7 @@ export default function FuelEcoTechPage() {
           <div aria-hidden="true" className="hero-grain" />
 
           {/* Content */}
-          <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 pb-16 md:pb-24">
+          <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 mt-auto pt-28 pb-16 md:pb-24">
             <Reveal>
               <span className="eyebrow-light mb-5 inline-flex">
                 Fuel Eco Technology · B2B · Fleet
@@ -201,7 +203,7 @@ export default function FuelEcoTechPage() {
                 ))}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 hero-cta">
                 <Link href={ENQUIRE} className="btn-primary">
                   Request a Fuel Savings Assessment
                   <ArrowRight className="w-4 h-4" />
@@ -628,6 +630,18 @@ export default function FuelEcoTechPage() {
             </div>
           </div>
         </section>
+
+        {/* ══ SAVINGS CALCULATOR ══════════════════════════════════════════════
+            Ivory — interactive estimator. Sits right after the proof: customers
+            who believe the 13.9% now get to model their own savings & payback.
+        ═══════════════════════════════════════════════════════════════════════ */}
+        <FetCalculator />
+
+        {/* ══ FULL LINE PRICING ═══════════════════════════════════════════════
+            Dark — the four device tiers with exact prices. Price reveal lands
+            immediately after the customer has seen their own estimated savings.
+        ═══════════════════════════════════════════════════════════════════════ */}
+        <FetPricing />
 
         {/* ══ NO ENGINE MODIFICATION ══════════════════════════════════════════
             White — reassurance section. Clean contrast after the dark proof.

@@ -1,13 +1,13 @@
 New contact message received on vitorra.org
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Name:     {{ $message->name }}
-Email:    {{ $message->email }}
-Subject:  {{ $message->subject ?: '—' }}
+Name:     {{ $contact->name }}
+Email:    {{ $contact->email }}
+Subject:  {{ $contact->subject ?: '—' }}
 
 Message:
-{{ $message->message }}
+{{ $contact->message }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Reply directly to this email to respond to {{ $message->name }}.
-Received: {{ $message->created_at->format('d M Y, H:i') }} (EAT)
+Reply directly to this email to respond to {{ $contact->name }}.
+Received: {{ $contact->created_at->format('d M Y, H:i') }} (EAT)

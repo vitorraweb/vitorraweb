@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { CookieBanner } from "@/components/ui/cookie-banner";
+import { CartProvider } from "@/lib/cart";
+import { Toaster } from "@/components/ui/sonner";
 
 /* ── Body: DM Sans — geometric humanist, cleaner and more distinctive than
    Inter. Used by Notion, Google product pages, and many premium SaaS brands.
@@ -63,6 +65,16 @@ export const metadata: Metadata = {
   },
 };
 
+/* Mobile viewport — device-width, allow zoom (accessibility), and extend under
+   the iOS notch/home-indicator so we can pad with safe-area insets. */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#F2F2F2",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -75,8 +87,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased">
-        {children}
-        <CookieBanner />
+        <CartProvider>
+          {children}
+          <CookieBanner />
+          <Toaster position="bottom-right" />
+        </CartProvider>
       </body>
     </html>
   );

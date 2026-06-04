@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
+    /** Expose the computed dollar price (from cents) in API responses. */
+    protected $appends = ['price_usd'];
+
     protected $fillable = [
         'name',
         'slug',

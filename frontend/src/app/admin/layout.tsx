@@ -4,15 +4,22 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, UserCog, LogOut, Menu, X } from "lucide-react";
 import { auth, apiAdmin } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 
 const nav = [
   { label: "Dashboard",   href: "/admin",              icon: LayoutDashboard },
   { label: "Enquiries",   href: "/admin/enquiries",    icon: MessageSquare },
+  { label: "Customers",   href: "/admin/customers",    icon: Contact },
+  { label: "Prospects",   href: "/admin/prospects",    icon: Users },
+  { label: "Products",    href: "/admin/products",     icon: Package },
+  { label: "Blog",        href: "/admin/blog",         icon: FileText },
+  { label: "Media",       href: "/admin/media",        icon: Images },
   { label: "Messages",    href: "/admin/messages",     icon: Mail },
   { label: "Orders",      href: "/admin/orders",       icon: ShoppingCart },
+  { label: "Settings",    href: "/admin/settings",     icon: Settings, adminOnly: true },
+  { label: "Users",       href: "/admin/users",        icon: UserCog, adminOnly: true },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -54,7 +61,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </span>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {nav.map(({ label, href, icon: Icon }) => {
+          {nav.filter((n) => !n.adminOnly || user.role?.toLowerCase() === "admin").map(({ label, href, icon: Icon }) => {
             const active = pathname === href;
             return (
               <Link

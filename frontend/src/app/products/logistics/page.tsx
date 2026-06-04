@@ -58,7 +58,7 @@ export default function LogisticsPage() {
 
         {/* ══ HERO ════════════════════════════════════════════════════════════ */}
         <section
-          className="relative overflow-hidden flex flex-col justify-end"
+          className="relative overflow-hidden flex flex-col"
           style={{ minHeight: "88vh", backgroundColor: "#111111" }}
         >
           <div className="absolute inset-0">
@@ -78,7 +78,7 @@ export default function LogisticsPage() {
           <div aria-hidden="true" className="hero-aurora-right" />
           <div aria-hidden="true" className="hero-grain" />
 
-          <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 pb-16 md:pb-24">
+          <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 mt-auto pt-28 pb-16 md:pb-24">
             <Reveal>
               <span className="eyebrow-light mb-5 inline-flex">Logistics Services · B2B · Enterprise</span>
               <h1
@@ -117,7 +117,7 @@ export default function LogisticsPage() {
                 ))}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 hero-cta">
                 <Link href={ENQUIRE} className="btn-primary">
                   Request a Logistics Quote
                   <ArrowRight className="w-4 h-4" />

@@ -22,9 +22,8 @@ class ContactController extends Controller
 
         $msg = ContactMessage::create($data);
 
-        Mail::to(config('mail.team_address'))
-            ->replyTo($msg->email, $msg->name)
-            ->send(new NewContactMessage($msg));
+        // Reply-to (sender) is set in the mailable's envelope
+        Mail::to(config('mail.team_address'))->send(new NewContactMessage($msg));
 
         return response()->json([
             'data'    => $msg,

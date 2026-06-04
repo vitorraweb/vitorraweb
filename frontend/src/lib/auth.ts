@@ -49,3 +49,20 @@ export async function apiAdmin<T>(path: string, options?: RequestInit): Promise<
   }
   return res.json();
 }
+
+/* Multipart upload — lets the browser set the Content-Type boundary (don't set it). */
+export async function uploadAdmin<T>(path: string, form: FormData): Promise<T> {
+  const token = auth.getToken();
+  const base  = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const res   = await fetch(`${base}${path}`, {
+    method: "POST",
+    body: form,
+    headers: { Accept: "application/json", Authorization: token ? `Bearer ${token}` : "" },
+  });
+  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login"; }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Upload failed" }));
+    throw new Error(err.message ?? "Upload failed");
+  }
+  return res.json();
+}

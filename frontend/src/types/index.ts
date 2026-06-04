@@ -13,6 +13,8 @@ export interface Product {
   stock_quantity: number | null;
   is_published: boolean;
   images: MediaFile[];
+  /** Arbitrary product-specific fields (coffee: tagline, badge, weight, roast…) */
+  meta?: Record<string, string> | null;
   created_at: string;
 }
 
@@ -26,25 +28,41 @@ export type OrderStatus =
   | "complete"
   | "cancelled";
 
-export type PaymentMethod = "flutterwave" | "paypal" | "eft";
+export type PaymentMethod = "flutterwave" | "paypal" | "stripe" | "manual" | "eft";
 export type PaymentStatus = "pending" | "partial" | "paid";
 export type Currency = "UGX" | "USD";
 
-export interface Order {
+export interface OrderItem {
   id: number;
-  product: Product;
+  product_id: number | null;
+  product_name: string;
+  product_slug: string;
+  options: { grind?: string; weight?: string } | null;
   quantity: number;
   unit_price_ugx: number;
-  unit_price_usd: number;
+  unit_price_usd_cents: number;
+  /** Line total in the order's currency unit (UGX shillings / USD cents). */
+  line_total: number;
+}
+
+export interface Order {
+  id: number;
+  reference: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
   currency: Currency;
+  /** Stored in the order currency unit: UGX whole shillings, USD cents. */
+  subtotal: number;
   total: number;
   status: OrderStatus;
-  payment_method: PaymentMethod;
+  payment_method: PaymentMethod | null;
   payment_status: PaymentStatus;
   shipping_address: Address;
   tracking_number: string | null;
   notes: string | null;
   invoice_url: string | null;
+  items: OrderItem[];
   created_at: string;
 }
 
@@ -57,6 +75,14 @@ export type EnquiryStatus =
   | "converted"
   | "closed";
 
+/** One structured, quote-ready answer captured by the product-aware enquiry form.
+    `value` is already display-formatted (multi-selects joined, units appended). */
+export interface EnquiryRequirement {
+  key: string;
+  label: string;
+  value: string;
+}
+
 export interface Enquiry {
   id: number;
   product_category: ProductCategory;
@@ -66,7 +92,7 @@ export interface Enquiry {
   phone: string | null;
   country: string;
   message: string;
-  requirements: string | null;
+  requirements: EnquiryRequirement[] | null;
   status: EnquiryStatus;
   created_at: string;
 }
@@ -79,6 +105,7 @@ export interface EnquiryFormData {
   phone: string;
   country: string;
   message: string;
+  requirements?: EnquiryRequirement[];
 }
 
 /* ─── Blog ─────────────────────────────────────────────────────────────── */
@@ -89,6 +116,8 @@ export interface BlogPost {
   slug: string;
   excerpt: string;
   content: string;
+  /** Sanitised HTML rendered server-side from the markdown `content` (safe to render). */
+  content_html?: string;
   author: string;
   status: "draft" | "published";
   published_at: string;

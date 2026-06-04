@@ -100,6 +100,44 @@ export async function submitContact(data: ContactFormData): Promise<{ message: s
   });
 }
 
+/* ─── Checkout ──────────────────────────────────────────────────────────── */
+
+export interface CheckoutItem {
+  slug: string;
+  quantity: number;
+  grind?: string;
+  weight?: string;
+}
+
+export interface CheckoutPayload {
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  currency: "UGX" | "USD";
+  shipping_address: {
+    line1: string;
+    line2?: string;
+    city: string;
+    country: string;
+    postcode?: string;
+  };
+  items: CheckoutItem[];
+  notes?: string;
+}
+
+export async function createOrder(payload: CheckoutPayload): Promise<Order> {
+  const res = await request<ApiResponse<Order>>("/orders", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return res.data;
+}
+
+export async function getOrder(reference: string): Promise<Order> {
+  const res = await request<ApiResponse<Order>>(`/orders/${reference}`);
+  return res.data;
+}
+
 /* ─── Orders (Customer Portal — requires auth) ──────────────────────────── */
 
 export async function getMyOrders(token: string): Promise<Order[]> {

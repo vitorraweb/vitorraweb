@@ -8,6 +8,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { ParallaxImage } from "@/components/ui/parallax-image";
 import { Faq } from "@/components/ui/faq";
 import { Mountain, QrCode, Sprout, Flame, ShoppingBag, Store, Globe, ArrowRight, ArrowUpRight } from "lucide-react";
+import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "Vitorra Coffee — Premium Single-Origin Ugandan Coffee",
@@ -38,11 +39,22 @@ const steps = [
   { n: "03", title: "Roasted",   body: "Roasted in Uganda and sealed fresh — ready for your cup." },
 ];
 
+/* Retail self-serve is gated until prices are confirmed. While off, the retail
+   path becomes a "register interest" enquiry instead of a shop link. */
+const retailWay = COFFEE_SHOP_ENABLED
+  ? { icon: ShoppingBag, title: "Shop online", body: "Retail packs for your home or office.", href: "/shop", cta: "Shop coffee" }
+  : { icon: ShoppingBag, title: "Retail — launching soon", body: "Home & office packs are almost ready. Register your interest and we'll be in touch first.", href: ENQUIRE, cta: "Register interest" };
+
 const ways = [
-  { icon: ShoppingBag, title: "Shop online",  body: "Retail packs for your home or office.",              href: "/shop",    cta: "Shop coffee" },
+  retailWay,
   { icon: Store,       title: "Wholesale",    body: "Stock Vitorra Coffee in your café, hotel, or store.", href: ENQUIRE,   cta: "Enquire wholesale" },
   { icon: Globe,       title: "Export",       body: "Source traceable Ugandan coffee at volume.",           href: ENQUIRE,   cta: "Enquire export" },
 ];
+
+/* Secondary CTA pointing at the shop — relabelled to the holding page while off. */
+const SHOP_CTA = COFFEE_SHOP_ENABLED
+  ? { href: "/shop", label: "Visit the Coffee Shop" }
+  : { href: "/shop", label: "Coffee retail — launching soon" };
 
 const faqs = [
   { q: "Where is Vitorra Coffee grown?",          a: "It's single-origin 100% Arabica, grown on the highland slopes of Mount Elgon in eastern Uganda, then washed, sun-dried, and roasted in Uganda." },
@@ -60,7 +72,7 @@ export default function CoffeePage() {
 
         {/* ══ HERO ════════════════════════════════════════════════════════════ */}
         <section
-          className="relative overflow-hidden flex flex-col justify-end"
+          className="relative overflow-hidden flex flex-col"
           style={{ minHeight: "88vh", backgroundColor: "#111111" }}
         >
           <div className="absolute inset-0">
@@ -80,7 +92,7 @@ export default function CoffeePage() {
           <div aria-hidden="true" className="hero-aurora-right" />
           <div aria-hidden="true" className="hero-grain" />
 
-          <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 pb-16 md:pb-24">
+          <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 mt-auto pt-28 pb-16 md:pb-24">
             <Reveal>
               <span className="eyebrow-light mb-5 inline-flex">Vitorra Coffee · B2B · B2C</span>
               <h1
@@ -119,13 +131,13 @@ export default function CoffeePage() {
                 ))}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 hero-cta">
                 <Link href={ENQUIRE} className="btn-primary">
                   Enquire — Wholesale &amp; Export
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link href="/shop" className="btn-ghost-dark">
-                  Visit the Coffee Shop
+                <Link href={SHOP_CTA.href} className="btn-ghost-dark">
+                  {SHOP_CTA.label}
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -442,8 +454,8 @@ export default function CoffeePage() {
           body="Shop retail packs, stock your business, or source at export volumes — our team replies within 24 hours."
           primaryLabel="Enquire — Wholesale & Export"
           primaryHref={ENQUIRE}
-          secondaryLabel="Visit the Coffee Shop"
-          secondaryHref="/shop"
+          secondaryLabel={SHOP_CTA.label}
+          secondaryHref={SHOP_CTA.href}
           caption="Single origin  ·  Traceable  ·  Reply within 24 hours"
         />
 

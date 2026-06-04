@@ -14,13 +14,15 @@ class Enquiry extends Model
         'phone',
         'country',
         'message',
+        'requirements',
         'status',
         'assigned_to',
         'replied_at',
     ];
 
     protected $casts = [
-        'replied_at' => 'datetime',
+        'requirements' => 'array',
+        'replied_at'   => 'datetime',
     ];
 
     public function isNew(): bool

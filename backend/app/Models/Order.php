@@ -4,16 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
     protected $fillable = [
+        'reference',
         'user_id',
-        'product_id',
-        'quantity',
-        'unit_price_ugx',
-        'unit_price_usd_cents',
+        'customer_name',
+        'customer_email',
+        'customer_phone',
         'currency',
+        'subtotal',
         'total',
         'status',
         'payment_method',
@@ -26,11 +28,9 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'shipping_address'    => 'array',
-        'unit_price_ugx'      => 'integer',
-        'unit_price_usd_cents'=> 'integer',
-        'total'               => 'integer',
-        'quantity'            => 'integer',
+        'shipping_address' => 'array',
+        'subtotal'         => 'integer',
+        'total'            => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -38,8 +38,27 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function product(): BelongsTo
+    public function items(): HasMany
     {
-        return $this->belongsTo(Product::class);
+        return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * Format an amount stored in this order's currency unit
+     * (UGX whole shillings, USD cents) as a display string.
+     */
+    public function money(int $amount): string
+    {
+        return $this->currency === 'USD'
+            ? '$' . number_format($amount / 100, 2)
+            : 'UGX ' . number_format($amount);
+    }
+
+    /** The unit price of a line item expressed in this order's currency. */
+    public function unitPrice(OrderItem $item): int
+    {
+        return $this->currency === 'USD'
+            ? $item->unit_price_usd_cents
+            : $item->unit_price_ugx;
     }
 }

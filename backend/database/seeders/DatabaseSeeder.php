@@ -31,29 +31,89 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ── Sample coffee product (the Coffee Shop reads published products) ─
-        Product::updateOrCreate(
-            ['slug' => 'vitorra-gold-medium-roast-250g'],
+        // ── Coffee catalogue (slugs + prices mirror the storefront) ────────
+        $coffee = [
             [
-                'name'            => 'Vitorra GOLD — Medium Roast',
-                'category'        => 'COFFEE',
-                'description'     => 'Single-origin 100% Arabica from Mount Elgon, Uganda. Smooth, balanced, with caramel notes. Washed & sun-dried, roasted in Uganda. 250g.',
-                'price_ugx'       => 35000,
-                'price_usd_cents' => 950,
-                'stock_quantity'  => 100,
-                'is_published'    => true,
+                'slug'            => 'gold-medium-roast-250g',
+                'name'            => 'GOLD · Medium Roast',
+                'description'     => 'Our flagship single-origin Arabica from the highland slopes of Mount Elgon — smooth, balanced, with notes of caramel. Washed, sun-dried, and roasted in Uganda. The everyday bag for home and office.',
+                'price_ugx'       => 38000,
+                'price_usd_cents' => 1200,
+                'stock_quantity'  => 120,
                 'images'          => [
-                    ['url' => '/products/coffee/packshot.png', 'alt' => 'Vitorra GOLD medium roast coffee bag', 'type' => 'image'],
-                    ['url' => '/products/coffee/lifestyle.png', 'alt' => 'Vitorra coffee with a brewed cup', 'type' => 'image'],
+                    ['url' => '/products/coffee/packshot.png',    'alt' => 'Vitorra GOLD medium roast — 250g bag',     'type' => 'image'],
+                    ['url' => '/products/coffee/label-front.png', 'alt' => 'Vitorra GOLD front label',                 'type' => 'image'],
+                    ['url' => '/products/coffee/label-back.png',  'alt' => 'Vitorra GOLD back label',                  'type' => 'image'],
+                    ['url' => '/products/coffee/bean-macro.png',  'alt' => 'Close-up of roasted Arabica beans',        'type' => 'image'],
                 ],
                 'meta'            => [
-                    'roast'        => 'Medium',
-                    'origin'       => 'Mount Elgon, Uganda',
-                    'tasting_notes'=> 'Smooth · Balanced · Caramel',
-                    'process'      => 'Washed & Sun Dried',
-                    'weight'       => '250g',
+                    'tagline' => '250g · Single origin Arabica',
+                    'badge'   => 'Bestseller',
+                    'weight'  => '250g',
                 ],
-            ]
-        );
+            ],
+            [
+                'slug'            => 'gold-medium-roast-1kg',
+                'name'            => 'GOLD · Medium Roast',
+                'description'     => 'The same GOLD medium roast in a 1kg bag — built for busy households, offices, and cafés that go through coffee fast. Best value per cup, sealed fresh at origin.',
+                'price_ugx'       => 135000,
+                'price_usd_cents' => 4200,
+                'stock_quantity'  => 60,
+                'images'          => [
+                    ['url' => '/products/coffee/label-front.png', 'alt' => 'Vitorra GOLD — 1kg bag',           'type' => 'image'],
+                    ['url' => '/products/coffee/packshot.png',    'alt' => 'Vitorra GOLD packshot',            'type' => 'image'],
+                    ['url' => '/products/coffee/lifestyle.png',   'alt' => 'Vitorra coffee with a brewed cup', 'type' => 'image'],
+                    ['url' => '/products/coffee/beans.png',       'alt' => 'Roasted Vitorra coffee beans',     'type' => 'image'],
+                ],
+                'meta'            => [
+                    'tagline' => '1kg · Single origin Arabica',
+                    'badge'   => 'Best value',
+                    'weight'  => '1kg',
+                ],
+            ],
+            [
+                'slug'            => 'gold-gift-box',
+                'name'            => 'GOLD Gift Box',
+                'description'     => 'Two 250g bags of GOLD medium roast in a premium presentation box — the taste of Uganda, ready to gift. A considered present for clients, colleagues, and coffee lovers.',
+                'price_ugx'       => 82000,
+                'price_usd_cents' => 2600,
+                'stock_quantity'  => 40,
+                'images'          => [
+                    ['url' => '/products/coffee/collage.png',   'alt' => 'Vitorra GOLD gift box',            'type' => 'image'],
+                    ['url' => '/products/coffee/lifestyle.png', 'alt' => 'Vitorra coffee with a brewed cup', 'type' => 'image'],
+                    ['url' => '/products/coffee/packshot.png',  'alt' => 'Vitorra GOLD packshot',            'type' => 'image'],
+                    ['url' => '/products/coffee/bean-macro.png','alt' => 'Close-up of roasted Arabica beans','type' => 'image'],
+                ],
+                'meta'            => [
+                    'tagline' => '2 × 250g · Presentation box',
+                    'badge'   => 'Gift',
+                    'weight'  => '2 × 250g',
+                ],
+            ],
+        ];
+
+        $sharedMeta = [
+            'roast'         => 'Medium',
+            'origin'        => 'Mount Elgon, Uganda',
+            'tasting_notes' => 'Smooth · Balanced · Caramel',
+            'process'       => 'Washed & Sun Dried',
+        ];
+
+        foreach ($coffee as $product) {
+            Product::updateOrCreate(
+                ['slug' => $product['slug']],
+                [
+                    'name'            => $product['name'],
+                    'category'        => 'COFFEE',
+                    'description'     => $product['description'],
+                    'price_ugx'       => $product['price_ugx'],
+                    'price_usd_cents' => $product['price_usd_cents'],
+                    'stock_quantity'  => $product['stock_quantity'],
+                    'is_published'    => true,
+                    'images'          => $product['images'],
+                    'meta'            => array_merge($sharedMeta, $product['meta']),
+                ]
+            );
+        }
     }
 }

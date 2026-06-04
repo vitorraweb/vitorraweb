@@ -5,6 +5,7 @@ import EnquiryForm from "@/components/sections/EnquiryForm";
 import { Reveal } from "@/components/ui/reveal";
 import { Clock, Target, ShieldCheck, Mail, Phone } from "lucide-react";
 import { CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/constants";
+import { FET_TIERS } from "@/lib/fet-pricing";
 
 export const metadata: Metadata = {
   title: "Request a Quote — Vitorra Holdings Limited",
@@ -60,10 +61,25 @@ const telHref = `tel:${CONTACT_PHONE.replace(/\s+/g, "")}`;
 export default async function EnquirePage({
   searchParams,
 }: {
-  searchParams: Promise<{ sector?: string }>;
+  searchParams: Promise<{ sector?: string; message?: string; vehicle?: string; fleet?: string }>;
 }) {
   const params = await searchParams;
-  const sector = params.sector?.toUpperCase() ?? "";
+  let sector = params.sector?.toUpperCase() ?? "";
+
+  /* Prefill from the FET tools. The calculator passes a `message` summary plus
+     `vehicle` (tier id) and `fleet` (count); the pricing cards pass `vehicle`
+     only. Vehicle/fleet seed the structured question set; a vehicle implies the
+     FET sector when none was supplied. */
+  const initialMessage = params.message?.trim() ?? "";
+  const initialAnswers: Record<string, string> = {};
+  if (params.vehicle && FET_TIERS.some((t) => t.id === params.vehicle)) {
+    initialAnswers.vehicle_type = params.vehicle;
+    if (!sector) sector = "FET";
+  }
+  if (params.fleet && /^\d+$/.test(params.fleet)) {
+    initialAnswers.fleet_size = params.fleet;
+  }
+
   const content = SECTOR_CONTENT[sector] ?? DEFAULT_CONTENT;
 
   return (
@@ -193,7 +209,7 @@ export default async function EnquirePage({
 
             {/* Right — form */}
             <Reveal delay={120}>
-              <EnquiryForm />
+              <EnquiryForm initialSector={sector} initialMessage={initialMessage} initialAnswers={initialAnswers} />
             </Reveal>
           </div>
         </section>

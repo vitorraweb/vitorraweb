@@ -37,6 +37,10 @@ class BlogController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
+        // Serve sanitised HTML (never the raw markdown) for safe public rendering.
+        $post->append('content_html');
+        $post->makeHidden('content');
+
         return response()->json(['data' => $post]);
     }
 }

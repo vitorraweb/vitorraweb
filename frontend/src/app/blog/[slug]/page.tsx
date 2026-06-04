@@ -118,7 +118,8 @@ export default async function BlogPostPage({ params }: Props) {
             <Reveal>
               <div
                 className="blog-content"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                /* content_html is sanitised server-side (markdown → safe HTML). */
+                dangerouslySetInnerHTML={{ __html: post.content_html ?? "" }}
               />
             </Reveal>
           </div>
