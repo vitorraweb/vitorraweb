@@ -52,14 +52,18 @@ class ProspectController extends Controller
     }
 
     /**
-     * Import a CSV of new prospects under a chosen category. Idempotent
-     * (firstOrCreate by name+category) so re-uploads never overwrite edits.
-     * Columns are matched loosely by header; the first column defaults to name.
+     * Import a CSV of prospects under a chosen category. Robust to the marketing
+     * workbook format: it locates the header row (skipping any title rows above
+     * it) and then extracts each prospect's name / email / phone / location by
+     * CONTENT, not by fixed column position — so inconsistent headers and column
+     * drift (e.g. a phone landing in the email column) still parse correctly.
+     * Idempotent (firstOrCreate by name+category) so re-uploads never overwrite
+     * edits. Mirrors scripts/import_prospects.py.
      */
     public function import(Request $request): JsonResponse
     {
         $request->validate([
-            'file'     => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+            'file'     => ['required', 'file', 'mimes:csv,txt', 'max:4096'],
             'category' => ['required', Rule::in(Prospect::CATEGORIES)],
         ]);
 
@@ -68,11 +72,28 @@ class ProspectController extends Controller
         if (empty($lines)) {
             return response()->json(['imported' => 0, 'skipped' => 0, 'message' => 'The file was empty.']);
         }
+        $lines[0] = preg_replace('/^\xEF\xBB\xBF/', '', $lines[0]); // strip UTF-8 BOM
 
         $rows = array_map('str_getcsv', $lines);
-        $header = array_map(fn ($h) => strtolower(trim((string) $h)), array_shift($rows));
 
-        $col = function (array $needles) use ($header) {
+        // Find the header row (first near-top row mentioning location/email),
+        // skipping any title rows above it. Everything below it is data.
+        $headerIdx = -1;
+        foreach ($rows as $i => $r) {
+            if ($i > 4) {
+                break;
+            }
+            $joined = strtolower(implode(' ', array_map(fn ($c) => (string) $c, $r)));
+            if (str_contains($joined, 'location') || str_contains($joined, 'email') || str_contains($joined, 'e-mail')) {
+                $headerIdx = $i;
+                break;
+            }
+        }
+        $header   = $headerIdx >= 0 ? array_map(fn ($h) => strtolower(trim((string) $h)), $rows[$headerIdx]) : [];
+        $dataRows = array_slice($rows, $headerIdx + 1);
+
+        // Optional outreach status / feedback columns (read by header position).
+        $colByName = function (array $needles) use ($header) {
             foreach ($header as $i => $h) {
                 foreach ($needles as $n) {
                     if ($h !== '' && str_contains($h, $n)) {
@@ -82,42 +103,56 @@ class ProspectController extends Controller
             }
             return null;
         };
+        $iStat = $colByName(['status']);
+        $iFb   = $colByName(['feedback', 'notes']);
 
-        $iName  = $col(['name', 'company', 'school', 'distributor']) ?? 0;
-        $iLoc   = $col(['location', 'address']);
-        $iPhone = $col(['phone', 'contact', 'tel', 'mobile']);
-        $iEmail = $col(['email', 'e-mail', 'mail']);
-        $iStat  = $col(['status']);
-        $iFb    = $col(['feedback', 'notes']);
-
-        $get = fn (array $r, $i) => $i !== null && isset($r[$i]) ? trim((string) $r[$i]) : '';
+        // A cell is "phone-like" if it has 7+ digits and no @ (handles 256.../0...
+        // formats and multiple numbers). Locations like "Plot 535" (<7 digits) won't match.
+        $isPhone = fn (string $v) => ! str_contains($v, '@') && strlen(preg_replace('/\D/', '', $v)) >= 7;
 
         $imported = 0;
         $skipped = 0;
 
-        foreach ($rows as $r) {
-            $name = $get($r, $iName);
-            if ($name === '') {
+        foreach ($dataRows as $r) {
+            // Scan only the "contact block" (columns before any status column) so
+            // status/feedback text can't be mistaken for a location.
+            $contactPart = $iStat !== null ? array_slice($r, 0, $iStat) : $r;
+            $cells = array_values(array_filter(
+                array_map(fn ($c) => trim((string) $c), $contactPart),
+                fn ($c) => $c !== ''
+            ));
+            if (empty($cells)) {
                 continue;
             }
 
+            $name = $cells[0];
+            $rest = array_slice($cells, 1);
+
+            $emails = array_values(array_filter($rest, fn ($c) => str_contains($c, '@')));
+            $phones = array_values(array_filter($rest, $isPhone));
+            $texts  = array_values(array_filter($rest, fn ($c) => ! str_contains($c, '@') && ! $isPhone($c)));
+
             $flags = [];
-            $emailRaw = $get($r, $iEmail);
             $email = null;
-            if ($emailRaw !== '') {
-                $clean = strtolower(str_replace(' ', '', $emailRaw));
-                $email = filter_var($clean, FILTER_VALIDATE_EMAIL) ?: null;
-                if (! $email) {
+            if (! empty($emails)) {
+                $clean = strtolower(str_replace(' ', '', $emails[0]));
+                if (str_contains($clean, 'example.com')) {
                     $flags[] = 'bad_email';
+                } else {
+                    $email = filter_var($clean, FILTER_VALIDATE_EMAIL) ?: null;
+                    if (! $email) {
+                        $flags[] = 'bad_email';
+                    }
                 }
             }
-            $phone = $get($r, $iPhone) ?: null;
+            $phone    = ! empty($phones) ? implode(' / ', array_values(array_unique($phones))) : null;
+            $location = $texts[0] ?? null;
             if (! $email && ! $phone) {
                 $flags[] = 'no_contact';
             }
 
-            $statusRaw = strtolower($get($r, $iStat));
-            $feedback = $get($r, $iFb) ?: null;
+            $statusRaw = $iStat !== null && isset($r[$iStat]) ? strtolower(trim((string) $r[$iStat])) : '';
+            $feedback  = $iFb !== null && isset($r[$iFb]) ? (trim((string) $r[$iFb]) ?: null) : null;
             $status = str_contains(strtolower($feedback ?? ''), 'not delivered') || str_contains($statusRaw, 'bounce')
                 ? 'bounced'
                 : (in_array($statusRaw, ['sent', 'delivered', 'contacted'], true) ? 'contacted' : 'not_contacted');
@@ -126,7 +161,7 @@ class ProspectController extends Controller
                 ['name' => $name, 'category' => $category],
                 [
                     'product'         => 'FET',
-                    'location'        => $get($r, $iLoc) ?: null,
+                    'location'        => $location,
                     'phone'           => $phone,
                     'email'           => $email,
                     'outreach_status' => $status,
