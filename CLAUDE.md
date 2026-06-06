@@ -115,6 +115,7 @@ The priority revenue product (FET) now has a **public full-line pricing guide an
 - **Cleaned import pipeline** (not a raw load — the sheet had inconsistent headers, a title row, an empty sheet, column drift, 8 bad emails, dupes): `scripts/import_prospects.py` (openpyxl) normalises → `backend/database/data/fet-prospects.json`; `php artisan prospects:import` upserts idempotently (firstOrCreate by name+category — never clobbers manual edits). **163 imported.**
 - **`prospects` table** (migration `2026_06_04_000002`): name, category (vertical), product, location, phone, email, outreach_status (not_contacted→contacted→delivered/bounced→responded→qualified→converted/not_interested), feedback, follow_up, assigned_to, flags (bad_email/no_contact), source.
 - **Admin `/admin/prospects`:** filter by industry + status, search, pagination, inline status/assignment/feedback/follow-up editing, data-hygiene flags, and a **CSV upload importer** (marketing can add new lists themselves — category-scoped, dedupes). Dashboard has a **FET prospect outreach** tile (total / reached / converted / needs-fixing + top industries). Dashboard `GET /admin/stats` extended with a `prospects` block.
+- **Admin CSV importer hardened (2026-06-06):** the upload importer now detects fields by **content, not column position** (mirrors `import_prospects.py`) — strips the BOM, finds the real header row (skipping any title rows), then per row takes name = first cell, email = the cell containing `@`, phone = cells with 7+ digits (joined by ` / `), location = first text cell, scanning only the columns before the status column. Fixes the launch bug where the marketing workbook's title row + drifted columns made every uploaded prospect flag `no_contact`. Re-uploads of the team's exact sheet (saved as CSV) now parse correctly. Cleanup/restore of the 163 clean leads on a fresh prod DB: `php artisan prospects:import --fresh`.
 - **Next (not built):** one-click **convert prospect → enquiry** (links the CRM into the enquiry pipeline + conversion metric); email/WhatsApp outreach once those providers are live.
 
 ### Week 3 — Blog CMS + XSS fix (2026-06-04)
@@ -379,10 +380,22 @@ All 9 members now have real photos. No placeholder slots remain.
 
 | Branch | Purpose |
 |--------|---------|
-| `master` | Old React/Firebase site — preserved, untouched |
-| `rebuild` | All new work — the active development branch |
+| `master` | **Production branch** (deployed). The rebuild was merged in; the old React/Firebase site lives in history. |
+| `rebuild` | Active development branch. Merged to `master` via fast-forward when shipping. |
 
-Recover any old file: `git checkout master -- <path>`
+Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <old-commit> -- <path>`.
+
+---
+
+## Deployment (live since 2026-06-06)
+
+- **Frontend** → **Vercel**, root directory `frontend/`, at `vitorra.org` + `www.vitorra.org`. Env: `NEXT_PUBLIC_API_URL=https://api.vitorra.org/api`. `frontend/next.config.ts` allows `next/image` from `api.vitorra.org` (uploaded media / blog covers).
+- **Backend API** → **Namecheap cPanel** at `api.vitorra.org` (docroot → `backend/public`), PHP 8.3, **MySQL** (prod), deployed via SSH + git. Path on box: `/home/okelvaxj/vitorraweb`. `QUEUE_CONNECTION=sync` (emails send inline — no worker). Redeploy: SSH → `git pull` → `composer install --no-dev` → `php artisan migrate --force` → `php artisan config:cache`.
+- **DNS + email at GoDaddy** — nameservers **must stay at GoDaddy** (it runs Microsoft 365 email). ⚠ **Never** touch the M365 MX/SPF/DKIM/autodiscover records or change nameservers. Web records: `A @`/`A api` + `CNAME www`.
+- **CORS** (`backend/config/cors.php`): allows apex + www + `localhost:3000` + `FRONTEND_URL`, plus `*.vercel.app` previews (pattern) and comma-separated `CORS_ALLOWED_ORIGINS`. Auth is Bearer-token (stateless), so no cross-subdomain cookie config needed.
+- **Fresh-prod note:** dev enquiries/orders were guest test data and don't carry over — empty admin tables on launch are expected. **Prospects** are the only real business data: restore with `php artisan prospects:import --fresh` (loads the 163 cleaned leads from `backend/database/data/fet-prospects.json`).
+- **Pending on prod:** live payment gateway + real email provider (Resend planned — use a `send.` subdomain so its SPF/DKIM don't clash with M365); change the seeded `changeme123` admin/ops passwords.
+- Full runbook: the deployment plan file (GoDaddy/Vercel/cPanel/Resend steps).
 
 ---
 
