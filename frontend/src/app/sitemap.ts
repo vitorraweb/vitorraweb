@@ -25,15 +25,25 @@ const PAGES: { path: string; priority: number; cf: MetadataRoute.Sitemap[number]
   ...(COFFEE_SHOP_ENABLED ? [{ path: "/shop", priority: 0.7 as const, cf: "weekly" as const }] : []),
 ];
 
+/* English keeps clean URLs (/about); Swahili is prefixed (/sw/about). Each
+   sitemap entry advertises both languages via hreflang alternates so Google
+   can pair and rank them. `x-default` points at the English (default) URL. */
+function urls(path: string) {
+  const en = `${SITE_URL}${path}`;
+  const sw = `${SITE_URL}/sw${path}`;
+  return { en, sw, alternates: { languages: { en, sw, "x-default": en } } };
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
-  const staticEntries: MetadataRoute.Sitemap = PAGES.map((p) => ({
-    url: `${SITE_URL}${p.path}`,
-    lastModified: now,
-    changeFrequency: p.cf,
-    priority: p.priority,
-  }));
+  const staticEntries: MetadataRoute.Sitemap = PAGES.flatMap((p) => {
+    const { en, sw, alternates } = urls(p.path);
+    return [
+      { url: en, lastModified: now, changeFrequency: p.cf, priority: p.priority, alternates },
+      { url: sw, lastModified: now, changeFrequency: p.cf, priority: p.priority, alternates },
+    ];
+  });
 
   // Blog posts from the API — skipped gracefully if the backend is unreachable.
   const blogEntries: MetadataRoute.Sitemap = [];
@@ -43,12 +53,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     do {
       const res = await getBlogPosts(page);
       for (const post of res.data) {
-        blogEntries.push({
-          url: `${SITE_URL}/blog/${post.slug}`,
-          lastModified: post.published_at ? new Date(post.published_at) : now,
-          changeFrequency: "monthly",
-          priority: 0.6,
-        });
+        const { en, sw, alternates } = urls(`/blog/${post.slug}`);
+        const lastModified = post.published_at ? new Date(post.published_at) : now;
+        blogEntries.push(
+          { url: en, lastModified, changeFrequency: "monthly", priority: 0.6, alternates },
+          { url: sw, lastModified, changeFrequency: "monthly", priority: 0.6, alternates },
+        );
       }
       lastPage = res.meta?.last_page ?? 1;
       page += 1;
