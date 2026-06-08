@@ -87,6 +87,14 @@
     "trust": {
       "title": "Certifications & Trust — Vitorra Holdings Limited",
       "description": "Vitorra Holdings is a registered Ugandan company (URSB). Every product line is backed by certification, validation, or documentation — available on request."
+    },
+    "shop": {
+      "title": "Coffee Shop — Buy Premium Ugandan Coffee Online",
+      "description": "Shop Vitorra GOLD — single-origin 100% Arabica from Mount Elgon, Uganda. Roasted at origin, traceable farm to cup. Delivered across Uganda and internationally."
+    },
+    "shopSoon": {
+      "title": "Vitorra Coffee — Retail Store Launching Soon",
+      "description": "Our single-origin GOLD retail store is launching soon. Wholesale and export buyers can order today — enquire for pricing and volumes."
     }
   },
   "hero": {
@@ -892,6 +900,25 @@
     "ctaBody": "Request the documentation for any Vitorra product and our team will share it — within 24 hours.",
     "ctaPrimary": "Request Documentation",
     "ctaCaption": "Registered  ·  Verified  ·  Reply within 24 hours"
+  },
+  "shopSoon": {
+    "heroEyebrow": "Vitorra Coffee · Retail launching soon",
+    "heroTitleLead": "The taste of Uganda,",
+    "heroTitleAccent": "almost ready.",
+    "heroBody": "Our single-origin GOLD retail store is putting on its final polish. Wholesale and export buyers can order today — and we'll tell you the moment retail packs go live.",
+    "heroCtaPrimary": "Enquire — Wholesale & Export",
+    "heroCtaSecondary": "Our coffee story",
+    "pathsEyebrow": "In the meantime",
+    "pathsTitle": "There's already a way to get our coffee.",
+    "wholesaleTitle": "Wholesale",
+    "wholesaleBody": "Stocking a café, hotel, restaurant, or store? We supply by the kilo, today.",
+    "wholesaleCta": "Enquire wholesale",
+    "exportTitle": "Export",
+    "exportBody": "Sourcing traceable Ugandan coffee at volume for international markets.",
+    "exportCta": "Enquire export",
+    "retailTitle": "Retail",
+    "retailBody": "Home & office packs are launching shortly. Tell us and we'll be in touch first.",
+    "retailCta": "Register your interest"
   },
   "enquiryForm": {
     "catFetLabel": "Fuel Eco Tech",

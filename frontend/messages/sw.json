@@ -87,6 +87,14 @@
     "trust": {
       "title": "Vyeti na Uaminifu — Vitorra Holdings Limited",
       "description": "Vitorra Holdings ni kampuni iliyosajiliwa nchini Uganda (URSB). Kila aina ya bidhaa inaungwa mkono na cheti, uthibitisho, au nyaraka — zinazopatikana unapoomba."
+    },
+    "shop": {
+      "title": "Duka la Kahawa — Nunua Kahawa Bora ya Uganda Mtandaoni",
+      "description": "Nunua Vitorra GOLD — Arabica 100% ya asili moja kutoka Mlima Elgon, Uganda. Imekaangwa asili, inayofuatilika shambani hadi kikombeni. Inawasilishwa kote Uganda na kimataifa."
+    },
+    "shopSoon": {
+      "title": "Vitorra Coffee — Duka la Rejareja Linakuja Hivi Karibuni",
+      "description": "Duka letu la rejareja la GOLD la asili moja linakuja hivi karibuni. Wanunuzi wa jumla na usafirishaji nje wanaweza kuagiza leo — uliza kuhusu bei na idadi."
     }
   },
   "hero": {
@@ -892,6 +900,25 @@
     "ctaBody": "Omba nyaraka za bidhaa yoyote ya Vitorra na timu yetu itazishiriki — ndani ya saa 24.",
     "ctaPrimary": "Omba Nyaraka",
     "ctaCaption": "Imesajiliwa  ·  Imethibitishwa  ·  Jibu ndani ya saa 24"
+  },
+  "shopSoon": {
+    "heroEyebrow": "Vitorra Coffee · Rejareja inakuja hivi karibuni",
+    "heroTitleLead": "Ladha ya Uganda,",
+    "heroTitleAccent": "karibu tayari.",
+    "heroBody": "Duka letu la rejareja la GOLD la asili moja linakamilisha mapambo yake ya mwisho. Wanunuzi wa jumla na usafirishaji nje wanaweza kuagiza leo — na tutakujulisha mara pakiti za rejareja zinapoanza.",
+    "heroCtaPrimary": "Uliza — Jumla na Usafirishaji Nje",
+    "heroCtaSecondary": "Hadithi ya kahawa yetu",
+    "pathsEyebrow": "Wakati huo huo",
+    "pathsTitle": "Tayari kuna njia ya kupata kahawa yetu.",
+    "wholesaleTitle": "Jumla",
+    "wholesaleBody": "Unaweka kahawa, hoteli, mgahawa, au duka? Tunasambaza kwa kilo, leo.",
+    "wholesaleCta": "Uliza jumla",
+    "exportTitle": "Usafirishaji nje",
+    "exportBody": "Unapata kahawa ya Uganda inayofuatilika kwa idadi kwa masoko ya kimataifa.",
+    "exportCta": "Uliza usafirishaji nje",
+    "retailTitle": "Rejareja",
+    "retailBody": "Pakiti za nyumbani na ofisini zinaanza hivi karibuni. Tueleze na tutawasiliana nawe kwanza.",
+    "retailCta": "Sajili nia yako"
   },
   "enquiryForm": {
     "catFetLabel": "Fuel Eco Tech",

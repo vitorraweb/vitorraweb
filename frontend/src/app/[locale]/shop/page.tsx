@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
@@ -14,18 +15,17 @@ import { Truck, ShieldCheck, QrCode, ArrowRight } from "lucide-react";
 /* Metadata adapts to the gate: while the store is off we tell the truth (and
    keep the holding page out of the index, so Google never ranks a "buy" page
    that can't sell). It flips back to the full shop listing with the flag. */
-export const metadata: Metadata = COFFEE_SHOP_ENABLED
-  ? {
-      title: "Coffee Shop — Buy Premium Ugandan Coffee Online",
-      description:
-        "Shop Vitorra GOLD — single-origin 100% Arabica from Mount Elgon, Uganda. Roasted at origin, traceable farm to cup. Delivered across Uganda and internationally.",
-    }
-  : {
-      title: "Vitorra Coffee — Retail Store Launching Soon",
-      description:
-        "Our single-origin GOLD retail store is launching soon. Wholesale and export buyers can order today — enquire for pricing and volumes.",
-      robots: { index: false, follow: true },
-    };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: COFFEE_SHOP_ENABLED ? "meta.shop" : "meta.shopSoon" });
+  return COFFEE_SHOP_ENABLED
+    ? { title: t("title"), description: t("description") }
+    : { title: t("title"), description: t("description"), robots: { index: false, follow: true } };
+}
 
 export const revalidate = 600;
 

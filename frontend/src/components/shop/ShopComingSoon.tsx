@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -11,31 +12,15 @@ import { ArrowRight, ArrowUpRight, Store, Globe, Bell } from "lucide-react";
    the enquiry form — wholesale & export buyers can transact today, retail
    customers register their interest. No cart, no prices.                       */
 
-const paths = [
-  {
-    icon: Store,
-    title: "Wholesale",
-    body: "Stocking a café, hotel, restaurant, or store? We supply by the kilo, today.",
-    cta: "Enquire wholesale",
-    href: "/enquire?sector=COFFEE",
-  },
-  {
-    icon: Globe,
-    title: "Export",
-    body: "Sourcing traceable Ugandan coffee at volume for international markets.",
-    cta: "Enquire export",
-    href: "/enquire?sector=COFFEE",
-  },
-  {
-    icon: Bell,
-    title: "Retail",
-    body: "Home & office packs are launching shortly. Tell us and we'll be in touch first.",
-    cta: "Register your interest",
-    href: "/enquire?sector=COFFEE",
-  },
-];
-
 export default function ShopComingSoon() {
+  const t = useTranslations("shopSoon");
+
+  const paths = [
+    { icon: Store, title: t("wholesaleTitle"), body: t("wholesaleBody"), cta: t("wholesaleCta"), href: "/enquire?sector=COFFEE" },
+    { icon: Globe, title: t("exportTitle"),    body: t("exportBody"),    cta: t("exportCta"),    href: "/enquire?sector=COFFEE" },
+    { icon: Bell,  title: t("retailTitle"),    body: t("retailBody"),    cta: t("retailCta"),    href: "/enquire?sector=COFFEE" },
+  ];
+
   return (
     <>
       <Header />
@@ -65,7 +50,7 @@ export default function ShopComingSoon() {
 
           <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 mt-auto pb-16 md:pb-20 pt-32">
             <Reveal>
-              <span className="eyebrow-light mb-5 inline-flex">Vitorra Coffee · Retail launching soon</span>
+              <span className="eyebrow-light mb-5 inline-flex">{t("heroEyebrow")}</span>
               <h1
                 className="max-w-2xl mb-5"
                 style={{
@@ -77,22 +62,20 @@ export default function ShopComingSoon() {
                   color: "#FFFFFF",
                 }}
               >
-                The taste of Uganda,{" "}
-                <span className="text-gold-gradient">almost ready.</span>
+                {t("heroTitleLead")}{" "}
+                <span className="text-gold-gradient">{t("heroTitleAccent")}</span>
               </h1>
               <p className="max-w-xl mb-9" style={{ fontSize: "17px", lineHeight: 1.75, color: "rgba(255,255,255,0.65)" }}>
-                Our single-origin GOLD retail store is putting on its final
-                polish. Wholesale and export buyers can order today — and we&apos;ll
-                tell you the moment retail packs go live.
+                {t("heroBody")}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 hero-cta">
                 <Link href="/enquire?sector=COFFEE" className="btn-primary">
-                  Enquire — Wholesale &amp; Export
+                  {t("heroCtaPrimary")}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/products/coffee" className="btn-ghost-dark">
-                  Our coffee story
+                  {t("heroCtaSecondary")}
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -107,7 +90,7 @@ export default function ShopComingSoon() {
         >
           <div className="container-max">
             <Reveal className="mb-12 max-w-2xl">
-              <span className="eyebrow block mb-3">In the meantime</span>
+              <span className="eyebrow block mb-3">{t("pathsEyebrow")}</span>
               <h2
                 style={{
                   fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -119,7 +102,7 @@ export default function ShopComingSoon() {
                   maxWidth: "480px",
                 }}
               >
-                There&apos;s already a way to get our coffee.
+                {t("pathsTitle")}
               </h2>
             </Reveal>
 
