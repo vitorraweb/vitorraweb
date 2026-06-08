@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -16,135 +18,96 @@ import {
   ShieldCheck, Award, Check, X,
 } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Fuel Eco Tech — Proven Fuel Savings for Fleets",
-  description:
-    "Fuel Eco Tech is validated fuel-saving technology for commercial fleets across East Africa — lower fuel costs, extended engine life, and reduced emissions. Request a fuel savings assessment.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.fet" });
+  return { title: t("title"), description: t("description") };
+}
 
 const ENQUIRE = "/enquire?sector=FET";
-
-/* ─── Data ───────────────────────────────────────────────────────────────── */
-
-const benefits = [
-  { icon: Fuel,      title: "Lower fuel costs",    body: "Reduce diesel and petrol consumption across your fleet — directly improving your bottom line." },
-  { icon: Wrench,    title: "Extended engine life", body: "A cleaner, more complete burn means less build-up and wear on critical engine components." },
-  { icon: Leaf,      title: "Reduced emissions",    body: "Burning fuel more efficiently lowers harmful exhaust output — better for compliance and the environment." },
-  { icon: LineChart, title: "Measurable ROI",       body: "We benchmark your consumption before and after, so the savings are visible — not guesswork." },
-];
-
-const withoutFet = [
-  "Incomplete combustion — fuel is wasted on every cycle",
-  "Excess CO₂, NOx, and soot particles in exhaust gases",
-  "Deposits accumulate inside the engine over time",
-  "Higher fuel spend for the same kilometres driven",
-];
-
-const withFet = [
-  "Patented swirl chamber ensures full oxygen integration",
-  "Cleaner, more complete burn on every combustion cycle",
-  "Fewer deposits — less wear on engine components",
-  "Measurable reduction in fuel consumption and emissions",
-];
-
-const steps = [
-  {
-    n: "01",
-    title: "Fitted to your fuel line",
-    body: "FET integrates between the fuel pump and fuel filter — outside the high-pressure system. No modification to your engine, injection system, or electronics. Fitted in under an hour.",
-  },
-  {
-    n: "02",
-    title: "Patented swirl chamber activates",
-    body: "The proprietary swirl chamber system improves the turbulence and distribution of the air-fuel mixture in the combustion chamber. Oxygen integrates more fully — so every cycle burns cleaner and more completely.",
-  },
-  {
-    n: "03",
-    title: "Measured results",
-    body: "We establish your baseline consumption, then track the difference after fitting — giving you a clear, data-backed return on investment.",
-  },
-];
-
-const testFindings = [
-  "No further limp-mode incidents across the entire test period",
-  "EGR and DPF blockages eliminated completely after installation",
-  "Smoother, more stable engine behaviour throughout",
-  "13.9% reduction is well above normal operational variation (±3–5%)",
-];
-
-const testMetrics = [
-  { value: "3–5",  unit: " months",     label: "Full investment payback" },
-  { value: "€900", unit: "–€1,300",     label: "Estimated annual savings" },
-  { value: "0",    unit: " incidents",  label: "Limp-mode events post-install" },
-];
-
-const noModPoints = [
-  {
-    title: "No engine changes",
-    body: "FET works exclusively on fuel preparation and swirling. It does not intervene in the combustion engine, control electronics, or exhaust aftertreatment system.",
-  },
-  {
-    title: "Outside the high-pressure system",
-    body: "Installation is carried out outside the high-pressure fuel system. No changes to your injection system or engine components are necessary.",
-  },
-  {
-    title: "No chemical alteration",
-    body: "FET does not change the chemical composition of your fuel or alter the way your engine works. It is a physical optimisation only.",
-  },
-  {
-    title: "Factory systems stay intact",
-    body: "The system improves combustion efficiency without any mechanical or electronic intervention in your factory-set systems. Your vehicle warranty is not affected.",
-  },
-];
-
-const audiences = [
-  { icon: Truck,   label: "Fleet operators" },
-  { icon: Boxes,   label: "Logistics & transport" },
-  { icon: Factory, label: "Manufacturing & plant" },
-  { icon: Tractor, label: "Agriculture & machinery" },
-  { icon: Bus,     label: "Bus & taxi operators" },
-  { icon: Ship,    label: "Marine & vessels" },
-];
-
-const certifications = [
-  { code: "ISO 9001:2015",    label: "Quality Management",       body: "Manufactured under internationally recognised quality management standards — every unit produced to a consistent, verified specification." },
-  { code: "ISO 14001:2015",   label: "Environmental Management", body: "Committed to reducing environmental impact throughout production and operation — aligned with the emissions reduction story FET delivers." },
-  { code: "ISO 27001",        label: "Information Security",     body: "Business operations and customer data managed to international security standards — a hallmark of a serious, established organisation." },
-  { code: "Zurich Insurance", label: "Product Liability",        body: "Backed by Zurich product liability cover. An independent insurer has assessed and underwritten the product — a strong third-party quality signal." },
-  { code: "AVL Technologies", label: "Independently Lab Validated", body: "Performance independently validated by AVL Technologies — one of the world's foremost automotive engineering and testing institutions." },
-  { code: "qm-solutions GmbH", label: "German Certified",        body: "Independently certified by qm-solutions GmbH, Germany — confirming the product meets rigorous European quality and compliance standards." },
-];
-
-const faqs = [
-  { q: "What vehicles is Fuel Eco Tech suitable for?",  a: "Petrol and diesel engines right across the range — from small cars, mini-buses, and vans, through SUVs and light trucks, up to heavy long-haul trucks of 40 tonnes. Four device sizes cover every class; we confirm the exact fit for your specific vehicles during your free assessment." },
-  { q: "Do I need to modify my engine?",                a: "No. Fuel Eco Tech works outside the high-pressure fuel system — no changes to your engine, injection system, or electronics. Your factory configuration stays completely intact." },
-  { q: "Will this affect my vehicle warranty?",         a: "No. Because FET does not modify your engine or any factory-set components, your manufacturer warranty is not affected. It is a physical optimisation of the fuel preparation process only." },
-  { q: "How do you prove the savings?",                 a: "We establish your current fuel consumption as a baseline, then measure consumption after fitting — so the difference is transparent and tied to real data from your fleet." },
-  { q: "Is there a minimum fleet size?",                a: "No. Fuel Eco Tech works for a single vehicle or an entire fleet. Larger fleets simply see the savings multiply across every vehicle." },
-  { q: "How do I get started?",                         a: "Request a fuel savings assessment. We'll review your fleet, fuel usage, and goals, then come back with tailored options and expected outcomes — at no obligation." },
-];
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
 export default function FuelEcoTechPage() {
+  const t = useTranslations("fetPage");
+
+  const benefits = [
+    { icon: Fuel,      title: t("benefit1Title"), body: t("benefit1Body") },
+    { icon: Wrench,    title: t("benefit2Title"), body: t("benefit2Body") },
+    { icon: Leaf,      title: t("benefit3Title"), body: t("benefit3Body") },
+    { icon: LineChart, title: t("benefit4Title"), body: t("benefit4Body") },
+  ];
+
+  const withoutFet = [t("withoutFet1"), t("withoutFet2"), t("withoutFet3"), t("withoutFet4")];
+  const withFet = [t("withFet1"), t("withFet2"), t("withFet3"), t("withFet4")];
+
+  const steps = [
+    { n: "01", title: t("step1Title"), body: t("step1Body") },
+    { n: "02", title: t("step2Title"), body: t("step2Body") },
+    { n: "03", title: t("step3Title"), body: t("step3Body") },
+  ];
+
+  const testFindings = [t("finding1"), t("finding2"), t("finding3"), t("finding4")];
+
+  const testMetrics = [
+    { value: "3–5",  unit: t("metric1Unit"), label: t("metric1Label") },
+    { value: "€900", unit: t("metric2Unit"), label: t("metric2Label") },
+    { value: "0",    unit: t("metric3Unit"), label: t("metric3Label") },
+  ];
+
+  const noModPoints = [
+    { title: t("noMod1Title"), body: t("noMod1Body") },
+    { title: t("noMod2Title"), body: t("noMod2Body") },
+    { title: t("noMod3Title"), body: t("noMod3Body") },
+    { title: t("noMod4Title"), body: t("noMod4Body") },
+  ];
+
+  const audiences = [
+    { icon: Truck,   label: t("audience1") },
+    { icon: Boxes,   label: t("audience2") },
+    { icon: Factory, label: t("audience3") },
+    { icon: Tractor, label: t("audience4") },
+    { icon: Bus,     label: t("audience5") },
+    { icon: Ship,    label: t("audience6") },
+  ];
+
+  /* Cert codes are brand terms (kept literal); labels and bodies translate. */
+  const certifications = [
+    { code: "ISO 9001:2015",     label: t("cert1Label"), body: t("cert1Body") },
+    { code: "ISO 14001:2015",    label: t("cert2Label"), body: t("cert2Body") },
+    { code: "ISO 27001",         label: t("cert3Label"), body: t("cert3Body") },
+    { code: "Zurich Insurance",  label: t("cert4Label"), body: t("cert4Body") },
+    { code: "AVL Technologies",  label: t("cert5Label"), body: t("cert5Body") },
+    { code: "qm-solutions GmbH", label: t("cert6Label"), body: t("cert6Body") },
+  ];
+
+  const faqs = [
+    { q: t("faq1Q"), a: t("faq1A") },
+    { q: t("faq2Q"), a: t("faq2A") },
+    { q: t("faq3Q"), a: t("faq3A") },
+    { q: t("faq4Q"), a: t("faq4A") },
+    { q: t("faq5Q"), a: t("faq5A") },
+    { q: t("faq6Q"), a: t("faq6A") },
+  ];
+
   return (
     <>
       <Header />
       <main className="flex-1" style={{ backgroundColor: "#F2F2F2" }}>
 
-        {/* ══ HERO ════════════════════════════════════════════════════════════
-            Full-bleed product image with Ken Burns zoom. Gold aurora on the
-            right + grain texture match the homepage hero treatment exactly.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ HERO ════════════════════════════════════════════════════════════ */}
         <section
           className="relative overflow-hidden flex flex-col"
           style={{ minHeight: "88vh", backgroundColor: "#111111" }}
         >
-          {/* Background: product image + cinematic overlay */}
           <div className="absolute inset-0">
             <Image
               src="/products/fet/in-hand.png"
-              alt="Fuel Eco Tech fitted on a commercial fleet engine"
+              alt="Fuel Eco Tech"
               fill priority sizes="100vw"
               className="object-cover"
               style={{ animation: "vitorra-ken-burns 16s ease-out both" }}
@@ -154,17 +117,13 @@ export default function FuelEcoTechPage() {
               style={{ background: "linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.22) 100%)" }}
             />
           </div>
-
-          {/* Gold aurora — right-side glow */}
           <div aria-hidden="true" className="hero-aurora-right" />
-          {/* Film grain */}
           <div aria-hidden="true" className="hero-grain" />
 
-          {/* Content */}
           <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 mt-auto pt-28 pb-16 md:pb-24">
             <Reveal>
               <span className="eyebrow-light mb-5 inline-flex">
-                Fuel Eco Technology · B2B · Fleet
+                {t("heroEyebrow")}
               </span>
               <h1
                 className="max-w-2xl mb-5"
@@ -177,18 +136,15 @@ export default function FuelEcoTechPage() {
                   color:         "#FFFFFF",
                 }}
               >
-                Proven fuel savings.{" "}
-                <span className="text-gold-gradient">Measurable results.</span>
+                {t("heroTitleLead")}{" "}
+                <span className="text-gold-gradient">{t("heroTitleAccent")}</span>
               </h1>
               <p className="max-w-xl mb-9" style={{ fontSize: "17px", lineHeight: 1.75, color: "rgba(255,255,255,0.65)" }}>
-                Validated fuel-saving technology trusted by fleet operators across
-                East Africa — cutting fuel costs and extending engine life, with a
-                return you can measure.
+                {t("heroBody")}
               </p>
 
-              {/* Quick-fact pills */}
               <div className="flex flex-wrap gap-2 mb-9">
-                {["13.9% measured reduction", "Fitted in under 1 hour", "No engine modification", "1-year warranty"].map((f) => (
+                {[t("heroPill1"), t("heroPill2"), t("heroPill3"), t("heroPill4")].map((f) => (
                   <span
                     key={f}
                     style={{
@@ -205,11 +161,11 @@ export default function FuelEcoTechPage() {
 
               <div className="flex flex-col sm:flex-row gap-3 hero-cta">
                 <Link href={ENQUIRE} className="btn-primary">
-                  Request a Fuel Savings Assessment
+                  {t("heroCtaPrimary")}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/contact" className="btn-ghost-dark">
-                  Talk to our team
+                  {t("heroCtaSecondary")}
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -217,16 +173,14 @@ export default function FuelEcoTechPage() {
           </div>
         </section>
 
-        {/* ══ BENEFITS ════════════════════════════════════════════════════════
-            White — crisp contrast immediately after the dark hero.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ BENEFITS ════════════════════════════════════════════════════════ */}
         <section
           className="section-padding"
           style={{ backgroundColor: "#FFFFFF", boxShadow: "inset 0 1px 0 rgba(0,0,0,0.06)" }}
         >
           <div className="container-max">
             <Reveal className="mb-12 lg:mb-16 max-w-2xl">
-              <span className="eyebrow block mb-3">Why Fuel Eco Tech</span>
+              <span className="eyebrow block mb-3">{t("benefitsEyebrow")}</span>
               <h2
                 className="gold-underline"
                 style={{
@@ -239,7 +193,7 @@ export default function FuelEcoTechPage() {
                   maxWidth:      "520px",
                 }}
               >
-                Every litre, working harder.
+                {t("benefitsTitle")}
               </h2>
             </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -273,9 +227,7 @@ export default function FuelEcoTechPage() {
           </div>
         </section>
 
-        {/* ══ BEFORE / AFTER ══════════════════════════════════════════════════
-            Dark — the science, presented as a visual contrast.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ BEFORE / AFTER ══════════════════════════════════════════════════ */}
         <section
           className="section-padding relative overflow-hidden"
           style={{ backgroundColor: "#141414" }}
@@ -283,7 +235,7 @@ export default function FuelEcoTechPage() {
           <div aria-hidden="true" className="hero-grain" style={{ opacity: 0.025 }} />
           <div className="container-max relative z-10">
             <Reveal className="mb-12 text-center">
-              <span className="eyebrow-light mb-3 inline-flex">The science behind it</span>
+              <span className="eyebrow-light mb-3 inline-flex">{t("scienceEyebrow")}</span>
               <h2
                 className="max-w-2xl mx-auto"
                 style={{
@@ -295,11 +247,10 @@ export default function FuelEcoTechPage() {
                   color:         "#FFFFFF",
                 }}
               >
-                What changes inside your engine.
+                {t("scienceTitle")}
               </h2>
               <p className="mt-5 max-w-xl mx-auto" style={{ fontSize: "16px", lineHeight: 1.75, color: "rgba(255,255,255,0.48)" }}>
-                FET improves the turbulence and distribution of the air-fuel mixture
-                in the combustion chamber — so oxygen is used more fully on every cycle.
+                {t("scienceBody")}
               </p>
             </Reveal>
 
@@ -314,7 +265,7 @@ export default function FuelEcoTechPage() {
                       <X className="w-4 h-4" style={{ color: "#E07070" }} />
                     </span>
                     <h3 style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "20px", fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>
-                      Without FET
+                      {t("withoutFetTitle")}
                     </h3>
                   </div>
                   <ul className="space-y-4">
@@ -338,7 +289,7 @@ export default function FuelEcoTechPage() {
                       <Check className="w-4 h-4" style={{ color: "#C5B27A" }} />
                     </span>
                     <h3 style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "20px", fontWeight: 600, color: "#C5B27A" }}>
-                      With FET
+                      {t("withFetTitle")}
                     </h3>
                   </div>
                   <ul className="space-y-4">
@@ -355,21 +306,19 @@ export default function FuelEcoTechPage() {
           </div>
         </section>
 
-        {/* ══ HOW IT WORKS ════════════════════════════════════════════════════
-            Ivory — two-column: product image left, 3-step process right.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ HOW IT WORKS ════════════════════════════════════════════════════ */}
         <section className="section-padding" style={{ backgroundColor: "#F8F7F5" }}>
           <div className="container-max grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <Reveal direction="right">
               <ParallaxImage
                 src="/products/fet/installed.png"
-                alt="Fuel Eco Tech installed in an engine bay"
+                alt="Fuel Eco Tech installed"
                 className="aspect-[4/3] rounded-[40px] shadow-card"
               />
             </Reveal>
             <div>
               <Reveal>
-                <span className="eyebrow block mb-3">How it works</span>
+                <span className="eyebrow block mb-3">{t("howEyebrow")}</span>
                 <h2
                   className="mb-8"
                   style={{
@@ -381,7 +330,7 @@ export default function FuelEcoTechPage() {
                     color:         "#1E1E1E",
                   }}
                 >
-                  Simple to fit.<br />Built to perform.
+                  {t("howTitleLine1")}<br />{t("howTitleLine2")}
                 </h2>
               </Reveal>
               <div className="space-y-7">
@@ -417,16 +366,11 @@ export default function FuelEcoTechPage() {
           </div>
         </section>
 
-        {/* ══ PROVEN RESULTS ══════════════════════════════════════════════════
-            The VW T5 test report from CTI GmbH — real data, real institution,
-            signed November 2025. The most powerful conversion element on this
-            page: 13.9% verified reduction, 3–5 month payback.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ PROVEN RESULTS — VW T5 / CTI GmbH ═══════════════════════════════ */}
         <section
           className="section-padding relative overflow-hidden"
           style={{ backgroundColor: "#0D0D0D" }}
         >
-          {/* Gold aurora */}
           <div
             aria-hidden="true"
             className="absolute inset-0 pointer-events-none"
@@ -440,7 +384,7 @@ export default function FuelEcoTechPage() {
 
           <div className="container-max relative z-10">
             <Reveal className="mb-10">
-              <span className="eyebrow-light mb-3 inline-flex">Verified field results</span>
+              <span className="eyebrow-light mb-3 inline-flex">{t("resultsEyebrow")}</span>
               <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-10">
                 <h2
                   style={{
@@ -452,16 +396,14 @@ export default function FuelEcoTechPage() {
                     color:         "#FFFFFF",
                   }}
                 >
-                  Proven in the field.
+                  {t("resultsTitle")}
                 </h2>
                 <p className="pb-1 max-w-sm" style={{ fontSize: "14px", lineHeight: 1.65, color: "rgba(255,255,255,0.4)" }}>
-                  Independent test data from a signed official report — real vehicle,
-                  real conditions, verified results.
+                  {t("resultsSubtitle")}
                 </p>
               </div>
             </Reveal>
 
-            {/* Featured case study card */}
             <Reveal>
               <div
                 className="relative overflow-hidden rounded-[28px] md:rounded-[36px]"
@@ -476,20 +418,17 @@ export default function FuelEcoTechPage() {
                 />
 
                 <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-0">
-                  {/* Left: headline stat */}
                   <div className="flex flex-col justify-center p-8 md:p-12 lg:p-14">
-                    {/* Source badge */}
                     <div
                       className="inline-flex items-center gap-2 mb-6 self-start px-3 py-1.5 rounded-full"
                       style={{ background: "rgba(197,178,122,0.1)", border: "1px solid rgba(197,178,122,0.25)" }}
                     >
                       <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />
                       <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#C5B27A" }}>
-                        Official test report · CTI GmbH
+                        {t("reportBadge")}
                       </span>
                     </div>
 
-                    {/* Big number */}
                     <div
                       style={{
                         fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -516,30 +455,26 @@ export default function FuelEcoTechPage() {
                         marginBottom:  "16px",
                       }}
                     >
-                      fuel consumption reduction — first full month after installation.
+                      {t("bigNumberCaption")}
                     </p>
 
                     <p style={{ fontSize: "13px", lineHeight: 1.65, color: "rgba(255,255,255,0.38)", maxWidth: "300px" }}>
-                      VW T5 · Landesbaubehörde Stadthagen, Germany ·
-                      Tested January–October 2025 under standard service conditions.
+                      {t("vehicleLine")}
                     </p>
                   </div>
 
-                  {/* Right: data + findings */}
                   <div
                     className="flex flex-col justify-center p-8 md:p-12 lg:p-14"
                     style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
                   >
-                    {/* Before / after bars */}
                     <div className="mb-8">
                       <p style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: "16px" }}>
-                        Fuel consumption (l / 100 km)
+                        {t("consumptionLabel")}
                       </p>
 
-                      {/* Without FET bar */}
                       <div className="mb-4">
                         <div className="flex justify-between items-baseline mb-2">
-                          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>Without FET · Jan–Sept 2025</span>
+                          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>{t("withoutFetBar")}</span>
                           <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "18px", fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>11.52</span>
                         </div>
                         <div style={{ height: "10px", borderRadius: "999px", background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
@@ -547,10 +482,9 @@ export default function FuelEcoTechPage() {
                         </div>
                       </div>
 
-                      {/* With FET bar */}
                       <div>
                         <div className="flex justify-between items-baseline mb-2">
-                          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.65)" }}>With FET · October 2025</span>
+                          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.65)" }}>{t("withFetBar")}</span>
                           <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "18px", fontWeight: 700, color: "#C5B27A" }}>9.92</span>
                         </div>
                         <div style={{ height: "10px", borderRadius: "999px", background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
@@ -563,15 +497,14 @@ export default function FuelEcoTechPage() {
                         style={{ background: "rgba(197,178,122,0.1)", border: "1px solid rgba(197,178,122,0.2)" }}
                       >
                         <span style={{ fontSize: "11px", fontWeight: 700, color: "#C5B27A" }}>
-                          ↓ 1.60 l/100 km saved · 13,468 km verified baseline
+                          {t("savingCallout")}
                         </span>
                       </div>
                     </div>
 
-                    {/* Findings */}
                     <div className="mb-8">
                       <p style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: "12px" }}>
-                        Key observations post-installation
+                        {t("findingsLabel")}
                       </p>
                       <ul className="space-y-2.5">
                         {testFindings.map((f) => (
@@ -583,13 +516,9 @@ export default function FuelEcoTechPage() {
                       </ul>
                     </div>
 
-                    {/* Attribution */}
                     <div className="pt-5" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
                       <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.28)", lineHeight: 1.6 }}>
-                        Report prepared by{" "}
-                        <strong style={{ color: "rgba(255,255,255,0.48)" }}>CTI GmbH</strong>{" "}
-                        &amp; Landesbaubehörde Hameln · Signed by Holger Walprecht ·{" "}
-                        <strong style={{ color: "rgba(255,255,255,0.48)" }}>10 November 2025</strong>
+                        {t("attribution")}
                       </p>
                     </div>
                   </div>
@@ -597,7 +526,6 @@ export default function FuelEcoTechPage() {
               </div>
             </Reveal>
 
-            {/* Supporting metric chips */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5">
               {testMetrics.map((m, i) => (
                 <Reveal key={m.label} delay={i * 80}>
@@ -631,28 +559,20 @@ export default function FuelEcoTechPage() {
           </div>
         </section>
 
-        {/* ══ SAVINGS CALCULATOR ══════════════════════════════════════════════
-            Ivory — interactive estimator. Sits right after the proof: customers
-            who believe the 13.9% now get to model their own savings & payback.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ SAVINGS CALCULATOR ══════════════════════════════════════════════ */}
         <FetCalculator />
 
-        {/* ══ FULL LINE PRICING ═══════════════════════════════════════════════
-            Dark — the four device tiers with exact prices. Price reveal lands
-            immediately after the customer has seen their own estimated savings.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ FULL LINE PRICING ═══════════════════════════════════════════════ */}
         <FetPricing />
 
-        {/* ══ NO ENGINE MODIFICATION ══════════════════════════════════════════
-            White — reassurance section. Clean contrast after the dark proof.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ NO ENGINE MODIFICATION ══════════════════════════════════════════ */}
         <section
           className="section-padding"
           style={{ backgroundColor: "#FFFFFF", boxShadow: "inset 0 1px 0 rgba(0,0,0,0.06)" }}
         >
           <div className="container-max">
             <Reveal className="mb-12 lg:mb-16 max-w-2xl">
-              <span className="eyebrow block mb-3">Zero interference</span>
+              <span className="eyebrow block mb-3">{t("noModEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -664,12 +584,10 @@ export default function FuelEcoTechPage() {
                   maxWidth:      "560px",
                 }}
               >
-                No modification to your engine. Ever.
+                {t("noModTitle")}
               </h2>
               <p className="mt-5 max-w-xl" style={{ fontSize: "16px", lineHeight: 1.78, color: "#555555" }}>
-                FET is a physical optimisation — it improves how fuel enters the
-                combustion process without touching your engine, electronics, or
-                factory systems. Your vehicle leaves our team exactly as it arrived.
+                {t("noModBody")}
               </p>
             </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -702,9 +620,7 @@ export default function FuelEcoTechPage() {
           </div>
         </section>
 
-        {/* ══ VIDEO SHOWCASE ══════════════════════════════════════════════════
-            Ivory — cinematic video card, full-width within container.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ VIDEO SHOWCASE ══════════════════════════════════════════════════ */}
         <section className="section-padding" style={{ backgroundColor: "#F8F7F5" }}>
           <Reveal className="container-max">
             <div
@@ -722,7 +638,7 @@ export default function FuelEcoTechPage() {
                 style={{ background: "linear-gradient(to top, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.1) 50%)" }}
               />
               <div className="absolute bottom-0 left-0 p-8 md:p-12">
-                <span className="eyebrow-light mb-3 inline-flex">See it in action</span>
+                <span className="eyebrow-light mb-3 inline-flex">{t("videoEyebrow")}</span>
                 <p
                   style={{
                     fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -732,20 +648,18 @@ export default function FuelEcoTechPage() {
                     letterSpacing: "-0.02em",
                   }}
                 >
-                  Engineered for the road ahead.
+                  {t("videoText")}
                 </p>
               </div>
             </div>
           </Reveal>
         </section>
 
-        {/* ══ WHO IT'S FOR ════════════════════════════════════════════════════
-            Ivory — centered sector pills, mirrors homepage "Sectors" strip.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ WHO IT'S FOR ════════════════════════════════════════════════════ */}
         <section className="section-padding-sm" style={{ backgroundColor: "#F2F2F2" }}>
           <div className="container-max text-center">
             <Reveal>
-              <span className="eyebrow block mb-5">Who it&apos;s for</span>
+              <span className="eyebrow block mb-5">{t("audienceEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -755,8 +669,8 @@ export default function FuelEcoTechPage() {
                   lineHeight:    1.1,
                 }}
               >
-                <span style={{ color: "#1E1E1E" }}>Built for anyone </span>
-                <span style={{ color: "#AAAAAA" }}>who runs on fuel.</span>
+                <span style={{ color: "#1E1E1E" }}>{t("audienceTitleLead")}</span>
+                <span style={{ color: "#AAAAAA" }}>{t("audienceTitleAccent")}</span>
               </h2>
             </Reveal>
             <Reveal delay={100} className="mt-8 flex flex-wrap justify-center gap-3">
@@ -774,9 +688,7 @@ export default function FuelEcoTechPage() {
           </div>
         </section>
 
-        {/* ══ CERTIFICATIONS ══════════════════════════════════════════════════
-            Dark — six cert cards with aurora and grain for premium depth.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ CERTIFICATIONS ══════════════════════════════════════════════════ */}
         <section
           className="section-padding relative overflow-hidden"
           style={{ backgroundColor: "#141414" }}
@@ -794,7 +706,7 @@ export default function FuelEcoTechPage() {
 
           <div className="container-max relative z-10">
             <Reveal className="mb-12 lg:mb-16">
-              <span className="eyebrow-light mb-3 inline-flex">Verified &amp; validated</span>
+              <span className="eyebrow-light mb-3 inline-flex">{t("certsEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -806,13 +718,11 @@ export default function FuelEcoTechPage() {
                   maxWidth:      "560px",
                 }}
               >
-                Independently certified.{" "}
-                <span style={{ color: "#C5B27A" }}>Proven in the lab.</span>
+                {t("certsTitleLead")}{" "}
+                <span style={{ color: "#C5B27A" }}>{t("certsTitleAccent")}</span>
               </h2>
               <p className="mt-5 max-w-lg" style={{ fontSize: "16px", lineHeight: 1.75, color: "rgba(255,255,255,0.42)" }}>
-                FET carries internationally recognised certifications and has been
-                independently validated by AVL Technologies — one of the world&apos;s
-                foremost automotive engineering institutions.
+                {t("certsBody")}
               </p>
             </Reveal>
 
@@ -848,23 +758,21 @@ export default function FuelEcoTechPage() {
 
             <Reveal className="mt-10 text-center">
               <Link href="/trust/certifications" className="btn-ghost-dark inline-flex">
-                View all certifications
+                {t("certsViewAll")}
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
             </Reveal>
           </div>
         </section>
 
-        {/* ══ FAQ ══════════════════════════════════════════════════════════════
-            White — clean reading surface for detailed answers.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ FAQ ══════════════════════════════════════════════════════════════ */}
         <section
           className="section-padding"
           style={{ backgroundColor: "#FFFFFF", boxShadow: "inset 0 1px 0 rgba(0,0,0,0.06)" }}
         >
           <div className="container-max grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-12 lg:gap-20">
             <Reveal>
-              <span className="eyebrow block mb-3">Questions</span>
+              <span className="eyebrow block mb-3">{t("faqEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -876,12 +784,12 @@ export default function FuelEcoTechPage() {
                   maxWidth:      "320px",
                 }}
               >
-                Everything you need to know.
+                {t("faqTitle")}
               </h2>
               <p className="mt-5 text-sm" style={{ color: "#666666" }}>
-                Can&apos;t find your answer?{" "}
+                {t("faqCantFind")}{" "}
                 <Link href="/contact" className="font-semibold underline" style={{ color: "#1E1E1E" }}>
-                  Talk to our team.
+                  {t("faqTalkToTeam")}
                 </Link>
               </p>
             </Reveal>
@@ -893,15 +801,12 @@ export default function FuelEcoTechPage() {
 
         {/* ══ FINAL CTA ═══════════════════════════════════════════════════════ */}
         <FinalCTA
-          eyebrow="Get Started"
-          titleLead="Ready to cut your"
-          titleAccent="fuel bill?"
-          body="Book a no-obligation fuel savings assessment. We'll review your fleet and come back with tailored options and expected results."
-          primaryLabel="Request a Fuel Savings Assessment"
+          titleLead={t("finalCtaTitleLead")}
+          titleAccent={t("finalCtaTitleAccent")}
+          body={t("finalCtaBody")}
+          primaryLabel={t("heroCtaPrimary")}
           primaryHref={ENQUIRE}
-          secondaryLabel="Contact Us"
-          secondaryHref="/contact"
-          caption="No obligation  ·  Tailored to your fleet  ·  Reply within 24 hours"
+          caption={t("finalCtaCaption")}
         />
 
       </main>

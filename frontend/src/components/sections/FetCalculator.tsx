@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight, Fuel, ShieldCheck } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
 import {
@@ -39,6 +40,8 @@ const VERIFIED_LEFT_PCT =
   ((SAVINGS.verified - SAVINGS.min) / (SAVINGS.max - SAVINGS.min)) * 100;
 
 export default function FetCalculator() {
+  const tc = useTranslations("fetCalculator");
+  const tt = useTranslations("fetTiers");
   const [tier, setTier] = useState<FetTier>(FET_TIERS[0]);
   const [vehicles, setVehicles] = useState("1");
   const [annualKm, setAnnualKm] = useState(String(FET_TIERS[0].defaultAnnualKm));
@@ -71,15 +74,25 @@ export default function FetCalculator() {
   /* Hand the estimate to the enquiry form via a prefilled message. */
   const enquireHref = useMemo(() => {
     const saving = formatEur(result.annualSavingEurFleet, { decimals: 0 });
+    const label = tt(`${tier.id}.label`);
     const payback =
-      result.paybackYears != null ? `${result.paybackYears.toFixed(1)} years` : "n/a";
-    const fleetText = fleet > 1 ? `a fleet of ${fleet} × ${tier.label}` : `my ${tier.label}`;
-    const message =
-      `I'd like a Fuel Eco Tech quote for ${fleetText} (${tier.model}). ` +
-      `Based on the savings calculator — ${num(annualKm).toLocaleString("en-US")} km/year per vehicle ` +
-      `at €${num(fuelPrice).toFixed(2)}/L and ${savingsPct}% expected savings — ` +
-      `the estimated annual saving is ${saving} (≈ ${formatKg(result.co2KgFleet)} CO₂ avoided) ` +
-      `with a payback of ~${payback}. Please send tailored options.`;
+      result.paybackYears != null
+        ? tc("paybackYears", { years: result.paybackYears.toFixed(1) })
+        : tc("paybackNa");
+    const fleetText =
+      fleet > 1
+        ? tc("fleetTextMulti", { count: fleet, label })
+        : tc("fleetTextSingle", { label });
+    const message = tc("enquiryMessage", {
+      fleetText,
+      model: tier.model,
+      km: num(annualKm).toLocaleString("en-US"),
+      price: num(fuelPrice).toFixed(2),
+      pct: savingsPct,
+      saving,
+      co2: formatKg(result.co2KgFleet),
+      payback,
+    });
     const q = new URLSearchParams({
       sector: "FET",
       vehicle: tier.id,
@@ -87,7 +100,7 @@ export default function FetCalculator() {
       message,
     });
     return `/enquire?${q.toString()}`;
-  }, [tier, fleet, annualKm, fuelPrice, savingsPct, result]);
+  }, [tier, fleet, annualKm, fuelPrice, savingsPct, result, tc, tt]);
 
   return (
     <section className="section-padding" style={{ backgroundColor: "#F2F2F2" }}>
@@ -95,7 +108,7 @@ export default function FetCalculator() {
 
         {/* ── Left — intro ─────────────────────────────────────────────── */}
         <Reveal>
-          <span className="eyebrow block mb-3">Savings calculator</span>
+          <span className="eyebrow block mb-3">{tc("eyebrow")}</span>
           <h2
             className="mb-5"
             style={{
@@ -108,19 +121,17 @@ export default function FetCalculator() {
               maxWidth: "440px",
             }}
           >
-            How much could your fleet save?
+            {tc("title")}
           </h2>
           <p className="mb-7" style={{ fontSize: "16px", lineHeight: 1.78, color: "#555555", maxWidth: "420px" }}>
-            Enter your vehicles and usage to see an estimated annual fuel saving,
-            payback period, and CO₂ avoided. Your real figures are confirmed in a
-            free assessment.
+            {tc("body")}
           </p>
           <a
             href="#fet-pricing"
             className="inline-flex items-center gap-1.5 text-sm font-semibold"
             style={{ color: "#7A6020" }}
           >
-            See full line pricing
+            {tc("seePricing")}
             <ArrowRight className="w-3.5 h-3.5" />
           </a>
         </Reveal>
@@ -132,7 +143,7 @@ export default function FetCalculator() {
             style={{ backgroundColor: "#FFFFFF", border: "1px solid rgba(0,0,0,0.06)" }}
           >
             {/* Vehicle type */}
-            <Field label="Vehicle type">
+            <Field label={tc("vehicleType")}>
               <div className="grid grid-cols-2 gap-2.5">
                 {FET_TIERS.map((t) => {
                   const selected = t.id === tier.id;
@@ -148,7 +159,7 @@ export default function FetCalculator() {
                       }}
                     >
                       <span className="block text-sm font-semibold" style={{ color: "#1E1E1E" }}>
-                        {t.label}
+                        {tt(`${t.id}.label`)}
                       </span>
                       <span className="block text-[11px] mt-0.5" style={{ color: "#999999" }}>
                         {t.model}
@@ -161,16 +172,16 @@ export default function FetCalculator() {
 
             {/* Numeric inputs */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-              <Field label="Fleet size">
+              <Field label={tc("fleetSize")}>
                 <NumberInput value={vehicles} onChange={setVehicles} inputMode="numeric" min={1} />
               </Field>
-              <Field label="Annual km (each)">
+              <Field label={tc("annualKm")}>
                 <NumberInput value={annualKm} onChange={setAnnualKm} inputMode="numeric" />
               </Field>
-              <Field label="Fuel price (€/L)">
+              <Field label={tc("fuelPrice")}>
                 <NumberInput value={fuelPrice} onChange={setFuelPrice} inputMode="decimal" step="0.01" />
               </Field>
-              <Field label="Device (each)">
+              <Field label={tc("device")}>
                 <div
                   className="h-11 rounded-xl px-3.5 flex items-center text-sm font-semibold"
                   style={{ background: "#F2F2F2", color: "#1E1E1E", border: "1px solid rgba(0,0,0,0.06)" }}
@@ -183,7 +194,7 @@ export default function FetCalculator() {
             {/* Savings slider */}
             <div className="mt-6">
               <div className="flex items-baseline justify-between mb-2">
-                <Label>Expected fuel savings</Label>
+                <Label>{tc("expectedSavings")}</Label>
                 <span
                   style={{
                     fontFamily: "var(--font-playfair, Georgia, serif)",
@@ -214,13 +225,13 @@ export default function FetCalculator() {
                   onChange={(e) => setSavingsPct(Number(e.target.value))}
                   className="relative z-10 w-full"
                   style={{ accentColor: "#C5B27A" }}
-                  aria-label="Expected fuel savings percentage"
+                  aria-label={tc("expectedSavings")}
                 />
               </div>
 
               <div className="flex justify-between mt-1">
-                <span className="text-[11px]" style={{ color: "#999999" }}>Conservative {SAVINGS.min}%</span>
-                <span className="text-[11px]" style={{ color: "#999999" }}>Optimistic {SAVINGS.max}%</span>
+                <span className="text-[11px]" style={{ color: "#999999" }}>{tc("conservative", { pct: SAVINGS.min })}</span>
+                <span className="text-[11px]" style={{ color: "#999999" }}>{tc("optimistic", { pct: SAVINGS.max })}</span>
               </div>
 
               {/* Anchor to the proven field result */}
@@ -235,35 +246,35 @@ export default function FetCalculator() {
                 }}
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Use field-verified {SAVINGS.verified}%
+                {tc("useVerified", { pct: SAVINGS.verified })}
               </button>
             </div>
 
             {/* Results */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-7">
               <Result
-                label="Annual savings"
+                label={tc("resultSavingsLabel")}
                 value={formatEur(result.annualSavingEurFleet, { decimals: 0 })}
-                sub={fleet > 1 ? `Across ${fleet} vehicles` : "Per year with FET"}
+                sub={fleet > 1 ? tc("resultSavingsSubFleet", { count: fleet }) : tc("resultSavingsSubSingle")}
               />
               <Result
-                label="Payback period"
-                value={result.paybackYears != null ? `${result.paybackYears.toFixed(1)} yr` : "—"}
-                sub="Time to break even"
+                label={tc("resultPaybackLabel")}
+                value={result.paybackYears != null ? `${result.paybackYears.toFixed(1)} ${tc("yearAbbr")}` : "—"}
+                sub={tc("resultPaybackSub")}
               />
               <Result
-                label="CO₂ avoided"
+                label={tc("resultCo2Label")}
                 value={formatKg(result.co2KgFleet)}
-                sub="Lower emissions / year"
+                sub={tc("resultCo2Sub")}
               />
             </div>
 
             {/* Fleet investment summary */}
             {fleet > 1 && (
               <p className="mt-4 text-center text-[12px]" style={{ color: "#666666" }}>
-                Total device investment{" "}
+                {tc("fleetInvestmentPrefix")}{" "}
                 <span style={{ color: "#1E1E1E", fontWeight: 600 }}>{formatEur(result.deviceCostFleet, { decimals: 0 })}</span>
-                {" "}· {formatEur(tier.priceEur)} per vehicle, installed
+                {" "}{tc("fleetInvestmentSuffix", { price: formatEur(tier.priceEur) })}
               </p>
             )}
 
@@ -274,13 +285,12 @@ export default function FetCalculator() {
               style={{ borderRadius: "16px" }}
             >
               <Fuel className="w-4 h-4" />
-              Request a Quote
+              {tc("requestQuote")}
               <ArrowRight className="w-4 h-4" />
             </Link>
 
             <p className="mt-4 text-center text-[11px] leading-relaxed" style={{ color: "#9A9A9A" }}>
-              Estimates based on field and lab test data. Actual savings vary by
-              vehicle condition and driving pattern.
+              {tc("disclaimer")}
             </p>
           </div>
         </Reveal>
