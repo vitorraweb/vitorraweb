@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Certifications from "@/components/sections/Certifications";
@@ -7,26 +9,33 @@ import FinalCTA from "@/components/sections/FinalCTA";
 import { Reveal } from "@/components/ui/reveal";
 import { Fuel, HeartPulse, Coffee, Truck, ShieldCheck, Eye, FileCheck, ArrowRight } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Certifications & Trust — Vitorra Holdings Limited",
-  description:
-    "Vitorra Holdings is a registered Ugandan company (URSB). Every product line is backed by certification, validation, or documentation — available on request.",
-};
-
-const assurances = [
-  { icon: Fuel, label: "Fuel Eco Tech", body: "Validated fuel-saving technology. Performance data and validation details available on request.", href: "/enquire?sector=FET" },
-  { icon: HeartPulse, label: "SEAL Wound Spray", body: "Clinical-grade formulation. Specifications, certifications, and compliance documentation provided to procurement.", href: "/enquire?sector=SEAL" },
-  { icon: Coffee, label: "Vitorra Coffee", body: "Single-origin and traceable — ethical sourcing with farm-to-cup traceability and sustainability practices.", href: "/enquire?sector=COFFEE" },
-  { icon: Truck, label: "Logistics Services", body: "Compliant cross-border operations — customs documentation and clearance handled to standard.", href: "/enquire?sector=LOGISTICS" },
-];
-
-const principles = [
-  { icon: ShieldCheck, title: "Verified products", body: "Every product line is backed by validation, certification, or documentation we can share." },
-  { icon: Eye, title: "Transparent sourcing", body: "From single-origin coffee to cross-border freight, we can trace and evidence our chain." },
-  { icon: FileCheck, title: "Registered & accountable", body: "A registered Ugandan company operating to legal and regulatory standards." },
-];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.trust" });
+  return { title: t("title"), description: t("description") };
+}
 
 export default function CertificationsPage() {
+  const t = useTranslations("trustPage");
+  const tp = useTranslations("products");
+
+  const assurances = [
+    { icon: Fuel,      label: tp("fet.name"),        body: t("fetBody"),       href: "/enquire?sector=FET" },
+    { icon: HeartPulse, label: tp("seal.name"),      body: t("sealBody"),      href: "/enquire?sector=SEAL" },
+    { icon: Coffee,    label: tp("coffee.name"),     body: t("coffeeBody"),    href: "/enquire?sector=COFFEE" },
+    { icon: Truck,     label: tp("logistics.name"),  body: t("logisticsBody"), href: "/enquire?sector=LOGISTICS" },
+  ];
+
+  const principles = [
+    { icon: ShieldCheck, title: t("principle1Title"), body: t("principle1Body") },
+    { icon: Eye,         title: t("principle2Title"), body: t("principle2Body") },
+    { icon: FileCheck,   title: t("principle3Title"), body: t("principle3Body") },
+  ];
+
   return (
     <>
       <Header />
@@ -35,14 +44,12 @@ export default function CertificationsPage() {
         {/* ══ INTRO ═══════════════════════════════════════════════════════ */}
         <section className="px-6 md:px-12 lg:px-20 pb-12 md:pb-16" style={{ paddingTop: "clamp(128px, 12vh, 168px)" }}>
           <Reveal className="container-max max-w-3xl">
-            <span className="eyebrow block mb-4">Trust &amp; Compliance</span>
+            <span className="eyebrow block mb-4">{t("introEyebrow")}</span>
             <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "clamp(36px, 4.5vw, 58px)", fontWeight: 700, letterSpacing: "-0.025em", lineHeight: 1.06, color: "#1E1E1E" }}>
-              Proof you can verify.
+              {t("introTitle")}
             </h1>
             <p className="mt-6 max-w-xl" style={{ fontSize: "17px", lineHeight: 1.7, color: "#555555" }}>
-              Vitorra Holdings is a registered Ugandan company, and every product we
-              offer is backed by certification, validation, or documentation —
-              available whenever you need it.
+              {t("introBody")}
             </p>
           </Reveal>
         </section>
@@ -54,9 +61,9 @@ export default function CertificationsPage() {
         <section className="section-padding">
           <div className="container-max">
             <Reveal className="mb-12 max-w-2xl">
-              <span className="eyebrow block mb-3">Across every product</span>
+              <span className="eyebrow block mb-3">{t("assuranceEyebrow")}</span>
               <h2 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "clamp(28px, 3.2vw, 44px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.12, color: "#1E1E1E", maxWidth: "480px" }}>
-                Backed by the paperwork.
+                {t("assuranceTitle")}
               </h2>
             </Reveal>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -69,7 +76,7 @@ export default function CertificationsPage() {
                     <h3 className="mb-2" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "20px", fontWeight: 600, color: "#1E1E1E" }}>{a.label}</h3>
                     <p className="text-sm leading-relaxed flex-1 mb-5" style={{ color: "#555555" }}>{a.body}</p>
                     <Link href={a.href} className="inline-flex items-center gap-1.5 text-sm font-semibold hover:opacity-60 transition-opacity group" style={{ color: "#1E1E1E" }}>
-                      Request documentation<ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
+                      {t("requestDocs")}<ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
                     </Link>
                   </div>
                 </Reveal>
@@ -82,9 +89,9 @@ export default function CertificationsPage() {
         <section className="section-padding" style={{ backgroundColor: "#F8F7F5" }}>
           <div className="container-max">
             <Reveal className="mb-12 text-center">
-              <span className="eyebrow justify-center mb-3">Our commitment</span>
+              <span className="eyebrow justify-center mb-3">{t("principlesEyebrow")}</span>
               <h2 className="mx-auto" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "clamp(26px, 3vw, 40px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.12, color: "#1E1E1E", maxWidth: "460px" }}>
-                Trust, by design.
+                {t("principlesTitle")}
               </h2>
             </Reveal>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -105,13 +112,13 @@ export default function CertificationsPage() {
 
         {/* ══ FINAL CTA — shared homepage style ═══════════════════════════ */}
         <FinalCTA
-          eyebrow="Documentation"
-          titleLead="Need certifications or"
-          titleAccent="lab results?"
-          body="Request the documentation for any Vitorra product and our team will share it — within 24 hours."
-          primaryLabel="Request Documentation"
+          eyebrow={t("ctaEyebrow")}
+          titleLead={t("ctaTitleLead")}
+          titleAccent={t("ctaTitleAccent")}
+          body={t("ctaBody")}
+          primaryLabel={t("ctaPrimary")}
           primaryHref="/enquire"
-          caption="Registered  ·  Verified  ·  Reply within 24 hours"
+          caption={t("ctaCaption")}
         />
 
       </main>

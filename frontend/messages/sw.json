@@ -83,6 +83,10 @@
     "enquire": {
       "title": "Omba Nukuu — Vitorra Holdings Limited",
       "description": "Omba nukuu au ombi kutoka Vitorra Holdings — Fuel Eco Tech, SEAL wound spray, kahawa bora ya Uganda, au usafirishaji. Timu yetu hujibu ndani ya saa 24."
+    },
+    "trust": {
+      "title": "Vyeti na Uaminifu — Vitorra Holdings Limited",
+      "description": "Vitorra Holdings ni kampuni iliyosajiliwa nchini Uganda (URSB). Kila aina ya bidhaa inaungwa mkono na cheti, uthibitisho, au nyaraka — zinazopatikana unapoomba."
     }
   },
   "hero": {
@@ -862,6 +866,32 @@
     "assurance3Title": "Bila wajibu",
     "assurance3Body": "Nukuu na mazungumzo — bila shinikizo, bila taka.",
     "preferTalk": "Unapendelea kuzungumza moja kwa moja?"
+  },
+  "trustPage": {
+    "introEyebrow": "Uaminifu na Ufuataji",
+    "introTitle": "Ushahidi unaoweza kuthibitisha.",
+    "introBody": "Vitorra Holdings ni kampuni iliyosajiliwa nchini Uganda, na kila bidhaa tunayotoa inaungwa mkono na cheti, uthibitisho, au nyaraka — zinazopatikana wakati wowote unapohitaji.",
+    "assuranceEyebrow": "Katika kila bidhaa",
+    "assuranceTitle": "Inaungwa mkono na nyaraka.",
+    "requestDocs": "Omba nyaraka",
+    "fetBody": "Teknolojia ya kuokoa mafuta iliyothibitishwa. Data ya utendaji na maelezo ya uthibitisho yanapatikana unapoomba.",
+    "sealBody": "Fomula ya kiwango cha kitabibu. Vipimo, vyeti, na nyaraka za ufuataji hutolewa kwa ununuzi.",
+    "coffeeBody": "Asili moja na inayofuatilika — upataji wa kimaadili wenye ufuatiliaji wa shambani hadi kikombeni na utendaji endelevu.",
+    "logisticsBody": "Operesheni za kuvuka mipaka zinazofuata sheria — nyaraka za forodha na uondoshaji vinashughulikiwa kwa kiwango.",
+    "principlesEyebrow": "Ahadi yetu",
+    "principlesTitle": "Uaminifu, kwa muundo.",
+    "principle1Title": "Bidhaa zilizothibitishwa",
+    "principle1Body": "Kila aina ya bidhaa inaungwa mkono na uthibitisho, cheti, au nyaraka tunazoweza kushiriki.",
+    "principle2Title": "Upataji wenye uwazi",
+    "principle2Body": "Kutoka kahawa ya asili moja hadi mizigo ya kuvuka mipaka, tunaweza kufuatilia na kuthibitisha mnyororo wetu.",
+    "principle3Title": "Imesajiliwa na inawajibika",
+    "principle3Body": "Kampuni iliyosajiliwa nchini Uganda inayofanya kazi kwa viwango vya kisheria na udhibiti.",
+    "ctaEyebrow": "Nyaraka",
+    "ctaTitleLead": "Unahitaji vyeti au",
+    "ctaTitleAccent": "matokeo ya maabara?",
+    "ctaBody": "Omba nyaraka za bidhaa yoyote ya Vitorra na timu yetu itazishiriki — ndani ya saa 24.",
+    "ctaPrimary": "Omba Nyaraka",
+    "ctaCaption": "Imesajiliwa  ·  Imethibitishwa  ·  Jibu ndani ya saa 24"
   },
   "enquiryForm": {
     "catFetLabel": "Fuel Eco Tech",

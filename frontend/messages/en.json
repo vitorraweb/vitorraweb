@@ -83,6 +83,10 @@
     "enquire": {
       "title": "Request a Quote — Vitorra Holdings Limited",
       "description": "Request a quote or enquiry from Vitorra Holdings — Fuel Eco Tech, SEAL wound spray, premium Ugandan coffee, or logistics. Our team replies within 24 hours."
+    },
+    "trust": {
+      "title": "Certifications & Trust — Vitorra Holdings Limited",
+      "description": "Vitorra Holdings is a registered Ugandan company (URSB). Every product line is backed by certification, validation, or documentation — available on request."
     }
   },
   "hero": {
@@ -862,6 +866,32 @@
     "assurance3Title": "No obligation",
     "assurance3Body": "A quote and a conversation — no pressure, no spam.",
     "preferTalk": "Prefer to talk directly?"
+  },
+  "trustPage": {
+    "introEyebrow": "Trust & Compliance",
+    "introTitle": "Proof you can verify.",
+    "introBody": "Vitorra Holdings is a registered Ugandan company, and every product we offer is backed by certification, validation, or documentation — available whenever you need it.",
+    "assuranceEyebrow": "Across every product",
+    "assuranceTitle": "Backed by the paperwork.",
+    "requestDocs": "Request documentation",
+    "fetBody": "Validated fuel-saving technology. Performance data and validation details available on request.",
+    "sealBody": "Clinical-grade formulation. Specifications, certifications, and compliance documentation provided to procurement.",
+    "coffeeBody": "Single-origin and traceable — ethical sourcing with farm-to-cup traceability and sustainability practices.",
+    "logisticsBody": "Compliant cross-border operations — customs documentation and clearance handled to standard.",
+    "principlesEyebrow": "Our commitment",
+    "principlesTitle": "Trust, by design.",
+    "principle1Title": "Verified products",
+    "principle1Body": "Every product line is backed by validation, certification, or documentation we can share.",
+    "principle2Title": "Transparent sourcing",
+    "principle2Body": "From single-origin coffee to cross-border freight, we can trace and evidence our chain.",
+    "principle3Title": "Registered & accountable",
+    "principle3Body": "A registered Ugandan company operating to legal and regulatory standards.",
+    "ctaEyebrow": "Documentation",
+    "ctaTitleLead": "Need certifications or",
+    "ctaTitleAccent": "lab results?",
+    "ctaBody": "Request the documentation for any Vitorra product and our team will share it — within 24 hours.",
+    "ctaPrimary": "Request Documentation",
+    "ctaCaption": "Registered  ·  Verified  ·  Reply within 24 hours"
   },
   "enquiryForm": {
     "catFetLabel": "Fuel Eco Tech",
