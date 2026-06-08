@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { ShieldCheck } from "lucide-react";
 
@@ -11,20 +12,18 @@ import { ShieldCheck } from "lucide-react";
    No data has been altered or estimated.
    ─────────────────────────────────────────────────────────────────────────── */
 
-const KEY_FINDINGS = [
-  "No further limp-mode incidents after installation",
-  "EGR and DPF blockages eliminated completely",
-  "Smoother, more stable engine behaviour throughout",
-  "13.9% reduction exceeds normal operational variation (±3–5%)",
-];
-
-const SUPPORT_METRICS = [
-  { value: "3–5",  unit: "months",    label: "Full investment payback" },
-  { value: "€900", unit: "– €1,300",  label: "Total estimated annual savings" },
-  { value: "0",    unit: "incidents", label: "Limp-mode events post-installation" },
-];
-
 export default function Testimonials() {
+  const t = useTranslations("testimonials");
+
+  const KEY_FINDINGS = [t("finding1"), t("finding2"), t("finding3"), t("finding4")];
+
+  /* Values are figures from the signed report (literal); units/labels translate. */
+  const SUPPORT_METRICS = [
+    { value: "3–5",  unit: t("metric1Unit"), label: t("metric1Label") },
+    { value: "€900", unit: t("metric2Unit"), label: t("metric2Label") },
+    { value: "0",    unit: t("metric3Unit"), label: t("metric3Label") },
+  ];
+
   return (
     <section
       className="section-padding relative overflow-hidden"
@@ -37,7 +36,7 @@ export default function Testimonials() {
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <Reveal className="mb-10 md:mb-12">
-          <span className="eyebrow block mb-3">Verified field results</span>
+          <span className="eyebrow block mb-3">{t("eyebrow")}</span>
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-10">
             <h2
               style={{
@@ -49,14 +48,13 @@ export default function Testimonials() {
                 color:         "#1E1E1E",
               }}
             >
-              Proven in the field.
+              {t("title")}
             </h2>
             <p
               className="pb-1 max-w-sm"
               style={{ fontSize: "14px", lineHeight: 1.65, color: "#888888" }}
             >
-              Independent test data from a signed official report —
-              real vehicle, real conditions, verified results.
+              {t("subtitle")}
             </p>
           </div>
         </Reveal>
@@ -103,7 +101,7 @@ export default function Testimonials() {
                       color: "#C5B27A",
                     }}
                   >
-                    Official test report · CTI GmbH
+                    {t("reportBadge")}
                   </span>
                 </div>
 
@@ -134,7 +132,7 @@ export default function Testimonials() {
                     marginBottom:  "20px",
                   }}
                 >
-                  fuel consumption reduction — first full month after FET installation.
+                  {t("bigNumberCaption")}
                 </p>
 
                 <p
@@ -145,8 +143,7 @@ export default function Testimonials() {
                     maxWidth:   "320px",
                   }}
                 >
-                  VW T5 · Landesbaubehörde Stadthagen, Germany ·
-                  Tested January–October 2025 under standard service conditions.
+                  {t("vehicleLine")}
                 </p>
               </div>
 
@@ -165,14 +162,14 @@ export default function Testimonials() {
                       color: "rgba(255,255,255,0.35)",
                     }}
                   >
-                    Fuel consumption (l / 100 km)
+                    {t("consumptionLabel")}
                   </p>
 
                   {/* Without FET */}
                   <div className="mb-4">
                     <div className="flex justify-between items-baseline mb-2">
                       <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)" }}>
-                        Without FET &nbsp;·&nbsp; Jan–Sept 2025
+                        {t("withoutFet")}
                       </span>
                       <span
                         style={{
@@ -207,7 +204,7 @@ export default function Testimonials() {
                   <div>
                     <div className="flex justify-between items-baseline mb-2">
                       <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.65)" }}>
-                        With FET &nbsp;·&nbsp; October 2025
+                        {t("withFet")}
                       </span>
                       <span
                         style={{
@@ -252,7 +249,7 @@ export default function Testimonials() {
                         color: "#C5B27A",
                       }}
                     >
-                      ↓ 1.60 l/100 km saved · 13,468 km baseline · Verified result
+                      {t("savingCallout")}
                     </span>
                   </div>
                 </div>
@@ -267,7 +264,7 @@ export default function Testimonials() {
                       color: "rgba(255,255,255,0.35)",
                     }}
                   >
-                    Key observations post-installation
+                    {t("findingsLabel")}
                   </p>
                   <ul className="space-y-2.5">
                     {KEY_FINDINGS.map((f) => (
@@ -290,8 +287,7 @@ export default function Testimonials() {
                   style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
                 >
                   <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
-                    Report prepared by <strong style={{ color: "rgba(255,255,255,0.5)" }}>CTI GmbH</strong> &amp; Landesbaubehörde Hameln ·
-                    Signed by Holger Walprecht, Lippstadt · <strong style={{ color: "rgba(255,255,255,0.5)" }}>10 November 2025</strong>
+                    {t("attribution")}
                   </p>
                 </div>
               </div>

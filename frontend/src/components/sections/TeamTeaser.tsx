@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
@@ -10,19 +11,22 @@ import { cn } from "@/lib/utils";
    full team on /about. Keeps the homepage short while still showing the faces.
    ─────────────────────────────────────────────────────────────────────────── */
 
+/* Names are proper nouns (kept); role labels resolve from the shared team
+   namespace via roleKey. */
 const avatars = [
-  { name: "Solomon Okello",    role: "Chief Executive Officer",   file: "Solomon Okello - CEO.jpg" },
-  { name: "Victor Lojum",      role: "Head of Operations",        file: "Victor Lojum - Head of Operations.jpg" },
-  { name: "Joseph Rwabu",      role: "Senior Finance Officer",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
-  { name: "Thurayya Nakayima", role: "Senior Marketing Officer",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
-  { name: "John Oluwaseyi",    role: "IT Officer",                file: "John Oluwaseyi - IT Officer.jpeg" },
-  { name: "Sarah Nuwamanya",   role: "Marketing Officer",         file: "Sarah Nuwamanya - Marketing Officer.jpg" },
-  { name: "Olivia Sandra",     role: "Brand Designer",            file: "Olivia Sandra - Brand Designer.jpeg" },
-  { name: "Daniel Tuke",       role: "Finance Officer",           file: "Daniel Tuke - Finance Officer.jpeg" },
-  { name: "Nagawa Shakirah",   role: "Marketing Officer",         file: "Nagawa Shakirah - Marketing Officer.jpeg" },
+  { name: "Solomon Okello",    roleKey: "ceo",              file: "Solomon Okello - CEO.jpg" },
+  { name: "Victor Lojum",      roleKey: "headOfOperations", file: "Victor Lojum - Head of Operations.jpg" },
+  { name: "Joseph Rwabu",      roleKey: "seniorFinance",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
+  { name: "Thurayya Nakayima", roleKey: "seniorMarketing",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
+  { name: "John Oluwaseyi",    roleKey: "itOfficer",        file: "John Oluwaseyi - IT Officer.jpeg" },
+  { name: "Sarah Nuwamanya",   roleKey: "marketingOfficer", file: "Sarah Nuwamanya - Marketing Officer.jpg" },
+  { name: "Olivia Sandra",     roleKey: "brandDesigner",    file: "Olivia Sandra - Brand Designer.jpeg" },
+  { name: "Daniel Tuke",       roleKey: "financeOfficer",   file: "Daniel Tuke - Finance Officer.jpeg" },
+  { name: "Nagawa Shakirah",   roleKey: "marketingOfficer", file: "Nagawa Shakirah - Marketing Officer.jpeg" },
 ];
 
 export default function TeamTeaser() {
+  const t = useTranslations("team");
   return (
     <section
       className="relative overflow-hidden py-16 md:py-20 px-6 md:px-12 lg:px-20"
@@ -53,7 +57,7 @@ export default function TeamTeaser() {
                 {/* Name tooltip */}
                 <div className="av-tip" aria-hidden="true">
                   <span className="block font-semibold" style={{ color: "#FFFFFF" }}>{m.name}</span>
-                  <span className="block" style={{ color: "rgba(255,255,255,0.6)", fontSize: "10px" }}>{m.role}</span>
+                  <span className="block" style={{ color: "rgba(255,255,255,0.6)", fontSize: "10px" }}>{t(`roles.${m.roleKey}`)}</span>
                 </div>
               </div>
             ))}
@@ -68,7 +72,7 @@ export default function TeamTeaser() {
                 color: "#1E1E1E",
                 boxShadow: "0 0 0 4px #F8F7F5, 0 6px 18px rgba(0,0,0,0.12)",
               }}
-              aria-label="Meet the full team"
+              aria-label={t("meetFullTeam")}
             >
               <ArrowRight className="w-5 h-5" />
             </Link>
@@ -76,7 +80,7 @@ export default function TeamTeaser() {
 
           {/* Text */}
           <div>
-            <span className="eyebrow block mb-3">Our People</span>
+            <span className="eyebrow block mb-3">{t("eyebrow")}</span>
             <h2
               className="mb-4 max-w-md"
               style={{
@@ -88,18 +92,17 @@ export default function TeamTeaser() {
                 color: "#1E1E1E",
               }}
             >
-              The people behind Vitorra.
+              {t("teaserTitle")}
             </h2>
             <p className="mb-6 max-w-md" style={{ fontSize: "16px", lineHeight: 1.7, color: "#555555" }}>
-              A company is only as strong as its people — led by Solomon Okello,
-              with a team spanning operations, finance, marketing, and technology.
+              {t("teaserBody")}
             </p>
             <Link
               href="/about"
               className="inline-flex items-center gap-2 text-sm font-semibold hover:opacity-60 transition-opacity group"
               style={{ color: "#1E1E1E" }}
             >
-              Meet the team
+              {t("meetTeam")}
               <ArrowRight className="w-4 h-4 arrow-nudge" />
             </Link>
           </div>

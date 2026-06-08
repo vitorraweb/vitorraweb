@@ -50,5 +50,238 @@
     "dismiss": "Dismiss without accepting",
     "decline": "Decline",
     "acceptAll": "Accept all"
+  },
+  "meta": {
+    "home": {
+      "title": "Vitorra Holdings Limited — Fuel, Logistics, Healthcare & Coffee",
+      "description": "Vitorra is a diversified company providing Fuel Eco Tech, logistics, SEAL Wound Spray, and premium Ugandan coffee across Uganda and East Africa."
+    }
+  },
+  "hero": {
+    "primaryCta": "Request a Quote",
+    "sectorsLabel": "Vitorra business sectors",
+    "mute": "Mute video",
+    "unmute": "Unmute video",
+    "sectors": {
+      "overview": {
+        "tab": "Overview",
+        "eyebrow": "Vitorra Holdings Limited · Uganda & East Africa",
+        "headlineLead": "Innovative products.",
+        "headlineAccent": "Dependable solutions.",
+        "body": "A diversified company delivering Fuel Eco Tech, logistics, healthcare products, and premium coffee across Uganda, East Africa, and international markets.",
+        "secondaryLabel": "About Vitorra"
+      },
+      "fet": {
+        "tab": "Fuel Eco Tech",
+        "eyebrow": "Fuel Eco Technology",
+        "headlineLead": "Proven fuel savings.\nMeasurable results.",
+        "headlineAccent": "",
+        "body": "Reducing fuel consumption and extending engine life for commercial fleets across East Africa.",
+        "secondaryLabel": "Explore Fuel Eco Tech"
+      },
+      "seal": {
+        "tab": "SEAL",
+        "eyebrow": "SEAL Wound Spray",
+        "headlineLead": "Stop bleeding fast.\nSave lives.",
+        "headlineAccent": "",
+        "body": "Clinical-grade hemostatic wound control for hospitals, emergency responders, and military procurement.",
+        "secondaryLabel": "Explore SEAL"
+      },
+      "coffee": {
+        "tab": "Coffee",
+        "eyebrow": "Vitorra Coffee",
+        "headlineLead": "Premium Ugandan coffee.\nFarm to cup.",
+        "headlineAccent": "",
+        "body": "Traceable, responsibly sourced coffee for consumers, hospitality businesses, and international importers.",
+        "secondaryLabel": "Explore Coffee"
+      },
+      "logistics": {
+        "tab": "Logistics",
+        "eyebrow": "Logistics Services",
+        "headlineLead": "Move goods\nwith confidence.",
+        "headlineAccent": "",
+        "body": "End-to-end freight, warehousing, customs clearance, and supply chain management across Uganda, East Africa, and beyond.",
+        "secondaryLabel": "Explore Logistics"
+      }
+    }
+  },
+  "home": {
+    "authority": {
+      "eyebrow": "Independent certifications",
+      "titleLead": "Independently certified.",
+      "titleAccent": "Internationally proven.",
+      "body": "Every certification is externally issued — not self-declared. FET has been verified by the institutions that the industry trusts.",
+      "cta": "View all certifications & test reports",
+      "verifiedBy": "Verified by",
+      "footnote": "All certifications are externally issued and independently audited. No self-certification.",
+      "qualityManagement": "Quality Management",
+      "environmental": "Environmental",
+      "informationSecurity": "Information Security",
+      "labValidated": "Lab Validated",
+      "productLiability": "Product Liability",
+      "germanCertified": "German Certified"
+    },
+    "fet": {
+      "eyebrow": "Featured product · Fuel Eco Tech",
+      "titleLead": "Lower fuel costs.",
+      "titleAccent": "Proven in the lab.",
+      "body": "FET is a patented, ISO-certified fuel optimisation system — validated by AVL Technologies and trusted by fleet operators across East Africa. No engine modification. Measurable ROI.",
+      "proof1": "Patented swirl chamber — improves oxygen integration on every cycle",
+      "proof2": "Independently validated by AVL Technologies automotive lab",
+      "proof3": "ISO 9001 · ISO 14001 · ISO 27001 certified · Zurich Product Liability",
+      "pill1": "Fitted in under 1 hour",
+      "pill2": "No engine modification",
+      "pill3": "1-year warranty",
+      "ctaPrimary": "Request a Fuel Savings Assessment",
+      "ctaSecondary": "Learn more",
+      "badgeAvlLabel": "AVL Technologies Validated",
+      "badgeAvlValue": "Lab-proven performance",
+      "badgeCertified": "Certified"
+    },
+    "suite": {
+      "eyebrow": "Our portfolio",
+      "title": "More from Vitorra.",
+      "cta": "Request a quote for any product",
+      "sealBadge": "Medical · B2B",
+      "sealTagline": "Stop bleeding fast. Save lives.",
+      "sealDescription": "Clinically validated hemostatic wound spray for hospitals, emergency responders, NGOs, and military procurement.",
+      "sealCta": "Request Product Information",
+      "coffeeBadge": "B2B · B2C",
+      "coffeeTagline": "Premium Ugandan coffee. Farm to cup.",
+      "coffeeDescription": "Traceable, responsibly sourced coffee for consumers, hospitality businesses, and international importers.",
+      "coffeeCta": "Shop Coffee",
+      "logisticsBadge": "B2B · Enterprise",
+      "logisticsTagline": "Move goods with confidence.",
+      "logisticsDescription": "End-to-end freight, warehousing, customs clearance, and supply chain management across Uganda and East Africa.",
+      "logisticsCta": "Request a Logistics Quote"
+    },
+    "sectors": {
+      "eyebrow": "Who we serve",
+      "titleLead": "Serving businesses ",
+      "titleAccent": "across every sector.",
+      "fleetOperators": "Fleet Operators",
+      "agriculture": "Agriculture",
+      "publicTransport": "Public Transport",
+      "construction": "Construction & Industry",
+      "marine": "Marine",
+      "healthcareNgos": "Healthcare & NGOs"
+    },
+    "why": {
+      "eyebrow": "Why Vitorra",
+      "titleLead": "Innovative products.",
+      "titleAccent": "Dependable solutions.",
+      "body": "From fuel efficiency to emergency medicine, premium coffee to end-to-end logistics — Vitorra serves businesses that demand proven performance, not promises.",
+      "point1Headline": "Performance you can measure",
+      "point1Body": "Every FET installation is benchmarked before and after — so the savings are in data, not marketing copy.",
+      "point2Headline": "Certified at every level",
+      "point2Body": "ISO 9001 · 14001 · 27001, Zurich-insured, AVL-validated. Our products carry independent international certification.",
+      "point3Headline": "East Africa, built for scale",
+      "point3Body": "Serving Uganda and six markets across the region — with the infrastructure and local knowledge to grow alongside you.",
+      "cta": "About Vitorra"
+    }
+  },
+  "finalCta": {
+    "eyebrow": "Get Started",
+    "titleLead": "Ready to work with",
+    "titleAccent": "Vitorra?",
+    "body": "Whether you need a fuel savings assessment, a logistics quote, or premium Ugandan coffee — our team responds within 24 hours.",
+    "primaryLabel": "Request a Quote",
+    "secondaryLabel": "Contact Us",
+    "caption": "Uganda · East Africa · International  ·  Typical reply within 24 hours"
+  },
+  "trustMarquee": {
+    "ariaLabel": "Vitorra credentials",
+    "location": "Uganda · East Africa · International",
+    "productLines": "4 Product Lines",
+    "certifications": "Verified Certifications",
+    "b2bB2c": "B2B & B2C",
+    "response": "24-Hour Response"
+  },
+  "certCard": {
+    "eyebrow": "Verified & Certified",
+    "titleLine1": "Officially registered.",
+    "titleLine2": "Independently trusted.",
+    "body": "Vitorra Holdings Limited is a registered Ugandan company, backed by verified certifications, lab results, and third-party validations across every product line.",
+    "cta": "View Certifications",
+    "country": "Republic of Uganda",
+    "officialRegistration": "Official Registration",
+    "status": "Active & Compliant",
+    "certLabel": "Certificate of Incorporation",
+    "incorporated": "Incorporated under the Companies Act, 2012",
+    "issuingAuthorityLabel": "Issuing Authority",
+    "issuingAuthorityValue": "Uganda Registration Services Bureau (URSB)",
+    "jurisdictionLabel": "Jurisdiction",
+    "jurisdictionValue": "Kampala, Uganda · East African Community"
+  },
+  "statsBand": {
+    "eyebrow": "By the numbers",
+    "titleLead": "The infrastructure behind",
+    "titleAccent": "East African business.",
+    "stat1Label": "Product lines",
+    "stat1Sub": "Fuel · Medical · Coffee · Logistics",
+    "stat2Label": "Markets served",
+    "stat2Sub": "Uganda, East Africa & international",
+    "stat3Label": "ISO certified",
+    "stat3Sub": "Quality · Environment · Security",
+    "stat4Label": "Response time",
+    "stat4Sub": "Guaranteed first-reply commitment"
+  },
+  "team": {
+    "eyebrow": "Our People",
+    "teaserTitle": "The people behind Vitorra.",
+    "teaserBody": "A company is only as strong as its people — led by Solomon Okello, with a team spanning operations, finance, marketing, and technology.",
+    "meetTeam": "Meet the team",
+    "meetFullTeam": "Meet the full team",
+    "sectionTitle": "The team behind Vitorra.",
+    "roles": {
+      "ceo": "Chief Executive Officer",
+      "headOfOperations": "Head of Operations",
+      "seniorFinance": "Senior Finance Officer",
+      "seniorMarketing": "Senior Marketing Officer",
+      "itOfficer": "IT Officer",
+      "marketingOfficer": "Marketing Officer",
+      "brandDesigner": "Brand Designer",
+      "financeOfficer": "Finance Officer"
+    }
+  },
+  "testimonials": {
+    "eyebrow": "Verified field results",
+    "title": "Proven in the field.",
+    "subtitle": "Independent test data from a signed official report — real vehicle, real conditions, verified results.",
+    "reportBadge": "Official test report · CTI GmbH",
+    "bigNumberCaption": "fuel consumption reduction — first full month after FET installation.",
+    "vehicleLine": "VW T5 · Landesbaubehörde Stadthagen, Germany · Tested January–October 2025 under standard service conditions.",
+    "consumptionLabel": "Fuel consumption (l / 100 km)",
+    "withoutFet": "Without FET  ·  Jan–Sept 2025",
+    "withFet": "With FET  ·  October 2025",
+    "savingCallout": "↓ 1.60 l/100 km saved · 13,468 km baseline · Verified result",
+    "findingsLabel": "Key observations post-installation",
+    "finding1": "No further limp-mode incidents after installation",
+    "finding2": "EGR and DPF blockages eliminated completely",
+    "finding3": "Smoother, more stable engine behaviour throughout",
+    "finding4": "13.9% reduction exceeds normal operational variation (±3–5%)",
+    "attribution": "Report prepared by CTI GmbH & Landesbaubehörde Hameln · Signed by Holger Walprecht, Lippstadt · 10 November 2025",
+    "metric1Unit": "months",
+    "metric1Label": "Full investment payback",
+    "metric2Unit": "– €1,300",
+    "metric2Label": "Total estimated annual savings",
+    "metric3Unit": "incidents",
+    "metric3Label": "Limp-mode events post-installation"
+  },
+  "blogPreview": {
+    "eyebrow": "Blog & Insights",
+    "title": "Ideas from the field.",
+    "viewAll": "View all articles",
+    "readArticle": "Read article",
+    "publishingSoon": "Publishing soon",
+    "placeholder1Tag": "Fuel Eco Tech",
+    "placeholder1Title": "How FET is reducing fleet costs across East Africa",
+    "placeholder1Body": "Fleet operators across Uganda are seeing measurable drops in diesel spend after installation — here's what the data shows.",
+    "placeholder2Tag": "Industry Insights",
+    "placeholder2Title": "The true cost of fuel waste in commercial transport",
+    "placeholder2Body": "A practical breakdown of why diesel engines lose efficiency over time and what modern optimisation technology does about it.",
+    "placeholder3Tag": "Vitorra Coffee",
+    "placeholder3Title": "Tracing quality from Uganda's farms to international buyers",
+    "placeholder3Body": "How our sourcing and export process ensures every bag of Vitorra Coffee meets the consistency demands of wholesale markets."
   }
 }

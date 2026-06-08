@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { ArrowUpRight, ShieldCheck } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
 
@@ -28,6 +29,7 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 export default function Certifications() {
+  const t = useTranslations("certCard");
   const cardRef = useRef<HTMLDivElement>(null);
   const cur = useRef({ x: 0, y: 0 });
   const target = useRef({ x: 0, y: 0 });
@@ -106,17 +108,15 @@ export default function Certifications() {
       <div className="container-max relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
         {/* Left — copy */}
         <Reveal>
-          <span className="eyebrow-light mb-5 inline-flex">Verified &amp; Certified</span>
+          <span className="eyebrow-light mb-5 inline-flex">{t("eyebrow")}</span>
           <h2 className="mb-4 max-w-md" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "clamp(28px, 3.2vw, 44px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.12, color: "#FFFFFF" }}>
-            Officially registered.<br />Independently trusted.
+            {t("titleLine1")}<br />{t("titleLine2")}
           </h2>
           <p className="mb-8 max-w-md" style={{ fontSize: "16px", lineHeight: 1.7, color: "rgba(255,255,255,0.55)" }}>
-            Vitorra Holdings Limited is a registered Ugandan company, backed by
-            verified certifications, lab results, and third-party validations
-            across every product line.
+            {t("body")}
           </p>
           <Link href="/trust/certifications" className="btn-ghost-dark inline-flex items-center gap-2">
-            View Certifications
+            {t("cta")}
             <ArrowUpRight className="w-4 h-4" />
           </Link>
         </Reveal>
@@ -151,16 +151,16 @@ export default function Certifications() {
                 </div>
                 <div>
                   <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#C5B27A" }}>
-                    Republic of Uganda
+                    {t("country")}
                   </p>
-                  <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>Official Registration</p>
+                  <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>{t("officialRegistration")}</p>
                 </div>
                 <span
                   className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full shrink-0"
                   style={{ background: "rgba(111,191,142,0.12)", border: "1px solid rgba(111,191,142,0.4)" }}
                 >
                   <span className="status-dot w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#6FBF8E" }} />
-                  <span style={{ fontSize: "11px", fontWeight: 600, color: "#8FD3AE" }}>Active &amp; Compliant</span>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: "#8FD3AE" }}>{t("status")}</span>
                 </span>
               </div>
 
@@ -168,7 +168,7 @@ export default function Certifications() {
 
               {/* Certificate number */}
               <p style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }} className="mb-2">
-                Certificate of Incorporation
+                {t("certLabel")}
               </p>
               <p
                 style={{
@@ -183,15 +183,15 @@ export default function Certifications() {
                 80034340923220
               </p>
               <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>
-                Incorporated under the Companies Act, 2012
+                {t("incorporated")}
               </p>
 
               <div className="h-px w-full my-6" style={{ background: "rgba(255,255,255,0.08)" }} />
 
               {/* Detail grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <Detail label="Issuing Authority" value="Uganda Registration Services Bureau (URSB)" />
-                <Detail label="Jurisdiction" value="Kampala, Uganda · East African Community" />
+                <Detail label={t("issuingAuthorityLabel")} value={t("issuingAuthorityValue")} />
+                <Detail label={t("jurisdictionLabel")} value={t("jurisdictionValue")} />
               </div>
             </div>
           </div>

@@ -50,5 +50,238 @@
     "dismiss": "Funga bila kukubali",
     "decline": "Kataa",
     "acceptAll": "Kubali zote"
+  },
+  "meta": {
+    "home": {
+      "title": "Vitorra Holdings Limited — Mafuta, Usafirishaji, Afya na Kahawa",
+      "description": "Vitorra ni kampuni yenye sekta mbalimbali inayotoa Fuel Eco Tech, usafirishaji, SEAL Wound Spray, na kahawa bora ya Uganda kote Uganda na Afrika Mashariki."
+    }
+  },
+  "hero": {
+    "primaryCta": "Omba Nukuu",
+    "sectorsLabel": "Sekta za biashara za Vitorra",
+    "mute": "Zima sauti ya video",
+    "unmute": "Washa sauti ya video",
+    "sectors": {
+      "overview": {
+        "tab": "Muhtasari",
+        "eyebrow": "Vitorra Holdings Limited · Uganda na Afrika Mashariki",
+        "headlineLead": "Bidhaa za ubunifu.",
+        "headlineAccent": "Suluhisho za kuaminika.",
+        "body": "Kampuni yenye sekta mbalimbali inayotoa Fuel Eco Tech, usafirishaji, bidhaa za afya, na kahawa bora kote Uganda, Afrika Mashariki, na masoko ya kimataifa.",
+        "secondaryLabel": "Kuhusu Vitorra"
+      },
+      "fet": {
+        "tab": "Fuel Eco Tech",
+        "eyebrow": "Fuel Eco Technology",
+        "headlineLead": "Uokoaji wa mafuta uliothibitishwa.\nMatokeo yanayopimika.",
+        "headlineAccent": "",
+        "body": "Kupunguza matumizi ya mafuta na kuongeza maisha ya injini kwa magari ya kibiashara kote Afrika Mashariki.",
+        "secondaryLabel": "Gundua Fuel Eco Tech"
+      },
+      "seal": {
+        "tab": "SEAL",
+        "eyebrow": "SEAL Wound Spray",
+        "headlineLead": "Zuia damu haraka.\nOkoa maisha.",
+        "headlineAccent": "",
+        "body": "Udhibiti wa vidonda wa kiwango cha kitabibu kwa hospitali, wahudumu wa dharura, na ununuzi wa kijeshi.",
+        "secondaryLabel": "Gundua SEAL"
+      },
+      "coffee": {
+        "tab": "Kahawa",
+        "eyebrow": "Vitorra Coffee",
+        "headlineLead": "Kahawa bora ya Uganda.\nShambani hadi kikombeni.",
+        "headlineAccent": "",
+        "body": "Kahawa inayofuatilika, iliyopatikana kwa uwajibikaji kwa watumiaji, biashara za ukarimu, na waagizaji wa kimataifa.",
+        "secondaryLabel": "Gundua Kahawa"
+      },
+      "logistics": {
+        "tab": "Usafirishaji",
+        "eyebrow": "Huduma za Usafirishaji",
+        "headlineLead": "Safirisha bidhaa\nkwa uhakika.",
+        "headlineAccent": "",
+        "body": "Usafirishaji kamili, uhifadhi ghalani, uondoshaji forodha, na usimamizi wa ugavi kote Uganda, Afrika Mashariki, na zaidi.",
+        "secondaryLabel": "Gundua Usafirishaji"
+      }
+    }
+  },
+  "home": {
+    "authority": {
+      "eyebrow": "Vyeti huru",
+      "titleLead": "Imethibitishwa kwa kujitegemea.",
+      "titleAccent": "Imethibitishwa kimataifa.",
+      "body": "Kila cheti kinatolewa na taasisi za nje — si cha kujitangaza wenyewe. FET imethibitishwa na taasisi ambazo sekta inaziamini.",
+      "cta": "Tazama vyeti vyote na ripoti za majaribio",
+      "verifiedBy": "Imethibitishwa na",
+      "footnote": "Vyeti vyote vinatolewa na taasisi za nje na kukaguliwa kwa kujitegemea. Hakuna kujithibitisha wenyewe.",
+      "qualityManagement": "Usimamizi wa Ubora",
+      "environmental": "Mazingira",
+      "informationSecurity": "Usalama wa Taarifa",
+      "labValidated": "Imethibitishwa Maabara",
+      "productLiability": "Dhima ya Bidhaa",
+      "germanCertified": "Imethibitishwa Ujerumani"
+    },
+    "fet": {
+      "eyebrow": "Bidhaa maalum · Fuel Eco Tech",
+      "titleLead": "Punguza gharama za mafuta.",
+      "titleAccent": "Imethibitishwa maabara.",
+      "body": "FET ni mfumo wa kuboresha mafuta wenye hati miliki na cheti cha ISO — umethibitishwa na AVL Technologies na unaaminiwa na waendeshaji wa magari kote Afrika Mashariki. Hakuna marekebisho ya injini. Faida inayopimika.",
+      "proof1": "Chemba ya kuzungusha yenye hati miliki — inaboresha uchanganyaji wa oksijeni kila mzunguko",
+      "proof2": "Imethibitishwa kwa kujitegemea na maabara ya magari ya AVL Technologies",
+      "proof3": "Imethibitishwa ISO 9001 · ISO 14001 · ISO 27001 · Dhima ya Bidhaa ya Zurich",
+      "pill1": "Inawekwa kwa chini ya saa moja",
+      "pill2": "Hakuna marekebisho ya injini",
+      "pill3": "Dhamana ya mwaka mmoja",
+      "ctaPrimary": "Omba Tathmini ya Uokoaji wa Mafuta",
+      "ctaSecondary": "Jifunze zaidi",
+      "badgeAvlLabel": "Imethibitishwa na AVL Technologies",
+      "badgeAvlValue": "Utendaji uliothibitishwa maabara",
+      "badgeCertified": "Imethibitishwa"
+    },
+    "suite": {
+      "eyebrow": "Bidhaa zetu",
+      "title": "Zaidi kutoka Vitorra.",
+      "cta": "Omba nukuu kwa bidhaa yoyote",
+      "sealBadge": "Matibabu · B2B",
+      "sealTagline": "Zuia damu haraka. Okoa maisha.",
+      "sealDescription": "Dawa ya kunyunyizia vidonda iliyothibitishwa kitabibu kwa hospitali, wahudumu wa dharura, mashirika yasiyo ya kiserikali, na ununuzi wa kijeshi.",
+      "sealCta": "Omba Taarifa za Bidhaa",
+      "coffeeBadge": "B2B · B2C",
+      "coffeeTagline": "Kahawa bora ya Uganda. Shambani hadi kikombeni.",
+      "coffeeDescription": "Kahawa inayofuatilika, iliyopatikana kwa uwajibikaji kwa watumiaji, biashara za ukarimu, na waagizaji wa kimataifa.",
+      "coffeeCta": "Nunua Kahawa",
+      "logisticsBadge": "B2B · Biashara",
+      "logisticsTagline": "Safirisha bidhaa kwa uhakika.",
+      "logisticsDescription": "Usafirishaji kamili, uhifadhi ghalani, uondoshaji forodha, na usimamizi wa ugavi kote Uganda na Afrika Mashariki.",
+      "logisticsCta": "Omba Nukuu ya Usafirishaji"
+    },
+    "sectors": {
+      "eyebrow": "Tunaowahudumia",
+      "titleLead": "Tunahudumia biashara ",
+      "titleAccent": "katika kila sekta.",
+      "fleetOperators": "Waendeshaji wa Magari",
+      "agriculture": "Kilimo",
+      "publicTransport": "Usafiri wa Umma",
+      "construction": "Ujenzi na Viwanda",
+      "marine": "Baharini",
+      "healthcareNgos": "Afya na Mashirika Yasiyo ya Kiserikali"
+    },
+    "why": {
+      "eyebrow": "Kwa Nini Vitorra",
+      "titleLead": "Bidhaa za ubunifu.",
+      "titleAccent": "Suluhisho za kuaminika.",
+      "body": "Kutoka ufanisi wa mafuta hadi tiba ya dharura, kahawa bora hadi usafirishaji kamili — Vitorra inahudumia biashara zinazohitaji utendaji uliothibitishwa, si ahadi tu.",
+      "point1Headline": "Utendaji unaoweza kupima",
+      "point1Body": "Kila usakinishaji wa FET unapimwa kabla na baada — hivyo uokoaji upo katika data, si maneno ya matangazo.",
+      "point2Headline": "Imethibitishwa katika kila ngazi",
+      "point2Body": "ISO 9001 · 14001 · 27001, imebimwa na Zurich, imethibitishwa na AVL. Bidhaa zetu zina cheti huru cha kimataifa.",
+      "point3Headline": "Afrika Mashariki, iliyojengwa kwa ukuaji",
+      "point3Body": "Tunahudumia Uganda na masoko sita katika kanda — tukiwa na miundombinu na ujuzi wa ndani kukua pamoja nawe.",
+      "cta": "Kuhusu Vitorra"
+    }
+  },
+  "finalCta": {
+    "eyebrow": "Anza",
+    "titleLead": "Uko tayari kufanya kazi na",
+    "titleAccent": "Vitorra?",
+    "body": "Iwe unahitaji tathmini ya uokoaji wa mafuta, nukuu ya usafirishaji, au kahawa bora ya Uganda — timu yetu hujibu ndani ya saa 24.",
+    "primaryLabel": "Omba Nukuu",
+    "secondaryLabel": "Wasiliana Nasi",
+    "caption": "Uganda · Afrika Mashariki · Kimataifa  ·  Jibu la kawaida ndani ya saa 24"
+  },
+  "trustMarquee": {
+    "ariaLabel": "Sifa za Vitorra",
+    "location": "Uganda · Afrika Mashariki · Kimataifa",
+    "productLines": "Aina 4 za Bidhaa",
+    "certifications": "Vyeti Vilivyothibitishwa",
+    "b2bB2c": "B2B na B2C",
+    "response": "Jibu la Saa 24"
+  },
+  "certCard": {
+    "eyebrow": "Imethibitishwa na Kuidhinishwa",
+    "titleLine1": "Imesajiliwa rasmi.",
+    "titleLine2": "Inaaminiwa kwa kujitegemea.",
+    "body": "Vitorra Holdings Limited ni kampuni iliyosajiliwa nchini Uganda, ikiungwa mkono na vyeti vilivyothibitishwa, matokeo ya maabara, na uthibitisho wa watu wengine katika kila aina ya bidhaa.",
+    "cta": "Tazama Vyeti",
+    "country": "Jamhuri ya Uganda",
+    "officialRegistration": "Usajili Rasmi",
+    "status": "Hai na Inazingatia Sheria",
+    "certLabel": "Cheti cha Usajili wa Kampuni",
+    "incorporated": "Imesajiliwa chini ya Sheria ya Makampuni, 2012",
+    "issuingAuthorityLabel": "Mamlaka Iliyotoa",
+    "issuingAuthorityValue": "Ofisi ya Huduma za Usajili Uganda (URSB)",
+    "jurisdictionLabel": "Eneo la Mamlaka",
+    "jurisdictionValue": "Kampala, Uganda · Jumuiya ya Afrika Mashariki"
+  },
+  "statsBand": {
+    "eyebrow": "Kwa Takwimu",
+    "titleLead": "Miundombinu nyuma ya",
+    "titleAccent": "biashara ya Afrika Mashariki.",
+    "stat1Label": "Aina za bidhaa",
+    "stat1Sub": "Mafuta · Matibabu · Kahawa · Usafirishaji",
+    "stat2Label": "Masoko yanayohudumiwa",
+    "stat2Sub": "Uganda, Afrika Mashariki na kimataifa",
+    "stat3Label": "Imethibitishwa ISO",
+    "stat3Sub": "Ubora · Mazingira · Usalama",
+    "stat4Label": "Muda wa kujibu",
+    "stat4Sub": "Ahadi ya jibu la kwanza iliyohakikishwa"
+  },
+  "team": {
+    "eyebrow": "Watu Wetu",
+    "teaserTitle": "Watu walio nyuma ya Vitorra.",
+    "teaserBody": "Kampuni ina nguvu kadiri ya watu wake — ikiongozwa na Solomon Okello, ikiwa na timu inayojumuisha operesheni, fedha, masoko, na teknolojia.",
+    "meetTeam": "Kutana na timu",
+    "meetFullTeam": "Kutana na timu nzima",
+    "sectionTitle": "Timu iliyo nyuma ya Vitorra.",
+    "roles": {
+      "ceo": "Afisa Mkuu Mtendaji",
+      "headOfOperations": "Mkuu wa Operesheni",
+      "seniorFinance": "Afisa Mwandamizi wa Fedha",
+      "seniorMarketing": "Afisa Mwandamizi wa Masoko",
+      "itOfficer": "Afisa wa TEHAMA",
+      "marketingOfficer": "Afisa wa Masoko",
+      "brandDesigner": "Mbunifu wa Chapa",
+      "financeOfficer": "Afisa wa Fedha"
+    }
+  },
+  "testimonials": {
+    "eyebrow": "Matokeo ya uwandani yaliyothibitishwa",
+    "title": "Imethibitishwa uwandani.",
+    "subtitle": "Data huru ya majaribio kutoka ripoti rasmi iliyotiwa saini — gari halisi, mazingira halisi, matokeo yaliyothibitishwa.",
+    "reportBadge": "Ripoti rasmi ya majaribio · CTI GmbH",
+    "bigNumberCaption": "punguzo la matumizi ya mafuta — mwezi kamili wa kwanza baada ya usakinishaji wa FET.",
+    "vehicleLine": "VW T5 · Landesbaubehörde Stadthagen, Ujerumani · Ilijaribiwa Januari–Oktoba 2025 chini ya mazingira ya kawaida ya huduma.",
+    "consumptionLabel": "Matumizi ya mafuta (l / 100 km)",
+    "withoutFet": "Bila FET  ·  Jan–Sep 2025",
+    "withFet": "Na FET  ·  Oktoba 2025",
+    "savingCallout": "↓ 1.60 l/100 km imeokolewa · msingi wa 13,468 km · Matokeo yaliyothibitishwa",
+    "findingsLabel": "Uchunguzi muhimu baada ya usakinishaji",
+    "finding1": "Hakuna matukio zaidi ya hali-ya-kunusurika baada ya usakinishaji",
+    "finding2": "Vizuizi vya EGR na DPF viliondolewa kabisa",
+    "finding3": "Mwenendo wa injini ulaini na thabiti zaidi katika kipindi chote",
+    "finding4": "Punguzo la 13.9% linazidi tofauti ya kawaida ya uendeshaji (±3–5%)",
+    "attribution": "Ripoti iliandaliwa na CTI GmbH na Landesbaubehörde Hameln · Imetiwa saini na Holger Walprecht, Lippstadt · 10 Novemba 2025",
+    "metric1Unit": "miezi",
+    "metric1Label": "Marejesho kamili ya uwekezaji",
+    "metric2Unit": "– €1,300",
+    "metric2Label": "Jumla ya makadirio ya uokoaji wa mwaka",
+    "metric3Unit": "matukio",
+    "metric3Label": "Matukio ya hali-ya-kunusurika baada ya usakinishaji"
+  },
+  "blogPreview": {
+    "eyebrow": "Blogu na Maarifa",
+    "title": "Mawazo kutoka uwandani.",
+    "viewAll": "Tazama makala zote",
+    "readArticle": "Soma makala",
+    "publishingSoon": "Inachapishwa hivi karibuni",
+    "placeholder1Tag": "Fuel Eco Tech",
+    "placeholder1Title": "Jinsi FET inavyopunguza gharama za magari kote Afrika Mashariki",
+    "placeholder1Body": "Waendeshaji wa magari kote Uganda wanaona upungufu unaopimika wa matumizi ya dizeli baada ya usakinishaji — haya ndiyo yanayoonyeshwa na data.",
+    "placeholder2Tag": "Maarifa ya Sekta",
+    "placeholder2Title": "Gharama halisi ya upotevu wa mafuta katika usafiri wa kibiashara",
+    "placeholder2Body": "Maelezo ya vitendo kuhusu kwa nini injini za dizeli hupoteza ufanisi kwa muda na teknolojia ya kisasa ya kuboresha hufanya nini kuhusu hili.",
+    "placeholder3Tag": "Vitorra Coffee",
+    "placeholder3Title": "Kufuatilia ubora kutoka mashamba ya Uganda hadi wanunuzi wa kimataifa",
+    "placeholder3Body": "Jinsi mchakato wetu wa upataji na usafirishaji unavyohakikisha kila gunia la Vitorra Coffee linakidhi mahitaji ya uthabiti ya masoko ya jumla."
   }
 }

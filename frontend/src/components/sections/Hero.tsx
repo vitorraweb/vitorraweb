@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight, VolumeX, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,74 +28,43 @@ type Media =
   | { type: "image"; src: string; priority?: boolean }
   | { type: "gradient" };
 
+/* Structural config only — all display copy lives in the `hero` messages,
+   keyed by sector id. Watermarks are brand terms and stay literal. */
 type Sector = {
   id: string;
-  tab: string; // short label for the rail
-  eyebrow: string;
-  /** lead renders white (pre-line aware); accent renders in gold gradient */
-  headline: { lead: string; accent?: string };
-  body: string;
   secondaryHref: string;
-  secondaryLabel: string;
-  watermark: string; // ghost text for gradient panels
+  watermark: string; // ghost text for gradient panels (brand, untranslated)
   media: Media;
 };
-
-const PRIMARY_CTA = { label: "Request a Quote", href: "/enquire" };
 
 const SECTORS: Sector[] = [
   {
     id: "overview",
-    tab: "Overview",
-    eyebrow: "Vitorra Holdings Limited · Uganda & East Africa",
-    headline: { lead: "Innovative products.", accent: "Dependable solutions." },
-    body: "A diversified company delivering Fuel Eco Tech, logistics, healthcare products, and premium coffee across Uganda, East Africa, and international markets.",
     secondaryHref: "/about",
-    secondaryLabel: "About Vitorra",
     watermark: "Vitorra",
     media: { type: "image", src: "/hero/overview.png", priority: true },
   },
   {
     id: "fet",
-    tab: "Fuel Eco Tech",
-    eyebrow: "Fuel Eco Technology",
-    headline: { lead: "Proven fuel savings.\nMeasurable results." },
-    body: "Reducing fuel consumption and extending engine life for commercial fleets across East Africa.",
     secondaryHref: `/products/${PRODUCTS.FET}`,
-    secondaryLabel: "Explore Fuel Eco Tech",
     watermark: "FET",
     media: { type: "video", src: "/videos/fet.mp4", poster: "/videos/fet-poster.jpg" },
   },
   {
     id: "seal",
-    tab: "SEAL",
-    eyebrow: "SEAL Wound Spray",
-    headline: { lead: "Stop bleeding fast.\nSave lives." },
-    body: "Clinical-grade hemostatic wound control for hospitals, emergency responders, and military procurement.",
     secondaryHref: `/products/${PRODUCTS.SEAL}`,
-    secondaryLabel: "Explore SEAL",
     watermark: "SEAL",
     media: { type: "image", src: "/hero/seal.png" },
   },
   {
     id: "coffee",
-    tab: "Coffee",
-    eyebrow: "Vitorra Coffee",
-    headline: { lead: "Premium Ugandan coffee.\nFarm to cup." },
-    body: "Traceable, responsibly sourced coffee for consumers, hospitality businesses, and international importers.",
     secondaryHref: `/products/${PRODUCTS.COFFEE}`,
-    secondaryLabel: "Explore Coffee",
     watermark: "Coffee",
     media: { type: "image", src: "/hero/coffee.png" },
   },
   {
     id: "logistics",
-    tab: "Logistics",
-    eyebrow: "Logistics Services",
-    headline: { lead: "Move goods\nwith confidence." },
-    body: "End-to-end freight, warehousing, customs clearance, and supply chain management across Uganda, East Africa, and beyond.",
     secondaryHref: `/products/${PRODUCTS.LOGISTICS}`,
-    secondaryLabel: "Explore Logistics",
     watermark: "Logistics",
     media: { type: "image", src: "/hero/logistics.png" },
   },
@@ -107,6 +77,7 @@ const SECTORS: Sector[] = [
 const SLIDE_DURATION = 6500;
 
 export default function Hero() {
+  const t = useTranslations("hero");
   const [index, setIndex] = useState(0);
   const [muted, setMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -230,12 +201,12 @@ export default function Hero() {
       <div className="absolute inset-0 z-10 flex flex-col justify-end">
         <div className="max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 pt-36 pb-10 md:pb-12">
           {/* keyed by index so the entrance animation replays on each switch */}
-          <HeroContent key={active.id} sector={active} />
+          <HeroContent key={active.id} sector={active} t={t} />
 
           {/* ── Sector rail (persistent + progress indicators) ──────────── */}
           <div
             role="tablist"
-            aria-label="Vitorra business sectors"
+            aria-label={t("sectorsLabel")}
             className="mt-10 md:mt-12 flex items-center gap-1 sm:gap-2 overflow-x-auto overflow-y-hidden no-scrollbar pt-5"
             style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}
           >
@@ -250,7 +221,7 @@ export default function Hero() {
                   className="relative shrink-0 px-3 sm:px-4 py-2 text-sm font-semibold transition-colors duration-200 whitespace-nowrap"
                   style={{ color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.55)", letterSpacing: "-0.01em" }}
                 >
-                  {s.tab}
+                  {t(`sectors.${s.id}.tab`)}
                   {/* progress track + gold fill (auto-advance indicator) */}
                   <span
                     aria-hidden="true"
@@ -274,7 +245,7 @@ export default function Hero() {
       {activeIsVideo && (
         <button
           onClick={() => setMuted((m) => !m)}
-          aria-label={muted ? "Unmute video" : "Mute video"}
+          aria-label={muted ? t("unmute") : t("mute")}
           className="absolute top-28 right-4 md:right-8 z-20 flex items-center justify-center w-9 h-9 rounded-full transition-all hover:scale-105"
           style={{ background: "rgba(255,255,255,0.15)", color: "#FFFFFF", backdropFilter: "blur(8px)" }}
         >
@@ -287,11 +258,20 @@ export default function Hero() {
 
 /* ─── Foreground content ──────────────────────────────────────────────────── */
 
-function HeroContent({ sector }: { sector: Sector }) {
+function HeroContent({
+  sector,
+  t,
+}: {
+  sector: Sector;
+  t: ReturnType<typeof useTranslations>;
+}) {
   const anim = (n: number) => `hero-enter hero-enter-${n}`;
+  const accent = t(`sectors.${sector.id}.headlineAccent`);
   return (
     <div className="max-w-3xl">
-      <span className={cn("eyebrow-light mb-5 inline-flex", anim(1))}>{sector.eyebrow}</span>
+      <span className={cn("eyebrow-light mb-5 inline-flex", anim(1))}>
+        {t(`sectors.${sector.id}.eyebrow`)}
+      </span>
 
       <h1
         className={cn("mb-5", anim(2))}
@@ -305,11 +285,11 @@ function HeroContent({ sector }: { sector: Sector }) {
           whiteSpace: "pre-line",
         }}
       >
-        {sector.headline.lead}
-        {sector.headline.accent && (
+        {t(`sectors.${sector.id}.headlineLead`)}
+        {accent && (
           <>
             {" "}
-            <span className="text-gold-shimmer">{sector.headline.accent}</span>
+            <span className="text-gold-shimmer">{accent}</span>
           </>
         )}
       </h1>
@@ -318,16 +298,16 @@ function HeroContent({ sector }: { sector: Sector }) {
         className={cn("mb-8 max-w-xl", anim(3))}
         style={{ fontSize: "16px", lineHeight: 1.7, color: "rgba(255,255,255,0.65)" }}
       >
-        {sector.body}
+        {t(`sectors.${sector.id}.body`)}
       </p>
 
       <div className={cn("flex flex-col sm:flex-row gap-3", anim(4))}>
-        <Link href={PRIMARY_CTA.href} className="btn-primary">
-          {PRIMARY_CTA.label}
+        <Link href="/enquire" className="btn-primary">
+          {t("primaryCta")}
           <ArrowRight className="w-4 h-4" />
         </Link>
         <Link href={sector.secondaryHref} className="btn-ghost-dark">
-          {sector.secondaryLabel}
+          {t(`sectors.${sector.id}.secondaryLabel`)}
           <ArrowUpRight className="w-4 h-4" />
         </Link>
       </div>

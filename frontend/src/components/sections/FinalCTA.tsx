@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
 
@@ -129,16 +130,27 @@ interface FinalCTAProps {
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
 export default function FinalCTA({
-  eyebrow        = "Get Started",
-  titleLead      = "Ready to work with",
-  titleAccent    = "Vitorra?",
-  body           = "Whether you need a fuel savings assessment, a logistics quote, or premium Ugandan coffee — our team responds within 24 hours.",
-  primaryLabel   = "Request a Quote",
+  eyebrow,
+  titleLead,
+  titleAccent,
+  body,
+  primaryLabel,
   primaryHref    = "/enquire",
-  secondaryLabel = "Contact Us",
+  secondaryLabel,
   secondaryHref  = "/contact",
-  caption        = "Uganda · East Africa · International  ·  Typical reply within 24 hours",
+  caption,
 }: FinalCTAProps = {}) {
+  // Defaults come from translations; explicit props (passed by other pages)
+  // override them with their own already-translated copy.
+  const t = useTranslations("finalCta");
+  const _eyebrow        = eyebrow        ?? t("eyebrow");
+  const _titleLead      = titleLead      ?? t("titleLead");
+  const _titleAccent    = titleAccent    ?? t("titleAccent");
+  const _body           = body           ?? t("body");
+  const _primaryLabel   = primaryLabel   ?? t("primaryLabel");
+  const _secondaryLabel = secondaryLabel ?? t("secondaryLabel");
+  const _caption        = caption        ?? t("caption");
+
   return (
     <section
       className="relative overflow-hidden"
@@ -271,7 +283,7 @@ export default function FinalCTA({
         <Reveal>
           {/* Eyebrow — gold dot + charcoal text (standard eyebrow class) */}
           <span className="eyebrow justify-center mb-5 inline-flex">
-            {eyebrow}
+            {_eyebrow}
           </span>
 
           {/* Headline — dark Cormorant with gold gradient accent word */}
@@ -286,8 +298,8 @@ export default function FinalCTA({
               color:         "#1E1E1E",
             }}
           >
-            {titleLead}{" "}
-            <span className="text-gold-gradient">{titleAccent}</span>
+            {_titleLead}{" "}
+            <span className="text-gold-gradient">{_titleAccent}</span>
           </h2>
 
           {/* Body */}
@@ -299,18 +311,18 @@ export default function FinalCTA({
               color:      "#666666",
             }}
           >
-            {body}
+            {_body}
           </p>
 
           {/* CTAs — primary gold / secondary charcoal outline */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <MagneticButton href={primaryHref}>{primaryLabel}</MagneticButton>
+            <MagneticButton href={primaryHref}>{_primaryLabel}</MagneticButton>
             {/* btn-secondary: white bg + charcoal border — correct on light canvas */}
             <Link
               href={secondaryHref}
               className="btn-secondary inline-flex items-center gap-2"
             >
-              {secondaryLabel}
+              {_secondaryLabel}
             </Link>
           </div>
 
@@ -325,7 +337,7 @@ export default function FinalCTA({
               color:         "rgba(0,0,0,0.35)",
             }}
           >
-            {caption}
+            {_caption}
           </p>
         </Reveal>
       </div>

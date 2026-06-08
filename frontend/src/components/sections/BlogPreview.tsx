@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { ArrowRight, Calendar } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
@@ -18,7 +19,7 @@ function formatDate(iso: string) {
 }
 
 /* ── Live post card (rendered when backend is running) ───────────────────── */
-function PostCard({ post, index }: { post: BlogPost; index: number }) {
+function PostCard({ post, index, readLabel }: { post: BlogPost; index: number; readLabel: string }) {
   return (
     <Reveal delay={index * 80}>
       <Link
@@ -81,7 +82,7 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
             </p>
           )}
           <span className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto" style={{ color: "#1E1E1E" }}>
-            Read article <ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
+            {readLabel} <ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
           </span>
         </div>
       </Link>
@@ -90,25 +91,9 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
 }
 
 /* ── Placeholder cards (backend not yet live / no posts published) ────────── */
-const PLACEHOLDERS = [
-  {
-    tag: "Fuel Eco Tech",
-    title: "How FET is reducing fleet costs across East Africa",
-    body: "Fleet operators across Uganda are seeing measurable drops in diesel spend after installation — here's what the data shows.",
-  },
-  {
-    tag: "Industry Insights",
-    title: "The true cost of fuel waste in commercial transport",
-    body: "A practical breakdown of why diesel engines lose efficiency over time and what modern optimisation technology does about it.",
-  },
-  {
-    tag: "Vitorra Coffee",
-    title: "Tracing quality from Uganda's farms to international buyers",
-    body: "How our sourcing and export process ensures every bag of Vitorra Coffee meets the consistency demands of wholesale markets.",
-  },
-];
+type Placeholder = { tag: string; title: string; body: string };
 
-function PlaceholderCard({ item, index }: { item: typeof PLACEHOLDERS[0]; index: number }) {
+function PlaceholderCard({ item, index, soonLabel }: { item: Placeholder; index: number; soonLabel: string }) {
   return (
     <Reveal delay={index * 80}>
       <div
@@ -160,7 +145,7 @@ function PlaceholderCard({ item, index }: { item: typeof PLACEHOLDERS[0]; index:
             className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto"
             style={{ color: "#BBBBBB" }}
           >
-            Publishing soon
+            {soonLabel}
           </span>
         </div>
       </div>
@@ -171,6 +156,7 @@ function PlaceholderCard({ item, index }: { item: typeof PLACEHOLDERS[0]; index:
 /* ── Section ─────────────────────────────────────────────────────────────── */
 
 export default async function BlogPreview() {
+  const t = await getTranslations("blogPreview");
   let posts: BlogPost[] = [];
   try {
     const res = await getBlogPosts(1);
@@ -179,6 +165,12 @@ export default async function BlogPreview() {
     posts = [];
   }
 
+  const placeholders: Placeholder[] = [
+    { tag: t("placeholder1Tag"), title: t("placeholder1Title"), body: t("placeholder1Body") },
+    { tag: t("placeholder2Tag"), title: t("placeholder2Title"), body: t("placeholder2Body") },
+    { tag: t("placeholder3Tag"), title: t("placeholder3Title"), body: t("placeholder3Body") },
+  ];
+
   return (
     <section className="section-padding" style={{ backgroundColor: "#FAFAF8" }}>
       <div className="container-max">
@@ -186,7 +178,7 @@ export default async function BlogPreview() {
         <Reveal className="mb-12 lg:mb-14">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-10">
             <div>
-              <span className="eyebrow block mb-3">Blog &amp; Insights</span>
+              <span className="eyebrow block mb-3">{t("eyebrow")}</span>
               <h2
                 style={{
                   fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -195,7 +187,7 @@ export default async function BlogPreview() {
                   lineHeight: 1.12, color: "#1E1E1E",
                 }}
               >
-                Ideas from the field.
+                {t("title")}
               </h2>
             </div>
             <Link
@@ -203,7 +195,7 @@ export default async function BlogPreview() {
               className="inline-flex items-center gap-1.5 text-sm font-semibold shrink-0 pb-1"
               style={{ color: "#7A6020" }}
             >
-              View all articles <ArrowRight className="w-3.5 h-3.5" />
+              {t("viewAll")} <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </Reveal>
@@ -211,8 +203,8 @@ export default async function BlogPreview() {
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {posts.length > 0
-            ? posts.map((p, i) => <PostCard key={p.id} post={p} index={i} />)
-            : PLACEHOLDERS.map((p, i) => <PlaceholderCard key={p.title} item={p} index={i} />)
+            ? posts.map((p, i) => <PostCard key={p.id} post={p} index={i} readLabel={t("readArticle")} />)
+            : placeholders.map((p, i) => <PlaceholderCard key={p.title} item={p} index={i} soonLabel={t("publishingSoon")} />)
           }
         </div>
       </div>

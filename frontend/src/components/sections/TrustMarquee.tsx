@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { MapPin, Layers, BadgeCheck, Building2, Clock } from "lucide-react";
 
 /* ─── Trust marquee ───────────────────────────────────────────────────────────
@@ -14,12 +15,12 @@ import { MapPin, Layers, BadgeCheck, Building2, Clock } from "lucide-react";
    ─────────────────────────────────────────────────────────────────────────── */
 
 const ITEMS = [
-  { icon: MapPin, label: "Uganda · East Africa · International" },
-  { icon: Layers, label: "4 Product Lines" },
-  { icon: BadgeCheck, label: "Verified Certifications" },
-  { icon: Building2, label: "B2B & B2C" },
-  { icon: Clock, label: "24-Hour Response" },
-];
+  { icon: MapPin, key: "location" },
+  { icon: Layers, key: "productLines" },
+  { icon: BadgeCheck, key: "certifications" },
+  { icon: Building2, key: "b2bB2c" },
+  { icon: Clock, key: "response" },
+] as const;
 
 function TrustItem({ icon: Icon, label }: { icon: typeof MapPin; label: string }) {
   return (
@@ -42,10 +43,11 @@ function TrustItem({ icon: Icon, label }: { icon: typeof MapPin; label: string }
 }
 
 export default function TrustMarquee() {
+  const t = useTranslations("trustMarquee");
   return (
     <div
       className="marquee-mask bg-gold-strip relative overflow-hidden py-3.5"
-      aria-label="Vitorra credentials"
+      aria-label={t("ariaLabel")}
     >
       {/* Soft edge fades — items appear/disappear gracefully at the rims */}
       <div
@@ -64,7 +66,7 @@ export default function TrustMarquee() {
         {[0, 1].map((copy) => (
           <div key={copy} className="flex items-center shrink-0" aria-hidden={copy === 1}>
             {ITEMS.map((item) => (
-              <TrustItem key={`${copy}-${item.label}`} icon={item.icon} label={item.label} />
+              <TrustItem key={`${copy}-${item.key}`} icon={item.icon} label={t(item.key)} />
             ))}
           </div>
         ))}

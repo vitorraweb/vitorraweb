@@ -1,4 +1,7 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -17,80 +20,81 @@ import {
   Truck, Tractor, Bus, Ship, Factory, Building2,
 } from "lucide-react";
 
-/* ─── Data ──────────────────────────────────────────────────────────────── */
+/* ─── Metadata ──────────────────────────────────────────────────────────── */
 
-const certBadges = [
-  { code: "ISO 9001:2015",    label: "Quality Management"   },
-  { code: "ISO 14001:2015",   label: "Environmental"        },
-  { code: "ISO 27001",        label: "Information Security" },
-  { code: "AVL Technologies", label: "Lab Validated"        },
-  { code: "Zurich Insurance", label: "Product Liability"    },
-  { code: "qm-solutions",     label: "German Certified"     },
-];
-
-const fetProofPoints = [
-  "Patented swirl chamber — improves oxygen integration on every cycle",
-  "Independently validated by AVL Technologies automotive lab",
-  "ISO 9001 · ISO 14001 · ISO 27001 certified · Zurich Product Liability",
-];
-
-const otherProducts = [
-  {
-    label:       "SEAL Wound Spray",
-    badge:       "Medical · B2B",
-    image:       "/products/seal/trauma-tray.png",
-    tagline:     "Stop bleeding fast. Save lives.",
-    description: "Clinically validated hemostatic wound spray for hospitals, emergency responders, NGOs, and military procurement.",
-    href:        "/products/seal-wound-spray",
-    cta:         "Request Product Information",
-  },
-  {
-    label:       "Vitorra Coffee",
-    badge:       "B2B · B2C",
-    image:       "/products/coffee/lifestyle.png",
-    tagline:     "Premium Ugandan coffee. Farm to cup.",
-    description: "Traceable, responsibly sourced coffee for consumers, hospitality businesses, and international importers.",
-    href:        "/products/coffee",
-    cta:         "Shop Coffee",
-  },
-  {
-    label:       "Logistics Services",
-    badge:       "B2B · Enterprise",
-    image:       "/products/logistics/truck-day.png",
-    tagline:     "Move goods with confidence.",
-    description: "End-to-end freight, warehousing, customs clearance, and supply chain management across Uganda and East Africa.",
-    href:        "/products/logistics",
-    cta:         "Request a Logistics Quote",
-  },
-];
-
-const sectors = [
-  { icon: Truck,     label: "Fleet Operators"         },
-  { icon: Tractor,   label: "Agriculture"              },
-  { icon: Bus,       label: "Public Transport"         },
-  { icon: Factory,   label: "Construction & Industry"  },
-  { icon: Ship,      label: "Marine"                   },
-  { icon: Building2, label: "Healthcare & NGOs"        },
-];
-
-const whyPoints = [
-  {
-    headline: "Performance you can measure",
-    body: "Every FET installation is benchmarked before and after — so the savings are in data, not marketing copy.",
-  },
-  {
-    headline: "Certified at every level",
-    body: "ISO 9001 · 14001 · 27001, Zurich-insured, AVL-validated. Our products carry independent international certification.",
-  },
-  {
-    headline: "East Africa, built for scale",
-    body: "Serving Uganda and six markets across the region — with the infrastructure and local knowledge to grow alongside you.",
-  },
-];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.home" });
+  return { title: { absolute: t("title") }, description: t("description") };
+}
 
 /* ─── Page ──────────────────────────────────────────────────────────────── */
 
 export default function HomePage() {
+  const t = useTranslations("home");
+  const tp = useTranslations("products");
+
+  /* Certification codes are brand terms (kept literal); labels translate. */
+  const certBadges = [
+    { code: "ISO 9001:2015",    label: t("authority.qualityManagement")   },
+    { code: "ISO 14001:2015",   label: t("authority.environmental")        },
+    { code: "ISO 27001",        label: t("authority.informationSecurity")  },
+    { code: "AVL Technologies", label: t("authority.labValidated")         },
+    { code: "Zurich Insurance", label: t("authority.productLiability")     },
+    { code: "qm-solutions",     label: t("authority.germanCertified")      },
+  ];
+
+  const fetProofPoints = [t("fet.proof1"), t("fet.proof2"), t("fet.proof3")];
+
+  const otherProducts = [
+    {
+      label:       tp("seal.name"),
+      badge:       t("suite.sealBadge"),
+      image:       "/products/seal/trauma-tray.png",
+      tagline:     t("suite.sealTagline"),
+      description: t("suite.sealDescription"),
+      href:        "/products/seal-wound-spray",
+      cta:         t("suite.sealCta"),
+    },
+    {
+      label:       tp("coffee.name"),
+      badge:       t("suite.coffeeBadge"),
+      image:       "/products/coffee/lifestyle.png",
+      tagline:     t("suite.coffeeTagline"),
+      description: t("suite.coffeeDescription"),
+      href:        "/products/coffee",
+      cta:         t("suite.coffeeCta"),
+    },
+    {
+      label:       tp("logistics.name"),
+      badge:       t("suite.logisticsBadge"),
+      image:       "/products/logistics/truck-day.png",
+      tagline:     t("suite.logisticsTagline"),
+      description: t("suite.logisticsDescription"),
+      href:        "/products/logistics",
+      cta:         t("suite.logisticsCta"),
+    },
+  ];
+
+  const sectors = [
+    { icon: Truck,     label: t("sectors.fleetOperators")  },
+    { icon: Tractor,   label: t("sectors.agriculture")     },
+    { icon: Bus,       label: t("sectors.publicTransport") },
+    { icon: Factory,   label: t("sectors.construction")    },
+    { icon: Ship,      label: t("sectors.marine")          },
+    { icon: Building2, label: t("sectors.healthcareNgos")  },
+  ];
+
+  const whyPoints = [
+    { headline: t("why.point1Headline"), body: t("why.point1Body") },
+    { headline: t("why.point2Headline"), body: t("why.point2Body") },
+    { headline: t("why.point3Headline"), body: t("why.point3Body") },
+  ];
+
   return (
     <>
       <Header />
@@ -174,7 +178,7 @@ export default function HomePage() {
 
                 {/* Eyebrow — charcoal + gold dot (correct for light bg) */}
                 <span className="eyebrow mb-4 inline-flex">
-                  Independent certifications
+                  {t("authority.eyebrow")}
                 </span>
 
                 <h2
@@ -188,8 +192,8 @@ export default function HomePage() {
                     maxWidth:      "380px",
                   }}
                 >
-                  Independently certified.{" "}
-                  <span className="text-gold-gradient">Internationally proven.</span>
+                  {t("authority.titleLead")}{" "}
+                  <span className="text-gold-gradient">{t("authority.titleAccent")}</span>
                 </h2>
 
                 <p
@@ -201,8 +205,7 @@ export default function HomePage() {
                     maxWidth:   "340px",
                   }}
                 >
-                  Every certification is externally issued — not self-declared.
-                  FET has been verified by the institutions that the industry trusts.
+                  {t("authority.body")}
                 </p>
 
                 <Link
@@ -210,7 +213,7 @@ export default function HomePage() {
                   className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold group"
                   style={{ color: "#7A6020" }}
                 >
-                  View all certifications &amp; test reports
+                  {t("authority.cta")}
                   <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Link>
               </Reveal>
@@ -225,7 +228,7 @@ export default function HomePage() {
               }}
             >
               <Reveal className="mb-5">
-                <span className="eyebrow block">Verified by</span>
+                <span className="eyebrow block">{t("authority.verifiedBy")}</span>
               </Reveal>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0.5">
@@ -292,8 +295,7 @@ export default function HomePage() {
                     }}
                   />
                   <p style={{ fontSize: "12px", color: "#AAAAAA", lineHeight: 1.55 }}>
-                    All certifications are externally issued and independently audited.
-                    No self-certification.
+                    {t("authority.footnote")}
                   </p>
                 </div>
               </Reveal>
@@ -328,7 +330,7 @@ export default function HomePage() {
             {/* Left: content */}
             <Reveal>
               <span className="eyebrow-light mb-5 inline-flex">
-                Featured product · Fuel Eco Tech
+                {t("fet.eyebrow")}
               </span>
               <h2
                 style={{
@@ -341,17 +343,15 @@ export default function HomePage() {
                   maxWidth:      "520px",
                 }}
               >
-                Lower fuel costs.{" "}
-                <span className="text-gold-gradient">Proven in the lab.</span>
+                {t("fet.titleLead")}{" "}
+                <span className="text-gold-gradient">{t("fet.titleAccent")}</span>
               </h2>
 
               <p
                 className="mt-6 mb-8 max-w-[440px]"
                 style={{ fontSize: "16px", lineHeight: 1.8, color: "rgba(255,255,255,0.55)" }}
               >
-                FET is a patented, ISO-certified fuel optimisation system —
-                validated by AVL Technologies and trusted by fleet operators
-                across East Africa. No engine modification. Measurable ROI.
+                {t("fet.body")}
               </p>
 
               <ul className="flex flex-col gap-3.5 mb-10">
@@ -367,7 +367,7 @@ export default function HomePage() {
 
               {/* Quick-fact pills */}
               <div className="flex flex-wrap gap-2 mb-10">
-                {["Fitted in under 1 hour", "No engine modification", "1-year warranty"].map((f) => (
+                {[t("fet.pill1"), t("fet.pill2"), t("fet.pill3")].map((f) => (
                   <span
                     key={f}
                     style={{
@@ -387,11 +387,11 @@ export default function HomePage() {
 
               <div className="flex flex-wrap gap-3">
                 <Link href="/enquire?sector=FET" className="btn-primary">
-                  Request a Fuel Savings Assessment
+                  {t("fet.ctaPrimary")}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/products/fuel-eco-tech" className="btn-ghost-dark">
-                  Learn more
+                  {t("fet.ctaSecondary")}
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -420,10 +420,10 @@ export default function HomePage() {
                   style={{ boxShadow: "0 12px 40px rgba(0,0,0,0.18)" }}
                 >
                   <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#7A6020", marginBottom: "2px" }}>
-                    AVL Technologies Validated
+                    {t("fet.badgeAvlLabel")}
                   </div>
                   <div style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "15px", fontWeight: 600, color: "#1E1E1E" }}>
-                    Lab-proven performance
+                    {t("fet.badgeAvlValue")}
                   </div>
                 </div>
 
@@ -433,7 +433,7 @@ export default function HomePage() {
                   style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.14)" }}
                 >
                   <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#7A6020", marginBottom: "2px" }}>
-                    Certified
+                    {t("fet.badgeCertified")}
                   </div>
                   <div style={{ fontSize: "13px", fontWeight: 600, color: "#1E1E1E" }}>
                     ISO 9001 · 14001 · 27001
@@ -451,7 +451,7 @@ export default function HomePage() {
         <section className="section-padding" style={{ backgroundColor: "#FFFFFF" }}>
           <div className="container-max">
             <Reveal className="mb-12 lg:mb-16">
-              <span className="eyebrow block mb-3">Our portfolio</span>
+              <span className="eyebrow block mb-3">{t("suite.eyebrow")}</span>
               <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-10">
                 <h2
                   style={{
@@ -463,14 +463,14 @@ export default function HomePage() {
                     color:         "#1E1E1E",
                   }}
                 >
-                  More from Vitorra.
+                  {t("suite.title")}
                 </h2>
                 <Link
                   href="/enquire"
                   className="inline-flex items-center gap-1.5 text-sm font-semibold shrink-0 pb-1"
                   style={{ color: "#7A6020" }}
                 >
-                  Request a quote for any product
+                  {t("suite.cta")}
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -566,7 +566,7 @@ export default function HomePage() {
         <section className="section-padding-sm" style={{ backgroundColor: "#F2F2F2" }}>
           <div className="container-max text-center">
             <Reveal>
-              <span className="eyebrow block mb-5">Who we serve</span>
+              <span className="eyebrow block mb-5">{t("sectors.eyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -576,8 +576,8 @@ export default function HomePage() {
                   lineHeight:    1.15,
                 }}
               >
-                <span style={{ color: "#1E1E1E" }}>Serving businesses </span>
-                <span style={{ color: "#AAAAAA" }}>across every sector.</span>
+                <span style={{ color: "#1E1E1E" }}>{t("sectors.titleLead")}</span>
+                <span style={{ color: "#AAAAAA" }}>{t("sectors.titleAccent")}</span>
               </h2>
             </Reveal>
 
@@ -632,7 +632,7 @@ export default function HomePage() {
 
           <div className="container-max relative z-10">
             <Reveal className="text-center mb-14 md:mb-16">
-              <span className="eyebrow-light mb-4 inline-flex">Why Vitorra</span>
+              <span className="eyebrow-light mb-4 inline-flex">{t("why.eyebrow")}</span>
               <h2
                 className="max-w-2xl mx-auto"
                 style={{
@@ -644,16 +644,14 @@ export default function HomePage() {
                   color:         "#FFFFFF",
                 }}
               >
-                Innovative products.{" "}
-                <span style={{ color: "#C5B27A" }}>Dependable solutions.</span>
+                {t("why.titleLead")}{" "}
+                <span style={{ color: "#C5B27A" }}>{t("why.titleAccent")}</span>
               </h2>
               <p
                 className="mt-5 max-w-lg mx-auto"
                 style={{ fontSize: "16px", lineHeight: 1.78, color: "rgba(255,255,255,0.42)" }}
               >
-                From fuel efficiency to emergency medicine, premium coffee to
-                end-to-end logistics — Vitorra serves businesses that demand
-                proven performance, not promises.
+                {t("why.body")}
               </p>
             </Reveal>
 
@@ -694,7 +692,7 @@ export default function HomePage() {
 
             <Reveal className="mt-10 text-center">
               <Link href="/about" className="btn-ghost-dark inline-flex">
-                About Vitorra
+                {t("why.cta")}
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
             </Reveal>

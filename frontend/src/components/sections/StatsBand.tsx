@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 
 /* ─── Digit-scramble hook ────────────────────────────────────────────────────
@@ -73,32 +74,15 @@ function useScramble(numeric: string, delayMs = 0) {
 
 /* ─── Data ───────────────────────────────────────────────────────────────── */
 
+/* Numbers + suffixes are structural; labels/sub-labels come from translations. */
 const STATS = [
-  {
-    numeric: "4",
-    suffix:  "",
-    label:   "Product lines",
-    sub:     "Fuel · Medical · Coffee · Logistics",
-  },
-  {
-    numeric: "6",
-    suffix:  "+",
-    label:   "Markets served",
-    sub:     "Uganda, East Africa & international",
-  },
-  {
-    numeric: "3",
-    suffix:  "×",
-    label:   "ISO certified",
-    sub:     "Quality · Environment · Security",
-  },
-  {
-    numeric: "24",
-    suffix:  "h",
-    label:   "Response time",
-    sub:     "Guaranteed first-reply commitment",
-  },
-];
+  { numeric: "4",  suffix: "",  labelKey: "stat1Label", subKey: "stat1Sub" },
+  { numeric: "6",  suffix: "+", labelKey: "stat2Label", subKey: "stat2Sub" },
+  { numeric: "3",  suffix: "×", labelKey: "stat3Label", subKey: "stat3Sub" },
+  { numeric: "24", suffix: "h", labelKey: "stat4Label", subKey: "stat4Sub" },
+] as const;
+
+type StatView = { numeric: string; suffix: string; label: string; sub: string };
 
 /* ─── Individual stat card ───────────────────────────────────────────────── */
 
@@ -106,7 +90,7 @@ function StatCard({
   stat,
   index,
 }: {
-  stat: (typeof STATS)[0];
+  stat: StatView;
   index: number;
 }) {
   const { output, locked, nodeRef } = useScramble(
@@ -205,6 +189,7 @@ function StatCard({
 /* ─── Section ─────────────────────────────────────────────────────────────── */
 
 export default function StatsBand() {
+  const t = useTranslations("statsBand");
   return (
     <section
       className="section-padding relative overflow-hidden"
@@ -234,7 +219,7 @@ export default function StatsBand() {
       <div className="container-max relative z-10">
         {/* Header */}
         <Reveal className="text-center mb-12 md:mb-16">
-          <span className="eyebrow block mb-3">By the numbers</span>
+          <span className="eyebrow block mb-3">{t("eyebrow")}</span>
           <h2
             style={{
               fontFamily:
@@ -246,15 +231,19 @@ export default function StatsBand() {
               color: "#1E1E1E",
             }}
           >
-            The infrastructure behind{" "}
-            <span style={{ color: "#C5B27A" }}>East African business.</span>
+            {t("titleLead")}{" "}
+            <span style={{ color: "#C5B27A" }}>{t("titleAccent")}</span>
           </h2>
         </Reveal>
 
         {/* Card grid — 1 col mobile · 2 col tablet · 4 col desktop */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
           {STATS.map((s, i) => (
-            <StatCard key={s.label} stat={s} index={i} />
+            <StatCard
+              key={s.labelKey}
+              stat={{ numeric: s.numeric, suffix: s.suffix, label: t(s.labelKey), sub: t(s.subKey) }}
+              index={i}
+            />
           ))}
         </div>
       </div>
