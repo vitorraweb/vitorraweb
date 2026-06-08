@@ -11,12 +11,22 @@ type Status = "draft" | "published";
 type Form = {
   title: string; slug: string; excerpt: string; content: string;
   cover_image: string; seo_title: string; seo_description: string; status: Status;
+  // Swahili translation (optional). Cleared = no translation; the public /sw
+  // blog falls back to the English fields above per-field.
+  sw_title: string; sw_excerpt: string; sw_content: string;
+  sw_seo_title: string; sw_seo_description: string;
 };
 
-type ApiPost = Partial<Record<keyof Form, string | null>>;
+type ApiTranslation = {
+  locale: string;
+  title?: string | null; excerpt?: string | null; content?: string | null;
+  seo_title?: string | null; seo_description?: string | null;
+};
+type ApiPost = Partial<Record<keyof Form, string | null>> & { translations?: ApiTranslation[] };
 
 const EMPTY: Form = {
   title: "", slug: "", excerpt: "", content: "", cover_image: "", seo_title: "", seo_description: "", status: "draft",
+  sw_title: "", sw_excerpt: "", sw_content: "", sw_seo_title: "", sw_seo_description: "",
 };
 
 function slugify(s: string): string {
@@ -38,10 +48,13 @@ export default function BlogEditor({ postId }: { postId?: number }) {
     apiAdmin<{ data: ApiPost }>(`/admin/blog/posts/${postId}`)
       .then((res) => {
         const p = res.data;
+        const sw = p.translations?.find((t) => t.locale === "sw");
         setForm({
           title: p.title ?? "", slug: p.slug ?? "", excerpt: p.excerpt ?? "", content: p.content ?? "",
           cover_image: p.cover_image ?? "", seo_title: p.seo_title ?? "", seo_description: p.seo_description ?? "",
           status: (p.status as Status) ?? "draft",
+          sw_title: sw?.title ?? "", sw_excerpt: sw?.excerpt ?? "", sw_content: sw?.content ?? "",
+          sw_seo_title: sw?.seo_title ?? "", sw_seo_description: sw?.seo_description ?? "",
         });
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"))
@@ -53,7 +66,17 @@ export default function BlogEditor({ postId }: { postId?: number }) {
   const save = async (status: Status) => {
     if (!form.title.trim() || !form.content.trim()) { setError("Title and content are required."); return; }
     setSaving(true); setError("");
-    const payload = { ...form, status };
+    const payload = {
+      title: form.title, slug: form.slug, excerpt: form.excerpt, content: form.content,
+      cover_image: form.cover_image, seo_title: form.seo_title, seo_description: form.seo_description,
+      status,
+      translations: {
+        sw: {
+          title: form.sw_title, excerpt: form.sw_excerpt, content: form.sw_content,
+          seo_title: form.sw_seo_title, seo_description: form.sw_seo_description,
+        },
+      },
+    };
     try {
       if (postId) await apiAdmin(`/admin/blog/posts/${postId}`, { method: "PATCH", body: JSON.stringify(payload) });
       else await apiAdmin(`/admin/blog/posts`, { method: "POST", body: JSON.stringify(payload) });
@@ -120,6 +143,34 @@ export default function BlogEditor({ postId }: { postId?: number }) {
             </Field>
             <Field label="SEO description">
               <textarea value={form.seo_description} onChange={(e) => set("seo_description", e.target.value)} className={`${inputCls} min-h-16`} style={inputStyle} />
+            </Field>
+          </div>
+        </details>
+
+        {/* Swahili translation — what /sw/blog serves. Any field left blank
+            falls back to the English version above for that field. */}
+        <details className="rounded-xl border" style={{ borderColor: "rgba(197,178,122,0.4)", background: "rgba(197,178,122,0.05)" }}>
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold" style={{ color: "#7A6020" }}>
+            Swahili translation (optional)
+          </summary>
+          <div className="px-4 pb-4 space-y-4">
+            <p className="text-xs" style={{ color: "#999" }}>
+              Shown to visitors on the Swahili (/sw) site. Leave a field blank to fall back to the English version above.
+            </p>
+            <Field label="Title — Swahili">
+              <input value={form.sw_title} onChange={(e) => set("sw_title", e.target.value)} placeholder="Kichwa cha makala…" className={inputCls} style={inputStyle} />
+            </Field>
+            <Field label="Excerpt — Swahili">
+              <textarea value={form.sw_excerpt} onChange={(e) => set("sw_excerpt", e.target.value)} placeholder="Muhtasari mfupi…" className={`${inputCls} min-h-16`} style={inputStyle} />
+            </Field>
+            <Field label="Content — Swahili" hint="Markdown supported. Raw HTML is removed automatically for security.">
+              <textarea value={form.sw_content} onChange={(e) => set("sw_content", e.target.value)} placeholder={"# Kichwa\n\nAndika makala yako kwa **Markdown**…"} className={`${inputCls} min-h-80`} style={{ ...inputStyle, fontFamily: "ui-monospace, monospace", lineHeight: 1.6 }} />
+            </Field>
+            <Field label="SEO title — Swahili">
+              <input value={form.sw_seo_title} onChange={(e) => set("sw_seo_title", e.target.value)} className={inputCls} style={inputStyle} />
+            </Field>
+            <Field label="SEO description — Swahili">
+              <textarea value={form.sw_seo_description} onChange={(e) => set("sw_seo_description", e.target.value)} className={`${inputCls} min-h-16`} style={inputStyle} />
             </Field>
           </div>
         </details>

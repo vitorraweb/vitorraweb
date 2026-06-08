@@ -25,28 +25,34 @@ class BlogAdminController extends Controller
         return response()->json($query->paginate(20));
     }
 
-    /** Single post with raw markdown content, for the editor. */
+    /** Single post with raw markdown content + translations, for the editor. */
     public function show(BlogPost $post): JsonResponse
     {
-        $post->load('author:id,name');
+        $post->load('author:id,name', 'translations');
         return response()->json(['data' => $post]);
     }
 
     public function store(Request $request): JsonResponse
     {
         $data = $this->validateData($request);
+        $translations = $data['translations'] ?? [];
+        unset($data['translations']);
+
         $data['user_id'] = $request->user()->id;
         $data['slug'] = $this->uniqueSlug($data['slug'] ?? '' ?: $data['title']);
         $data = $this->applyPublish($data, null);
 
         $post = BlogPost::create($data);
+        $this->syncTranslations($post, $translations);
 
-        return response()->json(['data' => $post], 201);
+        return response()->json(['data' => $post->load('translations')], 201);
     }
 
     public function update(Request $request, BlogPost $post): JsonResponse
     {
         $data = $this->validateData($request);
+        $translations = $data['translations'] ?? null;
+        unset($data['translations']);
 
         if (! empty($data['slug'])) {
             $data['slug'] = $this->uniqueSlug($data['slug'], $post->id);
@@ -57,7 +63,11 @@ class BlogAdminController extends Controller
         $data = $this->applyPublish($data, $post);
         $post->update($data);
 
-        return response()->json(['data' => $post->fresh()]);
+        if ($translations !== null) {
+            $this->syncTranslations($post, $translations);
+        }
+
+        return response()->json(['data' => $post->fresh()->load('translations')]);
     }
 
     public function destroy(BlogPost $post): JsonResponse
@@ -67,6 +77,9 @@ class BlogAdminController extends Controller
     }
 
     /* ── Helpers ──────────────────────────────────────────────────────────── */
+
+    /** Locales (beyond the default English base) that can be authored. */
+    private const TRANSLATABLE_LOCALES = ['sw'];
 
     private function validateData(Request $request): array
     {
@@ -79,7 +92,39 @@ class BlogAdminController extends Controller
             'status'          => ['required', Rule::in(['draft', 'published'])],
             'seo_title'       => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
+
+            // Optional per-locale translations, e.g. translations.sw.{title,…}
+            'translations'                       => ['nullable', 'array'],
+            'translations.*.title'               => ['nullable', 'string', 'max:255'],
+            'translations.*.excerpt'             => ['nullable', 'string', 'max:500'],
+            'translations.*.content'             => ['nullable', 'string'],
+            'translations.*.seo_title'           => ['nullable', 'string', 'max:255'],
+            'translations.*.seo_description'     => ['nullable', 'string', 'max:500'],
         ]);
+    }
+
+    /**
+     * Upsert (or clear) a post's translations. An all-blank locale removes its
+     * row, so clearing the Swahili fields in the editor deletes the translation.
+     */
+    private function syncTranslations(BlogPost $post, array $translations): void
+    {
+        foreach (self::TRANSLATABLE_LOCALES as $locale) {
+            $fields = $translations[$locale] ?? [];
+            $clean = array_filter([
+                'title'           => $fields['title'] ?? null,
+                'excerpt'         => $fields['excerpt'] ?? null,
+                'content'         => $fields['content'] ?? null,
+                'seo_title'       => $fields['seo_title'] ?? null,
+                'seo_description' => $fields['seo_description'] ?? null,
+            ], fn ($v) => filled($v));
+
+            if (empty($clean)) {
+                $post->translations()->where('locale', $locale)->delete();
+            } else {
+                $post->translations()->updateOrCreate(['locale' => $locale], $clean);
+            }
+        }
     }
 
     /** Slugify and guarantee uniqueness (appending -2, -3, … as needed). */
