@@ -160,10 +160,9 @@ export default function Header() {
             </div>
 
             {/* CTA + mobile toggle — right */}
-            <div className="flex items-center gap-3">
-              <div className="hidden md:block">
-                <LanguageSwitcher />
-              </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Language switcher — always visible in the bar at every size */}
+              <LanguageSwitcher />
               {COFFEE_SHOP_ENABLED && <CartButton />}
               <Link
                 href="/account/dashboard"

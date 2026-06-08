@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useLocale } from "next-intl";
+import { Globe } from "lucide-react";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { locales, type AppLocale } from "@/i18n/routing";
 import { SWAHILI_ENABLED } from "@/lib/config";
@@ -31,13 +32,18 @@ export default function LanguageSwitcher({ dark = false }: { dark?: boolean }) {
     <div
       role="group"
       aria-label="Select language"
-      className="inline-flex items-center rounded-full p-1"
+      className="inline-flex items-center rounded-full p-1 pl-2"
       style={{
         background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
         border: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.07)",
         opacity: isPending ? 0.6 : 1,
       }}
     >
+      <Globe
+        className="w-3.5 h-3.5 mr-1 shrink-0"
+        style={{ color: dark ? "rgba(255,255,255,0.55)" : "#7A6020" }}
+        aria-hidden="true"
+      />
       {locales.map((opt) => {
         const isActive = active === opt;
         return (
