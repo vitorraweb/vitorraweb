@@ -25,8 +25,8 @@ const ceo: Member = {
 };
 
 const leadership: Member[] = [
-  { name: "Victor Lojum",      role: "Head of Operations",       file: "Victor Lojum - Head of Operations.jpg" },
   { name: "Joseph Rwabu",      role: "Senior Finance Officer",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
+  { name: "Victor Lojum",      role: "Head of Operations",       file: "Victor Lojum - Head of Operations.jpg" },
   { name: "Thurayya Nakayima", role: "Senior Marketing Officer",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
 ];
 
