@@ -3,6 +3,8 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { ArrowUpRight, Check, Download } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
+import ApproxPrice from "@/components/ui/ApproxPrice";
+import CurrencyConverter from "@/components/ui/CurrencyConverter";
 import { FET_TIERS, formatEur } from "@/lib/fet-pricing";
 
 /* ─── FET Full Line Pricing ───────────────────────────────────────────────────
@@ -116,6 +118,7 @@ export default function FetPricing() {
                   <p className="text-[11px] mt-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>
                     {tr("perDevice")}
                   </p>
+                  <ApproxPrice eur={t.priceEur} className="block text-[12px] mt-2 text-[rgba(197,178,122,0.7)]" />
 
                   <Link
                     href={`/enquire?sector=FET&vehicle=${t.id}`}
@@ -130,6 +133,12 @@ export default function FetPricing() {
             </Reveal>
           ))}
         </div>
+
+        {/* Currency helper — FET prices are quoted in EUR; let buyers see them
+            in UGX/USD and convert any amount. */}
+        <Reveal className="mt-10 max-w-xl">
+          <CurrencyConverter />
+        </Reveal>
 
         {/* What's included */}
         <Reveal className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-3">

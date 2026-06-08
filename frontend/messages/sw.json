@@ -929,6 +929,13 @@
     "retailBody": "Pakiti za nyumbani na ofisini zinaanza hivi karibuni. Tueleze na tutawasiliana nawe kwanza.",
     "retailCta": "Sajili nia yako"
   },
+  "currency": {
+    "converterTitle": "Kibadilishaji cha sarafu",
+    "amountLabel": "Kiasi",
+    "toLabel": "Badilisha kuwa",
+    "swap": "Badilisha sarafu",
+    "indicativeNote": "Viwango vya dalili kwa mwongozo tu. Nukuu yako inathibitishwa kwa sarafu unayopendelea."
+  },
   "blogPage": {
     "eyebrow": "Blogu na Maarifa",
     "title": "Mawazo na maarifa kutoka Vitorra.",

@@ -929,6 +929,13 @@
     "retailBody": "Home & office packs are launching shortly. Tell us and we'll be in touch first.",
     "retailCta": "Register your interest"
   },
+  "currency": {
+    "converterTitle": "Currency converter",
+    "amountLabel": "Amount",
+    "toLabel": "Converts to",
+    "swap": "Swap currencies",
+    "indicativeNote": "Indicative rates for guidance only. Your quote is confirmed in your preferred currency."
+  },
   "blogPage": {
     "eyebrow": "Blog & Insights",
     "title": "Ideas & insights from Vitorra.",

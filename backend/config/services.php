@@ -36,8 +36,10 @@ return [
     ],
 
     'exchange_rate' => [
-        'key'               => env('EXCHANGE_RATE_API_KEY'),
+        'key'                  => env('EXCHANGE_RATE_API_KEY'),
         'fallback_ugx_per_usd' => env('EXCHANGE_RATE_FALLBACK', 3750),
+        // EUR per 1 USD (used for FET's EUR prices). ~0.92 at time of writing.
+        'fallback_eur_per_usd' => env('EXCHANGE_RATE_FALLBACK_EUR', 0.92),
     ],
 
     'flutterwave' => [
