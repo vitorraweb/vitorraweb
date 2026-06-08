@@ -205,12 +205,13 @@ export default async function BlogPreview() {
           </div>
         </Reveal>
 
-        {/* Cards */}
+        {/* Cards — real posts first, topped up with feature cards to fill 3, so
+            the row stays full whether there are 0, 1, or 3 published posts. */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {posts.length > 0
-            ? posts.map((p, i) => <PostCard key={p.id} post={p} index={i} readLabel={t("readArticle")} />)
-            : features.map((f, i) => <FeatureCard key={f.title} item={f} index={i} />)
-          }
+          {[
+            ...posts.map((p, i) => <PostCard key={p.id} post={p} index={i} readLabel={t("readArticle")} />),
+            ...features.slice(posts.length).map((f, i) => <FeatureCard key={f.title} item={f} index={posts.length + i} />),
+          ]}
         </div>
       </div>
     </section>
