@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -10,61 +12,67 @@ import { Faq } from "@/components/ui/faq";
 import { Mountain, QrCode, Sprout, Flame, ShoppingBag, Store, Globe, ArrowRight, ArrowUpRight } from "lucide-react";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
-export const metadata: Metadata = {
-  title: "Vitorra Coffee — Premium Single-Origin Ugandan Coffee",
-  description:
-    "Vitorra Coffee — traceable, single-origin 100% Arabica from Mount Elgon, Uganda. Shop retail, stock your business wholesale, or source at export volumes.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.coffee" });
+  return { title: t("title"), description: t("description") };
+}
 
 const ENQUIRE = "/enquire?sector=COFFEE";
 
-const specs: [string, string][] = [
-  ["Roast",          "Medium · 100% Arabica"],
-  ["Origin",         "Single origin — Mount Elgon, Uganda"],
-  ["Tasting notes",  "Smooth · Balanced · Caramel"],
-  ["Process",        "Washed & Sun Dried"],
-  ["Format",         "Roasted in Uganda · 250g"],
-];
-
-const benefits = [
-  { icon: Mountain, title: "Single origin",        body: "Grown on the rich highland slopes of Mount Elgon, Uganda." },
-  { icon: QrCode,   title: "Traceable, farm to cup", body: "Every bag carries a code to trace your coffee back to its source." },
-  { icon: Sprout,   title: "Ethically sourced",    body: "Grown by Ugandan farmers — supporting local communities and fair practice." },
-  { icon: Flame,    title: "Roasted in Uganda",    body: "Roasted at origin for freshness and the true taste of Uganda." },
-];
-
-const steps = [
-  { n: "01", title: "Grown",     body: "Hand-tended on highland farms around Mount Elgon, Uganda." },
-  { n: "02", title: "Processed", body: "Washed and sun-dried to develop a smooth, balanced cup." },
-  { n: "03", title: "Roasted",   body: "Roasted in Uganda and sealed fresh — ready for your cup." },
-];
-
-/* Retail self-serve is gated until prices are confirmed. While off, the retail
-   path becomes a "register interest" enquiry instead of a shop link. */
-const retailWay = COFFEE_SHOP_ENABLED
-  ? { icon: ShoppingBag, title: "Shop online", body: "Retail packs for your home or office.", href: "/shop", cta: "Shop coffee" }
-  : { icon: ShoppingBag, title: "Retail — launching soon", body: "Home & office packs are almost ready. Register your interest and we'll be in touch first.", href: ENQUIRE, cta: "Register interest" };
-
-const ways = [
-  retailWay,
-  { icon: Store,       title: "Wholesale",    body: "Stock Vitorra Coffee in your café, hotel, or store.", href: ENQUIRE,   cta: "Enquire wholesale" },
-  { icon: Globe,       title: "Export",       body: "Source traceable Ugandan coffee at volume.",           href: ENQUIRE,   cta: "Enquire export" },
-];
-
-/* Secondary CTA pointing at the shop — relabelled to the holding page while off. */
-const SHOP_CTA = COFFEE_SHOP_ENABLED
-  ? { href: "/shop", label: "Visit the Coffee Shop" }
-  : { href: "/shop", label: "Coffee retail — launching soon" };
-
-const faqs = [
-  { q: "Where is Vitorra Coffee grown?",          a: "It's single-origin 100% Arabica, grown on the highland slopes of Mount Elgon in eastern Uganda, then washed, sun-dried, and roasted in Uganda." },
-  { q: "Can I buy wholesale for my café?",        a: "Yes. We supply cafés, hotels, restaurants, and retailers. Enquire for wholesale pricing and regular supply options." },
-  { q: "Do you export internationally?",          a: "Yes. We supply traceable Ugandan coffee to international importers and roasters. Enquire for export volumes, pricing, and documentation." },
-  { q: "How is the coffee traceable?",            a: "Every bag carries a QR code that traces your coffee back to its source, and we provide origin and process documentation on request." },
-  { q: "What does it taste like?",                a: "Our GOLD medium roast is smooth and balanced with caramel notes — washed and sun-dried for a clean, rounded cup." },
-];
-
 export default function CoffeePage() {
+  const t = useTranslations("coffeePage");
+
+  const specs: [string, string][] = [
+    [t("spec1Key"), t("spec1Value")],
+    [t("spec2Key"), t("spec2Value")],
+    [t("spec3Key"), t("spec3Value")],
+    [t("spec4Key"), t("spec4Value")],
+    [t("spec5Key"), t("spec5Value")],
+  ];
+
+  const benefits = [
+    { icon: Mountain, title: t("benefit1Title"), body: t("benefit1Body") },
+    { icon: QrCode,   title: t("benefit2Title"), body: t("benefit2Body") },
+    { icon: Sprout,   title: t("benefit3Title"), body: t("benefit3Body") },
+    { icon: Flame,    title: t("benefit4Title"), body: t("benefit4Body") },
+  ];
+
+  const steps = [
+    { n: "01", title: t("ftcStep1Title"), body: t("ftcStep1Body") },
+    { n: "02", title: t("ftcStep2Title"), body: t("ftcStep2Body") },
+    { n: "03", title: t("ftcStep3Title"), body: t("ftcStep3Body") },
+  ];
+
+  /* Retail self-serve is gated until prices are confirmed. While off, the retail
+     path becomes a "register interest" enquiry instead of a shop link. */
+  const retailWay = COFFEE_SHOP_ENABLED
+    ? { icon: ShoppingBag, title: t("retailShopTitle"), body: t("retailShopBody"), href: "/shop", cta: t("retailShopCta") }
+    : { icon: ShoppingBag, title: t("retailSoonTitle"), body: t("retailSoonBody"), href: ENQUIRE, cta: t("retailSoonCta") };
+
+  const ways = [
+    retailWay,
+    { icon: Store, title: t("wholesaleTitle"), body: t("wholesaleBody"), href: ENQUIRE, cta: t("wholesaleCta") },
+    { icon: Globe, title: t("exportTitle"),    body: t("exportBody"),    href: ENQUIRE, cta: t("exportCta") },
+  ];
+
+  /* Secondary CTA pointing at the shop — relabelled to the holding page while off. */
+  const SHOP_CTA = COFFEE_SHOP_ENABLED
+    ? { href: "/shop", label: t("shopVisit") }
+    : { href: "/shop", label: t("shopSoon") };
+
+  const faqs = [
+    { q: t("faq1Q"), a: t("faq1A") },
+    { q: t("faq2Q"), a: t("faq2A") },
+    { q: t("faq3Q"), a: t("faq3A") },
+    { q: t("faq4Q"), a: t("faq4A") },
+    { q: t("faq5Q"), a: t("faq5A") },
+  ];
+
   return (
     <>
       <Header />
@@ -78,7 +86,7 @@ export default function CoffeePage() {
           <div className="absolute inset-0">
             <Image
               src="/hero/coffee.png"
-              alt="Ripe coffee cherries on the branch at sunrise, Mount Elgon, Uganda"
+              alt="Coffee cherries, Mount Elgon, Uganda"
               fill priority sizes="100vw"
               className="object-cover"
               style={{ animation: "vitorra-ken-burns 16s ease-out both" }}
@@ -94,7 +102,7 @@ export default function CoffeePage() {
 
           <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 mt-auto pt-28 pb-16 md:pb-24">
             <Reveal>
-              <span className="eyebrow-light mb-5 inline-flex">Vitorra Coffee · B2B · B2C</span>
+              <span className="eyebrow-light mb-5 inline-flex">{t("heroEyebrow")}</span>
               <h1
                 className="max-w-2xl mb-5"
                 style={{
@@ -106,17 +114,15 @@ export default function CoffeePage() {
                   color:         "#FFFFFF",
                 }}
               >
-                Premium Ugandan coffee.{" "}
-                <span className="text-gold-gradient">Farm to cup.</span>
+                {t("heroTitleLead")}{" "}
+                <span className="text-gold-gradient">{t("heroTitleAccent")}</span>
               </h1>
               <p className="max-w-xl mb-9" style={{ fontSize: "17px", lineHeight: 1.75, color: "rgba(255,255,255,0.65)" }}>
-                Traceable, responsibly sourced single-origin coffee from the slopes
-                of Mount Elgon — for consumers, hospitality, and international importers.
+                {t("heroBody")}
               </p>
 
-              {/* Quick-fact pills */}
               <div className="flex flex-wrap gap-2 mb-9">
-                {["100% Arabica", "Single origin", "Mount Elgon, Uganda", "Traceable, farm to cup"].map((f) => (
+                {[t("heroPill1"), t("heroPill2"), t("heroPill3"), t("heroPill4")].map((f) => (
                   <span
                     key={f}
                     style={{
@@ -133,7 +139,7 @@ export default function CoffeePage() {
 
               <div className="flex flex-col sm:flex-row gap-3 hero-cta">
                 <Link href={ENQUIRE} className="btn-primary">
-                  Enquire — Wholesale &amp; Export
+                  {t("heroCtaPrimary")}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href={SHOP_CTA.href} className="btn-ghost-dark">
@@ -152,7 +158,7 @@ export default function CoffeePage() {
         >
           <div className="container-max">
             <Reveal className="mb-12 lg:mb-16 max-w-2xl">
-              <span className="eyebrow block mb-3">Why Vitorra Coffee</span>
+              <span className="eyebrow block mb-3">{t("benefitsEyebrow")}</span>
               <h2
                 className="gold-underline"
                 style={{
@@ -165,7 +171,7 @@ export default function CoffeePage() {
                   maxWidth:      "520px",
                 }}
               >
-                The taste of Uganda.
+                {t("benefitsTitle")}
               </h2>
             </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -205,13 +211,13 @@ export default function CoffeePage() {
             <Reveal direction="right">
               <ParallaxImage
                 src="/products/coffee/lifestyle.png"
-                alt="Vitorra GOLD coffee bag with a freshly brewed cup and roasted beans"
+                alt="Vitorra GOLD coffee"
                 className="aspect-[4/3] rounded-[40px] shadow-card"
               />
             </Reveal>
             <div>
               <Reveal>
-                <span className="eyebrow block mb-3">The blend</span>
+                <span className="eyebrow block mb-3">{t("blendEyebrow")}</span>
                 <h2
                   className="mb-2"
                   style={{
@@ -223,10 +229,10 @@ export default function CoffeePage() {
                     color:         "#1E1E1E",
                   }}
                 >
-                  GOLD — Medium Roast
+                  {t("blendTitle")}
                 </h2>
                 <p className="mb-8" style={{ fontSize: "15px", lineHeight: 1.75, color: "#555555", maxWidth: "440px" }}>
-                  A smooth, balanced cup with caramel notes — our flagship single-origin Arabica.
+                  {t("blendBody")}
                 </p>
               </Reveal>
               <Reveal delay={120}>
@@ -259,14 +265,14 @@ export default function CoffeePage() {
               <Reveal direction="left">
                 <ParallaxImage
                   src="/products/coffee/farmer.png"
-                  alt="A Ugandan farmer harvesting ripe coffee cherries on a highland farm"
+                  alt="Ugandan coffee farmer harvesting cherries"
                   className="aspect-[4/3] rounded-[40px] shadow-card"
                 />
               </Reveal>
             </div>
             <div className="lg:order-1">
               <Reveal>
-                <span className="eyebrow block mb-3">Farm to cup</span>
+                <span className="eyebrow block mb-3">{t("ftcEyebrow")}</span>
                 <h2
                   className="mb-8"
                   style={{
@@ -278,7 +284,7 @@ export default function CoffeePage() {
                     color:         "#1E1E1E",
                   }}
                 >
-                  Traceable from<br />the first cherry.
+                  {t("ftcTitleLine1")}<br />{t("ftcTitleLine2")}
                 </h2>
               </Reveal>
               <div className="space-y-7">
@@ -320,7 +326,7 @@ export default function CoffeePage() {
             <div className="card-stadium relative shadow-card" style={{ aspectRatio: "16/9", maxHeight: "70vh" }}>
               <Image
                 src="/products/coffee/beans.png"
-                alt="Close-up of freshly roasted Vitorra coffee beans"
+                alt="Roasted Vitorra coffee beans"
                 fill sizes="100vw"
                 className="object-cover"
               />
@@ -329,7 +335,7 @@ export default function CoffeePage() {
                 style={{ background: "linear-gradient(to top, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.1) 55%)" }}
               />
               <div className="absolute bottom-0 left-0 p-8 md:p-12">
-                <span className="eyebrow-light mb-3 inline-flex">100% Arabica</span>
+                <span className="eyebrow-light mb-3 inline-flex">{t("mediaEyebrow")}</span>
                 <p
                   style={{
                     fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -339,17 +345,14 @@ export default function CoffeePage() {
                     letterSpacing: "-0.02em",
                   }}
                 >
-                  The taste of Uganda. The pride of Africa.
+                  {t("mediaText")}
                 </p>
               </div>
             </div>
           </Reveal>
         </section>
 
-        {/* ══ WAYS TO BUY ═════════════════════════════════════════════════════
-            Dark glass cards — kept dark as these are interactive purchase paths,
-            not just audience labels. Grain added for premium depth.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ WAYS TO BUY ═════════════════════════════════════════════════════ */}
         <section
           className="section-padding relative overflow-hidden"
           style={{ backgroundColor: "#141414" }}
@@ -363,7 +366,7 @@ export default function CoffeePage() {
 
           <div className="container-max relative z-10">
             <Reveal className="mb-10 text-center">
-              <span className="eyebrow-light mb-3 inline-flex">Ways to buy</span>
+              <span className="eyebrow-light mb-3 inline-flex">{t("waysEyebrow")}</span>
               <h2
                 className="max-w-xl mx-auto"
                 style={{
@@ -375,7 +378,7 @@ export default function CoffeePage() {
                   color:         "#FFFFFF",
                 }}
               >
-                However you take it.
+                {t("waysTitle")}
               </h2>
             </Reveal>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -419,7 +422,7 @@ export default function CoffeePage() {
         >
           <div className="container-max grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-12 lg:gap-20">
             <Reveal>
-              <span className="eyebrow block mb-3">Questions</span>
+              <span className="eyebrow block mb-3">{t("faqEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -431,12 +434,12 @@ export default function CoffeePage() {
                   maxWidth:      "320px",
                 }}
               >
-                Everything you need to know.
+                {t("faqTitle")}
               </h2>
               <p className="mt-5 text-sm" style={{ color: "#666666" }}>
-                Wholesale or export?{" "}
+                {t("faqWholesaleExport")}{" "}
                 <Link href={ENQUIRE} className="font-semibold underline" style={{ color: "#1E1E1E" }}>
-                  Send us an enquiry.
+                  {t("faqSendEnquiry")}
                 </Link>
               </p>
             </Reveal>
@@ -448,15 +451,14 @@ export default function CoffeePage() {
 
         {/* ══ FINAL CTA ═══════════════════════════════════════════════════════ */}
         <FinalCTA
-          eyebrow="Get Started"
-          titleLead="Taste the pride of"
-          titleAccent="Africa."
-          body="Shop retail packs, stock your business, or source at export volumes — our team replies within 24 hours."
-          primaryLabel="Enquire — Wholesale & Export"
+          titleLead={t("finalCtaTitleLead")}
+          titleAccent={t("finalCtaTitleAccent")}
+          body={t("finalCtaBody")}
+          primaryLabel={t("heroCtaPrimary")}
           primaryHref={ENQUIRE}
           secondaryLabel={SHOP_CTA.label}
           secondaryHref={SHOP_CTA.href}
-          caption="Single origin  ·  Traceable  ·  Reply within 24 hours"
+          caption={t("finalCtaCaption")}
         />
 
       </main>

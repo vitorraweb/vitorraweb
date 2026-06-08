@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -12,45 +14,51 @@ import {
   ArrowRight, ArrowUpRight,
 } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Logistics Services — Freight, Warehousing & Supply Chain",
-  description:
-    "Vitorra Logistics — end-to-end freight, warehousing, customs clearance, and supply-chain management across Uganda, East Africa, and international corridors. Request a quote.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.logistics" });
+  return { title: t("title"), description: t("description") };
+}
 
 const ENQUIRE = "/enquire?sector=LOGISTICS";
 
-const benefits = [
-  { icon: Route,       title: "End-to-end",         body: "Freight, warehousing, customs, and supply-chain — handled by one partner." },
-  { icon: Globe,       title: "Cross-border reach",  body: "Across Uganda, East Africa, and international trade corridors." },
-  { icon: Activity,    title: "Real-time visibility", body: "Track shipments and stock from dispatch through to delivery." },
-  { icon: ShieldCheck, title: "Reliable & secure",   body: "Your goods handled with care and delivered on schedule, every time." },
-];
-
-const capabilities = [
-  { title: "Freight",                  body: "Road, sea, and air freight — moving your goods reliably across borders.",             img: "/products/logistics/truck-day.png",    alt: "Vitorra-branded freight truck on the highway" },
-  { title: "Warehousing",              body: "Secure storage, inventory management, and order fulfilment.",                         img: "/products/logistics/warehouse.png",    alt: "Organised Vitorra warehouse" },
-  { title: "Customs clearance",        body: "Documentation and clearance handled — no delays at the border.",                      img: "/products/logistics/customs.png",      alt: "Vitorra customs clearance at a container port" },
-  { title: "Supply-chain management",  body: "End-to-end coordination and visibility, from origin to destination.",                 img: "/products/logistics/control-room.png", alt: "Vitorra logistics control room" },
-];
-
-const audiences = [
-  { icon: Ship,          label: "Importers & exporters"   },
-  { icon: Factory,       label: "Manufacturers"            },
-  { icon: Store,         label: "Retail & distribution"   },
-  { icon: Wheat,         label: "Agriculture & commodities" },
-  { icon: HeartHandshake, label: "NGOs & projects"         },
-];
-
-const faqs = [
-  { q: "What logistics services do you offer?",  a: "Road, sea, and air freight; secure warehousing and fulfilment; customs clearance and documentation; and full supply-chain management — end to end." },
-  { q: "Which regions do you cover?",            a: "We move goods within Uganda, across East Africa, and through international trade corridors. Tell us your route and we'll confirm the best option." },
-  { q: "Do you handle customs clearance?",       a: "Yes. We manage the documentation and clearance process so your goods keep moving without delays at the border." },
-  { q: "Can I track my shipment?",               a: "Yes. We provide visibility from dispatch through to delivery, so you always know where your goods are." },
-  { q: "How do I get a quote?",                  a: "Request a logistics quote with your origin, destination, and cargo details. Our team replies within 24 hours with tailored options." },
-];
-
 export default function LogisticsPage() {
+  const t = useTranslations("logisticsPage");
+
+  const benefits = [
+    { icon: Route,       title: t("benefit1Title"), body: t("benefit1Body") },
+    { icon: Globe,       title: t("benefit2Title"), body: t("benefit2Body") },
+    { icon: Activity,    title: t("benefit3Title"), body: t("benefit3Body") },
+    { icon: ShieldCheck, title: t("benefit4Title"), body: t("benefit4Body") },
+  ];
+
+  const capabilities = [
+    { title: t("cap1Title"), body: t("cap1Body"), img: "/products/logistics/truck-day.png",    alt: t("cap1Alt") },
+    { title: t("cap2Title"), body: t("cap2Body"), img: "/products/logistics/warehouse.png",    alt: t("cap2Alt") },
+    { title: t("cap3Title"), body: t("cap3Body"), img: "/products/logistics/customs.png",      alt: t("cap3Alt") },
+    { title: t("cap4Title"), body: t("cap4Body"), img: "/products/logistics/control-room.png", alt: t("cap4Alt") },
+  ];
+
+  const audiences = [
+    { icon: Ship,           label: t("audience1") },
+    { icon: Factory,        label: t("audience2") },
+    { icon: Store,          label: t("audience3") },
+    { icon: Wheat,          label: t("audience4") },
+    { icon: HeartHandshake, label: t("audience5") },
+  ];
+
+  const faqs = [
+    { q: t("faq1Q"), a: t("faq1A") },
+    { q: t("faq2Q"), a: t("faq2A") },
+    { q: t("faq3Q"), a: t("faq3A") },
+    { q: t("faq4Q"), a: t("faq4A") },
+    { q: t("faq5Q"), a: t("faq5A") },
+  ];
+
   return (
     <>
       <Header />
@@ -64,7 +72,7 @@ export default function LogisticsPage() {
           <div className="absolute inset-0">
             <Image
               src="/hero/logistics.png"
-              alt="Container freight truck on an open highway at sunset"
+              alt="Container freight truck on a highway"
               fill priority sizes="100vw"
               className="object-cover"
               style={{ animation: "vitorra-ken-burns 16s ease-out both" }}
@@ -80,7 +88,7 @@ export default function LogisticsPage() {
 
           <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 mt-auto pt-28 pb-16 md:pb-24">
             <Reveal>
-              <span className="eyebrow-light mb-5 inline-flex">Logistics Services · B2B · Enterprise</span>
+              <span className="eyebrow-light mb-5 inline-flex">{t("heroEyebrow")}</span>
               <h1
                 className="max-w-2xl mb-5"
                 style={{
@@ -92,17 +100,15 @@ export default function LogisticsPage() {
                   color:         "#FFFFFF",
                 }}
               >
-                Move goods{" "}
-                <span className="text-gold-gradient">with confidence.</span>
+                {t("heroTitleLead")}{" "}
+                <span className="text-gold-gradient">{t("heroTitleAccent")}</span>
               </h1>
               <p className="max-w-xl mb-9" style={{ fontSize: "17px", lineHeight: 1.75, color: "rgba(255,255,255,0.65)" }}>
-                End-to-end freight, warehousing, customs clearance, and supply-chain
-                management across Uganda, East Africa, and beyond.
+                {t("heroBody")}
               </p>
 
-              {/* Quick-fact pills */}
               <div className="flex flex-wrap gap-2 mb-9">
-                {["Road, sea & air freight", "Customs clearance", "Real-time tracking", "East Africa & international"].map((f) => (
+                {[t("heroPill1"), t("heroPill2"), t("heroPill3"), t("heroPill4")].map((f) => (
                   <span
                     key={f}
                     style={{
@@ -119,11 +125,11 @@ export default function LogisticsPage() {
 
               <div className="flex flex-col sm:flex-row gap-3 hero-cta">
                 <Link href={ENQUIRE} className="btn-primary">
-                  Request a Logistics Quote
+                  {t("heroCtaPrimary")}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/contact" className="btn-ghost-dark">
-                  Talk to our team
+                  {t("heroCtaSecondary")}
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -138,7 +144,7 @@ export default function LogisticsPage() {
         >
           <div className="container-max">
             <Reveal className="mb-12 lg:mb-16 max-w-2xl">
-              <span className="eyebrow block mb-3">Why Vitorra Logistics</span>
+              <span className="eyebrow block mb-3">{t("benefitsEyebrow")}</span>
               <h2
                 className="gold-underline"
                 style={{
@@ -151,7 +157,7 @@ export default function LogisticsPage() {
                   maxWidth:      "520px",
                 }}
               >
-                One partner, end to end.
+                {t("benefitsTitle")}
               </h2>
             </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -189,7 +195,7 @@ export default function LogisticsPage() {
         <section className="section-padding" style={{ backgroundColor: "#F8F7F5" }}>
           <div className="container-max">
             <Reveal className="mb-12 lg:mb-16 max-w-2xl">
-              <span className="eyebrow block mb-3">What we do</span>
+              <span className="eyebrow block mb-3">{t("capEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -201,7 +207,7 @@ export default function LogisticsPage() {
                   maxWidth:      "420px",
                 }}
               >
-                Every link in the chain.
+                {t("capTitle")}
               </h2>
             </Reveal>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -239,7 +245,7 @@ export default function LogisticsPage() {
             <div className="card-stadium relative shadow-card" style={{ aspectRatio: "16/9", maxHeight: "70vh" }}>
               <Image
                 src="/products/logistics/truck-convoy.png"
-                alt="A convoy of Vitorra-branded freight trucks at sunset"
+                alt="Vitorra freight truck convoy"
                 fill sizes="100vw"
                 className="object-cover"
               />
@@ -248,7 +254,7 @@ export default function LogisticsPage() {
                 style={{ background: "linear-gradient(to top, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.1) 55%)" }}
               />
               <div className="absolute bottom-0 left-0 p-8 md:p-12">
-                <span className="eyebrow-light mb-3 inline-flex">Our network</span>
+                <span className="eyebrow-light mb-3 inline-flex">{t("mediaEyebrow")}</span>
                 <p
                   style={{
                     fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -258,20 +264,18 @@ export default function LogisticsPage() {
                     letterSpacing: "-0.02em",
                   }}
                 >
-                  One network. End to end.
+                  {t("mediaText")}
                 </p>
               </div>
             </div>
           </Reveal>
         </section>
 
-        {/* ══ WHO WE SERVE ════════════════════════════════════════════════════
-            Light centered — consistent with FET and SEAL audience sections.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ WHO WE SERVE ════════════════════════════════════════════════════ */}
         <section className="section-padding-sm" style={{ backgroundColor: "#FFFFFF", boxShadow: "inset 0 1px 0 rgba(0,0,0,0.06)" }}>
           <div className="container-max text-center">
             <Reveal>
-              <span className="eyebrow block mb-5">Who we serve</span>
+              <span className="eyebrow block mb-5">{t("audienceEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -281,8 +285,8 @@ export default function LogisticsPage() {
                   lineHeight:    1.1,
                 }}
               >
-                <span style={{ color: "#1E1E1E" }}>Trusted to </span>
-                <span style={{ color: "#AAAAAA" }}>deliver.</span>
+                <span style={{ color: "#1E1E1E" }}>{t("audienceTitleLead")}</span>
+                <span style={{ color: "#AAAAAA" }}>{t("audienceTitleAccent")}</span>
               </h2>
             </Reveal>
             <Reveal delay={100} className="mt-8 flex flex-wrap justify-center gap-3">
@@ -307,7 +311,7 @@ export default function LogisticsPage() {
         >
           <div className="container-max grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-12 lg:gap-20">
             <Reveal>
-              <span className="eyebrow block mb-3">Questions</span>
+              <span className="eyebrow block mb-3">{t("faqEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -319,12 +323,12 @@ export default function LogisticsPage() {
                   maxWidth:      "320px",
                 }}
               >
-                Everything you need to know.
+                {t("faqTitle")}
               </h2>
               <p className="mt-5 text-sm" style={{ color: "#666666" }}>
-                Have a specific route in mind?{" "}
+                {t("faqRoute")}{" "}
                 <Link href={ENQUIRE} className="font-semibold underline" style={{ color: "#1E1E1E" }}>
-                  Request a quote.
+                  {t("faqRequestQuote")}
                 </Link>
               </p>
             </Reveal>
@@ -336,15 +340,12 @@ export default function LogisticsPage() {
 
         {/* ══ FINAL CTA ═══════════════════════════════════════════════════════ */}
         <FinalCTA
-          eyebrow="Get Started"
-          titleLead="Ready to move your"
-          titleAccent="goods?"
-          body="Tell us your route and cargo, and we'll come back with a tailored logistics quote — within 24 hours."
-          primaryLabel="Request a Logistics Quote"
+          titleLead={t("finalCtaTitleLead")}
+          titleAccent={t("finalCtaTitleAccent")}
+          body={t("finalCtaBody")}
+          primaryLabel={t("heroCtaPrimary")}
           primaryHref={ENQUIRE}
-          secondaryLabel="Contact Us"
-          secondaryHref="/contact"
-          caption="Uganda · East Africa · International  ·  Reply within 24 hours"
+          caption={t("finalCtaCaption")}
         />
 
       </main>
