@@ -2,10 +2,11 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ArrowUpRight, MapPin, Mail, Phone } from "lucide-react";
-import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_ADDRESS, COMPANY_REG_NO, SITE_NAME } from "@/lib/constants";
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_ALT, CONTACT_ADDRESS, COMPANY_REG_NO, SITE_NAME } from "@/lib/constants";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
 const telHref = `tel:${CONTACT_PHONE.replace(/\s+/g, "")}`;
+const telAltHref = `tel:${CONTACT_PHONE_ALT.replace(/\s+/g, "")}`;
 
 export default function Footer() {
   const t = useTranslations();
@@ -94,11 +95,16 @@ export default function Footer() {
                 {CONTACT_EMAIL}
               </a>
             </li>
-            <li className="flex items-center gap-3">
-              <Phone className="w-4 h-4 shrink-0" style={{ color: "#C5B27A" }} />
-              <a href={telHref} className="text-sm text-white/55 hover:text-white transition-colors">
-                {CONTACT_PHONE}
-              </a>
+            <li className="flex items-start gap-3">
+              <Phone className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#C5B27A" }} />
+              <span className="flex flex-col gap-1">
+                <a href={telHref} className="text-sm text-white/55 hover:text-white transition-colors">
+                  {CONTACT_PHONE}
+                </a>
+                <a href={telAltHref} className="text-sm text-white/55 hover:text-white transition-colors">
+                  {CONTACT_PHONE_ALT}
+                </a>
+              </span>
             </li>
           </ul>
         </div>
