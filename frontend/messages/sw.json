@@ -320,15 +320,18 @@
     "viewAll": "Tazama makala zote",
     "readArticle": "Soma makala",
     "publishingSoon": "Inachapishwa hivi karibuni",
-    "placeholder1Tag": "Fuel Eco Tech",
-    "placeholder1Title": "Jinsi FET inavyopunguza gharama za magari kote Afrika Mashariki",
-    "placeholder1Body": "Waendeshaji wa magari kote Uganda wanaona upungufu unaopimika wa matumizi ya dizeli baada ya usakinishaji — haya ndiyo yanayoonyeshwa na data.",
-    "placeholder2Tag": "Maarifa ya Sekta",
-    "placeholder2Title": "Gharama halisi ya upotevu wa mafuta katika usafiri wa kibiashara",
-    "placeholder2Body": "Maelezo ya vitendo kuhusu kwa nini injini za dizeli hupoteza ufanisi kwa muda na teknolojia ya kisasa ya kuboresha hufanya nini kuhusu hili.",
-    "placeholder3Tag": "Vitorra Coffee",
-    "placeholder3Title": "Kufuatilia ubora kutoka mashamba ya Uganda hadi wanunuzi wa kimataifa",
-    "placeholder3Body": "Jinsi mchakato wetu wa upataji na usafirishaji unavyohakikisha kila gunia la Vitorra Coffee linakidhi mahitaji ya uthabiti ya masoko ya jumla."
+    "placeholder1Tag": "Uzinduzi",
+    "placeholder1Title": "Fuel Eco Tech yazinduliwa rasmi nchini Uganda",
+    "placeholder1Body": "Vitorra ililetea soko la Uganda mfumo wa kuokoa mafuta uliotengenezwa Ujerumani — gharama ndogo za mafuta na hewa chafu, bila marekebisho ya injini.",
+    "placeholder1Cta": "Kuhusu Fuel Eco Tech",
+    "placeholder2Tag": "Fuel Eco Tech",
+    "placeholder2Title": "Uokoaji uliothibitishwa, marejesho ya takriban miezi 14",
+    "placeholder2Body": "Ikiwa na cheti cha ISO na bima ya Zurich, FET inawekwa kati ya pampu ya mafuta na chujio kuboresha mwako kwa magari, makundi ya magari, na mitambo.",
+    "placeholder2Cta": "Omba tathmini",
+    "placeholder3Tag": "Kwenye vyombo vya habari",
+    "placeholder3Title": "Uzinduzi wetu, ulioripotiwa na Ugnews Line",
+    "placeholder3Body": "“Suluhisho la vitendo na lenye gharama nafuu kwa wamiliki wa magari na waendeshaji wa makundi ya magari,” alisema Thurayya Nakayima wa Vitorra.",
+    "placeholder3Cta": "Soma habari"
   },
   "about": {
     "mission": {

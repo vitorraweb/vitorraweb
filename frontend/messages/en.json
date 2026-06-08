@@ -320,15 +320,18 @@
     "viewAll": "View all articles",
     "readArticle": "Read article",
     "publishingSoon": "Publishing soon",
-    "placeholder1Tag": "Fuel Eco Tech",
-    "placeholder1Title": "How FET is reducing fleet costs across East Africa",
-    "placeholder1Body": "Fleet operators across Uganda are seeing measurable drops in diesel spend after installation — here's what the data shows.",
-    "placeholder2Tag": "Industry Insights",
-    "placeholder2Title": "The true cost of fuel waste in commercial transport",
-    "placeholder2Body": "A practical breakdown of why diesel engines lose efficiency over time and what modern optimisation technology does about it.",
-    "placeholder3Tag": "Vitorra Coffee",
-    "placeholder3Title": "Tracing quality from Uganda's farms to international buyers",
-    "placeholder3Body": "How our sourcing and export process ensures every bag of Vitorra Coffee meets the consistency demands of wholesale markets."
+    "placeholder1Tag": "Launch",
+    "placeholder1Title": "Fuel Eco Tech officially launches in Uganda",
+    "placeholder1Body": "Vitorra introduced the German-engineered fuel-saving system to the Ugandan market — lower fuel costs and emissions, with no engine modification.",
+    "placeholder1Cta": "About Fuel Eco Tech",
+    "placeholder2Tag": "Fuel Eco Tech",
+    "placeholder2Title": "Proven savings, around a 14-month payback",
+    "placeholder2Body": "ISO-certified and Zurich-insured, FET fits between the fuel pump and filter to optimise combustion across cars, fleets, and machinery.",
+    "placeholder2Cta": "Request an assessment",
+    "placeholder3Tag": "In the press",
+    "placeholder3Title": "Our launch, covered by Ugnews Line",
+    "placeholder3Body": "“A practical, cost-effective solution for vehicle owners and fleet operators,” said Vitorra's Thurayya Nakayima.",
+    "placeholder3Cta": "Read the coverage"
   },
   "about": {
     "mission": {
