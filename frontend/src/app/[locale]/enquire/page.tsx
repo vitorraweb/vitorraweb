@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import EnquiryForm from "@/components/sections/EnquiryForm";
@@ -7,54 +8,15 @@ import { Clock, Target, ShieldCheck, Mail, Phone } from "lucide-react";
 import { CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/constants";
 import { FET_TIERS } from "@/lib/fet-pricing";
 
-export const metadata: Metadata = {
-  title: "Request a Quote — Vitorra Holdings Limited",
-  description:
-    "Request a quote or enquiry from Vitorra Holdings — Fuel Eco Tech, SEAL wound spray, premium Ugandan coffee, or logistics. Our team replies within 24 hours.",
-};
-
-/* ─── Sector-adaptive hero content ──────────────────────────────────────────
-   When a visitor arrives from a product CTA (e.g. /enquire?sector=FET), the
-   hero headline and eyebrow adapt to that product context. Falls back to a
-   general message for direct visits.
-   ─────────────────────────────────────────────────────────────────────────── */
-const SECTOR_CONTENT: Record<
-  string,
-  { eyebrow: string; title: string; body: string }
-> = {
-  FET: {
-    eyebrow: "Fuel Eco Tech · Fleet Efficiency",
-    title: "Request your fuel savings assessment.",
-    body: "Tell us about your fleet — we'll come back with tailored options and realistic fuel savings projections within 24 hours. No obligation.",
-  },
-  SEAL: {
-    eyebrow: "SEAL Wound Spray · Medical Procurement",
-    title: "Request product information.",
-    body: "Let us know your organisation's requirements and we'll send clinical documentation, pricing, and procurement details within 24 hours.",
-  },
-  COFFEE: {
-    eyebrow: "Vitorra Coffee · Wholesale & Export",
-    title: "Request wholesale or export pricing.",
-    body: "Whether you're a café, distributor, or international buyer — tell us your volumes and we'll come back with a tailored quote.",
-  },
-  LOGISTICS: {
-    eyebrow: "Logistics Services · Freight & Supply Chain",
-    title: "Request a logistics quote.",
-    body: "Describe your freight requirements and our operations team will respond within 24 hours with service options and pricing.",
-  },
-};
-
-const DEFAULT_CONTENT = {
-  eyebrow: "Request a Quote",
-  title: "Let's find the right solution for you.",
-  body: "Tell us a little about what you need and our team will respond within 24 hours with tailored options — no obligation.",
-};
-
-const assurances = [
-  { icon: Clock,       title: "Reply within 24 hours", body: "A real person from our team, not an auto-reply." },
-  { icon: Target,      title: "Tailored to your sector", body: "Options matched to your volume, market, and timeline." },
-  { icon: ShieldCheck, title: "No obligation",           body: "A quote and a conversation — no pressure, no spam." },
-];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.enquire" });
+  return { title: t("title"), description: t("description") };
+}
 
 const telHref = `tel:${CONTACT_PHONE.replace(/\s+/g, "")}`;
 
@@ -63,6 +25,7 @@ export default async function EnquirePage({
 }: {
   searchParams: Promise<{ sector?: string; message?: string; vehicle?: string; fleet?: string }>;
 }) {
+  const t = await getTranslations("enquirePage");
   const params = await searchParams;
   let sector = params.sector?.toUpperCase() ?? "";
 
@@ -80,7 +43,19 @@ export default async function EnquirePage({
     initialAnswers.fleet_size = params.fleet;
   }
 
-  const content = SECTOR_CONTENT[sector] ?? DEFAULT_CONTENT;
+  /* Hero copy adapts to the sector the visitor arrived from; defaults otherwise. */
+  const key = ["FET", "SEAL", "COFFEE", "LOGISTICS"].includes(sector) ? sector.toLowerCase() : "default";
+  const content = {
+    eyebrow: t(`${key}Eyebrow`),
+    title: t(`${key}Title`),
+    body: t(`${key}Body`),
+  };
+
+  const assurances = [
+    { icon: Clock,       title: t("assurance1Title"), body: t("assurance1Body") },
+    { icon: Target,      title: t("assurance2Title"), body: t("assurance2Body") },
+    { icon: ShieldCheck, title: t("assurance3Title"), body: t("assurance3Body") },
+  ];
 
   return (
     <>
@@ -131,12 +106,7 @@ export default async function EnquirePage({
                   maxWidth:      "720px",
                 }}
               >
-                {content.title.split(".")[0]}.{" "}
-                {content.title.split(".")[1] && (
-                  <span className="text-gold-gradient">
-                    {content.title.split(".").slice(1).join(".").trim()}
-                  </span>
-                )}
+                {content.title}
               </h1>
               <p
                 className="mt-5 max-w-lg"
@@ -183,7 +153,7 @@ export default async function EnquirePage({
 
                 <div className="pt-6" style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}>
                   <p className="text-sm font-semibold mb-3" style={{ color: "#1E1E1E" }}>
-                    Prefer to talk directly?
+                    {t("preferTalk")}
                   </p>
                   <div className="space-y-2">
                     <a

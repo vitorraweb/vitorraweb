@@ -3,13 +3,13 @@ import { FET_TIERS } from "@/lib/fet-pricing";
 
 /* ─── Product-aware enquiry schema ────────────────────────────────────────────
    The "intelligence" in the enquiry form: each product declares exactly the
-   questions its quote requires — the ones the ops/sales team would otherwise
-   have to email the customer to ask. A single renderer (EnquiryForm) consumes
-   these, branching with `showIf` so the form stays short. Answers are captured
-   as structured data and turned into a quote-ready brief — no back-and-forth.
+   questions its quote requires. A single renderer (EnquiryForm) consumes these,
+   branching with `showIf` so the form stays short.
 
-   To add or change a question, edit this file only. Nothing else needs to know
-   about individual fields.                                                     */
+   Display strings are resolved through translators so the whole question set is
+   localised: `t` is scoped to the "enquiry" messages namespace, `tt` to
+   "fetTiers" (for the vehicle tier labels). To add or change a question, edit
+   this builder plus the matching keys in messages/*.json.                      */
 
 export type UiCategory = ProductCategory | "GENERAL";
 
@@ -40,305 +40,303 @@ export interface FieldDef {
   dynamicHelp?: (a: Answers) => string | null;
 }
 
-/* Shared option sets ------------------------------------------------------- */
+type Translator = (key: string) => string;
 
-const TIMELINE: FieldOption[] = [
-  { value: "now", label: "Immediately" },
-  { value: "soon", label: "Within 1–3 months" },
-  { value: "exploring", label: "Just exploring" },
-];
+/* ─── The question sets (built per-locale) ────────────────────────────────── */
 
-/* ─── The question sets ───────────────────────────────────────────────────── */
+export function getEnquirySchemas(t: Translator, tt: Translator): Record<UiCategory, FieldDef[]> {
+  const TIMELINE: FieldOption[] = [
+    { value: "now", label: t("tlNow") },
+    { value: "soon", label: t("tlSoon") },
+    { value: "exploring", label: t("tlExploring") },
+  ];
 
-export const ENQUIRY_SCHEMAS: Record<UiCategory, FieldDef[]> = {
-  /* Fuel Eco Tech — fleet fuel efficiency (B2B). Vehicle + fleet can arrive
-     pre-filled from the savings calculator. */
-  FET: [
-    {
-      id: "vehicle_type",
-      label: "Vehicle type",
-      type: "single",
-      required: true,
-      options: FET_TIERS.map((t) => ({ value: t.id, label: `${t.label} · ${t.model}` })),
-    },
-    { id: "fleet_size", label: "Fleet size", type: "number", required: true, unit: "vehicles", placeholder: "e.g. 12" },
-    {
-      id: "fuel_type",
-      label: "Fuel type",
-      type: "single",
-      required: true,
-      options: [
-        { value: "diesel", label: "Diesel" },
-        { value: "petrol", label: "Petrol" },
-        { value: "mixed", label: "Mixed fleet" },
-      ],
-    },
-    {
-      id: "goal",
-      label: "Main goal",
-      type: "single",
-      options: [
-        { value: "cost", label: "Cut fuel costs" },
-        { value: "emissions", label: "Meet emissions rules" },
-        { value: "engine", label: "Extend engine life" },
-        { value: "all", label: "All of these" },
-      ],
-    },
-    { id: "timeline", label: "Timeline", type: "single", required: true, options: TIMELINE },
-    {
-      id: "role",
-      label: "Your role in the decision",
-      type: "single",
-      options: [
-        { value: "decide", label: "I make the decision" },
-        { value: "recommend", label: "I recommend / influence" },
-        { value: "research", label: "Just researching" },
-      ],
-    },
-  ],
+  return {
+    /* Fuel Eco Tech — fleet fuel efficiency (B2B). Vehicle + fleet can arrive
+       pre-filled from the savings calculator. */
+    FET: [
+      {
+        id: "vehicle_type",
+        label: t("fetVehicleType"),
+        type: "single",
+        required: true,
+        options: FET_TIERS.map((tier) => ({ value: tier.id, label: `${tt(`${tier.id}.label`)} · ${tier.model}` })),
+      },
+      { id: "fleet_size", label: t("fetFleetSize"), type: "number", required: true, unit: t("unitVehicles"), placeholder: t("fetFleetSizePh") },
+      {
+        id: "fuel_type",
+        label: t("fetFuelType"),
+        type: "single",
+        required: true,
+        options: [
+          { value: "diesel", label: t("fetDiesel") },
+          { value: "petrol", label: t("fetPetrol") },
+          { value: "mixed", label: t("fetMixed") },
+        ],
+      },
+      {
+        id: "goal",
+        label: t("fetGoal"),
+        type: "single",
+        options: [
+          { value: "cost", label: t("fetGoalCost") },
+          { value: "emissions", label: t("fetGoalEmissions") },
+          { value: "engine", label: t("fetGoalEngine") },
+          { value: "all", label: t("fetGoalAll") },
+        ],
+      },
+      { id: "timeline", label: t("timeline"), type: "single", required: true, options: TIMELINE },
+      {
+        id: "role",
+        label: t("fetRole"),
+        type: "single",
+        options: [
+          { value: "decide", label: t("fetRoleDecide") },
+          { value: "recommend", label: t("fetRoleRecommend") },
+          { value: "research", label: t("fetRoleResearch") },
+        ],
+      },
+    ],
 
-  /* SEAL — hemostatic wound spray (B2B medical). */
-  SEAL: [
-    {
-      id: "org_type",
-      label: "Organisation type",
-      type: "single",
-      required: true,
-      options: [
-        { value: "hospital", label: "Hospital" },
-        { value: "clinic", label: "Clinic" },
-        { value: "ambulance", label: "Ambulance service" },
-        { value: "pharmacy", label: "Pharmacy" },
-        { value: "distributor", label: "Medical distributor" },
-        { value: "ngo", label: "NGO" },
-        { value: "military", label: "Military / defence" },
-        { value: "other", label: "Other" },
-      ],
-    },
-    {
-      id: "use_case",
-      label: "Primary use",
-      type: "single",
-      options: [
-        { value: "emergency", label: "Emergency response" },
-        { value: "surgical", label: "Surgical / theatre" },
-        { value: "firstaid", label: "First-aid kits" },
-        { value: "resale", label: "Resale / distribution" },
-        { value: "other", label: "Other" },
-      ],
-    },
-    { id: "volume", label: "Estimated volume", type: "number", unit: "units / month", placeholder: "e.g. 200" },
-    {
-      id: "needs",
-      label: "What do you need from us?",
-      type: "multi",
-      required: true,
-      options: [
-        { value: "info", label: "Product information" },
-        { value: "clinical", label: "Clinical documentation" },
-        { value: "sample", label: "A sample" },
-        { value: "pricing", label: "Pricing" },
-        { value: "procurement", label: "Procurement support" },
-      ],
-    },
-    {
-      id: "procurement",
-      label: "How do you procure?",
-      type: "single",
-      options: [
-        { value: "direct", label: "Direct purchase" },
-        { value: "tender", label: "Formal tender" },
-        { value: "distributor", label: "Through a distributor" },
-      ],
-    },
-    { id: "timeline", label: "Timeline", type: "single", required: true, options: TIMELINE },
-  ],
+    /* SEAL — hemostatic wound spray (B2B medical). */
+    SEAL: [
+      {
+        id: "org_type",
+        label: t("sealOrgType"),
+        type: "single",
+        required: true,
+        options: [
+          { value: "hospital", label: t("sealHospital") },
+          { value: "clinic", label: t("sealClinic") },
+          { value: "ambulance", label: t("sealAmbulance") },
+          { value: "pharmacy", label: t("sealPharmacy") },
+          { value: "distributor", label: t("sealDistributor") },
+          { value: "ngo", label: t("sealNgo") },
+          { value: "military", label: t("sealMilitary") },
+          { value: "other", label: t("sealOther") },
+        ],
+      },
+      {
+        id: "use_case",
+        label: t("sealUseCase"),
+        type: "single",
+        options: [
+          { value: "emergency", label: t("sealEmergency") },
+          { value: "surgical", label: t("sealSurgical") },
+          { value: "firstaid", label: t("sealFirstaid") },
+          { value: "resale", label: t("sealResale") },
+          { value: "other", label: t("sealUseOther") },
+        ],
+      },
+      { id: "volume", label: t("sealVolume"), type: "number", unit: t("unitUnitsMonth"), placeholder: t("sealVolumePh") },
+      {
+        id: "needs",
+        label: t("sealNeeds"),
+        type: "multi",
+        required: true,
+        options: [
+          { value: "info", label: t("sealNeedInfo") },
+          { value: "clinical", label: t("sealNeedClinical") },
+          { value: "sample", label: t("sealNeedSample") },
+          { value: "pricing", label: t("sealNeedPricing") },
+          { value: "procurement", label: t("sealNeedProcurement") },
+        ],
+      },
+      {
+        id: "procurement",
+        label: t("sealProcurement"),
+        type: "single",
+        options: [
+          { value: "direct", label: t("sealProcDirect") },
+          { value: "tender", label: t("sealProcTender") },
+          { value: "distributor", label: t("sealProcDistributor") },
+        ],
+      },
+      { id: "timeline", label: t("timeline"), type: "single", required: true, options: TIMELINE },
+    ],
 
-  /* Coffee — wholesale & export (retail is self-serve, handled by the shop). */
-  COFFEE: [
-    {
-      id: "buyer_type",
-      label: "You are a…",
-      type: "single",
-      required: true,
-      options: [
-        { value: "cafe", label: "Café" },
-        { value: "hotel", label: "Hotel / restaurant" },
-        { value: "office", label: "Office" },
-        { value: "retailer", label: "Retailer / supermarket" },
-        { value: "distributor", label: "Distributor" },
-        { value: "importer", label: "International importer" },
-        { value: "other", label: "Other" },
-      ],
-    },
-    {
-      id: "channel",
-      label: "Buying for…",
-      type: "single",
-      required: true,
-      options: [
-        { value: "local", label: "Local wholesale (Uganda)" },
-        { value: "export", label: "Export (international)" },
-      ],
-    },
-    {
-      id: "volume",
-      label: "Volume per order",
-      type: "number",
-      required: true,
-      unit: "kg",
-      placeholder: "e.g. 60",
-      dynamicHelp: (a) =>
-        a.channel === "export"
-          ? "Export starts at 60 kg (one bag)."
-          : a.channel === "local"
-            ? "Local wholesale minimum is 10 kg."
+    /* Coffee — wholesale & export (retail is self-serve, handled by the shop). */
+    COFFEE: [
+      {
+        id: "buyer_type",
+        label: t("coffeeBuyerType"),
+        type: "single",
+        required: true,
+        options: [
+          { value: "cafe", label: t("coffeeCafe") },
+          { value: "hotel", label: t("coffeeHotel") },
+          { value: "office", label: t("coffeeOffice") },
+          { value: "retailer", label: t("coffeeRetailer") },
+          { value: "distributor", label: t("coffeeDistributor") },
+          { value: "importer", label: t("coffeeImporter") },
+          { value: "other", label: t("coffeeBuyerOther") },
+        ],
+      },
+      {
+        id: "channel",
+        label: t("coffeeChannel"),
+        type: "single",
+        required: true,
+        options: [
+          { value: "local", label: t("coffeeLocal") },
+          { value: "export", label: t("coffeeExport") },
+        ],
+      },
+      {
+        id: "volume",
+        label: t("coffeeVolume"),
+        type: "number",
+        required: true,
+        unit: t("unitKg"),
+        placeholder: t("coffeeVolumePh"),
+        dynamicHelp: (a) =>
+          a.channel === "export"
+            ? t("coffeeHelpExport")
+            : a.channel === "local"
+              ? t("coffeeHelpLocal")
+              : null,
+      },
+      {
+        id: "frequency",
+        label: t("coffeeFrequency"),
+        type: "single",
+        options: [
+          { value: "oneoff", label: t("coffeeOneoff") },
+          { value: "weekly", label: t("coffeeWeekly") },
+          { value: "monthly", label: t("coffeeMonthly") },
+          { value: "quarterly", label: t("coffeeQuarterly") },
+        ],
+      },
+      {
+        id: "prep",
+        label: t("coffeePrep"),
+        type: "multi",
+        options: [
+          { value: "whole", label: t("coffeeWhole") },
+          { value: "ground", label: t("coffeeGround") },
+        ],
+      },
+      {
+        id: "destination",
+        label: t("coffeeDestination"),
+        type: "text",
+        required: true,
+        placeholder: t("coffeeDestinationPh"),
+        showIf: (a) => a.channel === "export",
+      },
+      {
+        id: "docs",
+        label: t("coffeeDocs"),
+        type: "multi",
+        showIf: (a) => a.channel === "export",
+        options: [
+          { value: "origin", label: t("coffeeDocOrigin") },
+          { value: "foodsafety", label: t("coffeeDocFoodsafety") },
+          { value: "phyto", label: t("coffeeDocPhyto") },
+          { value: "grading", label: t("coffeeDocGrading") },
+        ],
+      },
+      {
+        id: "private_label",
+        label: t("coffeePrivateLabel"),
+        type: "single",
+        options: [
+          { value: "vitorra", label: t("coffeeBrandVitorra") },
+          { value: "own", label: t("coffeeBrandOwn") },
+        ],
+      },
+    ],
+
+    /* Logistics — freight & supply chain (B2B). The most data-rich quote. */
+    LOGISTICS: [
+      {
+        id: "services",
+        label: t("logServices"),
+        type: "multi",
+        required: true,
+        options: [
+          { value: "freight", label: t("logFreight") },
+          { value: "forwarding", label: t("logForwarding") },
+          { value: "warehousing", label: t("logWarehousing") },
+          { value: "customs", label: t("logCustoms") },
+          { value: "supplychain", label: t("logSupplychain") },
+        ],
+      },
+      { id: "cargo", label: t("logCargo"), type: "text", required: true, placeholder: t("logCargoPh") },
+      {
+        id: "handling",
+        label: t("logHandling"),
+        type: "multi",
+        options: [
+          { value: "refrigerated", label: t("logRefrigerated") },
+          { value: "hazardous", label: t("logHazardous") },
+          { value: "oversized", label: t("logOversized") },
+          { value: "fragile", label: t("logFragile") },
+          { value: "none", label: t("logHandlingNone") },
+        ],
+        dynamicHelp: (a) =>
+          Array.isArray(a.handling) && a.handling.includes("hazardous")
+            ? t("logHelpHazardous")
             : null,
-    },
-    {
-      id: "frequency",
-      label: "How often?",
-      type: "single",
-      options: [
-        { value: "oneoff", label: "One-off" },
-        { value: "weekly", label: "Weekly" },
-        { value: "monthly", label: "Monthly" },
-        { value: "quarterly", label: "Quarterly" },
-      ],
-    },
-    {
-      id: "prep",
-      label: "Preferred preparation",
-      type: "multi",
-      options: [
-        { value: "whole", label: "Whole bean" },
-        { value: "ground", label: "Ground" },
-      ],
-    },
-    {
-      id: "destination",
-      label: "Destination country",
-      type: "text",
-      required: true,
-      placeholder: "e.g. Germany",
-      showIf: (a) => a.channel === "export",
-    },
-    {
-      id: "docs",
-      label: "Export documents needed",
-      type: "multi",
-      showIf: (a) => a.channel === "export",
-      options: [
-        { value: "origin", label: "Certificate of Origin" },
-        { value: "foodsafety", label: "Food-safety certification" },
-        { value: "phyto", label: "Phytosanitary certificate" },
-        { value: "grading", label: "Quality grading report" },
-      ],
-    },
-    {
-      id: "private_label",
-      label: "Branding",
-      type: "single",
-      options: [
-        { value: "vitorra", label: "Vitorra branding" },
-        { value: "own", label: "My own brand (private label)" },
-      ],
-    },
-  ],
+      },
+      { id: "origin", label: t("logOrigin"), type: "text", required: true, placeholder: t("logOriginPh") },
+      { id: "destination", label: t("logDestination"), type: "text", required: true, placeholder: t("logDestinationPh") },
+      {
+        id: "mode",
+        label: t("logMode"),
+        type: "single",
+        options: [
+          { value: "road", label: t("logRoad") },
+          { value: "ocean", label: t("logOcean") },
+          { value: "air", label: t("logAir") },
+          { value: "notsure", label: t("logNotsure") },
+        ],
+      },
+      {
+        id: "frequency",
+        label: t("logShipmentType"),
+        type: "single",
+        required: true,
+        options: [
+          { value: "oneoff", label: t("logOneoff") },
+          { value: "ongoing", label: t("logOngoing") },
+        ],
+      },
+      { id: "timeline", label: t("timeline"), type: "single", options: TIMELINE },
+    ],
 
-  /* Logistics — freight & supply chain (B2B). The most data-rich quote. */
-  LOGISTICS: [
-    {
-      id: "services",
-      label: "Services needed",
-      type: "multi",
-      required: true,
-      options: [
-        { value: "freight", label: "Freight transport" },
-        { value: "forwarding", label: "Freight forwarding (import/export)" },
-        { value: "warehousing", label: "Warehousing & distribution" },
-        { value: "customs", label: "Customs & clearance" },
-        { value: "supplychain", label: "Supply-chain management" },
-      ],
-    },
-    { id: "cargo", label: "What are you shipping?", type: "text", required: true, placeholder: "e.g. 18 tonnes of packaged coffee" },
-    {
-      id: "handling",
-      label: "Special handling",
-      type: "multi",
-      options: [
-        { value: "refrigerated", label: "Refrigerated" },
-        { value: "hazardous", label: "Hazardous" },
-        { value: "oversized", label: "Oversized" },
-        { value: "fragile", label: "Fragile" },
-        { value: "none", label: "None" },
-      ],
-      dynamicHelp: (a) =>
-        Array.isArray(a.handling) && a.handling.includes("hazardous")
-          ? "Hazardous cargo needs extra documentation — we'll guide you through it."
-          : null,
-    },
-    { id: "origin", label: "Origin", type: "text", required: true, placeholder: "City / country" },
-    { id: "destination", label: "Destination", type: "text", required: true, placeholder: "City / country" },
-    {
-      id: "mode",
-      label: "Preferred mode",
-      type: "single",
-      options: [
-        { value: "road", label: "Road" },
-        { value: "ocean", label: "Ocean" },
-        { value: "air", label: "Air" },
-        { value: "notsure", label: "Not sure — advise me" },
-      ],
-    },
-    {
-      id: "frequency",
-      label: "Shipment type",
-      type: "single",
-      required: true,
-      options: [
-        { value: "oneoff", label: "One-off shipment" },
-        { value: "ongoing", label: "Ongoing / recurring" },
-      ],
-    },
-    { id: "timeline", label: "Timeline", type: "single", options: TIMELINE },
-  ],
-
-  /* General enquiry — no structured fields; the free-text message carries it. */
-  GENERAL: [],
-};
+    /* General enquiry — no structured fields; the free-text message carries it. */
+    GENERAL: [],
+  };
+}
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
-
-function fieldsFor(cat: UiCategory | null): FieldDef[] {
-  return cat ? (ENQUIRY_SCHEMAS[cat] ?? []) : [];
-}
 
 function optionLabel(field: FieldDef, value: string): string {
   return field.options?.find((o) => o.value === value)?.label ?? value;
 }
 
-/** The fields currently visible for a category, after applying `showIf` branching. */
-export function visibleFields(cat: UiCategory | null, answers: Answers): FieldDef[] {
-  return fieldsFor(cat).filter((f) => !f.showIf || f.showIf(answers));
+/** The fields currently visible, after applying `showIf` branching. */
+export function visibleFields(fields: FieldDef[], answers: Answers): FieldDef[] {
+  return fields.filter((f) => !f.showIf || f.showIf(answers));
 }
 
 /** Validate required visible fields. Returns { fieldId: errorMessage }. */
-export function validateAnswers(cat: UiCategory | null, answers: Answers): Record<string, string> {
+export function validateAnswers(fields: FieldDef[], answers: Answers, requiredMsg: string): Record<string, string> {
   const errors: Record<string, string> = {};
-  for (const f of visibleFields(cat, answers)) {
+  for (const f of visibleFields(fields, answers)) {
     if (!f.required) continue;
     const v = answers[f.id];
     const empty = v == null || (Array.isArray(v) ? v.length === 0 : String(v).trim() === "");
-    if (empty) errors[f.id] = "This field is required.";
+    if (empty) errors[f.id] = requiredMsg;
   }
   return errors;
 }
 
 /** Turn raw answers into display-ready { key, label, value } pairs for the brief. */
-export function buildRequirements(cat: UiCategory | null, answers: Answers): EnquiryRequirement[] {
+export function buildRequirements(fields: FieldDef[], answers: Answers): EnquiryRequirement[] {
   const out: EnquiryRequirement[] = [];
-  for (const f of visibleFields(cat, answers)) {
+  for (const f of visibleFields(fields, answers)) {
     const v = answers[f.id];
     if (v == null) continue;
 

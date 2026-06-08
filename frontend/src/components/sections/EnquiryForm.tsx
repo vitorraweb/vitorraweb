@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Fuel, HeartPulse, Coffee, Truck, MessageCircle, Check, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +11,7 @@ import { cn } from "@/lib/utils";
 import type { EnquiryFormData, ProductCategory } from "@/types";
 import { submitEnquiry } from "@/lib/api";
 import {
+  getEnquirySchemas,
   visibleFields,
   validateAnswers,
   buildRequirements,
@@ -25,15 +27,13 @@ import {
    Builds an EnquiryFormData payload and posts it via `submitEnquiry`.
    ─────────────────────────────────────────────────────────────────────────── */
 
-const CATEGORIES: { value: UiCategory; label: string; desc: string; icon: typeof Fuel }[] = [
-  { value: "FET", label: "Fuel Eco Tech", desc: "Fuel savings for fleets", icon: Fuel },
-  { value: "SEAL", label: "SEAL Wound Spray", desc: "Clinical wound care", icon: HeartPulse },
-  { value: "COFFEE", label: "Vitorra Coffee", desc: "Wholesale & export", icon: Coffee },
-  { value: "LOGISTICS", label: "Logistics", desc: "Freight & supply chain", icon: Truck },
-  { value: "GENERAL", label: "General enquiry", desc: "Something else", icon: MessageCircle },
+const CATEGORY_META: { value: UiCategory; labelKey: string; descKey: string; icon: typeof Fuel }[] = [
+  { value: "FET", labelKey: "catFetLabel", descKey: "catFetDesc", icon: Fuel },
+  { value: "SEAL", labelKey: "catSealLabel", descKey: "catSealDesc", icon: HeartPulse },
+  { value: "COFFEE", labelKey: "catCoffeeLabel", descKey: "catCoffeeDesc", icon: Coffee },
+  { value: "LOGISTICS", labelKey: "catLogisticsLabel", descKey: "catLogisticsDesc", icon: Truck },
+  { value: "GENERAL", labelKey: "catGeneralLabel", descKey: "catGeneralDesc", icon: MessageCircle },
 ];
-
-const STEPS = ["Interest", "Details", "Contact"];
 
 type Fields = Omit<EnquiryFormData, "product_category">;
 const EMPTY: Fields = { name: "", email: "", company: "", phone: "", country: "Uganda", message: "" };
@@ -52,8 +52,15 @@ export default function EnquiryForm({
   /** Pre-filled schema answers (e.g. vehicle_type / fleet_size from the FET calculator). */
   initialAnswers?: Answers;
 }) {
+  const t = useTranslations("enquiryForm");
+  const te = useTranslations("enquiry");
+  const tt = useTranslations("fetTiers");
+  const schemas = getEnquirySchemas(te, tt);
+  const CATEGORIES = CATEGORY_META.map((c) => ({ ...c, label: t(c.labelKey), desc: t(c.descKey) }));
+  const STEPS = [t("stepInterest"), t("stepDetails"), t("stepContact")];
+
   const prefillCategory =
-    initialSector && CATEGORIES.some((c) => c.value === initialSector)
+    initialSector && CATEGORY_META.some((c) => c.value === initialSector)
       ? (initialSector as UiCategory)
       : null;
 
@@ -77,23 +84,24 @@ export default function EnquiryForm({
   };
 
   // Product-specific question set for the chosen category (empty for General).
-  const fields = visibleFields(category, answers);
+  const categoryFields = category ? (schemas[category] ?? []) : [];
+  const fields = visibleFields(categoryFields, answers);
   const hasSchema = fields.length > 0;
 
   const validate = (s: number): boolean => {
     const e: Record<string, string> = {};
-    if (s === 0 && !category) e.category = "Please choose what we can help with.";
+    if (s === 0 && !category) e.category = t("errChoose");
     if (s === 1) {
-      Object.assign(e, validateAnswers(category, answers));
-      if (!form.country.trim()) e.country = "Country is required.";
+      Object.assign(e, validateAnswers(categoryFields, answers, t("errFieldRequired")));
+      if (!form.country.trim()) e.country = t("errCountry");
       // With a question set, the message is optional context; without one
       // (General enquiry), it's the only way to capture the need.
-      if (!hasSchema && !form.message.trim()) e.message = "Tell us a little about what you need.";
+      if (!hasSchema && !form.message.trim()) e.message = t("errTellUs");
     }
     if (s === 2) {
-      if (!form.name.trim()) e.name = "Your name is required.";
-      if (!form.email.trim()) e.email = "Email is required.";
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email address.";
+      if (!form.name.trim()) e.name = t("errName");
+      if (!form.email.trim()) e.email = t("errEmailRequired");
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("errEmailInvalid");
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -105,7 +113,7 @@ export default function EnquiryForm({
   const handleSubmit = async () => {
     if (!validate(2)) return;
     setStatus("submitting");
-    const requirements = buildRequirements(category, answers);
+    const requirements = buildRequirements(categoryFields, answers);
     const payload: EnquiryFormData = {
       ...form,
       product_category: category === "GENERAL" ? "" : (category as ProductCategory),
@@ -127,19 +135,17 @@ export default function EnquiryForm({
           <Check className="w-7 h-7" style={{ color: "#7A6020" }} strokeWidth={2.5} />
         </div>
         <h2 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "clamp(24px,3vw,32px)", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }} className="mb-3">
-          Enquiry received.
+          {t("successTitle")}
         </h2>
         <p className="max-w-sm mx-auto mb-6" style={{ fontSize: "15px", lineHeight: 1.7, color: "#555555" }}>
-          Thank you, {form.name.split(" ")[0] || "there"}. Our team will reply to{" "}
-          <span style={{ color: "#1E1E1E", fontWeight: 600 }}>{form.email}</span> within 24 hours.
+          {t("successBody", { name: form.name.split(" ")[0] || t("fallbackName"), email: form.email })}
         </p>
         <p className="max-w-sm mx-auto mb-7 text-sm" style={{ color: "#777777" }}>
-          Want to follow its progress? Create an account to track this enquiry&apos;s
-          status and access your documents in one place.
+          {t("successTrack")}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/" className="btn-secondary">Back to home</Link>
-          <Link href="/account/register" className="btn-primary">Create an account<ArrowRight className="w-4 h-4" /></Link>
+          <Link href="/" className="btn-secondary">{t("backHome")}</Link>
+          <Link href="/account/register" className="btn-primary">{t("createAccount")}<ArrowRight className="w-4 h-4" /></Link>
         </div>
       </div>
     );
@@ -184,9 +190,9 @@ export default function EnquiryForm({
         {step === 0 && (
           <div>
             <h3 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "22px", fontWeight: 700, color: "#1E1E1E" }}>
-              What can we help you with?
+              {t("step0Heading")}
             </h3>
-            <p className="text-sm mb-6" style={{ color: "#777777" }}>Choose the area closest to your needs.</p>
+            <p className="text-sm mb-6" style={{ color: "#777777" }}>{t("step0Sub")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {CATEGORIES.map((c) => {
                 const selected = category === c.value;
@@ -220,12 +226,11 @@ export default function EnquiryForm({
         {step === 1 && (
           <div className="space-y-5">
             <h3 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "22px", fontWeight: 700, color: "#1E1E1E" }}>
-              Tell us about your needs
+              {t("step1Heading")}
             </h3>
             {hasSchema && (
               <p className="text-sm" style={{ color: "#777777" }}>
-                A few quick details so we can prepare an accurate quote — and skip
-                the back-and-forth.
+                {t("step1Sub")}
               </p>
             )}
 
@@ -242,27 +247,23 @@ export default function EnquiryForm({
             ))}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label="Company / Organisation">
-                <Input value={form.company} onChange={(e) => set("company", e.target.value)} placeholder="Optional" className="h-11 rounded-xl px-3.5" />
+              <Field label={t("companyLabel")}>
+                <Input value={form.company} onChange={(e) => set("company", e.target.value)} placeholder={t("optional")} className="h-11 rounded-xl px-3.5" />
               </Field>
-              <Field label="Country" required error={errors.country}>
+              <Field label={t("countryLabel")} required error={errors.country}>
                 <Input value={form.country} onChange={(e) => set("country", e.target.value)} className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.country} />
               </Field>
             </div>
 
             <Field
-              label={hasSchema ? "Anything else we should know?" : "What do you need?"}
+              label={hasSchema ? t("anythingElse") : t("whatNeed")}
               required={!hasSchema}
               error={errors.message}
             >
               <Textarea
                 value={form.message}
                 onChange={(e) => set("message", e.target.value)}
-                placeholder={
-                  hasSchema
-                    ? "Optional — any extra context, deadlines, or questions."
-                    : "e.g. I'd like to discuss a partnership opportunity…"
-                }
+                placeholder={hasSchema ? t("msgPlaceholderSchema") : t("msgPlaceholderGeneral")}
                 className="min-h-24 rounded-xl px-3.5 py-3"
                 aria-invalid={!!errors.message}
               />
@@ -273,21 +274,21 @@ export default function EnquiryForm({
         {step === 2 && (
           <div className="space-y-5">
             <h3 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "22px", fontWeight: 700, color: "#1E1E1E" }}>
-              How can we reach you?
+              {t("step2Heading")}
             </h3>
-            <Field label="Full name" required error={errors.name}>
-              <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Jane Doe" className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.name} />
+            <Field label={t("fullName")} required error={errors.name}>
+              <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("namePlaceholder")} className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.name} />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label="Email" required error={errors.email}>
-                <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="jane@company.com" className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.email} />
+              <Field label={t("email")} required error={errors.email}>
+                <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder={t("emailPlaceholder")} className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.email} />
               </Field>
-              <Field label="Phone">
-                <Input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="Optional" className="h-11 rounded-xl px-3.5" />
+              <Field label={t("phone")}>
+                <Input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder={t("optional")} className="h-11 rounded-xl px-3.5" />
               </Field>
             </div>
             {status === "error" && (
-              <p className="text-sm" style={{ color: "#C0392B" }}>Something went wrong. Please try again or email {""}
+              <p className="text-sm" style={{ color: "#C0392B" }}>{t("errorGeneric")} {""}
                 <a href="mailto:support@vitorra.org" className="underline">support@vitorra.org</a>.
               </p>
             )}
@@ -298,14 +299,14 @@ export default function EnquiryForm({
       {/* Nav */}
       <div className="flex items-center justify-between mt-8 pt-6" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
         {step > 0 ? (
-          <button type="button" onClick={back} className="btn-secondary"><ArrowLeft className="w-4 h-4" />Back</button>
+          <button type="button" onClick={back} className="btn-secondary"><ArrowLeft className="w-4 h-4" />{t("back")}</button>
         ) : <span />}
 
         {step < 2 ? (
-          <button type="button" onClick={next} className="btn-primary">Continue<ArrowRight className="w-4 h-4" /></button>
+          <button type="button" onClick={next} className="btn-primary">{t("continue")}<ArrowRight className="w-4 h-4" /></button>
         ) : (
           <button type="button" onClick={handleSubmit} disabled={status === "submitting"} className="btn-primary" style={{ opacity: status === "submitting" ? 0.7 : 1 }}>
-            {status === "submitting" ? <><Loader2 className="w-4 h-4 animate-spin" />Sending…</> : <>Submit enquiry<ArrowRight className="w-4 h-4" /></>}
+            {status === "submitting" ? <><Loader2 className="w-4 h-4 animate-spin" />{t("sending")}</> : <>{t("submit")}<ArrowRight className="w-4 h-4" /></>}
           </button>
         )}
       </div>
