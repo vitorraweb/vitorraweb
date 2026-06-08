@@ -59,6 +59,10 @@
     "about": {
       "title": "Kuhusu — Vitorra Holdings Limited",
       "description": "Vitorra Holdings Limited ni kampuni yenye sekta mbalimbali iliyojengwa nchini Uganda — ikifanya kazi katika teknolojia ya mafuta, afya, kahawa bora, na usafirishaji. Kutana na timu yetu ya uongozi na ujue kinachotuendesha."
+    },
+    "contact": {
+      "title": "Wasiliana Nasi — Vitorra Holdings Limited",
+      "description": "Wasiliana na Vitorra Holdings Limited mjini Kampala, Uganda — barua pepe support@vitorra.org, piga simu +256 740 026 118, au tutumie ujumbe. Tunajibu ndani ya saa 24."
     }
   },
   "hero": {
@@ -362,5 +366,43 @@
     "stat1Label": "Aina za Bidhaa",
     "stat2Label": "Masoko Yanayohudumiwa",
     "stat3Label": "Muda wa Kujibu"
+  },
+  "contact": {
+    "eyebrow": "Wasiliana",
+    "title": "Tuzungumze.",
+    "subtitle": "Maswali, ushirikiano, au msaada — wasiliana nasi kwa njia inayokufaa. Timu yetu hujibu ndani ya saa 24.",
+    "emailUs": "Tutumie barua pepe",
+    "callUs": "Tupigie simu",
+    "whatsapp": "WhatsApp",
+    "whatsappValue": "Tutumie ujumbe kwa WhatsApp",
+    "hoursWeekday": "Jumatatu – Ijumaa · 8:00 – 17:00 (EAT)",
+    "hoursSaturday": "Jumamosi · 9:00 – 13:00 (EAT)",
+    "quoteTitle": "Unatafuta nukuu?",
+    "quoteBody": "Tueleze mahitaji yako na tutajibu kwa chaguo zinazokufaa.",
+    "quoteCta": "Omba Nukuu",
+    "mapTitle": "Vitorra Holdings Limited — eneo la ofisi ya Kampala",
+    "form": {
+      "heading": "Tutumie ujumbe",
+      "subheading": "Kwa kawaida tunajibu ndani ya saa 24.",
+      "fullName": "Jina kamili",
+      "fullNamePlaceholder": "Jane Doe",
+      "email": "Barua pepe",
+      "emailPlaceholder": "jane@kampuni.com",
+      "subject": "Mada",
+      "subjectPlaceholder": "Si lazima",
+      "message": "Ujumbe",
+      "messagePlaceholder": "Tunawezaje kukusaidia?",
+      "send": "Tuma ujumbe",
+      "sending": "Inatuma…",
+      "errorGeneric": "Hitilafu imetokea. Tafadhali jaribu tena au tuma barua pepe",
+      "successTitle": "Ujumbe umetumwa.",
+      "successBody": "Asante, {name}. Tutakujibu kwa {email} ndani ya saa 24.",
+      "backHome": "Rudi nyumbani",
+      "fallbackName": "wewe",
+      "errName": "Jina lako linahitajika.",
+      "errEmailRequired": "Barua pepe inahitajika.",
+      "errEmailInvalid": "Weka anwani sahihi ya barua pepe.",
+      "errMessage": "Tafadhali andika ujumbe."
+    }
   }
 }

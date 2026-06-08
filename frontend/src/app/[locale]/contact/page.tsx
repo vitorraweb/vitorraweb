@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ContactForm from "@/components/sections/ContactForm";
@@ -7,24 +9,30 @@ import { Reveal } from "@/components/ui/reveal";
 import { Mail, Phone, MessageCircle, MapPin, Clock, ArrowRight } from "lucide-react";
 import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_ADDRESS } from "@/lib/constants";
 
-export const metadata: Metadata = {
-  title: "Contact Us — Vitorra Holdings Limited",
-  description:
-    "Get in touch with Vitorra Holdings Limited in Kampala, Uganda — email support@vitorra.org, call +256 740 026 118, or send us a message. We reply within 24 hours.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.contact" });
+  return { title: t("title"), description: t("description") };
+}
 
 const tel = CONTACT_PHONE.replace(/\s+/g, "");
 const wa = CONTACT_PHONE.replace(/[^0-9]/g, "");
 const mapQuery = encodeURIComponent(`${CONTACT_ADDRESS.join(", ")}`);
 const mapSrc = `https://www.google.com/maps?q=${mapQuery}&output=embed`;
 
-const methods = [
-  { icon: Mail, label: "Email us", value: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
-  { icon: Phone, label: "Call us", value: CONTACT_PHONE, href: `tel:${tel}` },
-  { icon: MessageCircle, label: "WhatsApp", value: "Message us on WhatsApp", href: `https://wa.me/${wa}` },
-];
-
 export default function ContactPage() {
+  const t = useTranslations("contact");
+
+  const methods = [
+    { icon: Mail, label: t("emailUs"), value: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
+    { icon: Phone, label: t("callUs"), value: CONTACT_PHONE, href: `tel:${tel}` },
+    { icon: MessageCircle, label: t("whatsapp"), value: t("whatsappValue"), href: `https://wa.me/${wa}` },
+  ];
+
   return (
     <>
       <Header />
@@ -37,13 +45,12 @@ export default function ContactPage() {
             {/* Left — details */}
             <div className="lg:sticky lg:top-28 self-start">
               <Reveal>
-                <span className="eyebrow block mb-4">Contact</span>
+                <span className="eyebrow block mb-4">{t("eyebrow")}</span>
                 <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "clamp(36px, 4.5vw, 56px)", fontWeight: 700, letterSpacing: "-0.025em", lineHeight: 1.06, color: "#1E1E1E" }}>
-                  Let&apos;s talk.
+                  {t("title")}
                 </h1>
                 <p className="mt-6 mb-9 max-w-md" style={{ fontSize: "16px", lineHeight: 1.7, color: "#555555" }}>
-                  Questions, partnerships, or support — reach us however suits you.
-                  Our team replies within 24 hours.
+                  {t("subtitle")}
                 </p>
 
                 {/* Methods */}
@@ -74,18 +81,18 @@ export default function ContactPage() {
                   <div className="flex items-start gap-3">
                     <Clock className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#C5B27A" }} />
                     <span className="text-sm leading-relaxed" style={{ color: "#555555" }}>
-                      <span className="block">Mon – Fri · 8:00 – 17:00 (EAT)</span>
-                      <span className="block">Sat · 9:00 – 13:00 (EAT)</span>
+                      <span className="block">{t("hoursWeekday")}</span>
+                      <span className="block">{t("hoursSaturday")}</span>
                     </span>
                   </div>
                 </div>
 
                 {/* Quote nudge */}
                 <div className="mt-8 p-5 rounded-2xl" style={{ background: "rgba(197,178,122,0.1)", border: "1px solid rgba(197,178,122,0.3)" }}>
-                  <p className="text-sm font-semibold mb-1" style={{ color: "#1E1E1E" }}>Looking for a quote?</p>
-                  <p className="text-sm mb-3" style={{ color: "#666666" }}>Tell us about your needs and we&apos;ll respond with tailored options.</p>
+                  <p className="text-sm font-semibold mb-1" style={{ color: "#1E1E1E" }}>{t("quoteTitle")}</p>
+                  <p className="text-sm mb-3" style={{ color: "#666666" }}>{t("quoteBody")}</p>
                   <Link href="/enquire" className="inline-flex items-center gap-1.5 text-sm font-semibold hover:opacity-60 transition-opacity group" style={{ color: "#7A6020" }}>
-                    Request a Quote<ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
+                    {t("quoteCta")}<ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
                   </Link>
                 </div>
               </Reveal>
@@ -104,7 +111,7 @@ export default function ContactPage() {
             <div className="card-stadium shadow-card overflow-hidden" style={{ aspectRatio: "21/9", maxHeight: "56vh" }}>
               <iframe
                 src={mapSrc}
-                title="Vitorra Holdings Limited — Kampala office location"
+                title={t("mapTitle")}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 className="w-full h-full"

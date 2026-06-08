@@ -59,6 +59,10 @@
     "about": {
       "title": "About — Vitorra Holdings Limited",
       "description": "Vitorra Holdings Limited is a diversified holdings company built in Uganda — operating across fuel technology, healthcare, premium coffee, and logistics. Meet our leadership team and learn what drives us."
+    },
+    "contact": {
+      "title": "Contact Us — Vitorra Holdings Limited",
+      "description": "Get in touch with Vitorra Holdings Limited in Kampala, Uganda — email support@vitorra.org, call +256 740 026 118, or send us a message. We reply within 24 hours."
     }
   },
   "hero": {
@@ -362,5 +366,43 @@
     "stat1Label": "Product Lines",
     "stat2Label": "Markets Served",
     "stat3Label": "Response Time"
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Let's talk.",
+    "subtitle": "Questions, partnerships, or support — reach us however suits you. Our team replies within 24 hours.",
+    "emailUs": "Email us",
+    "callUs": "Call us",
+    "whatsapp": "WhatsApp",
+    "whatsappValue": "Message us on WhatsApp",
+    "hoursWeekday": "Mon – Fri · 8:00 – 17:00 (EAT)",
+    "hoursSaturday": "Sat · 9:00 – 13:00 (EAT)",
+    "quoteTitle": "Looking for a quote?",
+    "quoteBody": "Tell us about your needs and we'll respond with tailored options.",
+    "quoteCta": "Request a Quote",
+    "mapTitle": "Vitorra Holdings Limited — Kampala office location",
+    "form": {
+      "heading": "Send us a message",
+      "subheading": "We typically reply within 24 hours.",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Jane Doe",
+      "email": "Email",
+      "emailPlaceholder": "jane@company.com",
+      "subject": "Subject",
+      "subjectPlaceholder": "Optional",
+      "message": "Message",
+      "messagePlaceholder": "How can we help?",
+      "send": "Send message",
+      "sending": "Sending…",
+      "errorGeneric": "Something went wrong. Please try again or email",
+      "successTitle": "Message sent.",
+      "successBody": "Thanks, {name}. We'll get back to {email} within 24 hours.",
+      "backHome": "Back to home",
+      "fallbackName": "there",
+      "errName": "Your name is required.",
+      "errEmailRequired": "Email is required.",
+      "errEmailInvalid": "Enter a valid email address.",
+      "errMessage": "Please enter a message."
+    }
   }
 }
