@@ -56,7 +56,10 @@ export function Reveal({
           setVisible(false);
         }
       },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+      // Trigger as soon as the element nears the viewport (rootMargin extends
+      // the trigger zone ~18% of the screen below the fold), so content is
+      // already fading in by the time the user scrolls to it — no "loading" lag.
+      { threshold: 0, rootMargin: "0px 0px 18% 0px" }
     );
 
     observer.observe(el);
@@ -73,6 +76,10 @@ export function Reveal({
     }
   })();
 
+  // Treat the incoming `delay` as a stagger hint and soften it: scale it down
+  // and cap it, so long grids/lists never leave the last item waiting noticeably.
+  const stagger = Math.min(delay * 0.55, 180);
+
   const Component = as as React.ElementType;
 
   return (
@@ -82,7 +89,7 @@ export function Reveal({
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translate3d(0,0,0)" : offset,
-        transition: `opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms`,
+        transition: `opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1) ${stagger}ms, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1) ${stagger}ms`,
         willChange: "opacity, transform",
       }}
     >
