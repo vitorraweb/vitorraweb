@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import { getTranslations, getLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -9,18 +10,19 @@ import { Reveal } from "@/components/ui/reveal";
 import { Calendar, User, ArrowLeft } from "lucide-react";
 import { getBlogPost } from "@/lib/api";
 
-interface Props { params: Promise<{ slug: string }> }
+interface Props { params: Promise<{ slug: string; locale: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, locale } = await params;
   try {
-    const post = await getBlogPost(slug);
+    const post = await getBlogPost(slug, locale);
     return {
       title: post.seo_title ?? post.title,
       description: post.seo_description ?? post.excerpt ?? undefined,
     };
   } catch {
-    return { title: "Article — Vitorra Holdings" };
+    const t = await getTranslations({ locale, namespace: "meta.article" });
+    return { title: t("title") };
   }
 }
 
@@ -32,10 +34,12 @@ function formatDate(iso: string) {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
+  const t = await getTranslations("blogPage");
 
   let post;
   try {
-    post = await getBlogPost(slug);
+    post = await getBlogPost(slug, locale);
   } catch {
     notFound();
   }
@@ -75,7 +79,7 @@ export default async function BlogPostPage({ params }: Props) {
                 style={{ color: "#666666" }}
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Blog & Insights
+                {t("backToBlog")}
               </Link>
             </Reveal>
 
@@ -126,14 +130,14 @@ export default async function BlogPostPage({ params }: Props) {
         </article>
 
         <FinalCTA
-          titleLead="Questions about what"
-          titleAccent="you just read?"
-          body="Our team is happy to go deeper — reach out and we'll respond within 24 hours."
-          primaryLabel="Get in Touch"
+          titleLead={t("finalCtaTitleLead")}
+          titleAccent={t("finalCtaTitleAccent")}
+          body={t("finalCtaBody")}
+          primaryLabel={t("finalCtaPrimary")}
           primaryHref="/contact"
-          secondaryLabel="Request a Quote"
+          secondaryLabel={t("finalCtaSecondary")}
           secondaryHref="/enquire"
-          caption="Uganda · East Africa · International"
+          caption={t("finalCtaCaption")}
         />
 
       </main>

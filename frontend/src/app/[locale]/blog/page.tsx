@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { getTranslations, getLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -8,11 +10,15 @@ import { ArrowRight, Calendar, User } from "lucide-react";
 import { getBlogPosts } from "@/lib/api";
 import type { BlogPost } from "@/types";
 
-export const metadata: Metadata = {
-  title: "Blog & Insights — Vitorra Holdings Limited",
-  description:
-    "Insights, updates, and stories from Vitorra Holdings — fuel technology, healthcare, premium Ugandan coffee, and logistics across East Africa.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.blog" });
+  return { title: t("title"), description: t("description") };
+}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -21,6 +27,7 @@ function formatDate(iso: string): string {
 }
 
 function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
+  const t = useTranslations("blogPage");
   return (
     <Link
       href={`/blog/${post.slug}`}
@@ -96,7 +103,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
           className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto"
           style={{ color: "#1E1E1E" }}
         >
-          Read article
+          {t("readArticle")}
           <ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
         </span>
       </div>
@@ -105,6 +112,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
 }
 
 function EmptyState() {
+  const t = useTranslations("blogPage");
   return (
     <div className="col-span-full py-20 text-center">
       <span
@@ -119,22 +127,24 @@ function EmptyState() {
           marginBottom: "24px",
         }}
       >
-        Coming soon
+        {t("comingSoon")}
       </span>
       <p style={{ fontSize: "16px", color: "#666666", marginBottom: "24px" }}>
-        Insights and updates are on their way.
+        {t("comingSoonSub")}
       </p>
       <Link href="/contact" className="btn-secondary inline-flex items-center gap-2">
-        Get in touch<ArrowRight className="w-4 h-4" />
+        {t("getInTouch")}<ArrowRight className="w-4 h-4" />
       </Link>
     </div>
   );
 }
 
 export default async function BlogPage() {
+  const t = await getTranslations("blogPage");
+  const locale = await getLocale();
   let posts: BlogPost[] = [];
   try {
-    const res = await getBlogPosts(1);
+    const res = await getBlogPosts(1, locale);
     posts = res.data;
   } catch {
     // Backend not yet running — render gracefully with empty state
@@ -152,7 +162,7 @@ export default async function BlogPage() {
 
             {/* Header */}
             <Reveal className="mb-12 lg:mb-16">
-              <span className="eyebrow block mb-3">Blog & Insights</span>
+              <span className="eyebrow block mb-3">{t("eyebrow")}</span>
               <h1
                 className="max-w-xl gold-underline"
                 style={{
@@ -164,7 +174,7 @@ export default async function BlogPage() {
                   color: "#1E1E1E",
                 }}
               >
-                Ideas &amp; insights from Vitorra.
+                {t("title")}
               </h1>
             </Reveal>
 

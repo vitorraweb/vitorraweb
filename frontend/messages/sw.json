@@ -99,7 +99,9 @@
     "legalPrivacy": { "title": "Sera ya Faragha — Vitorra Holdings Limited", "description": "Jinsi Vitorra Holdings Limited inavyokusanya, kutumia, na kulinda taarifa zako binafsi." },
     "legalTerms": { "title": "Sheria na Masharti — Vitorra Holdings Limited", "description": "Sheria zinazoongoza matumizi ya tovuti ya Vitorra Holdings na ununuzi wa bidhaa za Vitorra." },
     "legalReturns": { "title": "Marejesho na Dhamana — Vitorra Holdings Limited", "description": "Sera ya marejesho, urejeshaji wa fedha, na dhamana ya Vitorra Holdings kwa maagizo ya Duka la Kahawa na bidhaa za B2B." },
-    "legalCookies": { "title": "Sera ya Vidakuzi — Vitorra Holdings Limited", "description": "Jinsi Vitorra Holdings inavyotumia vidakuzi na jinsi ya kusimamia mapendeleo yako." }
+    "legalCookies": { "title": "Sera ya Vidakuzi — Vitorra Holdings Limited", "description": "Jinsi Vitorra Holdings inavyotumia vidakuzi na jinsi ya kusimamia mapendeleo yako." },
+    "blog": { "title": "Blogu na Maarifa — Vitorra Holdings Limited", "description": "Maarifa, masasisho, na hadithi kutoka Vitorra Holdings — teknolojia ya mafuta, afya, kahawa bora ya Uganda, na usafirishaji kote Afrika Mashariki." },
+    "article": { "title": "Makala — Vitorra Holdings" }
   },
   "hero": {
     "primaryCta": "Omba Nukuu",
@@ -923,6 +925,21 @@
     "retailTitle": "Rejareja",
     "retailBody": "Pakiti za nyumbani na ofisini zinaanza hivi karibuni. Tueleze na tutawasiliana nawe kwanza.",
     "retailCta": "Sajili nia yako"
+  },
+  "blogPage": {
+    "eyebrow": "Blogu na Maarifa",
+    "title": "Mawazo na maarifa kutoka Vitorra.",
+    "readArticle": "Soma makala",
+    "comingSoon": "Inakuja hivi karibuni",
+    "comingSoonSub": "Maarifa na masasisho yanakuja.",
+    "getInTouch": "Wasiliana nasi",
+    "backToBlog": "Blogu na Maarifa",
+    "finalCtaTitleLead": "Una maswali kuhusu",
+    "finalCtaTitleAccent": "ulichosoma?",
+    "finalCtaBody": "Timu yetu inafurahi kueleza zaidi — wasiliana nasi na tutajibu ndani ya saa 24.",
+    "finalCtaPrimary": "Wasiliana Nasi",
+    "finalCtaSecondary": "Omba Nukuu",
+    "finalCtaCaption": "Uganda · Afrika Mashariki · Kimataifa"
   },
   "legal": {
     "eyebrow": "Kisheria",

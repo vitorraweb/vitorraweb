@@ -99,7 +99,9 @@
     "legalPrivacy": { "title": "Privacy Policy — Vitorra Holdings Limited", "description": "How Vitorra Holdings Limited collects, uses, and protects your personal information." },
     "legalTerms": { "title": "Terms & Conditions — Vitorra Holdings Limited", "description": "The terms governing use of the Vitorra Holdings website and purchase of Vitorra products." },
     "legalReturns": { "title": "Returns & Warranty — Vitorra Holdings Limited", "description": "Vitorra Holdings returns, refund, and warranty policy for Coffee Shop orders and B2B products." },
-    "legalCookies": { "title": "Cookie Policy — Vitorra Holdings Limited", "description": "How Vitorra Holdings uses cookies and how to manage your preferences." }
+    "legalCookies": { "title": "Cookie Policy — Vitorra Holdings Limited", "description": "How Vitorra Holdings uses cookies and how to manage your preferences." },
+    "blog": { "title": "Blog & Insights — Vitorra Holdings Limited", "description": "Insights, updates, and stories from Vitorra Holdings — fuel technology, healthcare, premium Ugandan coffee, and logistics across East Africa." },
+    "article": { "title": "Article — Vitorra Holdings" }
   },
   "hero": {
     "primaryCta": "Request a Quote",
@@ -923,6 +925,21 @@
     "retailTitle": "Retail",
     "retailBody": "Home & office packs are launching shortly. Tell us and we'll be in touch first.",
     "retailCta": "Register your interest"
+  },
+  "blogPage": {
+    "eyebrow": "Blog & Insights",
+    "title": "Ideas & insights from Vitorra.",
+    "readArticle": "Read article",
+    "comingSoon": "Coming soon",
+    "comingSoonSub": "Insights and updates are on their way.",
+    "getInTouch": "Get in touch",
+    "backToBlog": "Blog & Insights",
+    "finalCtaTitleLead": "Questions about what",
+    "finalCtaTitleAccent": "you just read?",
+    "finalCtaBody": "Our team is happy to go deeper — reach out and we'll respond within 24 hours.",
+    "finalCtaPrimary": "Get in Touch",
+    "finalCtaSecondary": "Request a Quote",
+    "finalCtaCaption": "Uganda · East Africa · International"
   },
   "legal": {
     "eyebrow": "Legal",

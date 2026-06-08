@@ -61,14 +61,18 @@ export async function getExchangeRate(): Promise<number> {
 
 /* ─── Blog ─────────────────────────────────────────────────────────────── */
 
-export async function getBlogPosts(page = 1): Promise<PaginatedResponse<BlogPost>> {
-  return request<PaginatedResponse<BlogPost>>(`/blog/posts?page=${page}`, {
+/* `locale` is forwarded to the API so it can serve translated posts (with an
+   English fallback) once blog translations exist; harmlessly ignored until then. */
+export async function getBlogPosts(page = 1, locale?: string): Promise<PaginatedResponse<BlogPost>> {
+  const loc = locale && locale !== "en" ? `&locale=${locale}` : "";
+  return request<PaginatedResponse<BlogPost>>(`/blog/posts?page=${page}${loc}`, {
     next: { revalidate: 1800 },
   });
 }
 
-export async function getBlogPost(slug: string): Promise<BlogPost> {
-  const res = await request<ApiResponse<BlogPost>>(`/blog/posts/${slug}`, {
+export async function getBlogPost(slug: string, locale?: string): Promise<BlogPost> {
+  const loc = locale && locale !== "en" ? `?locale=${locale}` : "";
+  const res = await request<ApiResponse<BlogPost>>(`/blog/posts/${slug}${loc}`, {
     next: { revalidate: 1800 },
   });
   return res.data;
