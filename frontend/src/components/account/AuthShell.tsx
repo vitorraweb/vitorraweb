@@ -1,15 +1,10 @@
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Check, ArrowUpRight } from "lucide-react";
 
 /* Premium split auth layout — dark cinematic brand panel (aurora + grain, like
    the site's heroes) on the left, the form on a clean ivory canvas on the right. */
-
-const PERKS = [
-  "Track every order and enquiry in one place",
-  "See exactly where your quotes stand, in real time",
-  "Download your documents, datasheets, and invoices",
-];
 
 export default function AuthShell({
   lead,
@@ -20,6 +15,8 @@ export default function AuthShell({
   accent: string;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("account");
+  const PERKS = [t("perk1"), t("perk2"), t("perk3")];
   return (
     <section className="grid lg:grid-cols-2 min-h-dvh">
       {/* ── Left — dark brand panel ──────────────────────────────────────── */}
@@ -32,12 +29,12 @@ export default function AuthShell({
             <Image src="/logo.png" alt="Vitorra Holdings Limited" width={120} height={120} className="h-16 w-auto" />
           </Link>
           <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold transition-opacity hover:opacity-70" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Back to vitorra.org<ArrowUpRight className="w-3.5 h-3.5" />
+            {t("backToSite")}<ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         <div className="relative z-10 max-w-md">
-          <span className="eyebrow-light mb-6 inline-flex">Vitorra Account</span>
+          <span className="eyebrow-light mb-6 inline-flex">{t("shellEyebrow")}</span>
           <h2
             style={{
               fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -64,8 +61,7 @@ export default function AuthShell({
 
         <div className="relative z-10">
           <p style={{ fontSize: "12px", lineHeight: 1.7, color: "rgba(255,255,255,0.32)", maxWidth: "320px" }}>
-            A diversified African holdings company — fuel technology, healthcare,
-            premium coffee, and logistics.
+            {t("shellTagline")}
           </p>
         </div>
       </div>

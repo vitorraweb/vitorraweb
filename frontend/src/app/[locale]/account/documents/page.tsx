@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2, FileText, Download } from "lucide-react";
 import { apiCustomer } from "@/lib/customer-auth";
 
 type Doc = { name: string; url: string; type: string };
 
 export default function AccountDocuments() {
+  const t = useTranslations("account");
   const [list, setList] = useState<Doc[] | null>(null);
 
   useEffect(() => {
     apiCustomer<{ data: Doc[] }>("/account/documents").then((r) => setList(r.data)).catch(() => setList([]));
   }, []);
 
-  if (!list) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (!list) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
 
   return (
     <div>
@@ -38,7 +40,7 @@ export default function AccountDocuments() {
           </a>
         ))}
       </div>
-      <p className="text-xs mt-5" style={{ color: "#999" }}>More documents specific to your account will appear here as they&apos;re shared with you.</p>
+      <p className="text-xs mt-5" style={{ color: "#999" }}>{t("docsFoot")}</p>
     </div>
   );
 }

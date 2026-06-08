@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { ShoppingBag, MessageSquare, FileText, ArrowRight } from "lucide-react";
 import { apiCustomer } from "@/lib/customer-auth";
 
 export default function AccountDashboard() {
+  const t = useTranslations("account");
   const [stats, setStats] = useState<{ orders: number; enquiries: number } | null>(null);
 
   useEffect(() => {
@@ -18,9 +20,9 @@ export default function AccountDashboard() {
   }, []);
 
   const cards = [
-    { label: "Orders", value: stats ? String(stats.orders) : "—", sub: "Track & view your orders", href: "/account/orders", icon: ShoppingBag },
-    { label: "Enquiries", value: stats ? String(stats.enquiries) : "—", sub: "See where your quotes stand", href: "/account/enquiries", icon: MessageSquare },
-    { label: "Documents", value: "", sub: "Datasheets, guides & invoices", href: "/account/documents", icon: FileText },
+    { label: t("tabOrders"), value: stats ? String(stats.orders) : "—", sub: t("cardOrdersSub"), href: "/account/orders", icon: ShoppingBag },
+    { label: t("tabEnquiries"), value: stats ? String(stats.enquiries) : "—", sub: t("cardEnquiriesSub"), href: "/account/enquiries", icon: MessageSquare },
+    { label: t("tabDocuments"), value: "", sub: t("cardDocumentsSub"), href: "/account/documents", icon: FileText },
   ];
 
   return (

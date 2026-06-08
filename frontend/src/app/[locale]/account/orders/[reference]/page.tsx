@@ -1,9 +1,15 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Loader2, ArrowLeft, Download } from "lucide-react";
 import { apiCustomer } from "@/lib/customer-auth";
+
+const STATUS_KEY: Record<string, string> = {
+  pending: "statusPending", processing: "statusProcessing", shipped: "statusShipped",
+  delivered: "statusDelivered", complete: "statusComplete", cancelled: "statusCancelled",
+};
 
 type Item = { id: number; product_name: string; options: { grind?: string } | null; quantity: number; line_total: number };
 type Order = {
@@ -15,32 +21,33 @@ type Order = {
 const money = (c: string, t: number) => (c === "USD" ? `$${(t / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}` : `UGX ${t.toLocaleString("en-US")}`);
 
 export default function OrderDetail({ params }: { params: Promise<{ reference: string }> }) {
+  const t = useTranslations("account");
   const { reference } = use(params);
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    apiCustomer<{ data: Order }>(`/account/orders/${reference}`).then((r) => setOrder(r.data)).catch((e) => setError(e instanceof Error ? e.message : "Not found"));
-  }, [reference]);
+    apiCustomer<{ data: Order }>(`/account/orders/${reference}`).then((r) => setOrder(r.data)).catch((e) => setError(e instanceof Error ? e.message : t("notFound")));
+  }, [reference, t]);
 
-  if (error) return <p className="text-sm" style={{ color: "#C0392B" }}>{error}. <Link href="/account/orders" className="underline">Back to orders</Link></p>;
-  if (!order) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (error) return <p className="text-sm" style={{ color: "#C0392B" }}>{error}. <Link href="/account/orders" className="underline">{t("backToOrders")}</Link></p>;
+  if (!order) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
 
   const addr = order.shipping_address ?? {};
 
   return (
     <div className="max-w-2xl">
-      <Link href="/account/orders" className="inline-flex items-center gap-1.5 text-sm mb-5" style={{ color: "#777" }}><ArrowLeft className="w-4 h-4" />All orders</Link>
+      <Link href="/account/orders" className="inline-flex items-center gap-1.5 text-sm mb-5" style={{ color: "#777" }}><ArrowLeft className="w-4 h-4" />{t("allOrders")}</Link>
 
       <div className="bg-white rounded-[28px] border border-black/[0.05] shadow-card p-7 md:p-9">
         <div className="flex items-start justify-between gap-4 flex-wrap mb-7">
           <div>
             <h1 style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "28px", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }}>{order.reference}</h1>
-            <p className="text-xs mt-1.5" style={{ color: "#999" }}>Status: <span style={{ color: "#555", fontWeight: 600 }}>{order.status}</span> · Payment: {order.payment_status}{order.tracking_number ? ` · Tracking: ${order.tracking_number}` : ""}</p>
+            <p className="text-xs mt-1.5" style={{ color: "#999" }}>{t("statusLabel")}: <span style={{ color: "#555", fontWeight: 600 }}>{STATUS_KEY[order.status] ? t(STATUS_KEY[order.status]) : order.status}</span> · {t("paymentLabel")}: {order.payment_status}{order.tracking_number ? ` · ${t("trackingLabel")}: ${order.tracking_number}` : ""}</p>
           </div>
           {order.invoice_url && (
             <a href={order.invoice_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#1E1E1E" }}>
-              <Download className="w-4 h-4" />Invoice
+              <Download className="w-4 h-4" />{t("invoice")}
             </a>
           )}
         </div>
@@ -50,7 +57,7 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
             <div key={it.id} className="flex items-center justify-between py-3.5">
               <div>
                 <p className="text-sm font-medium" style={{ color: "#1E1E1E" }}>{it.product_name}</p>
-                <p className="text-xs" style={{ color: "#999" }}>Qty {it.quantity}{it.options?.grind ? ` · ${it.options.grind}` : ""}</p>
+                <p className="text-xs" style={{ color: "#999" }}>{t("qty")} {it.quantity}{it.options?.grind ? ` · ${it.options.grind}` : ""}</p>
               </div>
               <span className="text-sm" style={{ color: "#1E1E1E" }}>{money(order.currency, it.line_total)}</span>
             </div>
@@ -58,13 +65,13 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
         </div>
 
         <div className="flex items-center justify-between pt-5 mt-2 border-t" style={{ borderColor: "rgba(0,0,0,0.1)" }}>
-          <span className="text-sm font-bold uppercase tracking-wide" style={{ color: "#777" }}>Total</span>
+          <span className="text-sm font-bold uppercase tracking-wide" style={{ color: "#777" }}>{t("total")}</span>
           <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "24px", fontWeight: 700, color: "#1E1E1E" }}>{money(order.currency, order.total)}</span>
         </div>
 
         {(addr.line1 || addr.city) && (
           <div className="mt-7 pt-6 border-t" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "#8a8a8a" }}>Delivery</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "#8a8a8a" }}>{t("delivery")}</p>
             <p className="text-sm" style={{ color: "#555" }}>{[addr.line1, addr.line2, addr.city, addr.country, addr.postcode].filter(Boolean).join(", ")}</p>
           </div>
         )}
