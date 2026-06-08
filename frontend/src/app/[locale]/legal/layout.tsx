@@ -1,15 +1,16 @@
+import { useTranslations } from "next-intl";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import Link from "next/link";
-
-const legalLinks = [
-  { label: "Privacy Policy",       href: "/legal/privacy-policy" },
-  { label: "Terms & Conditions",   href: "/legal/terms-and-conditions" },
-  { label: "Returns & Warranty",   href: "/legal/returns-and-warranty" },
-  { label: "Cookie Policy",        href: "/legal/cookie-policy" },
-];
+import { Link } from "@/i18n/navigation";
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
+  const t = useTranslations("footer");
+  const legalLinks = [
+    { label: t("privacy"), href: "/legal/privacy-policy" },
+    { label: t("terms"),   href: "/legal/terms-and-conditions" },
+    { label: t("returns"), href: "/legal/returns-and-warranty" },
+    { label: t("cookies"), href: "/legal/cookie-policy" },
+  ];
   return (
     <>
       <Header />
@@ -18,8 +19,8 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-10 lg:gap-16 items-start">
 
             {/* Sidebar nav */}
-            <nav className="lg:sticky lg:top-28" aria-label="Legal pages">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-4" style={{ color: "#999999" }}>Legal</p>
+            <nav className="lg:sticky lg:top-28" aria-label="Legal">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-4" style={{ color: "#999999" }}>{t("colLegal")}</p>
               <ul className="space-y-1">
                 {legalLinks.map((l) => (
                   <li key={l.href}>

@@ -95,7 +95,11 @@
     "shopSoon": {
       "title": "Vitorra Coffee — Retail Store Launching Soon",
       "description": "Our single-origin GOLD retail store is launching soon. Wholesale and export buyers can order today — enquire for pricing and volumes."
-    }
+    },
+    "legalPrivacy": { "title": "Privacy Policy — Vitorra Holdings Limited", "description": "How Vitorra Holdings Limited collects, uses, and protects your personal information." },
+    "legalTerms": { "title": "Terms & Conditions — Vitorra Holdings Limited", "description": "The terms governing use of the Vitorra Holdings website and purchase of Vitorra products." },
+    "legalReturns": { "title": "Returns & Warranty — Vitorra Holdings Limited", "description": "Vitorra Holdings returns, refund, and warranty policy for Coffee Shop orders and B2B products." },
+    "legalCookies": { "title": "Cookie Policy — Vitorra Holdings Limited", "description": "How Vitorra Holdings uses cookies and how to manage your preferences." }
   },
   "hero": {
     "primaryCta": "Request a Quote",
@@ -919,6 +923,135 @@
     "retailTitle": "Retail",
     "retailBody": "Home & office packs are launching shortly. Tell us and we'll be in touch first.",
     "retailCta": "Register your interest"
+  },
+  "legal": {
+    "eyebrow": "Legal",
+    "lastUpdated": "Last updated:",
+    "privacy": {
+      "title": "Privacy Policy",
+      "updated": "1 June 2026",
+      "whoTitle": "Who we are",
+      "who1": "{name} (\"Vitorra\", \"we\", \"us\") is a company registered in Uganda (Reg. No. 80034340923220), located at Padre Pio House, Plot 32, Lumumba Avenue, Kampala, Uganda. We operate the website vitorra.org.",
+      "who2": "We are the data controller for personal information collected through this website. Questions about this policy: <mail></mail>.",
+      "collectTitle": "Information we collect",
+      "collect1": "We collect information you provide directly:",
+      "collectList": [
+        "Name, email, phone, and company when you submit an enquiry or contact form",
+        "Shipping address, payment details, and order information when you place an order through the Coffee Shop",
+        "Account details (name and email) if you create a customer portal account",
+        "Messages and correspondence when you contact us"
+      ],
+      "collect2": "We also collect information automatically when you use the site (pages visited, device type, browser, IP address via standard server logs and analytics).",
+      "useTitle": "How we use your information",
+      "useList": [
+        "To respond to enquiries, quotes, and support requests",
+        "To process and fulfil your orders and send order confirmations",
+        "To manage your account if you register",
+        "To send transactional emails (order updates, receipts)",
+        "To improve the website through aggregated analytics",
+        "To comply with legal obligations"
+      ],
+      "use2": "We do not sell your personal information to third parties, and we do not send marketing emails without your explicit consent.",
+      "basesTitle": "Legal bases for processing",
+      "bases1": "We process your information on the following bases: performance of a contract (processing orders); legitimate interests (responding to enquiries, operating the site); consent (any marketing communications); and legal obligation (tax records, compliance).",
+      "cookiesTitle": "Cookies",
+      "cookies1": "We use essential cookies required for the site to function, and optional analytics cookies to understand usage. See our <clink>Cookie Policy</clink> for full details. You can manage your preferences at any time.",
+      "sharingTitle": "Data sharing",
+      "sharing1": "We share data only where necessary:",
+      "sharingList": [
+        "Payment processors (Flutterwave, PayPal) to complete transactions",
+        "Email service providers to send transactional emails",
+        "Shipping and logistics partners to fulfil orders",
+        "Analytics providers (aggregated, anonymised data only)",
+        "Legal authorities when required by law"
+      ],
+      "retentionTitle": "Data retention",
+      "retention1": "We retain personal data for as long as necessary to fulfil the purposes it was collected for, including legal, accounting, and reporting requirements. Enquiry data is retained for up to 2 years. Order records are retained for 7 years for tax purposes.",
+      "rightsTitle": "Your rights",
+      "rights1": "Depending on your location, you may have rights to: access the personal data we hold about you; correct inaccurate data; request deletion; restrict or object to processing; and data portability. To exercise any right, contact us at <mail></mail>.",
+      "changesTitle": "Changes to this policy",
+      "changes1": "We may update this policy from time to time. Material changes will be communicated by updating the \"Last updated\" date above. Continued use of the site constitutes acceptance of the updated policy."
+    },
+    "terms": {
+      "title": "Terms & Conditions",
+      "updated": "1 June 2026",
+      "aboutTitle": "About these terms",
+      "about1": "These terms govern your use of vitorra.org and any purchase you make from {name} (\"Vitorra\", \"we\", \"us\"). By using the site or placing an order, you agree to these terms. If you do not agree, please do not use the site.",
+      "usingTitle": "Using the website",
+      "using1": "You may use the site for lawful purposes only. You must not:",
+      "usingList": [
+        "Use the site in any way that breaches applicable local or international law or regulation",
+        "Transmit unsolicited or unauthorised advertising or promotional material (spam)",
+        "Knowingly introduce viruses, trojans, or other malicious or harmful material",
+        "Attempt to gain unauthorised access to any part of the site or its related systems"
+      ],
+      "ordersTitle": "Orders and payment",
+      "orders1": "When you place an order through our Coffee Shop, you are making an offer to purchase. We confirm acceptance by email. We reserve the right to decline or cancel orders at our discretion (for example, if a pricing error is identified).",
+      "orders2": "All prices are shown in UGX or USD as indicated. Payments are processed securely by Flutterwave (UGX) and PayPal (USD). We do not store card details.",
+      "orders3": "For B2B enquiries (Fuel Eco Tech, SEAL, Logistics), prices are agreed individually — a confirmed purchase order or written agreement constitutes the contract.",
+      "deliveryTitle": "Delivery",
+      "delivery1": "Delivery times stated are estimates only. We are not liable for delays outside our reasonable control (customs, weather, logistics disruptions). Risk in goods passes to you on delivery.",
+      "ipTitle": "Intellectual property",
+      "ip1": "All content on the site — including text, images, logos, and design — is owned by or licensed to Vitorra. You may not reproduce, distribute, or create derivative works without our written permission.",
+      "disclaimerTitle": "Disclaimer and limitation of liability",
+      "disclaimer1": "The site is provided \"as is\". We make reasonable efforts to keep it accurate and available, but we give no warranty as to its completeness, accuracy, or fitness for any particular purpose.",
+      "disclaimer2": "To the fullest extent permitted by law, Vitorra is not liable for any indirect, consequential, or incidental losses arising from use of the site or from any product purchased, beyond the value of the order in question.",
+      "governingTitle": "Governing law",
+      "governing1": "These terms are governed by the laws of the Republic of Uganda. Any disputes shall be subject to the exclusive jurisdiction of the courts of Uganda.",
+      "contactTitle": "Contact",
+      "contact1": "Questions about these terms: <mail></mail>."
+    },
+    "returns": {
+      "title": "Returns & Warranty",
+      "updated": "1 June 2026",
+      "coffeeTitle": "Coffee Shop orders",
+      "coffee1": "If your order arrives damaged, incorrect, or significantly not as described, please contact us within 7 days of receipt at <mail></mail> with your order number and a photo of the issue. We will arrange a replacement or full refund at no additional cost to you.",
+      "coffee2": "We are unable to accept returns for:",
+      "coffeeList": [
+        "Perishable or consumable goods that have been opened (including coffee once the seal is broken, unless faulty)",
+        "Items returned more than 14 days after delivery",
+        "Items not in their original condition due to customer handling"
+      ],
+      "b2bTitle": "B2B products (Fuel Eco Tech, SEAL Wound Spray, Logistics)",
+      "b2b1": "B2B product returns and warranties are governed by the individual supply agreement or purchase order in place. If you have a concern about a B2B product or service, contact us at <mail></mail> and our team will respond within 24 hours.",
+      "b2b2": "For SEAL Wound Spray: as a single-use medical product, opened units cannot be returned. Defective sealed units (manufacturing defect) may be returned for replacement within 30 days of delivery. Proof of purchase required.",
+      "refundTitle": "Refund process",
+      "refund1": "Approved refunds are processed within 5–10 business days. Refunds are issued to the original payment method (Flutterwave or PayPal). We do not refund original shipping costs unless the return is due to our error.",
+      "startTitle": "How to start a return",
+      "startList": [
+        "Email support@vitorra.org with your order number and reason",
+        "Include a photo if the item is damaged or incorrect",
+        "Our team will confirm eligibility and next steps within 24 hours"
+      ],
+      "warrantyTitle": "Warranty — Fuel Eco Tech",
+      "warranty1": "Fuel Eco Tech units carry a limited warranty against manufacturing defects for 12 months from the date of installation. The warranty does not cover damage caused by improper installation, misuse, or normal wear. Contact us to make a warranty claim."
+    },
+    "cookies": {
+      "title": "Cookie Policy",
+      "updated": "1 June 2026",
+      "whatTitle": "What are cookies?",
+      "what1": "Cookies are small text files placed on your device when you visit a website. They allow the site to remember your preferences and understand how you use it.",
+      "useTitle": "Cookies we use",
+      "essential": "<b>Essential cookies</b> — required for the site to function. These cannot be disabled.",
+      "essentialList": [
+        "Session management (keeping you logged in)",
+        "Shopping cart state (Coffee Shop)",
+        "Cookie consent preference (remembering your choice)"
+      ],
+      "analytics": "<b>Analytics cookies</b> — help us understand how visitors use the site so we can improve it. These are only set with your consent.",
+      "analyticsList": [
+        "Page views and navigation paths (aggregated, anonymised)",
+        "Device type and browser (to improve mobile experience)"
+      ],
+      "use3": "We do not use advertising or tracking cookies, and we do not share analytics data with third-party advertisers.",
+      "manageTitle": "Managing your preferences",
+      "manage1": "When you first visit the site, a cookie banner lets you accept or decline optional (analytics) cookies. You can update your preference at any time by clicking \"Cookie settings\" in the footer.",
+      "manage2": "You can also control cookies through your browser settings. Note that disabling essential cookies may affect site functionality (for example, the shopping cart may not work correctly).",
+      "thirdTitle": "Third-party cookies",
+      "third1": "We embed a Google Map on our Contact page. Google may set its own cookies when that map loads. We recommend reviewing Google's privacy policy for details.",
+      "contactTitle": "Contact",
+      "contact1": "Questions about our use of cookies: <mail></mail>."
+    }
   },
   "account": {
     "tabDashboard": "Dashboard",

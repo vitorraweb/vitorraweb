@@ -1,14 +1,17 @@
+import { useTranslations } from "next-intl";
+
 /* Shared prose wrapper for legal documents.
    Usage: <LegalPage title="..." updated="2026-06-01">…sections…</LegalPage> */
 export function LegalPage({ title, updated, children }: { title: string; updated: string; children: React.ReactNode }) {
+  const t = useTranslations("legal");
   return (
     <article>
       <header className="mb-10 pb-8" style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
-        <span className="eyebrow block mb-3">Legal</span>
+        <span className="eyebrow block mb-3">{t("eyebrow")}</span>
         <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "clamp(30px, 4vw, 48px)", fontWeight: 700, letterSpacing: "-0.025em", lineHeight: 1.08, color: "#1E1E1E" }}>
           {title}
         </h1>
-        <p className="mt-3 text-sm" style={{ color: "#999999" }}>Last updated: {updated}</p>
+        <p className="mt-3 text-sm" style={{ color: "#999999" }}>{t("lastUpdated")} {updated}</p>
       </header>
       <div className="legal-prose">{children}</div>
     </article>

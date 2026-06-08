@@ -95,7 +95,11 @@
     "shopSoon": {
       "title": "Vitorra Coffee — Duka la Rejareja Linakuja Hivi Karibuni",
       "description": "Duka letu la rejareja la GOLD la asili moja linakuja hivi karibuni. Wanunuzi wa jumla na usafirishaji nje wanaweza kuagiza leo — uliza kuhusu bei na idadi."
-    }
+    },
+    "legalPrivacy": { "title": "Sera ya Faragha — Vitorra Holdings Limited", "description": "Jinsi Vitorra Holdings Limited inavyokusanya, kutumia, na kulinda taarifa zako binafsi." },
+    "legalTerms": { "title": "Sheria na Masharti — Vitorra Holdings Limited", "description": "Sheria zinazoongoza matumizi ya tovuti ya Vitorra Holdings na ununuzi wa bidhaa za Vitorra." },
+    "legalReturns": { "title": "Marejesho na Dhamana — Vitorra Holdings Limited", "description": "Sera ya marejesho, urejeshaji wa fedha, na dhamana ya Vitorra Holdings kwa maagizo ya Duka la Kahawa na bidhaa za B2B." },
+    "legalCookies": { "title": "Sera ya Vidakuzi — Vitorra Holdings Limited", "description": "Jinsi Vitorra Holdings inavyotumia vidakuzi na jinsi ya kusimamia mapendeleo yako." }
   },
   "hero": {
     "primaryCta": "Omba Nukuu",
@@ -919,6 +923,135 @@
     "retailTitle": "Rejareja",
     "retailBody": "Pakiti za nyumbani na ofisini zinaanza hivi karibuni. Tueleze na tutawasiliana nawe kwanza.",
     "retailCta": "Sajili nia yako"
+  },
+  "legal": {
+    "eyebrow": "Kisheria",
+    "lastUpdated": "Ilisasishwa mwisho:",
+    "privacy": {
+      "title": "Sera ya Faragha",
+      "updated": "1 Juni 2026",
+      "whoTitle": "Sisi ni nani",
+      "who1": "{name} (\"Vitorra\", \"sisi\", \"kwetu\") ni kampuni iliyosajiliwa nchini Uganda (Nambari ya Usajili 80034340923220), iliyoko Padre Pio House, Plot 32, Lumumba Avenue, Kampala, Uganda. Tunaendesha tovuti vitorra.org.",
+      "who2": "Sisi ni wadhibiti wa data kwa taarifa binafsi zinazokusanywa kupitia tovuti hii. Maswali kuhusu sera hii: <mail></mail>.",
+      "collectTitle": "Taarifa tunazokusanya",
+      "collect1": "Tunakusanya taarifa unazotoa moja kwa moja:",
+      "collectList": [
+        "Jina, barua pepe, simu, na kampuni unapowasilisha ombi au fomu ya mawasiliano",
+        "Anwani ya usafirishaji, maelezo ya malipo, na taarifa za agizo unapoweka agizo kupitia Duka la Kahawa",
+        "Maelezo ya akaunti (jina na barua pepe) ukiunda akaunti ya portali ya wateja",
+        "Ujumbe na mawasiliano unapowasiliana nasi"
+      ],
+      "collect2": "Pia tunakusanya taarifa kiotomatiki unapotumia tovuti (kurasa zilizotembelewa, aina ya kifaa, kivinjari, anwani ya IP kupitia kumbukumbu za seva na uchambuzi).",
+      "useTitle": "Jinsi tunavyotumia taarifa zako",
+      "useList": [
+        "Kujibu maombi, nukuu, na maombi ya msaada",
+        "Kuchakata na kutimiza maagizo yako na kutuma uthibitisho wa maagizo",
+        "Kusimamia akaunti yako ukisajili",
+        "Kutuma barua pepe za miamala (masasisho ya maagizo, risiti)",
+        "Kuboresha tovuti kupitia uchambuzi uliojumlishwa",
+        "Kuzingatia wajibu wa kisheria"
+      ],
+      "use2": "Hatuuzi taarifa zako binafsi kwa watu wengine, na hatutumi barua pepe za matangazo bila idhini yako wazi.",
+      "basesTitle": "Misingi ya kisheria ya uchakataji",
+      "bases1": "Tunachakata taarifa zako kwa misingi ifuatayo: utekelezaji wa mkataba (kuchakata maagizo); maslahi halali (kujibu maombi, kuendesha tovuti); idhini (mawasiliano yoyote ya matangazo); na wajibu wa kisheria (kumbukumbu za kodi, ufuataji).",
+      "cookiesTitle": "Vidakuzi",
+      "cookies1": "Tunatumia vidakuzi muhimu vinavyohitajika ili tovuti ifanye kazi, na vidakuzi vya hiari vya uchambuzi kuelewa matumizi. Ona <clink>Sera yetu ya Vidakuzi</clink> kwa maelezo kamili. Unaweza kusimamia mapendeleo yako wakati wowote.",
+      "sharingTitle": "Ushirikishaji wa data",
+      "sharing1": "Tunashiriki data pale tu inapohitajika:",
+      "sharingList": [
+        "Wachakataji wa malipo (Flutterwave, PayPal) kukamilisha miamala",
+        "Watoa huduma za barua pepe kutuma barua pepe za miamala",
+        "Washirika wa usafirishaji na ugavi kutimiza maagizo",
+        "Watoa uchambuzi (data iliyojumlishwa na isiyo na utambulisho pekee)",
+        "Mamlaka za kisheria zinapohitajika kwa sheria"
+      ],
+      "retentionTitle": "Uhifadhi wa data",
+      "retention1": "Tunahifadhi data binafsi kwa muda unaohitajika kutimiza madhumuni iliyokusanywa, ikiwemo mahitaji ya kisheria, uhasibu, na uripoti. Data ya maombi huhifadhiwa hadi miaka 2. Kumbukumbu za maagizo huhifadhiwa kwa miaka 7 kwa madhumuni ya kodi.",
+      "rightsTitle": "Haki zako",
+      "rights1": "Kulingana na mahali ulipo, unaweza kuwa na haki za: kupata data binafsi tuliyo nayo kuhusu wewe; kurekebisha data isiyo sahihi; kuomba ufutaji; kuzuia au kupinga uchakataji; na uhamishaji wa data. Kutumia haki yoyote, wasiliana nasi kwa <mail></mail>.",
+      "changesTitle": "Mabadiliko ya sera hii",
+      "changes1": "Tunaweza kusasisha sera hii mara kwa mara. Mabadiliko muhimu yatajulishwa kwa kusasisha tarehe ya \"Ilisasishwa mwisho\" hapo juu. Kuendelea kutumia tovuti kunamaanisha kukubali sera iliyosasishwa."
+    },
+    "terms": {
+      "title": "Sheria na Masharti",
+      "updated": "1 Juni 2026",
+      "aboutTitle": "Kuhusu sheria hizi",
+      "about1": "Sheria hizi zinaongoza matumizi yako ya vitorra.org na ununuzi wowote unaofanya kutoka {name} (\"Vitorra\", \"sisi\", \"kwetu\"). Kwa kutumia tovuti au kuweka agizo, unakubali sheria hizi. Ikiwa hukubali, tafadhali usitumie tovuti.",
+      "usingTitle": "Kutumia tovuti",
+      "using1": "Unaweza kutumia tovuti kwa madhumuni halali pekee. Hupaswi:",
+      "usingList": [
+        "Kutumia tovuti kwa njia yoyote inayovunja sheria au kanuni za ndani au za kimataifa zinazotumika",
+        "Kusambaza matangazo yasiyoombwa au yasiyoidhinishwa (taka)",
+        "Kuanzisha kwa makusudi virusi, trojan, au nyenzo nyingine hatari au za kudhuru",
+        "Kujaribu kupata ufikiaji usioidhinishwa wa sehemu yoyote ya tovuti au mifumo yake inayohusiana"
+      ],
+      "ordersTitle": "Maagizo na malipo",
+      "orders1": "Unapoweka agizo kupitia Duka letu la Kahawa, unatoa ofa ya kununua. Tunathibitisha ukubali kwa barua pepe. Tunahifadhi haki ya kukataa au kughairi maagizo kwa hiari yetu (kwa mfano, ikiwa kosa la bei limegundulika).",
+      "orders2": "Bei zote zinaonyeshwa kwa UGX au USD kama ilivyoonyeshwa. Malipo huchakatwa kwa usalama na Flutterwave (UGX) na PayPal (USD). Hatuhifadhi maelezo ya kadi.",
+      "orders3": "Kwa maombi ya B2B (Fuel Eco Tech, SEAL, Usafirishaji), bei zinakubaliwa kibinafsi — agizo la ununuzi lililothibitishwa au makubaliano ya maandishi ndio mkataba.",
+      "deliveryTitle": "Uwasilishaji",
+      "delivery1": "Nyakati za uwasilishaji zilizotajwa ni makadirio pekee. Hatuhusiki na ucheleweshaji ulio nje ya udhibiti wetu wa kawaida (forodha, hali ya hewa, misukosuko ya usafirishaji). Hatari ya bidhaa inapita kwako wakati wa uwasilishaji.",
+      "ipTitle": "Haki miliki",
+      "ip1": "Maudhui yote ya tovuti — ikiwemo maandishi, picha, nembo, na muundo — yanamilikiwa na au kupewa leseni kwa Vitorra. Huwezi kunakili, kusambaza, au kuunda kazi za kufuata bila idhini yetu ya maandishi.",
+      "disclaimerTitle": "Kanusho na ukomo wa dhima",
+      "disclaimer1": "Tovuti inatolewa \"kama ilivyo\". Tunafanya juhudi za busara kuiweka sahihi na inayopatikana, lakini hatutoi dhamana kuhusu ukamilifu, usahihi, au ufaafu wake kwa madhumuni yoyote maalum.",
+      "disclaimer2": "Kwa kiwango kamili kinachoruhusiwa na sheria, Vitorra haihusiki na hasara zozote zisizo za moja kwa moja, za matokeo, au za bahati mbaya zinazotokana na matumizi ya tovuti au bidhaa yoyote iliyonunuliwa, zaidi ya thamani ya agizo husika.",
+      "governingTitle": "Sheria inayoongoza",
+      "governing1": "Sheria hizi zinaongozwa na sheria za Jamhuri ya Uganda. Mizozo yoyote itakuwa chini ya mamlaka pekee ya mahakama za Uganda.",
+      "contactTitle": "Wasiliana",
+      "contact1": "Maswali kuhusu sheria hizi: <mail></mail>."
+    },
+    "returns": {
+      "title": "Marejesho na Dhamana",
+      "updated": "1 Juni 2026",
+      "coffeeTitle": "Maagizo ya Duka la Kahawa",
+      "coffee1": "Ikiwa agizo lako litafika likiwa limeharibika, si sahihi, au tofauti sana na maelezo, tafadhali wasiliana nasi ndani ya siku 7 baada ya kupokea kwa <mail></mail> ukiwa na nambari yako ya agizo na picha ya tatizo. Tutapanga mbadala au urejeshaji kamili wa fedha bila gharama ya ziada kwako.",
+      "coffee2": "Hatuwezi kukubali marejesho kwa:",
+      "coffeeList": [
+        "Bidhaa zinazoharibika au za kuliwa zilizofunguliwa (ikiwemo kahawa mara muhuri unapovunjwa, isipokuwa ina kasoro)",
+        "Bidhaa zilizorejeshwa zaidi ya siku 14 baada ya uwasilishaji",
+        "Bidhaa zisizo katika hali yao ya awali kutokana na utunzaji wa mteja"
+      ],
+      "b2bTitle": "Bidhaa za B2B (Fuel Eco Tech, SEAL Wound Spray, Usafirishaji)",
+      "b2b1": "Marejesho na dhamana za bidhaa za B2B zinaongozwa na makubaliano ya usambazaji binafsi au agizo la ununuzi lililopo. Ikiwa una wasiwasi kuhusu bidhaa au huduma ya B2B, wasiliana nasi kwa <mail></mail> na timu yetu itajibu ndani ya saa 24.",
+      "b2b2": "Kwa SEAL Wound Spray: kama bidhaa ya matibabu ya matumizi ya mara moja, vifaa vilivyofunguliwa haviwezi kurejeshwa. Vifaa vyenye kasoro vilivyofungwa (kasoro ya utengenezaji) vinaweza kurejeshwa kwa mbadala ndani ya siku 30 baada ya uwasilishaji. Uthibitisho wa ununuzi unahitajika.",
+      "refundTitle": "Mchakato wa urejeshaji fedha",
+      "refund1": "Urejeshaji ulioidhinishwa huchakatwa ndani ya siku 5–10 za kazi. Urejeshaji hutolewa kwa njia ya malipo ya awali (Flutterwave au PayPal). Hatururejeshi gharama za usafirishaji za awali isipokuwa marejesho yanatokana na kosa letu.",
+      "startTitle": "Jinsi ya kuanza marejesho",
+      "startList": [
+        "Tuma barua pepe support@vitorra.org ukiwa na nambari yako ya agizo na sababu",
+        "Jumuisha picha ikiwa bidhaa imeharibika au si sahihi",
+        "Timu yetu itathibitisha ustahiki na hatua zinazofuata ndani ya saa 24"
+      ],
+      "warrantyTitle": "Dhamana — Fuel Eco Tech",
+      "warranty1": "Vifaa vya Fuel Eco Tech vina dhamana finyu dhidi ya kasoro za utengenezaji kwa miezi 12 kutoka tarehe ya usakinishaji. Dhamana haijumuishi uharibifu unaosababishwa na usakinishaji usio sahihi, matumizi mabaya, au uchakavu wa kawaida. Wasiliana nasi kuwasilisha dai la dhamana."
+    },
+    "cookies": {
+      "title": "Sera ya Vidakuzi",
+      "updated": "1 Juni 2026",
+      "whatTitle": "Vidakuzi ni nini?",
+      "what1": "Vidakuzi ni faili ndogo za maandishi zinazowekwa kwenye kifaa chako unapotembelea tovuti. Zinaruhusu tovuti kukumbuka mapendeleo yako na kuelewa jinsi unavyoitumia.",
+      "useTitle": "Vidakuzi tunavyotumia",
+      "essential": "<b>Vidakuzi muhimu</b> — vinahitajika ili tovuti ifanye kazi. Hivi haviwezi kuzimwa.",
+      "essentialList": [
+        "Usimamizi wa kipindi (kukuweka umeingia)",
+        "Hali ya kikapu cha ununuzi (Duka la Kahawa)",
+        "Pendeleo la idhini ya vidakuzi (kukumbuka chaguo lako)"
+      ],
+      "analytics": "<b>Vidakuzi vya uchambuzi</b> — vinatusaidia kuelewa jinsi wageni wanavyotumia tovuti ili tuiboreshe. Hivi vinawekwa tu kwa idhini yako.",
+      "analyticsList": [
+        "Kuangaliwa kwa kurasa na njia za urambazaji (zilizojumlishwa, zisizo na utambulisho)",
+        "Aina ya kifaa na kivinjari (kuboresha uzoefu wa simu)"
+      ],
+      "use3": "Hatutumii vidakuzi vya matangazo au ufuatiliaji, na hatushiriki data ya uchambuzi na watangazaji wa nje.",
+      "manageTitle": "Kusimamia mapendeleo yako",
+      "manage1": "Unapotembelea tovuti kwa mara ya kwanza, bango la vidakuzi linakuruhusu kukubali au kukataa vidakuzi vya hiari (vya uchambuzi). Unaweza kusasisha pendeleo lako wakati wowote kwa kubofya \"Mipangilio ya vidakuzi\" kwenye kijachini.",
+      "manage2": "Pia unaweza kudhibiti vidakuzi kupitia mipangilio ya kivinjari chako. Kumbuka kuwa kuzima vidakuzi muhimu kunaweza kuathiri utendaji wa tovuti (kwa mfano, kikapu cha ununuzi kinaweza kisifanye kazi vizuri).",
+      "thirdTitle": "Vidakuzi vya watu wengine",
+      "third1": "Tunapachika Ramani ya Google kwenye ukurasa wetu wa Mawasiliano. Google inaweza kuweka vidakuzi vyake ramani hiyo inapopakia. Tunapendekeza kupitia sera ya faragha ya Google kwa maelezo.",
+      "contactTitle": "Wasiliana",
+      "contact1": "Maswali kuhusu matumizi yetu ya vidakuzi: <mail></mail>."
+    }
   },
   "account": {
     "tabDashboard": "Dashibodi",
