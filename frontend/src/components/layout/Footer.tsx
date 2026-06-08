@@ -1,46 +1,49 @@
-import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { ArrowUpRight, MapPin, Mail, Phone } from "lucide-react";
 import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_ADDRESS, COMPANY_REG_NO, SITE_NAME } from "@/lib/constants";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
-const cols = [
-  {
-    heading: "Products",
-    links: [
-      { label: "Fuel Eco Tech", href: "/products/fuel-eco-tech" },
-      { label: "SEAL Wound Spray", href: "/products/seal-wound-spray" },
-      { label: "Vitorra Coffee", href: "/products/coffee" },
-      { label: "Logistics Services", href: "/products/logistics" },
-    ],
-  },
-  {
-    heading: "Company",
-    links: [
-      { label: "About Us", href: "/about" },
-      // Coffee Shop hidden until retail prices are confirmed (see lib/config).
-      ...(COFFEE_SHOP_ENABLED ? [{ label: "Coffee Shop", href: "/shop" }] : []),
-      { label: "Blog & Insights", href: "/blog" },
-      { label: "Certifications", href: "/trust/certifications" },
-      { label: "My Account", href: "/account/dashboard" },
-      { label: "Contact Us", href: "/contact" },
-    ],
-  },
-  {
-    heading: "Legal",
-    links: [
-      { label: "Privacy Policy", href: "/legal/privacy-policy" },
-      { label: "Terms & Conditions", href: "/legal/terms-and-conditions" },
-      { label: "Returns & Warranty", href: "/legal/returns-and-warranty" },
-      { label: "Cookie Policy", href: "/legal/cookie-policy" },
-    ],
-  },
-];
-
 const telHref = `tel:${CONTACT_PHONE.replace(/\s+/g, "")}`;
 
 export default function Footer() {
+  const t = useTranslations();
   const year = new Date().getFullYear();
+
+  // Product display names are brand terms (kept constant); link labels translate.
+  const cols = [
+    {
+      heading: t("footer.colProducts"),
+      links: [
+        { label: t("products.fet.name"), href: "/products/fuel-eco-tech" },
+        { label: t("products.seal.name"), href: "/products/seal-wound-spray" },
+        { label: t("products.coffee.name"), href: "/products/coffee" },
+        { label: t("products.logistics.name"), href: "/products/logistics" },
+      ],
+    },
+    {
+      heading: t("footer.colCompany"),
+      links: [
+        { label: t("footer.aboutUs"), href: "/about" },
+        // Coffee Shop hidden until retail prices are confirmed (see lib/config).
+        ...(COFFEE_SHOP_ENABLED ? [{ label: t("nav.coffeeShop"), href: "/shop" }] : []),
+        { label: t("footer.blogInsights"), href: "/blog" },
+        { label: t("footer.certifications"), href: "/trust/certifications" },
+        { label: t("common.myAccount"), href: "/account/dashboard" },
+        { label: t("footer.contactUs"), href: "/contact" },
+      ],
+    },
+    {
+      heading: t("footer.colLegal"),
+      links: [
+        { label: t("footer.privacy"), href: "/legal/privacy-policy" },
+        { label: t("footer.terms"), href: "/legal/terms-and-conditions" },
+        { label: t("footer.returns"), href: "/legal/returns-and-warranty" },
+        { label: t("footer.cookies"), href: "/legal/cookie-policy" },
+      ],
+    },
+  ];
 
   return (
     <footer className="bg-canvas-dark text-white/60">
@@ -61,7 +64,7 @@ export default function Footer() {
             href="/enquire"
             className="btn-primary inline-flex items-center gap-2 self-start sm:self-auto shrink-0"
           >
-            Request a Quote
+            {t("common.requestQuote")}
             <ArrowUpRight className="w-4 h-4" />
           </Link>
         </div>
@@ -73,8 +76,7 @@ export default function Footer() {
         {/* Contact */}
         <div className="max-w-xs">
           <p className="text-sm leading-relaxed text-white/45 mb-7">
-            A diversified company across fuel technology, healthcare, premium
-            coffee, and logistics.
+            {t("footer.tagline")}
           </p>
 
           <ul className="space-y-4">
@@ -125,8 +127,8 @@ export default function Footer() {
       {/* ── Bottom bar ──────────────────────────────────────────────────── */}
       <div className="border-t border-white/[0.08]">
         <div className="container-max mx-auto px-6 lg:px-20 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/30">
-          <p>&copy; {year} {SITE_NAME}. All rights reserved.</p>
-          <p>Reg. No. {COMPANY_REG_NO} &middot; Kampala, Uganda</p>
+          <p>{t("footer.rights", { year, name: SITE_NAME })}</p>
+          <p>{t("footer.regLine", { reg: COMPANY_REG_NO })}</p>
         </div>
       </div>
     </footer>

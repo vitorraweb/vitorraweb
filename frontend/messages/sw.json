@@ -1,0 +1,54 @@
+{
+  "common": {
+    "requestQuote": "Omba Nukuu",
+    "myAccount": "Akaunti Yangu",
+    "language": "Lugha",
+    "selectLanguage": "Chagua lugha",
+    "english": "Kiingereza",
+    "swahili": "Kiswahili"
+  },
+  "nav": {
+    "about": "Kuhusu",
+    "products": "Bidhaa",
+    "coffeeShop": "Duka la Kahawa",
+    "blog": "Blogu",
+    "contact": "Wasiliana"
+  },
+  "products": {
+    "fet": { "name": "Fuel Eco Tech", "tagline": "Teknolojia ya ufanisi wa mafuta kwa magari" },
+    "seal": { "name": "SEAL Wound Spray", "tagline": "Huduma ya dharura ya kuzuia damu" },
+    "coffee": { "name": "Vitorra Coffee", "tagline": "Kahawa bora ya Uganda" },
+    "logistics": { "name": "Logistics Services", "tagline": "Usafirishaji na ugavi kamili" }
+  },
+  "header": {
+    "navigation": "Urambazaji",
+    "productsHeading": "Bidhaa",
+    "cartAria": "Kikapu",
+    "accountAria": "Akaunti yangu",
+    "toggleMenu": "Fungua menyu"
+  },
+  "footer": {
+    "tagline": "Kampuni yenye sekta mbalimbali za teknolojia ya mafuta, afya, kahawa bora, na usafirishaji.",
+    "colProducts": "Bidhaa",
+    "colCompany": "Kampuni",
+    "colLegal": "Kisheria",
+    "aboutUs": "Kuhusu Sisi",
+    "blogInsights": "Blogu na Maarifa",
+    "certifications": "Vyeti",
+    "contactUs": "Wasiliana Nasi",
+    "privacy": "Sera ya Faragha",
+    "terms": "Sheria na Masharti",
+    "returns": "Marejesho na Dhamana",
+    "cookies": "Sera ya Vidakuzi",
+    "rights": "© {year} {name}. Haki zote zimehifadhiwa.",
+    "regLine": "Nambari ya Usajili {reg} · Kampala, Uganda"
+  },
+  "cookieBanner": {
+    "ariaLabel": "Idhini ya vidakuzi",
+    "message": "Tunatumia vidakuzi muhimu kuwezesha tovuti kufanya kazi, na vidakuzi vya hiari vya uchambuzi kuiboresha.",
+    "policyLink": "Sera ya vidakuzi",
+    "dismiss": "Funga bila kukubali",
+    "decline": "Kataa",
+    "acceptAll": "Kubali zote"
+  }
+}

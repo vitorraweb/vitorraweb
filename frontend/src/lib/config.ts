@@ -11,3 +11,9 @@
    Flip to `true` (one line) the day prices land — all the e-commerce code is
    left intact, nothing is deleted.                                          */
 export const COFFEE_SHOP_ENABLED = false;
+
+/* SWAHILI_ENABLED — shows the language switcher and exposes the Swahili (/sw)
+   experience. Swahili copy falls back to English for any untranslated key, so
+   the site never breaks; this flag simply controls whether visitors are
+   offered the switch. Independent of COFFEE_SHOP_ENABLED.                      */
+export const SWAHILI_ENABLED = true;

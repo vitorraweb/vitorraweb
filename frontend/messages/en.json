@@ -1,0 +1,54 @@
+{
+  "common": {
+    "requestQuote": "Request a Quote",
+    "myAccount": "My Account",
+    "language": "Language",
+    "selectLanguage": "Select language",
+    "english": "English",
+    "swahili": "Swahili"
+  },
+  "nav": {
+    "about": "About",
+    "products": "Products",
+    "coffeeShop": "Coffee Shop",
+    "blog": "Blog",
+    "contact": "Contact"
+  },
+  "products": {
+    "fet": { "name": "Fuel Eco Tech", "tagline": "Fleet fuel efficiency technology" },
+    "seal": { "name": "SEAL Wound Spray", "tagline": "Hemostatic emergency care" },
+    "coffee": { "name": "Vitorra Coffee", "tagline": "Premium Ugandan coffee" },
+    "logistics": { "name": "Logistics Services", "tagline": "End-to-end freight & supply chain" }
+  },
+  "header": {
+    "navigation": "Navigation",
+    "productsHeading": "Products",
+    "cartAria": "Cart",
+    "accountAria": "My account",
+    "toggleMenu": "Toggle menu"
+  },
+  "footer": {
+    "tagline": "A diversified company across fuel technology, healthcare, premium coffee, and logistics.",
+    "colProducts": "Products",
+    "colCompany": "Company",
+    "colLegal": "Legal",
+    "aboutUs": "About Us",
+    "blogInsights": "Blog & Insights",
+    "certifications": "Certifications",
+    "contactUs": "Contact Us",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "returns": "Returns & Warranty",
+    "cookies": "Cookie Policy",
+    "rights": "© {year} {name}. All rights reserved.",
+    "regLine": "Reg. No. {reg} · Kampala, Uganda"
+  },
+  "cookieBanner": {
+    "ariaLabel": "Cookie consent",
+    "message": "We use essential cookies to keep the site working, and optional analytics cookies to improve it.",
+    "policyLink": "Cookie policy",
+    "dismiss": "Dismiss without accepting",
+    "decline": "Decline",
+    "acceptAll": "Accept all"
+  }
+}

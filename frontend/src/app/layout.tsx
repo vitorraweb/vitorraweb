@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Cormorant_Garamond } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { CookieBanner } from "@/components/ui/cookie-banner";
 import { CartProvider } from "@/lib/cart";
@@ -75,23 +77,30 @@ export const viewport: Viewport = {
   themeColor: "#F2F2F2",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Active locale for <html lang> + the client message bundle. Resolves to the
+  // default ("en") on non-localized routes such as /admin.
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${dmSans.variable} ${cormorant.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased">
-        <CartProvider>
-          {children}
-          <CookieBanner />
-          <Toaster position="bottom-right" />
-        </CartProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <CartProvider>
+            {children}
+            <CookieBanner />
+            <Toaster position="bottom-right" />
+          </CartProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
