@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class BlogPost extends Model
@@ -28,6 +29,38 @@ class BlogPost extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function translations(): HasMany
+    {
+        return $this->hasMany(BlogPostTranslation::class);
+    }
+
+    /**
+     * Overlay this post's fields with its translation for $locale (if any).
+     * Null/blank translated fields fall back to the base English values, so a
+     * partial translation never produces an empty page. The default locale
+     * ("en") is the base row itself — nothing to overlay.
+     */
+    public function applyLocale(?string $locale): static
+    {
+        if (! $locale || $locale === 'en') {
+            return $this;
+        }
+
+        $translation = $this->relationLoaded('translations')
+            ? $this->translations->firstWhere('locale', $locale)
+            : $this->translations()->where('locale', $locale)->first();
+
+        if ($translation) {
+            foreach (['title', 'excerpt', 'content', 'seo_title', 'seo_description'] as $field) {
+                if (filled($translation->{$field})) {
+                    $this->setAttribute($field, $translation->{$field});
+                }
+            }
+        }
+
+        return $this;
     }
 
     public function scopePublished($query)
