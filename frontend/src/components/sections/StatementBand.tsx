@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ParallaxImage } from "@/components/ui/parallax-image";
 import { CountUp } from "@/components/ui/count-up";
 
@@ -16,12 +17,13 @@ import { CountUp } from "@/components/ui/count-up";
    ─────────────────────────────────────────────────────────────────────────── */
 
 const STATS = [
-  { end: 4, suffix: "", label: "Product Lines" },
-  { end: 3, suffix: "", label: "Markets Served" },
-  { end: 24, suffix: "h", label: "Response Time" },
-];
+  { end: 4, suffix: "", labelKey: "stat1Label" },
+  { end: 3, suffix: "", labelKey: "stat2Label" },
+  { end: 24, suffix: "h", labelKey: "stat3Label" },
+] as const;
 
 export default function StatementBand({ image }: { image?: string }) {
+  const t = useTranslations("statementBand");
   const ref = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
 
@@ -111,7 +113,7 @@ export default function StatementBand({ image }: { image?: string }) {
             <span
               style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "#C5B27A" }}
             >
-              Our Purpose
+              {t("eyebrow")}
             </span>
             <span
               className="h-px w-8"
@@ -137,11 +139,11 @@ export default function StatementBand({ image }: { image?: string }) {
             }}
           >
             <span className="block overflow-hidden">
-              <span style={line(180)}>Built in Uganda.</span>
+              <span style={line(180)}>{t("line1")}</span>
             </span>
             <span className="block overflow-hidden">
               <span className="text-gold-gradient" style={line(300)}>
-                Trusted across borders.
+                {t("line2")}
               </span>
             </span>
           </h2>
@@ -150,15 +152,13 @@ export default function StatementBand({ image }: { image?: string }) {
             className="mx-auto max-w-xl mt-7"
             style={{ fontSize: "16px", lineHeight: 1.75, color: "rgba(255,255,255,0.62)", ...fade(520) }}
           >
-            One diversified company behind fuel technology, healthcare, premium
-            coffee, and logistics — engineered to a global standard, grounded in
-            East Africa.
+            {t("body")}
           </p>
 
           {/* Count-up proof strip */}
           <div className="mt-12 md:mt-14 flex flex-wrap items-center justify-center" style={fade(680)}>
             {STATS.map((s, i) => (
-              <div key={s.label} className="flex items-center">
+              <div key={s.labelKey} className="flex items-center">
                 {i > 0 && (
                   <span
                     className="hidden sm:block mx-8 lg:mx-12"
@@ -187,7 +187,7 @@ export default function StatementBand({ image }: { image?: string }) {
                       color: "rgba(255,255,255,0.5)",
                     }}
                   >
-                    {s.label}
+                    {t(s.labelKey)}
                   </div>
                 </div>
               </div>

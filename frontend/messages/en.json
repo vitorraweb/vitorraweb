@@ -55,6 +55,10 @@
     "home": {
       "title": "Vitorra Holdings Limited — Fuel, Logistics, Healthcare & Coffee",
       "description": "Vitorra is a diversified company providing Fuel Eco Tech, logistics, SEAL Wound Spray, and premium Ugandan coffee across Uganda and East Africa."
+    },
+    "about": {
+      "title": "About — Vitorra Holdings Limited",
+      "description": "Vitorra Holdings Limited is a diversified holdings company built in Uganda — operating across fuel technology, healthcare, premium coffee, and logistics. Meet our leadership team and learn what drives us."
     }
   },
   "hero": {
@@ -283,5 +287,80 @@
     "placeholder3Tag": "Vitorra Coffee",
     "placeholder3Title": "Tracing quality from Uganda's farms to international buyers",
     "placeholder3Body": "How our sourcing and export process ensures every bag of Vitorra Coffee meets the consistency demands of wholesale markets."
+  },
+  "about": {
+    "mission": {
+      "eyebrow": "Our mission",
+      "title": "One conviction.",
+      "body1": "East Africa deserves access to the same quality of technology, healthcare products, and business services available anywhere in the world.",
+      "body2": "Vitorra exists to deliver exactly that — with the rigour, certifications, and integrity that serious buyers and partners demand.",
+      "quote": "Innovative products and dependable solutions — across fuel technology, healthcare, premium coffee, and logistics — for businesses and consumers across Uganda, East Africa, and international markets.",
+      "quoteRole": "Brand positioning statement"
+    },
+    "whoWeAre": {
+      "eyebrow": "Who we are",
+      "titleLine1": "A diversified company",
+      "titleLine2": "built for the long term.",
+      "body1": "Vitorra Holdings Limited is registered in Uganda and operates across fuel technology, healthcare, premium coffee, and logistics — bringing international-standard products to East African markets, and East African products to the world.",
+      "body2": "Every product line is held to the same standard: independently certified, evidenced by data, and delivered with integrity. We serve B2B clients across Uganda, Kenya, Tanzania, Rwanda, and international markets — with a 24-hour response commitment on every enquiry.",
+      "factRegisteredLabel": "Registered",
+      "factRegisteredValue": "Uganda (URSB)",
+      "factRegNoLabel": "Reg. No.",
+      "factMarketsLabel": "Markets",
+      "factMarketsValue": "Uganda + 5 regions",
+      "factResponseLabel": "Response",
+      "factResponseValue": "Within 24 hours"
+    },
+    "values": {
+      "eyebrow": "What we stand for",
+      "titleLead": "Our values",
+      "titleAccent": "in practice.",
+      "value1Title": "Integrity in every deal",
+      "value1Body": "We say what we mean and deliver what we promise — every product, every partner, every time. No fine print, no surprises.",
+      "value2Title": "Built on evidence",
+      "value2Body": "From fuel savings to food safety, our claims are backed by data, independent certification, and third-party validation. We do not self-certify.",
+      "value3Title": "East Africa, world-class",
+      "value3Body": "International execution standards paired with deep local knowledge — competitive at home, credible across every border we operate in."
+    },
+    "portfolio": {
+      "eyebrow": "Our portfolio",
+      "titleLine1": "Four lines.",
+      "titleLine2": "One trusted name.",
+      "cta": "Request a quote",
+      "learnMore": "Learn more",
+      "fetBadge": "B2B · Fleet",
+      "fetDesc": "Patented fuel optimisation for commercial fleets — ISO certified, AVL-validated, 13.9% measured reduction.",
+      "sealBadge": "Medical · B2B",
+      "sealDesc": "Clinical-grade hemostatic wound spray for hospitals, emergency responders, NGOs, and military procurement.",
+      "coffeeBadge": "B2B · B2C",
+      "coffeeDesc": "Traceable, responsibly sourced Ugandan coffee — for consumers, hospitality businesses, and international importers.",
+      "logisticsBadge": "B2B · Enterprise",
+      "logisticsDesc": "End-to-end freight, warehousing, customs clearance, and supply chain management across Uganda and East Africa."
+    },
+    "credentials": {
+      "eyebrow": "Our credentials",
+      "titleLead": "Independently certified.",
+      "titleAccent": "Externally audited.",
+      "viewFull": "View full certifications",
+      "viewAll": "View all",
+      "qualityManagement": "Quality Management",
+      "environmental": "Environmental",
+      "informationSecurity": "Information Security",
+      "labValidated": "Lab Validated",
+      "productLiability": "Product Liability",
+      "germanCertified": "German Certified",
+      "regPrefix": " — Registered in Uganda · Reg. No. ",
+      "regSuffix": " (Uganda Registration Services Bureau, URSB)"
+    },
+    "finalCtaEyebrow": "Work with us"
+  },
+  "statementBand": {
+    "eyebrow": "Our Purpose",
+    "line1": "Built in Uganda.",
+    "line2": "Trusted across borders.",
+    "body": "One diversified company behind fuel technology, healthcare, premium coffee, and logistics — engineered to a global standard, grounded in East Africa.",
+    "stat1Label": "Product Lines",
+    "stat2Label": "Markets Served",
+    "stat3Label": "Response Time"
   }
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { ArrowUpRight, User } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
@@ -15,30 +16,31 @@ import { cn } from "@/lib/utils";
    gold-tinted avatar. Honours reduced-motion; cursor effect is desktop-only.
    ─────────────────────────────────────────────────────────────────────────── */
 
-type Member = { name?: string; role: string; file?: string; placeholder?: boolean };
+type Member = { name?: string; roleKey: string; file?: string; placeholder?: boolean };
 type Size = "ceo" | "lead" | "officer";
 
 const ceo: Member = {
   name: "Solomon Okello",
-  role: "Chief Executive Officer",
+  roleKey: "ceo",
   file: "Solomon Okello - CEO.jpg",
 };
 
 const leadership: Member[] = [
-  { name: "Joseph Rwabu",      role: "Senior Finance Officer",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
-  { name: "Victor Lojum",      role: "Head of Operations",       file: "Victor Lojum - Head of Operations.jpg" },
-  { name: "Thurayya Nakayima", role: "Senior Marketing Officer",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
+  { name: "Joseph Rwabu",      roleKey: "seniorFinance",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
+  { name: "Victor Lojum",      roleKey: "headOfOperations", file: "Victor Lojum - Head of Operations.jpg" },
+  { name: "Thurayya Nakayima", roleKey: "seniorMarketing",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
 ];
 
 const officers: Member[] = [
-  { name: "John Oluwaseyi",   role: "IT Officer",               file: "John Oluwaseyi - IT Officer.jpeg" },
-  { name: "Sarah Nuwamanya",  role: "Marketing Officer",         file: "Sarah Nuwamanya - Marketing Officer.jpg" },
-  { name: "Olivia Sandra",    role: "Brand Designer",            file: "Olivia Sandra - Brand Designer.jpeg" },
-  { name: "Daniel Tuke",      role: "Finance Officer",           file: "Daniel Tuke - Finance Officer.jpeg" },
-  { name: "Nagawa Shakirah",  role: "Marketing Officer",         file: "Nagawa Shakirah - Marketing Officer.jpeg" },
+  { name: "John Oluwaseyi",   roleKey: "itOfficer",        file: "John Oluwaseyi - IT Officer.jpeg" },
+  { name: "Sarah Nuwamanya",  roleKey: "marketingOfficer", file: "Sarah Nuwamanya - Marketing Officer.jpg" },
+  { name: "Olivia Sandra",    roleKey: "brandDesigner",    file: "Olivia Sandra - Brand Designer.jpeg" },
+  { name: "Daniel Tuke",      roleKey: "financeOfficer",   file: "Daniel Tuke - Finance Officer.jpeg" },
+  { name: "Nagawa Shakirah",  roleKey: "marketingOfficer", file: "Nagawa Shakirah - Marketing Officer.jpeg" },
 ];
 
 export default function Team() {
+  const t = useTranslations("team");
   const secRef = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
 
@@ -87,7 +89,7 @@ export default function Team() {
 
       <div className="container-max relative z-10">
         <Reveal className="mb-14 lg:mb-16 text-center">
-          <span className="eyebrow justify-center mb-3">Our People</span>
+          <span className="eyebrow justify-center mb-3">{t("eyebrow")}</span>
           <h2
             className="mx-auto"
             style={{
@@ -100,7 +102,7 @@ export default function Team() {
               maxWidth: "520px",
             }}
           >
-            The team behind Vitorra.
+            {t("sectionTitle")}
           </h2>
         </Reveal>
 
@@ -170,7 +172,7 @@ export default function Team() {
               >
                 <span style={{ color: "#C5B27A", fontSize: "24px", lineHeight: 1 }}>+</span>
                 <span className="mt-1.5 px-3" style={{ fontSize: "11px", color: "#888888", fontWeight: 500 }}>
-                  Meet the team
+                  {t("meetTeam")}
                 </span>
               </Link>
             </div>
@@ -190,6 +192,8 @@ const SIZE_CLASS: Record<Size, string> = {
 };
 
 function TeamPortrait({ member, size, featured = false }: { member: Member; size: Size; featured?: boolean }) {
+  const t = useTranslations("team");
+  const role = t(`roles.${member.roleKey}`);
   const ref = useRef<HTMLDivElement>(null);
   const cur = useRef({ x: 0, y: 0 });
   const target = useRef({ x: 0, y: 0 });
@@ -266,7 +270,7 @@ function TeamPortrait({ member, size, featured = false }: { member: Member; size
             <div className="t-ring w-full h-full">
               <Image
                 src={`/team/${encodeURIComponent(member.file!)}`}
-                alt={member.name ?? member.role}
+                alt={member.name ?? role}
                 fill
                 className="object-cover t-img"
                 sizes={size === "ceo" ? "192px" : "144px"}
@@ -276,7 +280,7 @@ function TeamPortrait({ member, size, featured = false }: { member: Member; size
               href="/about"
               className="satellite-cta t-cta"
               style={{ width: "38px", height: "38px" }}
-              aria-label={`About ${member.name ?? member.role}`}
+              aria-label={`About ${member.name ?? role}`}
             >
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
@@ -285,7 +289,7 @@ function TeamPortrait({ member, size, featured = false }: { member: Member; size
       </div>
 
       <span className="eyebrow mb-1" style={{ fontSize: size === "ceo" ? "10px" : "9px" }}>
-        {member.role}
+        {role}
       </span>
       <p
         style={{

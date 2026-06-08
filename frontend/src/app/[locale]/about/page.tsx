@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -8,77 +10,47 @@ import Team from "@/components/sections/Team";
 import { Reveal } from "@/components/ui/reveal";
 import { ParallaxImage } from "@/components/ui/parallax-image";
 import FinalCTA from "@/components/sections/FinalCTA";
-import { ArrowRight, ArrowUpRight, Award, ShieldCheck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { COMPANY_REG_NO, SITE_NAME } from "@/lib/constants";
 
-export const metadata: Metadata = {
-  title: "About — Vitorra Holdings Limited",
-  description:
-    "Vitorra Holdings Limited is a diversified holdings company built in Uganda — operating across fuel technology, healthcare, premium coffee, and logistics. Meet our leadership team and learn what drives us.",
-};
-
-/* ─── Data ───────────────────────────────────────────────────────────────── */
-
-const values = [
-  {
-    n: "01",
-    title: "Integrity in every deal",
-    body: "We say what we mean and deliver what we promise — every product, every partner, every time. No fine print, no surprises.",
-  },
-  {
-    n: "02",
-    title: "Built on evidence",
-    body: "From fuel savings to food safety, our claims are backed by data, independent certification, and third-party validation. We do not self-certify.",
-  },
-  {
-    n: "03",
-    title: "East Africa, world-class",
-    body: "International execution standards paired with deep local knowledge — competitive at home, credible across every border we operate in.",
-  },
-];
-
-const portfolio = [
-  {
-    label: "Fuel Eco Tech",
-    desc:  "Patented fuel optimisation for commercial fleets — ISO certified, AVL-validated, 13.9% measured reduction.",
-    href:  "/products/fuel-eco-tech",
-    img:   "/products/fet/in-hand.png",
-    badge: "B2B · Fleet",
-  },
-  {
-    label: "SEAL Wound Spray",
-    desc:  "Clinical-grade hemostatic wound spray for hospitals, emergency responders, NGOs, and military procurement.",
-    href:  "/products/seal-wound-spray",
-    img:   "/products/seal/trauma-tray.png",
-    badge: "Medical · B2B",
-  },
-  {
-    label: "Vitorra Coffee",
-    desc:  "Traceable, responsibly sourced Ugandan coffee — for consumers, hospitality businesses, and international importers.",
-    href:  "/products/coffee",
-    img:   "/products/coffee/lifestyle.png",
-    badge: "B2B · B2C",
-  },
-  {
-    label: "Logistics Services",
-    desc:  "End-to-end freight, warehousing, customs clearance, and supply chain management across Uganda and East Africa.",
-    href:  "/products/logistics",
-    img:   "/products/logistics/truck-day.png",
-    badge: "B2B · Enterprise",
-  },
-];
-
-const credentials = [
-  { code: "ISO 9001:2015",    label: "Quality Management"   },
-  { code: "ISO 14001:2015",   label: "Environmental"        },
-  { code: "ISO 27001",        label: "Information Security" },
-  { code: "AVL Technologies", label: "Lab Validated"        },
-  { code: "Zurich Insurance", label: "Product Liability"    },
-  { code: "qm-solutions",     label: "German Certified"     },
-];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.about" });
+  return { title: t("title"), description: t("description") };
+}
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
 export default function AboutPage() {
+  const t = useTranslations("about");
+  const tp = useTranslations("products");
+
+  const values = [
+    { n: "01", title: t("values.value1Title"), body: t("values.value1Body") },
+    { n: "02", title: t("values.value2Title"), body: t("values.value2Body") },
+    { n: "03", title: t("values.value3Title"), body: t("values.value3Body") },
+  ];
+
+  const portfolio = [
+    { label: tp("fet.name"),       desc: t("portfolio.fetDesc"),       href: "/products/fuel-eco-tech",   img: "/products/fet/in-hand.png",        badge: t("portfolio.fetBadge") },
+    { label: tp("seal.name"),      desc: t("portfolio.sealDesc"),      href: "/products/seal-wound-spray", img: "/products/seal/trauma-tray.png",   badge: t("portfolio.sealBadge") },
+    { label: tp("coffee.name"),    desc: t("portfolio.coffeeDesc"),    href: "/products/coffee",           img: "/products/coffee/lifestyle.png",   badge: t("portfolio.coffeeBadge") },
+    { label: tp("logistics.name"), desc: t("portfolio.logisticsDesc"), href: "/products/logistics",        img: "/products/logistics/truck-day.png", badge: t("portfolio.logisticsBadge") },
+  ];
+
+  const credentials = [
+    { code: "ISO 9001:2015",    label: t("credentials.qualityManagement")   },
+    { code: "ISO 14001:2015",   label: t("credentials.environmental")        },
+    { code: "ISO 27001",        label: t("credentials.informationSecurity")  },
+    { code: "AVL Technologies", label: t("credentials.labValidated")         },
+    { code: "Zurich Insurance", label: t("credentials.productLiability")     },
+    { code: "qm-solutions",     label: t("credentials.germanCertified")      },
+  ];
+
   return (
     <>
       <Header />
@@ -109,7 +81,7 @@ export default function AboutPage() {
           <div className="container-max relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
             {/* Left: mission statement */}
             <Reveal>
-              <span className="eyebrow block mb-5">Our mission</span>
+              <span className="eyebrow block mb-5">{t("mission.eyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -120,7 +92,7 @@ export default function AboutPage() {
                   color:         "#1E1E1E",
                 }}
               >
-                One conviction.
+                {t("mission.title")}
               </h2>
               <div
                 style={{
@@ -131,14 +103,10 @@ export default function AboutPage() {
                 }}
               />
               <p style={{ fontSize: "17px", lineHeight: 1.8, color: "#555555", maxWidth: "480px" }}>
-                East Africa deserves access to the same quality of technology,
-                healthcare products, and business services available anywhere in
-                the world.
+                {t("mission.body1")}
               </p>
               <p className="mt-5" style={{ fontSize: "17px", lineHeight: 1.8, color: "#555555", maxWidth: "480px" }}>
-                Vitorra exists to deliver exactly that — with the rigour,
-                certifications, and integrity that serious buyers and partners
-                demand.
+                {t("mission.body2")}
               </p>
             </Reveal>
 
@@ -174,14 +142,11 @@ export default function AboutPage() {
                     marginBottom: "24px",
                   }}
                 >
-                  Innovative products and dependable solutions — across fuel
-                  technology, healthcare, premium coffee, and logistics — for
-                  businesses and consumers across Uganda, East Africa, and
-                  international markets.
+                  {t("mission.quote")}
                 </p>
                 <div style={{ width: 36, height: 2, background: "linear-gradient(90deg, #C5B27A, #D4C49A)", borderRadius: 999, marginBottom: "16px" }} />
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "#1E1E1E" }}>Vitorra Holdings Limited</div>
-                <div style={{ fontSize: "12px", color: "#AAAAAA", marginTop: "2px" }}>Brand positioning statement</div>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "#1E1E1E" }}>{SITE_NAME}</div>
+                <div style={{ fontSize: "12px", color: "#AAAAAA", marginTop: "2px" }}>{t("mission.quoteRole")}</div>
               </div>
             </Reveal>
           </div>
@@ -193,7 +158,7 @@ export default function AboutPage() {
         <section className="section-padding" style={{ backgroundColor: "#F2F2F2" }}>
           <div className="container-max grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <Reveal>
-              <span className="eyebrow block mb-4">Who we are</span>
+              <span className="eyebrow block mb-4">{t("whoWeAre.eyebrow")}</span>
               <h2
                 className="mb-6"
                 style={{
@@ -205,29 +170,22 @@ export default function AboutPage() {
                   color:         "#1E1E1E",
                 }}
               >
-                A diversified company<br />built for the long term.
+                {t("whoWeAre.titleLine1")}<br />{t("whoWeAre.titleLine2")}
               </h2>
               <p className="mb-5" style={{ fontSize: "16px", lineHeight: 1.78, color: "#555555" }}>
-                Vitorra Holdings Limited is registered in Uganda and operates
-                across fuel technology, healthcare, premium coffee, and logistics —
-                bringing international-standard products to East African markets,
-                and East African products to the world.
+                {t("whoWeAre.body1")}
               </p>
               <p style={{ fontSize: "16px", lineHeight: 1.78, color: "#555555" }}>
-                Every product line is held to the same standard: independently
-                certified, evidenced by data, and delivered with integrity.
-                We serve B2B clients across Uganda, Kenya, Tanzania, Rwanda, and
-                international markets — with a 24-hour response commitment on
-                every enquiry.
+                {t("whoWeAre.body2")}
               </p>
 
               {/* Key facts */}
               <div className="mt-8 grid grid-cols-2 gap-4">
                 {[
-                  { label: "Registered", value: "Uganda (URSB)" },
-                  { label: "Reg. No.",   value: "80034340923220" },
-                  { label: "Markets",    value: "Uganda + 5 regions" },
-                  { label: "Response",   value: "Within 24 hours" },
+                  { label: t("whoWeAre.factRegisteredLabel"), value: t("whoWeAre.factRegisteredValue") },
+                  { label: t("whoWeAre.factRegNoLabel"),      value: COMPANY_REG_NO },
+                  { label: t("whoWeAre.factMarketsLabel"),    value: t("whoWeAre.factMarketsValue") },
+                  { label: t("whoWeAre.factResponseLabel"),   value: t("whoWeAre.factResponseValue") },
                 ].map((f) => (
                   <div
                     key={f.label}
@@ -279,7 +237,7 @@ export default function AboutPage() {
 
           <div className="container-max relative z-10">
             <Reveal className="text-center mb-14">
-              <span className="eyebrow-light mb-4 inline-flex">What we stand for</span>
+              <span className="eyebrow-light mb-4 inline-flex">{t("values.eyebrow")}</span>
               <h2
                 className="max-w-xl mx-auto"
                 style={{
@@ -291,8 +249,8 @@ export default function AboutPage() {
                   color:         "#FFFFFF",
                 }}
               >
-                Our values{" "}
-                <span style={{ color: "#C5B27A" }}>in practice.</span>
+                {t("values.titleLead")}{" "}
+                <span style={{ color: "#C5B27A" }}>{t("values.titleAccent")}</span>
               </h2>
             </Reveal>
 
@@ -351,7 +309,7 @@ export default function AboutPage() {
         <section className="section-padding" style={{ backgroundColor: "#FFFFFF" }}>
           <div className="container-max">
             <Reveal className="mb-12 lg:mb-14">
-              <span className="eyebrow block mb-3">Our portfolio</span>
+              <span className="eyebrow block mb-3">{t("portfolio.eyebrow")}</span>
               <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-10">
                 <h2
                   style={{
@@ -363,14 +321,14 @@ export default function AboutPage() {
                     color:         "#1E1E1E",
                   }}
                 >
-                  Four lines.<br />One trusted name.
+                  {t("portfolio.titleLine1")}<br />{t("portfolio.titleLine2")}
                 </h2>
                 <Link
                   href="/enquire"
                   className="inline-flex items-center gap-1.5 text-sm font-semibold shrink-0 pb-1"
                   style={{ color: "#7A6020" }}
                 >
-                  Request a quote
+                  {t("portfolio.cta")}
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -431,7 +389,7 @@ export default function AboutPage() {
                         className="inline-flex items-center gap-1 text-xs font-semibold"
                         style={{ color: "#7A6020" }}
                       >
-                        Learn more <ArrowRight className="w-3 h-3 arrow-nudge" />
+                        {t("portfolio.learnMore")} <ArrowRight className="w-3 h-3 arrow-nudge" />
                       </span>
                     </div>
                   </Link>
@@ -459,7 +417,7 @@ export default function AboutPage() {
             <Reveal className="mb-10">
               <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-10">
                 <div>
-                  <span className="eyebrow block mb-3">Our credentials</span>
+                  <span className="eyebrow block mb-3">{t("credentials.eyebrow")}</span>
                   <h2
                     style={{
                       fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -470,8 +428,8 @@ export default function AboutPage() {
                       color:         "#1E1E1E",
                     }}
                   >
-                    Independently certified.<br />
-                    <span style={{ color: "#C5B27A" }}>Externally audited.</span>
+                    {t("credentials.titleLead")}<br />
+                    <span style={{ color: "#C5B27A" }}>{t("credentials.titleAccent")}</span>
                   </h2>
                 </div>
                 <Link
@@ -479,7 +437,7 @@ export default function AboutPage() {
                   className="inline-flex items-center gap-1.5 text-sm font-semibold shrink-0 pb-1"
                   style={{ color: "#7A6020" }}
                 >
-                  View full certifications
+                  {t("credentials.viewFull")}
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -519,10 +477,10 @@ export default function AboutPage() {
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="w-5 h-5 flex-shrink-0" style={{ color: "#7A6020" }} />
                   <p className="text-sm" style={{ color: "#555555" }}>
-                    <span className="font-semibold" style={{ color: "#1E1E1E" }}>Vitorra Holdings Limited</span>
-                    {" "}— Registered in Uganda · Reg. No.{" "}
-                    <span className="font-semibold" style={{ color: "#1E1E1E" }}>80034340923220</span>
-                    {" "}(Uganda Registration Services Bureau, URSB)
+                    <span className="font-semibold" style={{ color: "#1E1E1E" }}>{SITE_NAME}</span>
+                    {t("credentials.regPrefix")}
+                    <span className="font-semibold" style={{ color: "#1E1E1E" }}>{COMPANY_REG_NO}</span>
+                    {t("credentials.regSuffix")}
                   </p>
                 </div>
                 <Link
@@ -530,24 +488,17 @@ export default function AboutPage() {
                   className="inline-flex items-center gap-1.5 text-sm font-semibold shrink-0"
                   style={{ color: "#7A6020" }}
                 >
-                  View all <ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
+                  {t("credentials.viewAll")} <ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
                 </Link>
               </div>
             </Reveal>
           </div>
         </section>
 
-        {/* ══ 8. FINAL CTA ══════════════════════════════════════════════════════ */}
-        <FinalCTA
-          eyebrow="Work with us"
-          titleLead="Ready to work with"
-          titleAccent="Vitorra?"
-          body="Whether you need a fuel savings assessment, a logistics quote, or premium Ugandan coffee — our team responds within 24 hours."
-          primaryLabel="Request a Quote"
-          primaryHref="/enquire"
-          secondaryLabel="Contact Us"
-          secondaryHref="/contact"
-        />
+        {/* ══ 8. FINAL CTA ══════════════════════════════════════════════════════
+            Only the eyebrow differs from the shared default; the rest of the
+            copy comes from FinalCTA's own translated defaults. */}
+        <FinalCTA eyebrow={t("finalCtaEyebrow")} />
 
       </main>
       <Footer />

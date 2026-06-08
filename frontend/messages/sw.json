@@ -55,6 +55,10 @@
     "home": {
       "title": "Vitorra Holdings Limited — Mafuta, Usafirishaji, Afya na Kahawa",
       "description": "Vitorra ni kampuni yenye sekta mbalimbali inayotoa Fuel Eco Tech, usafirishaji, SEAL Wound Spray, na kahawa bora ya Uganda kote Uganda na Afrika Mashariki."
+    },
+    "about": {
+      "title": "Kuhusu — Vitorra Holdings Limited",
+      "description": "Vitorra Holdings Limited ni kampuni yenye sekta mbalimbali iliyojengwa nchini Uganda — ikifanya kazi katika teknolojia ya mafuta, afya, kahawa bora, na usafirishaji. Kutana na timu yetu ya uongozi na ujue kinachotuendesha."
     }
   },
   "hero": {
@@ -283,5 +287,80 @@
     "placeholder3Tag": "Vitorra Coffee",
     "placeholder3Title": "Kufuatilia ubora kutoka mashamba ya Uganda hadi wanunuzi wa kimataifa",
     "placeholder3Body": "Jinsi mchakato wetu wa upataji na usafirishaji unavyohakikisha kila gunia la Vitorra Coffee linakidhi mahitaji ya uthabiti ya masoko ya jumla."
+  },
+  "about": {
+    "mission": {
+      "eyebrow": "Dhamira yetu",
+      "title": "Imani moja.",
+      "body1": "Afrika Mashariki inastahili kupata teknolojia, bidhaa za afya, na huduma za biashara za ubora ule ule unaopatikana popote duniani.",
+      "body2": "Vitorra ipo ili kutoa hasa hilo — kwa umakini, vyeti, na uadilifu ambao wanunuzi na washirika makini wanadai.",
+      "quote": "Bidhaa za ubunifu na suluhisho za kuaminika — katika teknolojia ya mafuta, afya, kahawa bora, na usafirishaji — kwa biashara na watumiaji kote Uganda, Afrika Mashariki, na masoko ya kimataifa.",
+      "quoteRole": "Taarifa ya msimamo wa chapa"
+    },
+    "whoWeAre": {
+      "eyebrow": "Sisi ni nani",
+      "titleLine1": "Kampuni yenye sekta mbalimbali",
+      "titleLine2": "iliyojengwa kwa muda mrefu.",
+      "body1": "Vitorra Holdings Limited imesajiliwa nchini Uganda na inafanya kazi katika teknolojia ya mafuta, afya, kahawa bora, na usafirishaji — ikileta bidhaa za kiwango cha kimataifa kwenye masoko ya Afrika Mashariki, na bidhaa za Afrika Mashariki kwa dunia.",
+      "body2": "Kila aina ya bidhaa inashikiliwa kwa kiwango kile kile: imethibitishwa kwa kujitegemea, ikithibitishwa na data, na kutolewa kwa uadilifu. Tunahudumia wateja wa B2B kote Uganda, Kenya, Tanzania, Rwanda, na masoko ya kimataifa — kwa ahadi ya kujibu ndani ya saa 24 kwa kila ombi.",
+      "factRegisteredLabel": "Imesajiliwa",
+      "factRegisteredValue": "Uganda (URSB)",
+      "factRegNoLabel": "Nambari ya Usajili",
+      "factMarketsLabel": "Masoko",
+      "factMarketsValue": "Uganda + kanda 5",
+      "factResponseLabel": "Kujibu",
+      "factResponseValue": "Ndani ya saa 24"
+    },
+    "values": {
+      "eyebrow": "Tunachosimamia",
+      "titleLead": "Maadili yetu",
+      "titleAccent": "katika vitendo.",
+      "value1Title": "Uadilifu katika kila muamala",
+      "value1Body": "Tunasema tunachokimaanisha na kutoa tunachoahidi — kila bidhaa, kila mshirika, kila wakati. Hakuna masharti ya siri, hakuna mshangao.",
+      "value2Title": "Imejengwa juu ya ushahidi",
+      "value2Body": "Kutoka uokoaji wa mafuta hadi usalama wa chakula, madai yetu yanaungwa mkono na data, vyeti huru, na uthibitisho wa watu wengine. Hatujithibitishi wenyewe.",
+      "value3Title": "Afrika Mashariki, kiwango cha kimataifa",
+      "value3Body": "Viwango vya utekelezaji vya kimataifa pamoja na ujuzi wa kina wa ndani — wenye ushindani nyumbani, wenye kuaminika katika kila mpaka tunaofanya kazi."
+    },
+    "portfolio": {
+      "eyebrow": "Bidhaa zetu",
+      "titleLine1": "Aina nne.",
+      "titleLine2": "Jina moja linaloaminika.",
+      "cta": "Omba nukuu",
+      "learnMore": "Jifunze zaidi",
+      "fetBadge": "B2B · Magari",
+      "fetDesc": "Uboreshaji wa mafuta wenye hati miliki kwa magari ya kibiashara — imethibitishwa ISO, imethibitishwa na AVL, punguzo lililopimwa la 13.9%.",
+      "sealBadge": "Matibabu · B2B",
+      "sealDesc": "Dawa ya kunyunyizia vidonda ya kiwango cha kitabibu kwa hospitali, wahudumu wa dharura, mashirika yasiyo ya kiserikali, na ununuzi wa kijeshi.",
+      "coffeeBadge": "B2B · B2C",
+      "coffeeDesc": "Kahawa ya Uganda inayofuatilika, iliyopatikana kwa uwajibikaji — kwa watumiaji, biashara za ukarimu, na waagizaji wa kimataifa.",
+      "logisticsBadge": "B2B · Biashara",
+      "logisticsDesc": "Usafirishaji kamili, uhifadhi ghalani, uondoshaji forodha, na usimamizi wa ugavi kote Uganda na Afrika Mashariki."
+    },
+    "credentials": {
+      "eyebrow": "Sifa zetu",
+      "titleLead": "Imethibitishwa kwa kujitegemea.",
+      "titleAccent": "Imekaguliwa kwa nje.",
+      "viewFull": "Tazama vyeti vyote",
+      "viewAll": "Tazama vyote",
+      "qualityManagement": "Usimamizi wa Ubora",
+      "environmental": "Mazingira",
+      "informationSecurity": "Usalama wa Taarifa",
+      "labValidated": "Imethibitishwa Maabara",
+      "productLiability": "Dhima ya Bidhaa",
+      "germanCertified": "Imethibitishwa Ujerumani",
+      "regPrefix": " — Imesajiliwa nchini Uganda · Nambari ya Usajili ",
+      "regSuffix": " (Ofisi ya Huduma za Usajili Uganda, URSB)"
+    },
+    "finalCtaEyebrow": "Fanya kazi nasi"
+  },
+  "statementBand": {
+    "eyebrow": "Madhumuni Yetu",
+    "line1": "Imejengwa Uganda.",
+    "line2": "Inaaminiwa kuvuka mipaka.",
+    "body": "Kampuni moja yenye sekta mbalimbali nyuma ya teknolojia ya mafuta, afya, kahawa bora, na usafirishaji — iliyobuniwa kwa kiwango cha kimataifa, iliyoegemea Afrika Mashariki.",
+    "stat1Label": "Aina za Bidhaa",
+    "stat2Label": "Masoko Yanayohudumiwa",
+    "stat3Label": "Muda wa Kujibu"
   }
 }
