@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -15,101 +17,86 @@ import {
   ArrowRight, ArrowUpRight,
 } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "SEAL Wound Spray — FDA-Cleared Hemostatic Bleeding Control",
-  description:
-    "SEAL is an FDA-cleared, chitosan-based hemostatic spray for rapid bleeding control — for EMS, military, hospitals, home, and pet first aid. Single-use, sterile, MIL-STD-810H tested. Request product information.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.seal" });
+  return { title: t("title"), description: t("description") };
+}
 
 const ENQUIRE = "/enquire?sector=SEAL";
-
-/* ─── Data ───────────────────────────────────────────────────────────────── */
-
-const benefits = [
-  { icon: Droplets,     title: "Chitosan clotting",     body: "Chitosan binds to blood cells and platelets to form a fast, stable clot over the wound — sealing cuts, lacerations, and serious bleeds." },
-  { icon: ShieldCheck,  title: "FDA-cleared",           body: "Cleared by the US FDA (510(k)) — confirmed substantially equivalent to an established, safe, and effective medical device." },
-  { icon: PackageCheck, title: "Single-use & sterile",  body: "Every can is sealed, sterile, and single-use — no preparation, no cross-contamination, ready the moment you are." },
-  { icon: Snowflake,    title: "Built for extremes",    body: "Tested to MIL-STD-810H for heat, cold, altitude, and humidity — performs in rain, snow, wind, and low-light conditions." },
-];
-
-const steps = [
-  { n: "01", title: "Shake the can",        body: "Give it a good shake to activate the formula." },
-  { n: "02", title: "Spray the wound",      body: "Hold 6–10 inches away and apply a steady spray to fully cover the bleeding area." },
-  { n: "03", title: "A clot forms",         body: "Chitosan binds to blood cells and platelets, forming a fast, stable clot." },
-  { n: "04", title: "Seek care if needed",  body: "For deeper or more serious wounds, follow up with professional medical attention." },
-];
-
-const variants = [
-  {
-    icon: Backpack,
-    name: "SEAL OTC",
-    tagline: "Everyday carry",
-    body: "Compact enough for hiking kits, travel bags, and home medicine cabinets — bleeding control wherever life happens.",
-    specs: ["1.5oz aerosol can", "Sterile chitosan powder", "Single-use", "36-month shelf life", "Room-temperature storage"],
-  },
-  {
-    icon: Siren,
-    name: "SEAL PRO",
-    tagline: "Professional & tactical",
-    body: "A patented, higher-velocity formula for first responders and tactical teams — rapid control of moderate to severe external hemorrhage.",
-    specs: ["2.5oz aerosol can", "~80 PSI professional grade", "Single-use", "MIL-STD-810H tested", "For trained responders"],
-    featured: true,
-  },
-  {
-    icon: Dog,
-    name: "HemoSEAL Pet",
-    tagline: "Animal first aid",
-    body: "Sting-free bleeding control for dogs, cats, horses, goats, and more — stops bleeding from cuts, abrasions, and nail injuries.",
-    specs: ["2.8oz aerosol can", "Sting-free agent", "Single-use per animal", "No fur-gluing", "Field-ready"],
-  },
-];
-
-const trust = [
-  { icon: Award,        label: "FDA Cleared",            body: "Cleared through the US FDA 510(k) process — the pathway confirming a moderate-risk device is substantially equivalent to an established, safe, and effective product." },
-  { icon: Ambulance,    label: "Field-Proven",           body: "Deployed in Emergency Medical Services, military, and tactical operations — and approved for use by agencies including Maryland EMS." },
-  { icon: Activity,     label: "Coagulopathy-Tested",    body: "Tested in animal models with both normal and impaired clotting function. Always monitor patients post-application." },
-  { icon: Snowflake,    label: "Extreme-Environment Rated", body: "Meets MIL-STD-810H standards for temperature, altitude, and humidity — performs in rain, snow, wind, and low light." },
-  { icon: FlaskConical, label: "Sterile Chitosan",       body: "A sterile chitosan dry-powder formula — a naturally derived agent widely used in modern hemostatic dressings." },
-  { icon: Factory,      label: "Made in the USA",        body: "Manufactured in the United States and backed by the FDA clearance process." },
-];
-
-const specs: [string, string][] = [
-  ["Formula",    "Sterile chitosan dry powder"],
-  ["Use",        "Single-use"],
-  ["Shelf life", "36 months"],
-  ["Storage",    "Room temperature — no refrigeration"],
-  ["Tested to",  "MIL-STD-810H (heat, cold, altitude, humidity)"],
-  ["Removal",    "Rinse with saline or water, wipe with sterile gauze"],
-];
-
-const safety = [
-  "Not a replacement for a tourniquet — but it can reduce reliance on one, especially where a tourniquet can't be applied (neck, groin, or underarm).",
-  "Single-patient use. Once a can is activated the sterile seal is broken; use it on one person only. It may be used on multiple wounds on the same patient.",
-  "For deeper or more serious wounds, always seek professional medical attention.",
-];
-
-const audiences = [
-  { icon: Ambulance,   label: "EMTs & paramedics"       },
-  { icon: Shield,      label: "Military & combat medics" },
-  { icon: Flame,       label: "Police & fire services"  },
-  { icon: Building2,   label: "Hospital emergency depts" },
-  { icon: Stethoscope, label: "Clinics & surgical units" },
-  { icon: Dog,         label: "Veterinary & pet care"   },
-];
-
-const faqs = [
-  { q: "What is SEAL Wound Spray?",                a: "SEAL is an FDA-cleared, chitosan-based hemostatic aerosol designed for rapid bleeding control. It forms a gel-like clot over minor cuts and lacerations as well as more serious bleeds, for professional, home, and field first aid." },
-  { q: "How does it work?",                        a: "Shake the can, then spray from 6–10 inches to cover the bleeding area. The chitosan binds to blood cells and platelets, forming a fast, stable clot. For deeper wounds, follow up with professional care." },
-  { q: "Is it regulated?",                         a: "SEAL is cleared by the US FDA through the 510(k) process and tested to MIL-STD-810H. Our team provides the full regulatory, clinical, and compliance documentation for your market and procurement process on request." },
-  { q: "What variants are available?",             a: "Three: SEAL OTC for everyday and home use, SEAL PRO for first responders and tactical teams, and HemoSEAL Pet for animal first aid. We'll help you choose the right format and volumes." },
-  { q: "Can it replace a tourniquet?",             a: "No. SEAL does not replace a tourniquet, but it can reduce reliance on one — particularly in areas where a tourniquet can't be applied, such as the neck, groin, or underarm. Always seek care for serious wounds." },
-  { q: "How is it stored, and how long does it last?", a: "Each unit has a 36-month shelf life and is stored at room temperature with no refrigeration required — making it well suited to trauma kits, ambulances, clinics, and field packs." },
-  { q: "Can I order at procurement volumes?",      a: "Yes. We support institutional and bulk procurement for hospitals, responders, NGOs, and defence. Request product information and our team will share pricing, documentation, and supply options for your volumes." },
-];
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
 export default function SealWoundSprayPage() {
+  const t = useTranslations("sealPage");
+
+  const benefits = [
+    { icon: Droplets,     title: t("benefit1Title"), body: t("benefit1Body") },
+    { icon: ShieldCheck,  title: t("benefit2Title"), body: t("benefit2Body") },
+    { icon: PackageCheck, title: t("benefit3Title"), body: t("benefit3Body") },
+    { icon: Snowflake,    title: t("benefit4Title"), body: t("benefit4Body") },
+  ];
+
+  const steps = [
+    { n: "01", title: t("step1Title"), body: t("step1Body") },
+    { n: "02", title: t("step2Title"), body: t("step2Body") },
+    { n: "03", title: t("step3Title"), body: t("step3Body") },
+    { n: "04", title: t("step4Title"), body: t("step4Body") },
+  ];
+
+  /* Product names are brand terms (kept literal). */
+  const variants = [
+    { icon: Backpack, name: "SEAL OTC", tagline: t("v1Tagline"), body: t("v1Body"),
+      specs: [t("v1Spec1"), t("v1Spec2"), t("v1Spec3"), t("v1Spec4"), t("v1Spec5")] },
+    { icon: Siren, name: "SEAL PRO", tagline: t("v2Tagline"), body: t("v2Body"),
+      specs: [t("v2Spec1"), t("v2Spec2"), t("v2Spec3"), t("v2Spec4"), t("v2Spec5")], featured: true },
+    { icon: Dog, name: "HemoSEAL Pet", tagline: t("v3Tagline"), body: t("v3Body"),
+      specs: [t("v3Spec1"), t("v3Spec2"), t("v3Spec3"), t("v3Spec4"), t("v3Spec5")] },
+  ];
+
+  const trust = [
+    { icon: Award,        label: t("trust1Label"), body: t("trust1Body") },
+    { icon: Ambulance,    label: t("trust2Label"), body: t("trust2Body") },
+    { icon: Activity,     label: t("trust3Label"), body: t("trust3Body") },
+    { icon: Snowflake,    label: t("trust4Label"), body: t("trust4Body") },
+    { icon: FlaskConical, label: t("trust5Label"), body: t("trust5Body") },
+    { icon: Factory,      label: t("trust6Label"), body: t("trust6Body") },
+  ];
+
+  const specs: [string, string][] = [
+    [t("spec1Key"), t("spec1Value")],
+    [t("spec2Key"), t("spec2Value")],
+    [t("spec3Key"), t("spec3Value")],
+    [t("spec4Key"), t("spec4Value")],
+    [t("spec5Key"), t("spec5Value")],
+    [t("spec6Key"), t("spec6Value")],
+  ];
+
+  const safety = [t("safety1"), t("safety2"), t("safety3")];
+
+  const audiences = [
+    { icon: Ambulance,   label: t("audience1") },
+    { icon: Shield,      label: t("audience2") },
+    { icon: Flame,       label: t("audience3") },
+    { icon: Building2,   label: t("audience4") },
+    { icon: Stethoscope, label: t("audience5") },
+    { icon: Dog,         label: t("audience6") },
+  ];
+
+  const faqs = [
+    { q: t("faq1Q"), a: t("faq1A") },
+    { q: t("faq2Q"), a: t("faq2A") },
+    { q: t("faq3Q"), a: t("faq3A") },
+    { q: t("faq4Q"), a: t("faq4A") },
+    { q: t("faq5Q"), a: t("faq5A") },
+    { q: t("faq6Q"), a: t("faq6A") },
+    { q: t("faq7Q"), a: t("faq7A") },
+  ];
+
   return (
     <>
       <Header />
@@ -123,7 +110,7 @@ export default function SealWoundSprayPage() {
           <div className="absolute inset-0">
             <Image
               src="/hero/seal.png"
-              alt="Emergency responder preparing SEAL wound spray from a trauma kit"
+              alt="SEAL wound spray"
               fill priority sizes="100vw"
               className="object-cover"
               style={{ animation: "vitorra-ken-burns 16s ease-out both" }}
@@ -139,7 +126,7 @@ export default function SealWoundSprayPage() {
 
           <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 mt-auto pt-28 pb-16 md:pb-24">
             <Reveal>
-              <span className="eyebrow-light mb-5 inline-flex">SEAL Hemostatic Wound Spray · Medical · B2B</span>
+              <span className="eyebrow-light mb-5 inline-flex">{t("heroEyebrow")}</span>
               <h1
                 className="max-w-2xl mb-5"
                 style={{
@@ -151,18 +138,15 @@ export default function SealWoundSprayPage() {
                   color:         "#FFFFFF",
                 }}
               >
-                Stop bleeding fast.{" "}
-                <span className="text-gold-gradient">Save lives.</span>
+                {t("heroTitleLead")}{" "}
+                <span className="text-gold-gradient">{t("heroTitleAccent")}</span>
               </h1>
               <p className="max-w-xl mb-9" style={{ fontSize: "17px", lineHeight: 1.75, color: "rgba(255,255,255,0.65)" }}>
-                An FDA-cleared, chitosan-based hemostatic spray for rapid bleeding
-                control — trusted by EMS, military, and emergency teams, and ready
-                for the home, the field, and even the family pet.
+                {t("heroBody")}
               </p>
 
-              {/* Quick-fact pills */}
               <div className="flex flex-wrap gap-2 mb-9">
-                {["FDA-cleared · US 510(k)", "Chitosan-based", "Single-use & sterile", "MIL-STD-810H tested"].map((f) => (
+                {[t("heroPill1"), t("heroPill2"), t("heroPill3"), t("heroPill4")].map((f) => (
                   <span
                     key={f}
                     style={{
@@ -179,11 +163,11 @@ export default function SealWoundSprayPage() {
 
               <div className="flex flex-col sm:flex-row gap-3 hero-cta">
                 <Link href={ENQUIRE} className="btn-primary">
-                  Request Product Information
+                  {t("heroCtaPrimary")}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/contact" className="btn-ghost-dark">
-                  Talk to our team
+                  {t("heroCtaSecondary")}
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -198,7 +182,7 @@ export default function SealWoundSprayPage() {
         >
           <div className="container-max">
             <Reveal className="mb-12 lg:mb-16 max-w-2xl">
-              <span className="eyebrow block mb-3">Why SEAL</span>
+              <span className="eyebrow block mb-3">{t("benefitsEyebrow")}</span>
               <h2
                 className="gold-underline"
                 style={{
@@ -211,7 +195,7 @@ export default function SealWoundSprayPage() {
                   maxWidth:      "520px",
                 }}
               >
-                Control when it counts.
+                {t("benefitsTitle")}
               </h2>
             </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -251,13 +235,13 @@ export default function SealWoundSprayPage() {
             <Reveal direction="right">
               <ParallaxImage
                 src="/products/seal/in-hand.png"
-                alt="Gloved hand holding SEAL wound spray, ready to apply"
+                alt="SEAL wound spray in hand"
                 className="aspect-[4/3] rounded-[40px] shadow-card"
               />
             </Reveal>
             <div>
               <Reveal>
-                <span className="eyebrow block mb-3">How it works</span>
+                <span className="eyebrow block mb-3">{t("howEyebrow")}</span>
                 <h2
                   className="mb-8"
                   style={{
@@ -269,7 +253,7 @@ export default function SealWoundSprayPage() {
                     color:         "#1E1E1E",
                   }}
                 >
-                  Four simple steps.
+                  {t("howTitle")}
                 </h2>
               </Reveal>
               <div className="space-y-7">
@@ -312,7 +296,7 @@ export default function SealWoundSprayPage() {
         >
           <div className="container-max">
             <Reveal className="mb-12 max-w-2xl">
-              <span className="eyebrow block mb-3">The range</span>
+              <span className="eyebrow block mb-3">{t("rangeEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -324,11 +308,10 @@ export default function SealWoundSprayPage() {
                   maxWidth:      "520px",
                 }}
               >
-                One formula. Three formats.
+                {t("rangeTitle")}
               </h2>
               <p className="mt-5" style={{ fontSize: "16px", lineHeight: 1.75, color: "#555555", maxWidth: "560px" }}>
-                The same chitosan hemostatic technology, packaged for everyday carry,
-                professional response, and animal first aid.
+                {t("rangeBody")}
               </p>
             </Reveal>
 
@@ -352,7 +335,7 @@ export default function SealWoundSprayPage() {
                       </span>
                       {v.featured && (
                         <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#C5B27A" }}>
-                          Most capable
+                          {t("mostCapable")}
                         </span>
                       )}
                     </div>
@@ -381,8 +364,8 @@ export default function SealWoundSprayPage() {
             </div>
             <Reveal className="mt-6">
               <p className="text-xs" style={{ color: "#999999" }}>
-                Not sure which format fits your team?{" "}
-                <Link href={ENQUIRE} className="font-semibold underline" style={{ color: "#7A6020" }}>Ask us</Link> — we&apos;ll recommend the right one for your use and volumes.
+                {t("rangeFootText")}{" "}
+                <Link href={ENQUIRE} className="font-semibold underline" style={{ color: "#7A6020" }}>{t("rangeFootLink")}</Link>{t("rangeFootSuffix")}
               </p>
             </Reveal>
           </div>
@@ -394,7 +377,7 @@ export default function SealWoundSprayPage() {
             <div className="card-stadium relative shadow-card" style={{ aspectRatio: "16/9", maxHeight: "70vh" }}>
               <Image
                 src="/products/seal/trauma-tray.png"
-                alt="SEAL wound spray on a sterile trauma tray beside a first-aid kit"
+                alt="SEAL wound spray on a trauma tray"
                 fill sizes="100vw"
                 className="object-cover"
               />
@@ -403,7 +386,7 @@ export default function SealWoundSprayPage() {
                 style={{ background: "linear-gradient(to top, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.1) 55%)" }}
               />
               <div className="absolute bottom-0 left-0 p-8 md:p-12">
-                <span className="eyebrow-light mb-3 inline-flex">Ready where it counts</span>
+                <span className="eyebrow-light mb-3 inline-flex">{t("mediaEyebrow")}</span>
                 <p
                   style={{
                     fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -413,16 +396,14 @@ export default function SealWoundSprayPage() {
                     letterSpacing: "-0.02em",
                   }}
                 >
-                  In the kit. On the line. In seconds.
+                  {t("mediaText")}
                 </p>
               </div>
             </div>
           </Reveal>
         </section>
 
-        {/* ══ TESTED · TRUSTED · APPROVED ═════════════════════════════════════
-            Dark proof section — mirrors the FET certifications treatment.
-        ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ══ TESTED · TRUSTED · APPROVED ═════════════════════════════════════ */}
         <section
           className="section-padding relative overflow-hidden"
           style={{ backgroundColor: "#141414" }}
@@ -440,7 +421,7 @@ export default function SealWoundSprayPage() {
 
           <div className="container-max relative z-10">
             <Reveal className="mb-12 lg:mb-16">
-              <span className="eyebrow-light mb-3 inline-flex">Tested · Trusted · Approved</span>
+              <span className="eyebrow-light mb-3 inline-flex">{t("trustEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -452,12 +433,11 @@ export default function SealWoundSprayPage() {
                   maxWidth:      "560px",
                 }}
               >
-                Proven where the stakes{" "}
-                <span style={{ color: "#C5B27A" }}>are highest.</span>
+                {t("trustTitleLead")}{" "}
+                <span style={{ color: "#C5B27A" }}>{t("trustTitleAccent")}</span>
               </h2>
               <p className="mt-5 max-w-lg" style={{ fontSize: "16px", lineHeight: 1.75, color: "rgba(255,255,255,0.42)" }}>
-                FDA-cleared, field-deployed, and tested to military environmental
-                standards — SEAL is built to perform when it matters most.
+                {t("trustBody")}
               </p>
             </Reveal>
 
@@ -493,9 +473,8 @@ export default function SealWoundSprayPage() {
           style={{ backgroundColor: "#FFFFFF", boxShadow: "inset 0 1px 0 rgba(0,0,0,0.06)" }}
         >
           <div className="container-max grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-            {/* Specifications */}
             <Reveal>
-              <span className="eyebrow block mb-3">Specifications</span>
+              <span className="eyebrow block mb-3">{t("specsEyebrow")}</span>
               <h2
                 className="mb-7"
                 style={{
@@ -507,7 +486,7 @@ export default function SealWoundSprayPage() {
                   color:         "#1E1E1E",
                 }}
               >
-                The essentials.
+                {t("specsTitle")}
               </h2>
               <dl className="border-t" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
                 {specs.map(([k, v]) => (
@@ -523,9 +502,8 @@ export default function SealWoundSprayPage() {
               </dl>
             </Reveal>
 
-            {/* Safety */}
             <Reveal delay={120}>
-              <span className="eyebrow block mb-3">Important safety information</span>
+              <span className="eyebrow block mb-3">{t("safetyEyebrow")}</span>
               <h2
                 className="mb-7"
                 style={{
@@ -537,7 +515,7 @@ export default function SealWoundSprayPage() {
                   color:         "#1E1E1E",
                 }}
               >
-                Used responsibly.
+                {t("safetyTitle")}
               </h2>
               <ul className="space-y-5">
                 {safety.map((s) => (
@@ -550,8 +528,7 @@ export default function SealWoundSprayPage() {
                 ))}
               </ul>
               <p className="mt-7 text-xs leading-relaxed" style={{ color: "#999999" }}>
-                Full regulatory, clinical, and usage documentation is provided with
-                every procurement enquiry.
+                {t("safetyFoot")}
               </p>
             </Reveal>
           </div>
@@ -561,7 +538,7 @@ export default function SealWoundSprayPage() {
         <section className="section-padding-sm" style={{ backgroundColor: "#F2F2F2" }}>
           <div className="container-max text-center">
             <Reveal>
-              <span className="eyebrow block mb-5">Who it&apos;s for</span>
+              <span className="eyebrow block mb-5">{t("audienceEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -571,8 +548,8 @@ export default function SealWoundSprayPage() {
                   lineHeight:    1.1,
                 }}
               >
-                <span style={{ color: "#1E1E1E" }}>Where lives </span>
-                <span style={{ color: "#AAAAAA" }}>are on the line.</span>
+                <span style={{ color: "#1E1E1E" }}>{t("audienceTitleLead")}</span>
+                <span style={{ color: "#AAAAAA" }}>{t("audienceTitleAccent")}</span>
               </h2>
             </Reveal>
             <Reveal delay={100} className="mt-8 flex flex-wrap justify-center gap-3">
@@ -597,7 +574,7 @@ export default function SealWoundSprayPage() {
         >
           <div className="container-max grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-12 lg:gap-20">
             <Reveal>
-              <span className="eyebrow block mb-3">Questions</span>
+              <span className="eyebrow block mb-3">{t("faqEyebrow")}</span>
               <h2
                 style={{
                   fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
@@ -609,12 +586,12 @@ export default function SealWoundSprayPage() {
                   maxWidth:      "320px",
                 }}
               >
-                Everything you need to know.
+                {t("faqTitle")}
               </h2>
               <p className="mt-5 text-sm" style={{ color: "#666666" }}>
-                Need specifications or compliance documents?{" "}
+                {t("faqCantFind")}{" "}
                 <Link href="/contact" className="font-semibold underline" style={{ color: "#1E1E1E" }}>
-                  Talk to our team.
+                  {t("faqTalkToTeam")}
                 </Link>
               </p>
             </Reveal>
@@ -626,15 +603,12 @@ export default function SealWoundSprayPage() {
 
         {/* ══ FINAL CTA ═══════════════════════════════════════════════════════ */}
         <FinalCTA
-          eyebrow="Get Started"
-          titleLead="Equip your team with"
-          titleAccent="SEAL."
-          body="Request product information and our team will share specifications, certifications, and procurement options — within 24 hours."
-          primaryLabel="Request Product Information"
+          titleLead={t("finalCtaTitleLead")}
+          titleAccent={t("finalCtaTitleAccent")}
+          body={t("finalCtaBody")}
+          primaryLabel={t("heroCtaPrimary")}
           primaryHref={ENQUIRE}
-          secondaryLabel="Contact Us"
-          secondaryHref="/contact"
-          caption="FDA-cleared  ·  Single-use & sterile  ·  Reply within 24 hours"
+          caption={t("finalCtaCaption")}
         />
 
       </main>
