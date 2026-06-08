@@ -8,6 +8,7 @@ import { Menu, X, ChevronDown, ArrowRight, ShoppingBag, User } from "lucide-reac
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 /* ── Cart button with live count badge (Mastercard pill style) ──────────── */
 function CartButton({ onNavigate }: { onNavigate?: () => void }) {
@@ -160,6 +161,9 @@ export default function Header() {
 
             {/* CTA + mobile toggle — right */}
             <div className="flex items-center gap-3">
+              <div className="hidden md:block">
+                <LanguageSwitcher />
+              </div>
               {COFFEE_SHOP_ENABLED && <CartButton />}
               <Link
                 href="/account/dashboard"
@@ -225,6 +229,12 @@ export default function Header() {
                 )
               )}
               <div className="pt-4 mt-2 border-t border-black/5 space-y-2">
+                <div className="flex items-center justify-between px-3 py-2">
+                  <span className="text-xs font-bold uppercase tracking-widest text-charcoal/40">
+                    {t("common.language")}
+                  </span>
+                  <LanguageSwitcher />
+                </div>
                 <Link
                   href="/account/dashboard"
                   onClick={() => setMobileOpen(false)}
