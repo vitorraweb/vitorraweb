@@ -6,30 +6,19 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
         // ── Admin + Ops accounts ──────────────────────────────────────────
-        // ⚠ Change these passwords immediately after first login.
-        User::updateOrCreate(
-            ['email' => 'admin@vitorra.org'],
-            [
-                'name'     => 'Vitorra Admin',
-                'password' => Hash::make('changeme123'),
-                'role'     => 'admin',
-            ]
-        );
-
-        User::updateOrCreate(
-            ['email' => 'ops@vitorra.org'],
-            [
-                'name'     => 'Vitorra Ops',
-                'password' => Hash::make('changeme123'),
-                'role'     => 'ops',
-            ]
-        );
+        // Passwords come from the environment (ADMIN_PASSWORD / OPS_PASSWORD).
+        // If unset, a strong random password is generated and printed ONCE so
+        // the deployer can record it. Re-seeding never overwrites a password
+        // that has already been changed in the admin panel.
+        $this->seedStaffUser('admin@vitorra.org', 'Vitorra Admin', 'admin', env('ADMIN_PASSWORD'));
+        $this->seedStaffUser('ops@vitorra.org', 'Vitorra Ops', 'ops', env('OPS_PASSWORD'));
 
         // ── Coffee catalogue (slugs + prices mirror the storefront) ────────
         $coffee = [
@@ -114,6 +103,43 @@ class DatabaseSeeder extends Seeder
                     'meta'            => array_merge($sharedMeta, $product['meta']),
                 ]
             );
+        }
+    }
+
+    /**
+     * Create or refresh a staff account without ever resetting a password
+     * that was already changed. The password is only set when the account is
+     * first created — taken from $password (env) or a generated strong secret
+     * which is printed once to the console.
+     */
+    protected function seedStaffUser(string $email, string $name, string $role, ?string $password): void
+    {
+        $existing = User::where('email', $email)->first();
+
+        if ($existing) {
+            // Account already exists — keep its (possibly changed) password,
+            // only keep name/role in sync.
+            $existing->fill(['name' => $name, 'role' => $role])->save();
+
+            return;
+        }
+
+        $generated = false;
+        if (blank($password)) {
+            $password = Str::password(20);
+            $generated = true;
+        }
+
+        User::create([
+            'email'    => $email,
+            'name'     => $name,
+            'role'     => $role,
+            'password' => Hash::make($password),
+        ]);
+
+        if ($generated && $this->command) {
+            $this->command->warn("Generated password for {$email}: {$password}");
+            $this->command->warn('  ↑ Record this now — it is not shown again. Change it in /admin/users after first login.');
         }
     }
 }

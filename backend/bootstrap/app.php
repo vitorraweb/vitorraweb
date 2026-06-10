@@ -22,4 +22,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+        // Report exceptions to Sentry (no-op when SENTRY_LARAVEL_DSN is unset)
+        \Sentry\Laravel\Integration::handles($exceptions);
     })->create();

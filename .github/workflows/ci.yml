@@ -1,0 +1,84 @@
+name: CI
+
+# Runs quality checks on every push and pull request.
+# No deployment: the frontend auto-deploys via Vercel, and the backend is
+# released manually over SSH (see PROGRESS.md / the ops runbook).
+
+on:
+  push:
+    branches: ["master", "rebuild", "feat/**"]
+  pull_request:
+    branches: ["master"]
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (Laravel)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Check code style (Pint)
+        # Advisory for now — flip `continue-on-error` to false once the
+        # codebase has been formatted once with `./vendor/bin/pint`.
+        continue-on-error: true
+        run: ./vendor/bin/pint --test
+
+      - name: Run tests
+        run: php artisan test
+
+  frontend:
+    name: Frontend (Next.js)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Using `npm install` (not `npm ci`) because the committed lockfile is
+      # regenerated on Windows and may omit Linux-only optional deps; install is
+      # more forgiving. Switch to `npm ci` if the lockfile is regenerated on Linux.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
