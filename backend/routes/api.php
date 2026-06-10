@@ -86,35 +86,56 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::middleware('role:admin,ops')->prefix('admin')->group(function () {
+        // Dashboard — every staff member sees this.
         Route::get('/stats',                            [AdminController::class, 'stats']);
-        Route::get('/enquiries',                        [AdminController::class, 'enquiries']);
-        Route::patch('/enquiries/{enquiry}',            [AdminController::class, 'updateEnquiry']);
-        Route::get('/messages',                         [AdminController::class, 'messages']);
-        Route::patch('/messages/{message}/read',        [AdminController::class, 'markRead']);
-        Route::get('/orders',                           [AdminController::class, 'orders']);
-        Route::patch('/orders/{order}',                 [AdminController::class, 'updateOrder']);
-        Route::get('/prospects',                        [ProspectController::class, 'index']);
-        Route::patch('/prospects/{prospect}',           [ProspectController::class, 'update']);
-        Route::post('/prospects/import',                [ProspectController::class, 'import']);
-        Route::get('/products',                         [ProductAdminController::class, 'index']);
-        Route::post('/products',                        [ProductAdminController::class, 'store']);
-        Route::get('/products/{product}',               [ProductAdminController::class, 'show']);
-        Route::match(['put', 'patch'], '/products/{product}', [ProductAdminController::class, 'update']);
-        Route::delete('/products/{product}',            [ProductAdminController::class, 'destroy']);
-        Route::get('/customers',                        [CustomerController::class, 'index']);
-        Route::get('/customers/detail',                 [CustomerController::class, 'detail']);
-        Route::put('/customers/note',                   [CustomerController::class, 'saveNote']);
-        Route::get('/media',                            [MediaController::class, 'index']);
-        Route::post('/media',                           [MediaController::class, 'store']);
-        Route::delete('/media/{media}',                 [MediaController::class, 'destroy']);
-        Route::get('/newsletter/subscribers',           [NewsletterController::class, 'index']);
-        Route::get('/blog/posts',                       [BlogAdminController::class, 'index']);
-        Route::post('/blog/posts',                      [BlogAdminController::class, 'store']);
-        Route::get('/blog/posts/{post}',                [BlogAdminController::class, 'show']);
-        Route::match(['put', 'patch'], '/blog/posts/{post}', [BlogAdminController::class, 'update']);
-        Route::delete('/blog/posts/{post}',             [BlogAdminController::class, 'destroy']);
 
-        // System settings + user management — admin role only (not ops), per the BRD.
+        // Operational modules — each gated by the staff member's permissions.
+        Route::middleware('perm:enquiries')->group(function () {
+            Route::get('/enquiries',                    [AdminController::class, 'enquiries']);
+            Route::patch('/enquiries/{enquiry}',        [AdminController::class, 'updateEnquiry']);
+        });
+        Route::middleware('perm:messages')->group(function () {
+            Route::get('/messages',                     [AdminController::class, 'messages']);
+            Route::patch('/messages/{message}/read',    [AdminController::class, 'markRead']);
+        });
+        Route::middleware('perm:orders')->group(function () {
+            Route::get('/orders',                       [AdminController::class, 'orders']);
+            Route::patch('/orders/{order}',             [AdminController::class, 'updateOrder']);
+        });
+        Route::middleware('perm:prospects')->group(function () {
+            Route::get('/prospects',                    [ProspectController::class, 'index']);
+            Route::patch('/prospects/{prospect}',       [ProspectController::class, 'update']);
+            Route::post('/prospects/import',            [ProspectController::class, 'import']);
+        });
+        Route::middleware('perm:products')->group(function () {
+            Route::get('/products',                     [ProductAdminController::class, 'index']);
+            Route::post('/products',                    [ProductAdminController::class, 'store']);
+            Route::get('/products/{product}',           [ProductAdminController::class, 'show']);
+            Route::match(['put', 'patch'], '/products/{product}', [ProductAdminController::class, 'update']);
+            Route::delete('/products/{product}',        [ProductAdminController::class, 'destroy']);
+        });
+        Route::middleware('perm:customers')->group(function () {
+            Route::get('/customers',                    [CustomerController::class, 'index']);
+            Route::get('/customers/detail',             [CustomerController::class, 'detail']);
+            Route::put('/customers/note',               [CustomerController::class, 'saveNote']);
+        });
+        Route::middleware('perm:media')->group(function () {
+            Route::get('/media',                        [MediaController::class, 'index']);
+            Route::post('/media',                       [MediaController::class, 'store']);
+            Route::delete('/media/{media}',             [MediaController::class, 'destroy']);
+        });
+        Route::middleware('perm:newsletter')->group(function () {
+            Route::get('/newsletter/subscribers',       [NewsletterController::class, 'index']);
+        });
+        Route::middleware('perm:blog')->group(function () {
+            Route::get('/blog/posts',                   [BlogAdminController::class, 'index']);
+            Route::post('/blog/posts',                  [BlogAdminController::class, 'store']);
+            Route::get('/blog/posts/{post}',            [BlogAdminController::class, 'show']);
+            Route::match(['put', 'patch'], '/blog/posts/{post}', [BlogAdminController::class, 'update']);
+            Route::delete('/blog/posts/{post}',         [BlogAdminController::class, 'destroy']);
+        });
+
+        // System settings + staff management — admin role only (not ops), per the BRD.
         Route::middleware('role:admin')->group(function () {
             Route::get('/settings',  [SettingsController::class, 'index']);
             Route::put('/settings',  [SettingsController::class, 'update']);

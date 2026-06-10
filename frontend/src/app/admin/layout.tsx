@@ -4,22 +4,24 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, UserCog, LogOut, Menu, X } from "lucide-react";
-import { auth, apiAdmin } from "@/lib/auth";
+import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, LogOut, Menu, X } from "lucide-react";
+import { auth, apiAdmin, canAccess } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 
-const nav = [
+type NavItem = { label: string; href: string; icon: typeof LayoutDashboard; module?: string; adminOnly?: boolean };
+
+const nav: NavItem[] = [
   { label: "Dashboard",   href: "/admin",              icon: LayoutDashboard },
-  { label: "Enquiries",   href: "/admin/enquiries",    icon: MessageSquare },
-  { label: "Customers",   href: "/admin/customers",    icon: Contact },
-  { label: "Prospects",   href: "/admin/prospects",    icon: Users },
-  { label: "Products",    href: "/admin/products",     icon: Package },
-  { label: "Blog",        href: "/admin/blog",         icon: FileText },
-  { label: "Media",       href: "/admin/media",        icon: Images },
-  { label: "Messages",    href: "/admin/messages",     icon: Mail },
-  { label: "Orders",      href: "/admin/orders",       icon: ShoppingCart },
-  { label: "Settings",    href: "/admin/settings",     icon: Settings, adminOnly: true },
-  { label: "Users",       href: "/admin/users",        icon: UserCog, adminOnly: true },
+  { label: "Enquiries",   href: "/admin/enquiries",    icon: MessageSquare, module: "enquiries" },
+  { label: "Customers",   href: "/admin/customers",    icon: Contact,       module: "customers" },
+  { label: "Prospects",   href: "/admin/prospects",    icon: Users,         module: "prospects" },
+  { label: "Products",    href: "/admin/products",     icon: Package,       module: "products" },
+  { label: "Blog",        href: "/admin/blog",         icon: FileText,      module: "blog" },
+  { label: "Media",       href: "/admin/media",        icon: Images,        module: "media" },
+  { label: "Messages",    href: "/admin/messages",     icon: Mail,          module: "messages" },
+  { label: "Orders",      href: "/admin/orders",       icon: ShoppingCart,  module: "orders" },
+  { label: "Settings",    href: "/admin/settings",     icon: Settings,      adminOnly: true },
+  { label: "Staff",       href: "/admin/staff",        icon: Users,         adminOnly: true },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -35,6 +37,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const u = auth.getUser();
     if (!u) { router.push("/admin/login"); return; }
     setUser(u);
+    // Defense-in-depth: if the current screen maps to a module/role this user
+    // lacks, bounce to the dashboard (the backend also returns 403 regardless).
+    const current = [...nav]
+      .sort((a, b) => b.href.length - a.href.length)
+      .find((n) => pathname === n.href || pathname.startsWith(n.href + "/"));
+    if (current && current.href !== "/admin" && !canAccess(u, current)) {
+      router.replace("/admin");
+    }
   }, [pathname, router]);
 
   const logout = async () => {
@@ -61,7 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </span>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {nav.filter((n) => !n.adminOnly || user.role?.toLowerCase() === "admin").map(({ label, href, icon: Icon }) => {
+          {nav.filter((n) => canAccess(user, n)).map(({ label, href, icon: Icon }) => {
             const active = pathname === href;
             return (
               <Link

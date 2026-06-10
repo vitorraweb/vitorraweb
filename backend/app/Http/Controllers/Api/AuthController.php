@@ -37,7 +37,7 @@ class AuthController extends Controller
 
         return response()->json([
             'data' => [
-                'user'  => $user->only(['id', 'name', 'email', 'role']),
+                'user'  => $user->toAuthArray(),
                 'token' => $token,
             ],
         ], 201);
@@ -62,7 +62,7 @@ class AuthController extends Controller
 
         return response()->json([
             'data'  => [
-                'user'  => $user->only(['id', 'name', 'email', 'role']),
+                'user'  => $user->toAuthArray(),
                 'token' => $token,
             ],
         ]);
@@ -80,7 +80,7 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return response()->json([
-            'data' => $request->user()->only(['id', 'name', 'email', 'role']),
+            'data' => $request->user()->toAuthArray(),
         ]);
     }
 }

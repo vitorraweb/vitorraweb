@@ -16,7 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Allow the Next.js frontend to call the API
         $middleware->validateCsrfTokens(except: ['api/*']);
         // Role-based access guard for admin routes
-        $middleware->alias(['role' => \App\Http\Middleware\RequireRole::class]);
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RequireRole::class,
+            'perm' => \App\Http\Middleware\RequirePermission::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

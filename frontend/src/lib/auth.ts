@@ -4,7 +4,26 @@
 const TOKEN_KEY = "vitorra_admin_token";
 const USER_KEY  = "vitorra_admin_user";
 
-export type AdminUser = { id: number; name: string; email: string; role: string };
+export type AdminUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  department?: string | null;
+  job_title?: string | null;
+  staff_status?: string | null;
+  /** Operational modules this user may access (admins get all). */
+  permissions?: string[];
+};
+
+/** Whether a user may access a nav entry / module. Admins see everything. */
+export function canAccess(user: AdminUser | null, opts: { adminOnly?: boolean; module?: string }): boolean {
+  if (!user) return false;
+  const isAdmin = user.role?.toLowerCase() === "admin";
+  if (opts.adminOnly) return isAdmin;
+  if (opts.module) return isAdmin || (user.permissions ?? []).includes(opts.module);
+  return true;
+}
 
 export const auth = {
   getToken: (): string | null => {
