@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, LogOut, Menu, X, CheckSquare } from "lucide-react";
 import { auth, apiAdmin, canAccess } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 
@@ -20,6 +20,7 @@ const nav: NavItem[] = [
   { label: "Media",       href: "/admin/media",        icon: Images,        module: "media" },
   { label: "Messages",    href: "/admin/messages",     icon: Mail,          module: "messages" },
   { label: "Orders",      href: "/admin/orders",       icon: ShoppingCart,  module: "orders" },
+  { label: "Tasks",       href: "/admin/tasks",        icon: CheckSquare,   module: "tasks" },
   { label: "Settings",    href: "/admin/settings",     icon: Settings,      adminOnly: true },
   { label: "Staff",       href: "/admin/staff",        icon: Users,         adminOnly: true },
 ];

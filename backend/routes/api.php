@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\ProductAdminController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProspectController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\UserAdminController;
 use Illuminate\Support\Facades\Route;
 
@@ -126,6 +127,12 @@ Route::middleware('auth:sanctum')->group(function () {
         });
         Route::middleware('perm:newsletter')->group(function () {
             Route::get('/newsletter/subscribers',       [NewsletterController::class, 'index']);
+        });
+        Route::middleware('perm:tasks')->group(function () {
+            Route::get('/tasks',                        [TaskController::class, 'index']);
+            Route::post('/tasks',                       [TaskController::class, 'store']);
+            Route::match(['put', 'patch'], '/tasks/{task}', [TaskController::class, 'update']);
+            Route::delete('/tasks/{task}',              [TaskController::class, 'destroy']);
         });
         Route::middleware('perm:blog')->group(function () {
             Route::get('/blog/posts',                   [BlogAdminController::class, 'index']);
