@@ -52,7 +52,7 @@ export default function Footer() {
       {/* ── Logo + CTA ──────────────────────────────────────────────────── */}
       <div className="container-max mx-auto px-6 lg:px-20 pt-16 pb-12 border-b border-white/[0.08]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8">
-          <Link href="/" aria-label="Vitorra Holdings Limited — home" className="inline-block">
+          <Link href="/" aria-label="Vitorra Holdings Limited, home" className="inline-block">
             <Image
               src="/logo.png"
               alt="Vitorra Holdings Limited"

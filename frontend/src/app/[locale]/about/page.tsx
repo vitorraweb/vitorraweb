@@ -206,7 +206,7 @@ export default function AboutPage() {
             <Reveal delay={120} direction="left">
               <ParallaxImage
                 src="/hero/overview.png"
-                alt="Vitorra — East Africa operations"
+                alt="Vitorra, East Africa operations"
                 className="aspect-[4/3] rounded-[40px] shadow-card"
               />
             </Reveal>

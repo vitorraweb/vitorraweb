@@ -7,7 +7,7 @@ import CheckoutView from "@/components/shop/CheckoutView";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "Checkout — Vitorra Coffee Shop",
+  title: "Checkout | Vitorra Coffee Shop",
   description: "Complete your Vitorra Coffee order.",
   robots: { index: false, follow: false },
 };

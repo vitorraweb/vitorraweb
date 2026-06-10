@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Vitorra Holdings Limited — innovative products and dependable solutions";
+export const alt = "Vitorra Holdings Limited, innovative products and dependable solutions";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

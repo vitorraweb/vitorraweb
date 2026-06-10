@@ -49,7 +49,7 @@ export default function GlobalError({
           </h1>
           <p style={{ color: "#454545", lineHeight: 1.6, margin: "0 0 28px" }}>
             We hit an unexpected problem. Our team has been notified. Please try
-            again — if it keeps happening, contact us and we&apos;ll help.
+            again. If it keeps happening, contact us and we&apos;ll help.
           </p>
           <button
             onClick={() => reset()}

@@ -111,7 +111,7 @@ export default function CheckoutView() {
             Nothing to check out.
           </h2>
           <p className="mb-8 max-w-sm mx-auto" style={{ fontSize: "15px", color: "#666666" }}>
-            Your cart is empty — add a bag of GOLD and come back.
+            Your cart is empty. Add a bag of GOLD and come back.
           </p>
           <Link href="/shop" className="btn-primary">Browse the shop<ArrowRight className="w-4 h-4" /></Link>
         </div>
@@ -258,7 +258,7 @@ export default function CheckoutView() {
 
         <p className="flex items-center justify-center gap-1.5 text-xs mt-4" style={{ color: "#999999" }}>
           <ShieldCheck className="w-3.5 h-3.5" />
-          No payment taken now — we confirm payment &amp; delivery within 24h.
+          No payment taken now. We confirm payment &amp; delivery within 24h.
         </p>
       </div>
     </div>

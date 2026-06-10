@@ -31,7 +31,7 @@ export const revalidate = 600;
 
 const assurances = [
   { icon: QrCode, title: "Traceable, farm to cup", body: "Every bag carries a code that traces your coffee back to its source." },
-  { icon: Truck, title: "Delivered to your door", body: "Kampala and nationwide delivery — international shipping on request." },
+  { icon: Truck, title: "Delivered to your door", body: "Kampala and nationwide delivery, international shipping on request." },
   { icon: ShieldCheck, title: "Roasted fresh in Uganda", body: "Sealed at origin for peak freshness and the true taste of Uganda." },
 ];
 
@@ -86,7 +86,7 @@ export default async function ShopPage() {
                 <span className="text-gold-gradient">delivered.</span>
               </h1>
               <p className="max-w-xl mb-8" style={{ fontSize: "17px", lineHeight: 1.75, color: "rgba(255,255,255,0.65)" }}>
-                Single-origin GOLD — 100% Arabica from the highland slopes of
+                Single-origin GOLD, 100% Arabica from the highland slopes of
                 Mount Elgon, roasted in Uganda and sealed fresh. Order online for
                 your home, office, or as a gift.
               </p>
@@ -181,11 +181,11 @@ export default async function ShopPage() {
                 Wholesale &amp; export volumes.
               </h2>
               <p className="max-w-md mx-auto mb-8" style={{ fontSize: "15px", lineHeight: 1.75, color: "rgba(255,255,255,0.55)" }}>
-                Stocking a café, hotel, or store — or sourcing traceable Ugandan
+                Stocking a café, hotel, or store, or sourcing traceable Ugandan
                 coffee at export volume? Our team will quote you within 24 hours.
               </p>
               <Link href="/enquire?sector=COFFEE" className="btn-primary">
-                Enquire — Wholesale &amp; Export
+                Enquire: Wholesale &amp; Export
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </Reveal>
@@ -198,7 +198,7 @@ export default async function ShopPage() {
           titleLead="Taste the pride of"
           titleAccent="Africa."
           body="Single-origin GOLD, roasted in Uganda and delivered to your door. Have a question about an order? Our team replies within 24 hours."
-          primaryLabel="Enquire — Wholesale & Export"
+          primaryLabel="Enquire: Wholesale & Export"
           primaryHref="/enquire?sector=COFFEE"
           secondaryLabel="About Vitorra Coffee"
           secondaryHref="/products/coffee"

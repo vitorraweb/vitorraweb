@@ -7,7 +7,7 @@ import CartView from "@/components/shop/CartView";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "Your Cart — Vitorra Coffee Shop",
+  title: "Your Cart | Vitorra Coffee Shop",
   description: "Review your Vitorra Coffee order and check out.",
   robots: { index: false, follow: false },
 };

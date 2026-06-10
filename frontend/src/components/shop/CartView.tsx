@@ -64,7 +64,7 @@ export default function CartView() {
   function buildOrderText() {
     const itemLines = lines.map((l) => {
       const lineTotal = (currency === "USD" ? l.price_usd : l.price_ugx) * l.qty;
-      return `• ${l.qty} × ${l.name} (${l.weight}, ${l.grind}) — ${formatPrice(lineTotal, currency)}`;
+      return `• ${l.qty} × ${l.name} (${l.weight}, ${l.grind}) · ${formatPrice(lineTotal, currency)}`;
     });
     return [
       "Hello Vitorra Coffee, I'd like to place an order:",
@@ -73,7 +73,7 @@ export default function CartView() {
       "",
       `Subtotal: ${formatPrice(subtotal, currency)}`,
       "",
-      "My details —",
+      "My details:",
       "Name:",
       "Delivery address:",
       "Phone:",
@@ -83,7 +83,7 @@ export default function CartView() {
   const orderText = buildOrderText();
   const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderText)}`;
   const mailtoHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
-    "Vitorra Coffee — order request"
+    "Vitorra Coffee order request"
   )}&body=${encodeURIComponent(orderText)}`;
 
   return (
@@ -251,7 +251,7 @@ export default function CartView() {
         </Link>
 
         <p className="text-xs leading-relaxed mt-4 mb-4" style={{ color: "#999999" }}>
-          No payment is taken now — our team confirms stock, delivery, and
+          No payment is taken now. Our team confirms stock, delivery, and
           payment within 24 hours. Secure online card &amp; mobile-money
           checkout is coming soon.
         </p>

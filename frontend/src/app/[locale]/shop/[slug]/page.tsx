@@ -20,9 +20,9 @@ export const revalidate = 600;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await getShopProduct(slug);
-  if (!product) return { title: "Coffee — Vitorra Shop" };
+  if (!product) return { title: "Coffee | Vitorra Shop" };
   return {
-    title: `${product.name} — ${product.weight} | Vitorra Coffee Shop`,
+    title: `${product.name}, ${product.weight} | Vitorra Coffee Shop`,
     description: product.description,
   };
 }
@@ -79,7 +79,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 >
                   <Image
                     src={product.images[0]}
-                    alt={`${product.name} — ${product.weight}`}
+                    alt={`${product.name}, ${product.weight}`}
                     fill priority sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover"
                   />
@@ -225,7 +225,7 @@ export default async function ProductDetailPage({ params }: Props) {
                       <div className="relative overflow-hidden" style={{ aspectRatio: "4/3", backgroundColor: "#F4F1EB" }}>
                         <Image
                           src={p.images[0]}
-                          alt={`${p.name} — ${p.weight}`}
+                          alt={`${p.name}, ${p.weight}`}
                           fill sizes="(max-width: 1024px) 50vw, 33vw"
                           className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                         />
@@ -253,7 +253,7 @@ export default async function ProductDetailPage({ params }: Props) {
           titleLead="Brewed in"
           titleAccent="Uganda."
           body="Single-origin GOLD, roasted at origin and delivered to your door. Buying for a business? Ask us about wholesale and export."
-          primaryLabel="Enquire — Wholesale & Export"
+          primaryLabel="Enquire: Wholesale & Export"
           primaryHref="/enquire?sector=COFFEE"
           secondaryLabel="Back to the shop"
           secondaryHref="/shop"

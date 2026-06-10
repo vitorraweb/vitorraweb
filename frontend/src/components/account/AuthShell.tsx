@@ -25,7 +25,7 @@ export default function AuthShell({
         <div aria-hidden="true" className="hero-grain" />
 
         <div className="relative z-10 flex items-center justify-between">
-          <Link href="/" aria-label="Vitorra Holdings — home">
+          <Link href="/" aria-label="Vitorra Holdings, home">
             <Image src="/logo.png" alt="Vitorra Holdings Limited" width={120} height={120} className="h-16 w-auto" />
           </Link>
           <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold transition-opacity hover:opacity-70" style={{ color: "rgba(255,255,255,0.55)" }}>
@@ -70,7 +70,7 @@ export default function AuthShell({
       <div className="relative flex items-center justify-center px-6 py-16" style={{ backgroundColor: "#F2F2F2" }}>
         <div className="w-full max-w-[400px]">
           <div className="lg:hidden mb-8 flex justify-center">
-            <Link href="/" aria-label="Vitorra Holdings — home">
+            <Link href="/" aria-label="Vitorra Holdings, home">
               <Image src="/logo.png" alt="Vitorra" width={56} height={56} className="h-12 w-auto mix-blend-multiply" />
             </Link>
           </div>

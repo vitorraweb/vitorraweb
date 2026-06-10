@@ -16,17 +16,17 @@ const differentiators = [
   {
     number: "01",
     title: "Strategic, not just aesthetic",
-    body: "Every decision ties to business outcomes — customer trust, lead conversion, and long-term brand equity.",
+    body: "Every decision ties to business outcomes: customer trust, lead conversion, and long-term brand equity.",
   },
   {
     number: "02",
     title: "Premium global standards",
-    body: "International-quality execution with deep East African market knowledge — competitive locally, credible globally.",
+    body: "International-quality execution with deep East African market knowledge, competitive locally, credible globally.",
   },
   {
     number: "03",
     title: "Clarity by design",
-    body: "Visitors understand who Vitorra is, what we offer, and what to do next — within 30 seconds of landing.",
+    body: "Visitors understand who Vitorra is, what we offer, and what to do next, within 30 seconds of landing.",
   },
 ];
 
@@ -73,7 +73,7 @@ export default function WhyVitorra() {
 
             <p className="mt-6 mb-8" style={{ fontSize: "16px", lineHeight: 1.7, color: "#555555", maxWidth: "380px" }}>
               International-quality execution with deep East African market
-              knowledge — competitive locally, credible globally.
+              knowledge, competitive locally, credible globally.
             </p>
 
             {/* Live counter — updates as you scroll the list */}
