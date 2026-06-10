@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { ArrowUpRight, MapPin, Mail, Phone } from "lucide-react";
 import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_ALT, CONTACT_ADDRESS, COMPANY_REG_NO, SITE_NAME } from "@/lib/constants";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
+import NewsletterSignup from "./NewsletterSignup";
 
 const telHref = `tel:${CONTACT_PHONE.replace(/\s+/g, "")}`;
 const telAltHref = `tel:${CONTACT_PHONE_ALT.replace(/\s+/g, "")}`;
@@ -31,6 +32,7 @@ export default function Footer() {
         ...(COFFEE_SHOP_ENABLED ? [{ label: t("nav.coffeeShop"), href: "/shop" }] : []),
         { label: t("footer.blogInsights"), href: "/blog" },
         { label: t("footer.certifications"), href: "/trust/certifications" },
+        { label: t("footer.careers"), href: "/careers" },
         { label: t("common.myAccount"), href: "/account/dashboard" },
         { label: t("footer.contactUs"), href: "/contact" },
       ],
@@ -68,6 +70,19 @@ export default function Footer() {
             {t("common.requestQuote")}
             <ArrowUpRight className="w-4 h-4" />
           </Link>
+        </div>
+      </div>
+
+      {/* ── Newsletter signup ───────────────────────────────────────────── */}
+      <div className="container-max mx-auto px-6 lg:px-20 py-12 border-b border-white/[0.08]">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-7">
+          <div className="max-w-md">
+            <h3 className="text-white text-lg font-semibold mb-1.5" style={{ fontFamily: "var(--font-playfair, Georgia, serif)" }}>
+              {t("newsletter.title")}
+            </h3>
+            <p className="text-sm text-white/45 leading-relaxed">{t("newsletter.body")}</p>
+          </div>
+          <NewsletterSignup />
         </div>
       </div>
 

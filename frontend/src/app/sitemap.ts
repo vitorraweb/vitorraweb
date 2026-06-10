@@ -16,6 +16,7 @@ const PAGES: { path: string; priority: number; cf: MetadataRoute.Sitemap[number]
   { path: "/enquire", priority: 0.7, cf: "monthly" },
   { path: "/contact", priority: 0.6, cf: "monthly" },
   { path: "/blog", priority: 0.7, cf: "weekly" },
+  { path: "/careers", priority: 0.5, cf: "monthly" },
   { path: "/trust/certifications", priority: 0.6, cf: "monthly" },
   { path: "/legal/privacy-policy", priority: 0.3, cf: "yearly" },
   { path: "/legal/terms-and-conditions", priority: 0.3, cf: "yearly" },

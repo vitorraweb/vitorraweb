@@ -104,6 +104,27 @@ export async function submitContact(data: ContactFormData): Promise<{ message: s
   });
 }
 
+/* ─── Newsletter ────────────────────────────────────────────────────────── */
+
+export async function subscribeNewsletter(
+  email: string,
+  locale?: string
+): Promise<{ message: string }> {
+  return request<{ message: string }>("/newsletter/subscribe", {
+    method: "POST",
+    body: JSON.stringify({ email, locale, source: "footer" }),
+  });
+}
+
+export async function unsubscribeNewsletter(
+  token: string
+): Promise<{ email?: string; message: string }> {
+  return request<{ email?: string; message: string }>("/newsletter/unsubscribe", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+}
+
 /* ─── Checkout ──────────────────────────────────────────────────────────── */
 
 export interface CheckoutItem {

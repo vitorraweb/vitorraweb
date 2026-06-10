@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import StickyQuoteBar from "@/components/layout/StickyQuoteBar";
 
 /* Pre-render both locales at build time (/, /sw). */
 export function generateStaticParams() {
@@ -22,5 +23,10 @@ export default async function LocaleLayout({
     notFound();
   }
   setRequestLocale(locale);
-  return children;
+  return (
+    <>
+      {children}
+      <StickyQuoteBar />
+    </>
+  );
 }

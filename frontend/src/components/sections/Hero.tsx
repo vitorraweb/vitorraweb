@@ -163,12 +163,35 @@ export default function Hero() {
     }
   };
 
+  /* ── Swipe to change sector (mobile). Ignores swipes that begin on the
+        sector rail so its horizontal scroll still works. ──────────────────── */
+  const touchStart = useRef<{ x: number; y: number; onRail: boolean } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const tt = e.touches[0];
+    const onRail = !!(e.target as HTMLElement).closest?.('[role="tablist"]');
+    touchStart.current = { x: tt.clientX, y: tt.clientY, onRail };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const s = touchStart.current;
+    touchStart.current = null;
+    if (!s || s.onRail) return;
+    const tt = e.changedTouches[0];
+    const dx = tt.clientX - s.x;
+    const dy = tt.clientY - s.y;
+    // Only count a deliberate, mostly-horizontal swipe.
+    if (Math.abs(dx) < 50 || Math.abs(dx) <= Math.abs(dy)) return;
+    const i = indexRef.current;
+    goTo(dx < 0 ? (i + 1) % SECTORS.length : (i - 1 + SECTORS.length) % SECTORS.length);
+  };
+
   return (
     <section
       className="relative overflow-hidden"
       style={{ minHeight: "92vh", backgroundColor: "#161616" }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
       {/* ── Persistent gold aurora — right-side glow visible on all sectors ── */}
       <div aria-hidden="true" className="hero-aurora-right" />

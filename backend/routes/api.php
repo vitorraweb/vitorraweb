@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\EnquiryController;
 use App\Http\Controllers\Api\ExchangeRateController;
 use App\Http\Controllers\Api\MediaController;
+use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductAdminController;
@@ -37,6 +38,10 @@ Route::get('/blog/posts/{slug}',  [BlogController::class, 'show']);
 // Forms — submit enquiry or contact message
 Route::post('/enquiries', [EnquiryController::class, 'store']);
 Route::post('/contact',   [ContactController::class, 'store']);
+
+// Newsletter — public signup + token-based unsubscribe (GDPR)
+Route::post('/newsletter/subscribe',   [NewsletterController::class, 'subscribe']);
+Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
 
 // Orders — guest checkout + confirmation lookup by reference
 Route::post('/orders',                 [OrderController::class, 'store']);
@@ -102,6 +107,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/media',                            [MediaController::class, 'index']);
         Route::post('/media',                           [MediaController::class, 'store']);
         Route::delete('/media/{media}',                 [MediaController::class, 'destroy']);
+        Route::get('/newsletter/subscribers',           [NewsletterController::class, 'index']);
         Route::get('/blog/posts',                       [BlogAdminController::class, 'index']);
         Route::post('/blog/posts',                      [BlogAdminController::class, 'store']);
         Route::get('/blog/posts/{post}',                [BlogAdminController::class, 'show']);
