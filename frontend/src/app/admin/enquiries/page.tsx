@@ -301,7 +301,7 @@ function ConvertForm({
   return (
     <div className="rounded-xl p-4" style={{ background: "#F8F7F5", border: "1px solid rgba(0,0,0,0.06)" }}>
       <p className="text-xs font-semibold mb-3" style={{ color: "#1E1E1E" }}>
-        Convert to order — &ldquo;Reserve online, pay cash on installation&rdquo;
+        Convert to order — &ldquo;Reserve online, pay cash before installation&rdquo;
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">

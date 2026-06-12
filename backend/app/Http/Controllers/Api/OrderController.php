@@ -147,7 +147,7 @@ class OrderController extends Controller
      * "Reserve Now, Pay Cash" — self-serve FET reservation.
      *
      * Creates a real order against the FET catalogue with no online payment:
-     * the cash is collected in person at installation or collection. The
+     * the cash is paid in person before installation or collection. The
      * price is recomputed server-side from the catalogue, exactly as in
      * store().
      */
@@ -234,7 +234,7 @@ class OrderController extends Controller
 
         return response()->json([
             'data'    => $order,
-            'message' => 'Reservation received. Payment is collected in cash at installation — our team will be in touch to confirm details.',
+            'message' => 'Reservation received. Our team will be in touch to arrange cash payment before installation.',
         ], 201);
     }
 

@@ -123,7 +123,7 @@ export default function OrdersPage() {
                   </ul>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5 text-xs">
                     <Detail label="Customer" value={o.customer_email ?? o.user?.email ?? "—"} />
-                    <Detail label="Payment method" value={o.payment_method === "cash" ? "Cash on installation" : o.payment_method ?? "—"} />
+                    <Detail label="Payment method" value={o.payment_method === "cash" ? "Cash before installation" : o.payment_method ?? "—"} />
                     <Detail label="Destination" value={[o.shipping_address?.city, o.shipping_address?.country].filter(Boolean).join(", ") || "—"} />
                     <Detail label="Tracking" value={o.tracking_number ?? "—"} />
                     <Detail label="Installation date" value={o.preferred_installation_date ? formatDate(o.preferred_installation_date) : "Not yet set"} />

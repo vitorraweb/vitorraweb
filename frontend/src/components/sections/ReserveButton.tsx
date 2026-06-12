@@ -13,7 +13,7 @@ import type { Order } from "@/types";
 
 /* ─── "Reserve Now, Pay Cash" ─────────────────────────────────────────────────
    Self-serve FET reservation, sitting alongside "Request a quote". Creates a
-   real order (no online payment — cash is collected at installation or
+   real order (no online payment — cash is paid before installation or
    collection). Keeps FetPricing a server component by living entirely here. */
 
 type Form = { customer_name: string; customer_email: string; customer_phone: string; quantity: string; notes: string };

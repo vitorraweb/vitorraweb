@@ -40,8 +40,8 @@
     </table>
 
     <div class="notice">
-        <strong>Payment:</strong> this unit has been reserved. Payment is collected in cash at
+        <strong>Payment:</strong> this unit has been reserved. Payment is made in cash before
         installation (or on collection). No online payment is required to hold this reservation.
-        Our team will be in touch to confirm details and arrange a suitable installation date.
+        Our team will be in touch to confirm payment and arrange a suitable installation date.
     </div>
 @endsection

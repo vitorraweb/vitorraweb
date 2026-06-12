@@ -4,8 +4,8 @@ Your reservation is confirmed — Vitorra Holdings
 Hi {{ $order->customer_name }},
 
 Thank you for reserving a Fuel Eco Tech unit. No payment is required online —
-payment is collected in cash at installation (or on collection). Our team
-will be in touch shortly to confirm details and arrange a suitable
+payment is made in cash before installation (or on collection). Our team
+will be in touch shortly to confirm payment and arrange a suitable
 installation date.
 
 Order reference:  {{ $order->reference }}
@@ -18,7 +18,7 @@ Your reservation
     {{ $order->money($order->unitPrice($item)) }} each — {{ $order->money($item->line_total) }}
 @endforeach
 ──────────────────────────────────────
-Total due (cash, on installation):  {{ $order->money($order->total) }}
+Total due (cash, before installation):  {{ $order->money($order->total) }}
 
 @if ($order->notes)
 Your notes: {{ $order->notes }}
