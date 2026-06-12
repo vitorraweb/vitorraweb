@@ -28,9 +28,17 @@ export type OrderStatus =
   | "complete"
   | "cancelled";
 
-export type PaymentMethod = "flutterwave" | "paypal" | "stripe" | "manual" | "eft";
+export type PaymentMethod = "flutterwave" | "paypal" | "stripe" | "manual" | "eft" | "cash";
 export type PaymentStatus = "pending" | "partial" | "paid";
 export type Currency = "UGX" | "USD";
+
+export interface OrderDocument {
+  id: number;
+  type: "reservation_confirmation" | "payment_receipt" | "installation_certificate";
+  title: string;
+  url: string;
+  generated_at: string;
+}
 
 export interface OrderItem {
   id: number;
@@ -58,11 +66,15 @@ export interface Order {
   status: OrderStatus;
   payment_method: PaymentMethod | null;
   payment_status: PaymentStatus;
-  shipping_address: Address;
+  shipping_address: Address | Record<string, never>;
+  preferred_installation_date: string | null;
+  installation_location: string | null;
+  delivered_at: string | null;
   tracking_number: string | null;
   notes: string | null;
   invoice_url: string | null;
   items: OrderItem[];
+  documents?: OrderDocument[];
   created_at: string;
 }
 

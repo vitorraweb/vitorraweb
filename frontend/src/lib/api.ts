@@ -163,6 +163,26 @@ export async function getOrder(reference: string): Promise<Order> {
   return res.data;
 }
 
+/* ─── FET Reservations ("Reserve Now, Pay Cash") ───────────────────────── */
+
+export interface ReserveFetPayload {
+  tier: "car" | "suv" | "lighttruck" | "heavytruck";
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  quantity?: number;
+  currency?: "UGX" | "USD";
+  notes?: string;
+}
+
+export async function reserveFet(payload: ReserveFetPayload): Promise<{ order: Order; message: string }> {
+  const res = await request<ApiResponse<Order>>("/orders/reserve", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return { order: res.data, message: res.message ?? "" };
+}
+
 /* ─── Orders (Customer Portal — requires auth) ──────────────────────────── */
 
 export async function getMyOrders(token: string): Promise<Order[]> {

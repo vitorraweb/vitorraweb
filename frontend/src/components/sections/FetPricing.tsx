@@ -5,6 +5,7 @@ import { ArrowUpRight, Check, Download } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
 import ApproxPrice from "@/components/ui/ApproxPrice";
 import CurrencyConverter from "@/components/ui/CurrencyConverter";
+import ReserveButton from "@/components/sections/ReserveButton";
 import { FET_TIERS, formatEur } from "@/lib/fet-pricing";
 
 /* ─── FET Full Line Pricing ───────────────────────────────────────────────────
@@ -120,9 +121,11 @@ export default function FetPricing() {
                   </p>
                   <ApproxPrice eur={t.priceEur} className="block text-[12px] mt-2 text-[rgba(197,178,122,0.7)]" />
 
+                  <ReserveButton tier={t} />
+
                   <Link
                     href={`/enquire?sector=FET&vehicle=${t.id}`}
-                    className="inline-flex items-center gap-1.5 mt-5 text-sm font-semibold"
+                    className="inline-flex items-center justify-center gap-1.5 mt-3 text-sm font-semibold"
                     style={{ color: "#C5B27A" }}
                   >
                     {tr("requestQuote")}

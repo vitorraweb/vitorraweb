@@ -5,41 +5,74 @@ import { useTranslations } from "next-intl";
 import { Loader2, FileText, Download } from "lucide-react";
 import { apiCustomer } from "@/lib/customer-auth";
 
-type Doc = { name: string; url: string; type: string };
+type OrderDoc = { name: string; url: string; type: string; order_reference?: string; generated_at?: string };
+type Literature = { name: string; url: string; type: string };
+type DocsResponse = { order_documents: OrderDoc[]; product_literature: Literature[] };
 
 export default function AccountDocuments() {
   const t = useTranslations("account");
-  const [list, setList] = useState<Doc[] | null>(null);
+  const [docs, setDocs] = useState<DocsResponse | null>(null);
 
   useEffect(() => {
-    apiCustomer<{ data: Doc[] }>("/account/documents").then((r) => setList(r.data)).catch(() => setList([]));
+    apiCustomer<{ data: DocsResponse }>("/account/documents").then((r) => setDocs(r.data)).catch(() => setDocs({ order_documents: [], product_literature: [] }));
   }, []);
 
-  if (!list) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
+  if (!docs) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
 
   return (
     <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {list.map((d) => (
-          <a
-            key={d.url}
-            href={d.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group glow-card rounded-[20px] p-6 flex items-center gap-4 hover-lift"
-            style={{ background: "linear-gradient(145deg, #FFFFFF 0%, #FAF8F4 100%)", border: "1px solid rgba(197,178,122,0.16)" }}
-          >
-            <span className="flex items-center justify-center w-12 h-12 rounded-2xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-              <FileText className="w-6 h-6" />
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{d.name}</p>
-              <p className="text-xs" style={{ color: "#999" }}>{d.type}</p>
-            </div>
-            <Download className="w-5 h-5 shrink-0 transition-transform group-hover:translate-y-0.5" style={{ color: "#7A6020" }} />
-          </a>
-        ))}
+      {docs.order_documents.length > 0 && (
+        <div className="mb-8">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: "#8a8a8a" }}>{t("docsOrderDocuments")}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {docs.order_documents.map((d) => (
+              <a
+                key={d.url}
+                href={d.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group glow-card rounded-[20px] p-6 flex items-center gap-4 hover-lift"
+                style={{ background: "linear-gradient(145deg, #FFFFFF 0%, #FAF8F4 100%)", border: "1px solid rgba(197,178,122,0.16)" }}
+              >
+                <span className="flex items-center justify-center w-12 h-12 rounded-2xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
+                  <FileText className="w-6 h-6" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{d.name}</p>
+                  <p className="text-xs" style={{ color: "#999" }}>{d.order_reference ?? d.type}</p>
+                </div>
+                <Download className="w-5 h-5 shrink-0 transition-transform group-hover:translate-y-0.5" style={{ color: "#7A6020" }} />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: "#8a8a8a" }}>{t("docsProductLiterature")}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {docs.product_literature.map((d) => (
+            <a
+              key={d.url}
+              href={d.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group glow-card rounded-[20px] p-6 flex items-center gap-4 hover-lift"
+              style={{ background: "linear-gradient(145deg, #FFFFFF 0%, #FAF8F4 100%)", border: "1px solid rgba(197,178,122,0.16)" }}
+            >
+              <span className="flex items-center justify-center w-12 h-12 rounded-2xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
+                <FileText className="w-6 h-6" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{d.name}</p>
+                <p className="text-xs" style={{ color: "#999" }}>{d.type}</p>
+              </div>
+              <Download className="w-5 h-5 shrink-0 transition-transform group-hover:translate-y-0.5" style={{ color: "#7A6020" }} />
+            </a>
+          ))}
+        </div>
       </div>
+
       <p className="text-xs mt-5" style={{ color: "#999" }}>{t("docsFoot")}</p>
     </div>
   );

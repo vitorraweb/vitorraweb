@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, ChevronDown } from "lucide-react";
+import { Loader2, ChevronDown, FileText } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { StatusBadge, PageHeader, formatDate, Empty, type Paginated } from "@/components/admin/admin-ui";
 
@@ -9,16 +9,27 @@ type OrderItem = {
   product_name: string; product_slug: string; quantity: number;
   options: { grind?: string; weight?: string } | null; line_total: number;
 };
+type OrderDocument = {
+  id: number; type: string; title: string; url: string; generated_at: string;
+};
 type Order = {
   id: number; reference: string; currency: string; total: number; status: string;
-  payment_status: string; tracking_number: string | null; created_at: string;
+  payment_status: string; payment_method: string | null; tracking_number: string | null; created_at: string;
   customer_name: string; customer_email: string; customer_phone: string | null;
+  preferred_installation_date: string | null; installation_location: string | null;
   items: OrderItem[];
+  documents?: OrderDocument[];
   user: { name: string; email: string } | null;
   shipping_address: { city?: string; country?: string } | null;
 };
 
 const STATUSES = ["pending", "processing", "shipped", "delivered", "complete", "cancelled"];
+const PAYMENT_STATUSES = ["pending", "partial", "paid"];
+const DOC_LABELS: Record<string, string> = {
+  reservation_confirmation: "Reservation confirmation",
+  payment_receipt: "Payment receipt",
+  installation_certificate: "Installation certificate",
+};
 
 function money(total: number, currency: string) {
   return currency === "USD" ? `$${(total / 100).toFixed(2)}` : `UGX ${total.toLocaleString()}`;
@@ -49,8 +60,18 @@ export default function OrdersPage() {
 
   const updateStatus = async (id: number, status: string) => {
     setList((l) => l.map((o) => (o.id === id ? { ...o, status } : o)));
-    try { await apiAdmin(`/admin/orders/${id}`, { method: "PATCH", body: JSON.stringify({ status }) }); }
-    catch { load(); }
+    try {
+      const res = await apiAdmin<{ data: Order }>(`/admin/orders/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+      setList((l) => l.map((o) => (o.id === id ? res.data : o)));
+    } catch { load(); }
+  };
+
+  const updatePaymentStatus = async (id: number, payment_status: string) => {
+    setList((l) => l.map((o) => (o.id === id ? { ...o, payment_status } : o)));
+    try {
+      const res = await apiAdmin<{ data: Order }>(`/admin/orders/${id}`, { method: "PATCH", body: JSON.stringify({ payment_status }) });
+      setList((l) => l.map((o) => (o.id === id ? res.data : o)));
+    } catch { load(); }
   };
 
   return (
@@ -102,11 +123,14 @@ export default function OrdersPage() {
                   </ul>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5 text-xs">
                     <Detail label="Customer" value={o.customer_email ?? o.user?.email ?? "—"} />
-                    <Detail label="Payment" value={o.payment_status} />
+                    <Detail label="Payment method" value={o.payment_method === "cash" ? "Cash on installation" : o.payment_method ?? "—"} />
                     <Detail label="Destination" value={[o.shipping_address?.city, o.shipping_address?.country].filter(Boolean).join(", ") || "—"} />
                     <Detail label="Tracking" value={o.tracking_number ?? "—"} />
+                    <Detail label="Installation date" value={o.preferred_installation_date ? formatDate(o.preferred_installation_date) : "Not yet set"} />
+                    <Detail label="Installation location" value={o.installation_location ?? "Not yet set"} />
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
                     <span className="text-xs font-semibold" style={{ color: "#777" }}>Status:</span>
                     {STATUSES.map((s) => (
                       <button key={s} onClick={() => updateStatus(o.id, s)} className="text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize transition-colors" style={{ background: o.status === s ? "#C5B27A" : "#F2F2F2", color: o.status === s ? "#1E1E1E" : "#888" }}>
@@ -114,6 +138,31 @@ export default function OrdersPage() {
                       </button>
                     ))}
                   </div>
+
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span className="text-xs font-semibold" style={{ color: "#777" }}>Payment:</span>
+                    {PAYMENT_STATUSES.map((s) => (
+                      <button key={s} onClick={() => updatePaymentStatus(o.id, s)} className="text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize transition-colors" style={{ background: o.payment_status === s ? "#C5B27A" : "#F2F2F2", color: o.payment_status === s ? "#1E1E1E" : "#888" }}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+
+                  {o.documents && o.documents.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-semibold" style={{ color: "#777" }}>Documents:</span>
+                      {o.documents.map((d) => (
+                        <a
+                          key={d.id} href={d.url} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-colors"
+                          style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}
+                        >
+                          <FileText className="w-3 h-3" />
+                          {DOC_LABELS[d.type] ?? d.title}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -11,6 +11,7 @@ class Order extends Model
     protected $fillable = [
         'reference',
         'user_id',
+        'enquiry_id',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -22,15 +23,20 @@ class Order extends Model
         'payment_status',
         'payment_reference',
         'shipping_address',
+        'preferred_installation_date',
+        'installation_location',
         'tracking_number',
         'notes',
         'invoice_url',
+        'delivered_at',
     ];
 
     protected $casts = [
-        'shipping_address' => 'array',
-        'subtotal'         => 'integer',
-        'total'            => 'integer',
+        'shipping_address'             => 'array',
+        'subtotal'                     => 'integer',
+        'total'                        => 'integer',
+        'preferred_installation_date'  => 'date',
+        'delivered_at'                 => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -38,9 +44,19 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function enquiry(): BelongsTo
+    {
+        return $this->belongsTo(Enquiry::class);
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class);
     }
 
     /**

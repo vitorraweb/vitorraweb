@@ -104,6 +104,72 @@ class DatabaseSeeder extends Seeder
                 ]
             );
         }
+
+        $this->seedFetProducts();
+    }
+
+    /**
+     * FET catalogue entries for the "Reserve Now, Pay Cash" self-serve flow.
+     * Mirrors `frontend/src/lib/fet-pricing.ts` FET_TIERS (EUR, Kampala landed
+     * + installation, 35% margin). UGX/USD prices are computed here from the
+     * fallback exchange rate and rounded to the nearest 10,000 UGX — review
+     * and adjust in /admin/products before these are customer-facing.
+     */
+    protected function seedFetProducts(): void
+    {
+        $eurPerUsd = (float) config('services.exchange_rate.fallback_eur_per_usd', 0.92);
+        $ugxPerUsd = (float) config('services.exchange_rate.fallback_ugx_per_usd', 3750);
+
+        $tiers = [
+            [
+                'slug'  => 'fet-car',
+                'name'  => 'FET-PRO-FI — Car / Mini-bus',
+                'desc'  => 'Fuel Eco Tech device for compact & mid-range cars and mini-buses (1.4–2.0L). Kampala landed price, includes professional installation.',
+                'eur'   => 365.40,
+            ],
+            [
+                'slug'  => 'fet-suv',
+                'name'  => 'FET-PRO-FII — SUV / Large car',
+                'desc'  => 'Fuel Eco Tech device for SUVs, sports, upper-class & large cars (1.5–3.0L). Kampala landed price, includes professional installation.',
+                'eur'   => 630.71,
+            ],
+            [
+                'slug'  => 'fet-lighttruck',
+                'name'  => 'FET-PRO-FIII — Light truck',
+                'desc'  => 'Fuel Eco Tech device for light commercial trucks & vans (3.0–6.7L). Kampala landed price, includes professional installation.',
+                'eur'   => 1028.69,
+            ],
+            [
+                'slug'  => 'fet-heavytruck',
+                'name'  => 'FET-PRO-FIV — Heavy truck',
+                'desc'  => 'Fuel Eco Tech device for heavy goods vehicles & haulage (12–13L). Kampala landed price, includes professional installation.',
+                'eur'   => 1957.30,
+            ],
+        ];
+
+        foreach ($tiers as $tier) {
+            $priceUsd = $tier['eur'] / $eurPerUsd;
+            $priceUgx = (int) (round(($priceUsd * $ugxPerUsd) / 10000) * 10000);
+
+            Product::updateOrCreate(
+                ['slug' => $tier['slug']],
+                [
+                    'name'            => $tier['name'],
+                    'category'        => 'FET',
+                    'description'     => $tier['desc'],
+                    'price_ugx'       => $priceUgx,
+                    'price_usd_cents' => (int) round($priceUsd * 100),
+                    'stock_quantity'  => null, // unlimited — not physically stock-constrained
+                    'is_published'    => true,
+                    'images'          => [
+                        ['url' => '/products/fet/packshot.png', 'alt' => $tier['name'], 'type' => 'image'],
+                    ],
+                    'meta'            => [
+                        'price_eur' => $tier['eur'],
+                    ],
+                ]
+            );
+        }
     }
 
     /**

@@ -7,8 +7,12 @@ use App\Models\ContactMessage;
 use App\Models\Enquiry;
 use App\Models\Order;
 use App\Models\Prospect;
+use App\Services\DocumentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
@@ -151,6 +155,96 @@ class AdminController extends Controller
         return response()->json(['data' => $enquiry]);
     }
 
+    /**
+     * Convert a quoted enquiry into a cash-reserved order.
+     *
+     * Staff pick the agreed price and (for FET) the device tier explicitly —
+     * `Enquiry.requirements` stores translated display labels, not raw tier
+     * ids, so we don't try to parse them. Setting `product_slug = 'fet-{tier}'`
+     * on the line item is what lets the customer portal's savings widget
+     * recognise this order later.
+     */
+    public function convertEnquiryToOrder(Request $request, Enquiry $enquiry): JsonResponse
+    {
+        if ($enquiry->status !== 'quoted') {
+            throw ValidationException::withMessages([
+                'status' => 'Only quoted enquiries can be converted to an order.',
+            ]);
+        }
+
+        if (Order::where('enquiry_id', $enquiry->id)->exists()) {
+            throw ValidationException::withMessages([
+                'enquiry' => 'This enquiry has already been converted to an order.',
+            ]);
+        }
+
+        $data = $request->validate([
+            'currency'     => ['required', 'in:UGX,USD'],
+            'agreed_total' => ['required', 'integer', 'min:1'],
+            'tier'         => ['nullable', 'in:car,suv,lighttruck,heavytruck'],
+            'quantity'     => ['nullable', 'integer', 'min:1', 'max:50'],
+            'product_name' => ['nullable', 'string', 'max:255'],
+            'notes'        => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $qty = (int) ($data['quantity'] ?? 1);
+
+        $productName = $data['product_name']
+            ?? trim(($enquiry->product_category ?: 'Custom') . ' order — converted from enquiry #' . $enquiry->id);
+
+        $productSlug = $data['tier']
+            ? "fet-{$data['tier']}"
+            : strtolower(($enquiry->product_category ?: 'general')) . '-custom';
+
+        $order = DB::transaction(function () use ($enquiry, $data, $qty, $productName, $productSlug) {
+            $order = Order::create([
+                'reference'        => OrderController::makeReference(),
+                'enquiry_id'       => $enquiry->id,
+                'customer_name'    => $enquiry->name,
+                'customer_email'   => $enquiry->email,
+                'customer_phone'   => $enquiry->phone,
+                'currency'         => $data['currency'],
+                'subtotal'         => $data['agreed_total'],
+                'total'            => $data['agreed_total'],
+                'status'           => 'pending',
+                'payment_method'   => 'cash',
+                'payment_status'   => 'pending',
+                'shipping_address' => [],
+                'notes'            => $data['notes'] ?? null,
+            ]);
+
+            $order->items()->create([
+                'product_name'         => $productName,
+                'product_slug'         => $productSlug,
+                'options'              => [],
+                'quantity'             => $qty,
+                'unit_price_ugx'       => $data['currency'] === 'UGX' ? intdiv($data['agreed_total'], $qty) : 0,
+                'unit_price_usd_cents' => $data['currency'] === 'USD' ? intdiv($data['agreed_total'], $qty) : 0,
+                'line_total'           => $data['agreed_total'],
+            ]);
+
+            $enquiry->update(['status' => 'converted']);
+
+            return $order;
+        });
+
+        $order->load('items');
+
+        try {
+            app(DocumentService::class)->generateReservationConfirmation($order);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to generate reservation confirmation PDF', [
+                'order_id' => $order->id,
+                'error'    => $e->getMessage(),
+            ]);
+        }
+
+        return response()->json([
+            'data'    => $order,
+            'message' => 'Enquiry converted to order.',
+        ], 201);
+    }
+
     /** Paginated contact messages */
     public function messages(Request $request): JsonResponse
     {
@@ -174,7 +268,7 @@ class AdminController extends Controller
     /** Paginated orders */
     public function orders(Request $request): JsonResponse
     {
-        $query = Order::with(['items', 'user:id,name,email'])->latest();
+        $query = Order::with(['items', 'user:id,name,email', 'documents'])->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -183,16 +277,61 @@ class AdminController extends Controller
         return response()->json($query->paginate(25));
     }
 
-    /** Update an order's status */
+    /**
+     * Update an order's status, payment status, tracking, and installation
+     * details. Each field is updatable independently (PATCH semantics) so
+     * staff can mark payment received without also touching shipping status,
+     * and vice versa.
+     *
+     * Crossing into `delivered` for the first time stamps `delivered_at` and
+     * generates the installation certificate; payment_status flipping to
+     * `paid` generates the payment receipt. Both PDFs are generated
+     * synchronously and failures are logged, never blocking the response.
+     */
     public function updateOrder(Request $request, Order $order): JsonResponse
     {
         $data = $request->validate([
-            'status'          => ['required', 'in:pending,processing,shipped,delivered,complete,cancelled'],
-            'tracking_number' => ['nullable', 'string', 'max:255'],
+            'status'                       => ['sometimes', 'required', 'in:pending,processing,shipped,delivered,complete,cancelled'],
+            'payment_status'               => ['sometimes', 'required', 'in:pending,partial,paid'],
+            'preferred_installation_date'  => ['sometimes', 'nullable', 'date'],
+            'installation_location'        => ['sometimes', 'nullable', 'string', 'max:255'],
+            'tracking_number'              => ['sometimes', 'nullable', 'string', 'max:255'],
+            'notes'                        => ['sometimes', 'nullable', 'string', 'max:2000'],
         ]);
+
+        $wasPaid      = $order->payment_status === 'paid';
+        $wasDelivered = $order->delivered_at !== null;
+
+        if (($data['status'] ?? null) === 'delivered' && ! $wasDelivered) {
+            $data['delivered_at'] = now();
+        }
 
         $order->update($data);
 
-        return response()->json(['data' => $order]);
+        $docs = app(DocumentService::class);
+
+        if (($data['payment_status'] ?? null) === 'paid' && ! $wasPaid) {
+            try {
+                $docs->generatePaymentReceipt($order);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to generate payment receipt PDF', [
+                    'order_id' => $order->id,
+                    'error'    => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (isset($data['delivered_at'])) {
+            try {
+                $docs->generateInstallationCertificate($order);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to generate installation certificate PDF', [
+                    'order_id' => $order->id,
+                    'error'    => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return response()->json(['data' => $order->load(['items', 'documents'])]);
     }
 }

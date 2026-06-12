@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, ChevronDown, Mail, Phone, Building2, UserCheck } from "lucide-react";
+import Link from "next/link";
+import { Loader2, ChevronDown, Mail, Phone, Building2, UserCheck, ArrowRight } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { StatusBadge, PageHeader, formatDate, Empty, type Paginated } from "@/components/admin/admin-ui";
+import { FET_TIERS } from "@/lib/fet-pricing";
 
 type Requirement = { key: string; label: string; value: string };
 
@@ -17,6 +19,32 @@ type Enquiry = {
 const STATUSES = ["new", "in_progress", "quoted", "converted", "closed"];
 const CATEGORIES = ["FET", "SEAL", "COFFEE", "LOGISTICS"];
 
+/* Convert to Order — "Reserve Online, Pay Cash on Installation" for fleet
+   enquiries staff have quoted. Tier picked explicitly (Enquiry.requirements
+   stores translated display labels, not raw tier ids), which sets
+   product_slug = 'fet-{tier}' on the new order's line item for the customer
+   portal's savings widget. */
+type ConvertForm = {
+  currency: "UGX" | "USD";
+  agreed_total: string;
+  tier: "" | "car" | "suv" | "lighttruck" | "heavytruck";
+  quantity: string;
+  product_name: string;
+  notes: string;
+};
+
+function defaultConvertForm(e: Enquiry): ConvertForm {
+  const desc = e.requirements?.map((r) => r.value).filter(Boolean).join(", ") ?? "";
+  return {
+    currency: "UGX",
+    agreed_total: "",
+    tier: "",
+    quantity: "1",
+    product_name: desc,
+    notes: "",
+  };
+}
+
 /* Reassignment targets. Teams mirror the auto-routing in backend/config/enquiries.php;
    people are the staff who handle enquiries day-to-day. `assigned_to` is a free
    string, so this list can grow without any schema change. */
@@ -29,6 +57,11 @@ export default function EnquiriesPage() {
   const [filter, setFilter]   = useState("");
   const [cat, setCat]         = useState("");
   const [open, setOpen]       = useState<number | null>(null);
+
+  const [convertOpen, setConvertOpen]     = useState<number | null>(null);
+  const [convertForms, setConvertForms]   = useState<Record<number, ConvertForm>>({});
+  const [convertStatus, setConvertStatus] = useState<Record<number, "idle" | "submitting" | "error">>({});
+  const [convertedRefs, setConvertedRefs] = useState<Record<number, string>>({});
 
   const load = useCallback(async () => {
     try {
@@ -59,6 +92,51 @@ export default function EnquiriesPage() {
     setList((l) => l.map((e) => (e.id === id ? { ...e, assigned_to } : e)));
     try { await apiAdmin(`/admin/enquiries/${id}`, { method: "PATCH", body: JSON.stringify({ assigned_to }) }); }
     catch { load(); }
+  };
+
+  const toggleConvert = (e: Enquiry) => {
+    if (convertOpen === e.id) { setConvertOpen(null); return; }
+    setConvertForms((f) => ({ ...f, [e.id]: f[e.id] ?? defaultConvertForm(e) }));
+    setConvertStatus((s) => ({ ...s, [e.id]: "idle" }));
+    setConvertOpen(e.id);
+  };
+
+  const setConvertField = (id: number, patch: Partial<ConvertForm>) => {
+    setConvertForms((f) => ({ ...f, [id]: { ...f[id], ...patch } }));
+  };
+
+  const convert = async (e: Enquiry) => {
+    const f = convertForms[e.id];
+    if (!f) return;
+    const totalMajor = Number(f.agreed_total);
+    if (!totalMajor || totalMajor <= 0) {
+      setConvertStatus((s) => ({ ...s, [e.id]: "error" }));
+      return;
+    }
+
+    setConvertStatus((s) => ({ ...s, [e.id]: "submitting" }));
+
+    const payload: Record<string, unknown> = {
+      currency: f.currency,
+      agreed_total: f.currency === "USD" ? Math.round(totalMajor * 100) : Math.round(totalMajor),
+      quantity: Number(f.quantity) || 1,
+    };
+    if (f.tier) payload.tier = f.tier;
+    if (f.product_name.trim()) payload.product_name = f.product_name.trim();
+    if (f.notes.trim()) payload.notes = f.notes.trim();
+
+    try {
+      const res = await apiAdmin<{ data: { reference: string } }>(`/admin/enquiries/${e.id}/convert`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setList((l) => l.map((it) => (it.id === e.id ? { ...it, status: "converted" } : it)));
+      setConvertedRefs((r) => ({ ...r, [e.id]: res.data.reference }));
+      setConvertStatus((s) => ({ ...s, [e.id]: "idle" }));
+      setConvertOpen(null);
+    } catch {
+      setConvertStatus((s) => ({ ...s, [e.id]: "error" }));
+    }
   };
 
   return (
@@ -158,6 +236,38 @@ export default function EnquiriesPage() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Convert to Order — turns a quoted enquiry into a cash-reserved order */}
+                  {e.status === "quoted" && (
+                    <div className="mt-4 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+                      {convertedRefs[e.id] && (
+                        <p className="text-xs mb-3 inline-flex items-center gap-1.5" style={{ color: "#16A34A" }}>
+                          Converted to order <strong>{convertedRefs[e.id]}</strong> —{" "}
+                          <Link href="/admin/orders" className="inline-flex items-center gap-1 font-semibold hover:underline" style={{ color: "#7A6020" }}>
+                            view in Orders <ArrowRight className="w-3 h-3" />
+                          </Link>
+                        </p>
+                      )}
+
+                      {convertOpen !== e.id ? (
+                        <button
+                          onClick={() => toggleConvert(e)}
+                          className="text-[11px] font-semibold px-3 py-1.5 rounded-full transition-colors"
+                          style={{ background: "#1E1E1E", color: "#FFFFFF" }}
+                        >
+                          Convert to Order
+                        </button>
+                      ) : (
+                        <ConvertForm
+                          form={convertForms[e.id] ?? defaultConvertForm(e)}
+                          status={convertStatus[e.id] ?? "idle"}
+                          onChange={(patch) => setConvertField(e.id, patch)}
+                          onSubmit={() => convert(e)}
+                          onCancel={() => setConvertOpen(null)}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -173,5 +283,106 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
     <button onClick={onClick} className="text-xs font-semibold px-3.5 py-2 rounded-full capitalize transition-colors" style={{ background: active ? "#1E1E1E" : "#FFFFFF", color: active ? "#FFFFFF" : "#777777", border: "1px solid rgba(0,0,0,0.06)" }}>
       {children}
     </button>
+  );
+}
+
+const FIELD_CLS = "w-full text-xs rounded-lg px-3 py-2 border outline-none";
+const FIELD_STYLE = { borderColor: "rgba(0,0,0,0.12)", background: "#FFFFFF", color: "#1E1E1E" } as const;
+
+function ConvertForm({
+  form, status, onChange, onSubmit, onCancel,
+}: {
+  form: ConvertForm;
+  status: "idle" | "submitting" | "error";
+  onChange: (patch: Partial<ConvertForm>) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="rounded-xl p-4" style={{ background: "#F8F7F5", border: "1px solid rgba(0,0,0,0.06)" }}>
+      <p className="text-xs font-semibold mb-3" style={{ color: "#1E1E1E" }}>
+        Convert to order — &ldquo;Reserve online, pay cash on installation&rdquo;
+      </p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>Currency</label>
+          <select value={form.currency} onChange={(ev) => onChange({ currency: ev.target.value as ConvertForm["currency"] })} className={FIELD_CLS} style={FIELD_STYLE}>
+            <option value="UGX">UGX</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>
+            Agreed total ({form.currency === "USD" ? "$" : "UGX"})
+          </label>
+          <input
+            type="number" min={0} step={form.currency === "USD" ? "0.01" : "1"}
+            value={form.agreed_total}
+            onChange={(ev) => onChange({ agreed_total: ev.target.value })}
+            className={FIELD_CLS} style={FIELD_STYLE}
+            placeholder="0"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>FET device tier</label>
+          <select value={form.tier} onChange={(ev) => onChange({ tier: ev.target.value as ConvertForm["tier"] })} className={FIELD_CLS} style={FIELD_STYLE}>
+            <option value="">Custom / fleet (no tier)</option>
+            {FET_TIERS.map((t) => (
+              <option key={t.id} value={t.id}>{t.model} — {t.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>Quantity</label>
+          <input
+            type="number" min={1} max={50}
+            value={form.quantity}
+            onChange={(ev) => onChange({ quantity: ev.target.value })}
+            className={FIELD_CLS} style={FIELD_STYLE}
+          />
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>Description</label>
+        <input
+          type="text"
+          value={form.product_name}
+          onChange={(ev) => onChange({ product_name: ev.target.value })}
+          className={FIELD_CLS} style={FIELD_STYLE}
+          placeholder="e.g. FET-PRO-FII for fleet of 5 SUVs"
+        />
+      </div>
+
+      <div className="mb-3">
+        <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>Internal notes (optional)</label>
+        <textarea
+          value={form.notes}
+          onChange={(ev) => onChange({ notes: ev.target.value })}
+          className={`${FIELD_CLS} min-h-16`} style={FIELD_STYLE}
+        />
+      </div>
+
+      {status === "error" && (
+        <p className="text-xs mb-3" style={{ color: "#C0392B" }}>
+          Enter a valid agreed total, then try again.
+        </p>
+      )}
+
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onSubmit}
+          disabled={status === "submitting"}
+          className="text-[11px] font-semibold px-3.5 py-1.5 rounded-full transition-opacity"
+          style={{ background: "#C5B27A", color: "#1E1E1E", opacity: status === "submitting" ? 0.7 : 1 }}
+        >
+          {status === "submitting" ? "Converting…" : "Create order"}
+        </button>
+        <button onClick={onCancel} className="text-[11px] font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }

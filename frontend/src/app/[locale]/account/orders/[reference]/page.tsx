@@ -5,16 +5,15 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Loader2, ArrowLeft, Download } from "lucide-react";
 import { apiCustomer } from "@/lib/customer-auth";
+import OrderTimeline from "@/components/account/OrderTimeline";
+import FetSavingsWidget from "@/components/account/FetSavingsWidget";
+import InstallationScheduler from "@/components/account/InstallationScheduler";
 
-const STATUS_KEY: Record<string, string> = {
-  pending: "statusPending", processing: "statusProcessing", shipped: "statusShipped",
-  delivered: "statusDelivered", complete: "statusComplete", cancelled: "statusCancelled",
-};
-
-type Item = { id: number; product_name: string; options: { grind?: string } | null; quantity: number; line_total: number };
+type Item = { id: number; product_name: string; product_slug: string; options: { grind?: string } | null; quantity: number; line_total: number };
 type Order = {
   reference: string; currency: string; subtotal: number; total: number; status: string; payment_status: string;
   tracking_number: string | null; invoice_url: string | null; shipping_address: Record<string, string> | null;
+  preferred_installation_date: string | null; installation_location: string | null; delivered_at: string | null;
   items: Item[]; created_at: string;
 };
 
@@ -34,16 +33,19 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
   if (!order) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
 
   const addr = order.shipping_address ?? {};
+  const fetItem = order.items?.find((it) => it.product_slug?.startsWith("fet-"));
 
   return (
     <div className="max-w-2xl">
       <Link href="/account/orders" className="inline-flex items-center gap-1.5 text-sm mb-5" style={{ color: "#777" }}><ArrowLeft className="w-4 h-4" />{t("allOrders")}</Link>
 
       <div className="bg-white rounded-[28px] border border-black/[0.05] shadow-card p-7 md:p-9">
-        <div className="flex items-start justify-between gap-4 flex-wrap mb-7">
+        <div className="flex items-start justify-between gap-4 flex-wrap mb-5">
           <div>
             <h1 style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "28px", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }}>{order.reference}</h1>
-            <p className="text-xs mt-1.5" style={{ color: "#999" }}>{t("statusLabel")}: <span style={{ color: "#555", fontWeight: 600 }}>{STATUS_KEY[order.status] ? t(STATUS_KEY[order.status]) : order.status}</span> · {t("paymentLabel")}: {order.payment_status}{order.tracking_number ? ` · ${t("trackingLabel")}: ${order.tracking_number}` : ""}</p>
+            {order.tracking_number && (
+              <p className="text-xs mt-1.5" style={{ color: "#999" }}>{t("trackingLabel")}: {order.tracking_number}</p>
+            )}
           </div>
           {order.invoice_url && (
             <a href={order.invoice_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#1E1E1E" }}>
@@ -51,6 +53,8 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
             </a>
           )}
         </div>
+
+        <OrderTimeline status={order.status} paymentStatus={order.payment_status} />
 
         <div className="divide-y" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
           {order.items?.map((it) => (
@@ -74,6 +78,19 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "#8a8a8a" }}>{t("delivery")}</p>
             <p className="text-sm" style={{ color: "#555" }}>{[addr.line1, addr.line2, addr.city, addr.country, addr.postcode].filter(Boolean).join(", ")}</p>
           </div>
+        )}
+
+        {order.delivered_at && fetItem && (
+          <FetSavingsWidget productSlug={fetItem.product_slug} quantity={fetItem.quantity} deliveredAt={order.delivered_at} />
+        )}
+
+        {(order.status === "pending" || order.status === "processing") && (
+          <InstallationScheduler
+            reference={order.reference}
+            preferredDate={order.preferred_installation_date}
+            location={order.installation_location}
+            onSaved={(data) => setOrder((o) => (o ? { ...o, ...data } : o))}
+          />
         )}
       </div>
     </div>

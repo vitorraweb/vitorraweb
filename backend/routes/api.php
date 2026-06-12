@@ -46,6 +46,7 @@ Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscrib
 
 // Orders — guest checkout + confirmation lookup by reference
 Route::post('/orders',                 [OrderController::class, 'store']);
+Route::post('/orders/reserve',         [OrderController::class, 'reserve']);
 Route::get('/orders/{reference}',      [OrderController::class, 'show']);
 
 // Payments — initiate payment for an order + provider webhooks (gateway-agnostic)
@@ -73,12 +74,13 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::prefix('account')->group(function () {
-        Route::get('/orders',             [AccountController::class, 'orders']);
-        Route::get('/orders/{reference}', [AccountController::class, 'order']);
-        Route::get('/enquiries',          [AccountController::class, 'enquiries']);
-        Route::get('/documents',          [AccountController::class, 'documents']);
-        Route::get('/profile',            [AccountController::class, 'profile']);
-        Route::put('/profile',            [AccountController::class, 'updateProfile']);
+        Route::get('/orders',                          [AccountController::class, 'orders']);
+        Route::get('/orders/{reference}',              [AccountController::class, 'order']);
+        Route::patch('/orders/{reference}/installation', [AccountController::class, 'updateInstallation']);
+        Route::get('/enquiries',                       [AccountController::class, 'enquiries']);
+        Route::get('/documents',                       [AccountController::class, 'documents']);
+        Route::get('/profile',                         [AccountController::class, 'profile']);
+        Route::put('/profile',                         [AccountController::class, 'updateProfile']);
     });
 
     /*
@@ -94,6 +96,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('perm:enquiries')->group(function () {
             Route::get('/enquiries',                    [AdminController::class, 'enquiries']);
             Route::patch('/enquiries/{enquiry}',        [AdminController::class, 'updateEnquiry']);
+            Route::post('/enquiries/{enquiry}/convert', [AdminController::class, 'convertEnquiryToOrder']);
         });
         Route::middleware('perm:messages')->group(function () {
             Route::get('/messages',                     [AdminController::class, 'messages']);

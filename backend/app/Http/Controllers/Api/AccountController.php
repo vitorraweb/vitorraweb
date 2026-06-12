@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Document;
 use App\Models\Enquiry;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
@@ -27,6 +28,27 @@ class AccountController extends Controller
             ->whereRaw('lower(customer_email) = ?', [$this->email($request)])
             ->where('reference', $reference)
             ->firstOrFail();
+
+        return response()->json(['data' => $order]);
+    }
+
+    /**
+     * Customer-set installation preferences. Scoped by email like the other
+     * account endpoints; only meaningful while the order hasn't shipped yet,
+     * but no status check here — staff can still adjust it later in admin.
+     */
+    public function updateInstallation(Request $request, string $reference): JsonResponse
+    {
+        $order = Order::whereRaw('lower(customer_email) = ?', [$this->email($request)])
+            ->where('reference', $reference)
+            ->firstOrFail();
+
+        $data = $request->validate([
+            'preferred_installation_date' => ['required', 'date', 'after:today'],
+            'installation_location'       => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $order->update($data);
 
         return response()->json(['data' => $order]);
     }
@@ -57,12 +79,33 @@ class AccountController extends Controller
         return response()->json(['data' => $request->user()->only(['id', 'name', 'email', 'role', 'company', 'phone', 'country'])]);
     }
 
-    /** Documents available to every customer (product literature). */
-    public function documents(): JsonResponse
+    /**
+     * Documents center — generated order documents (reservation
+     * confirmations, payment receipts, installation certificates) plus the
+     * static product literature available to every customer.
+     */
+    public function documents(Request $request): JsonResponse
     {
+        $email = $this->email($request);
+
+        $orderDocuments = Document::whereHas('order', fn ($q) => $q->whereRaw('lower(customer_email) = ?', [$email]))
+            ->with('order:id,reference')
+            ->latest('generated_at')
+            ->get()
+            ->map(fn (Document $doc) => [
+                'name'            => $doc->title,
+                'url'             => $doc->url,
+                'type'            => 'PDF',
+                'order_reference' => $doc->order?->reference,
+                'generated_at'    => $doc->generated_at,
+            ]);
+
         return response()->json(['data' => [
-            ['name' => 'Fuel Eco Tech — Vehicle Application Guide', 'url' => '/downloads/vitorra-fet-application-guide.pdf', 'type' => 'PDF'],
-            ['name' => 'Fuel Eco Tech — Product Datasheet', 'url' => '/downloads/vitorra-fet-datasheet.pdf', 'type' => 'PDF'],
+            'order_documents'    => $orderDocuments,
+            'product_literature' => [
+                ['name' => 'Fuel Eco Tech — Vehicle Application Guide', 'url' => '/downloads/vitorra-fet-application-guide.pdf', 'type' => 'PDF'],
+                ['name' => 'Fuel Eco Tech — Product Datasheet', 'url' => '/downloads/vitorra-fet-datasheet.pdf', 'type' => 'PDF'],
+            ],
         ]]);
     }
 

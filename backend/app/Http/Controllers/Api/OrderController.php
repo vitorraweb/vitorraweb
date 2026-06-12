@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\NewOrder;
 use App\Mail\OrderConfirmation;
+use App\Mail\ReservationConfirmation;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\DocumentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -108,7 +111,7 @@ class OrderController extends Controller
         // Persist header + items atomically.
         $order = DB::transaction(function () use ($data, $currency, $subtotal, $lineItems, $request) {
             $order = Order::create([
-                'reference'        => $this->makeReference(),
+                'reference'        => self::makeReference(),
                 'user_id'          => $request->user()?->id,
                 'customer_name'    => $data['customer_name'],
                 'customer_email'   => $data['customer_email'],
@@ -140,6 +143,101 @@ class OrderController extends Controller
         ], 201);
     }
 
+    /**
+     * "Reserve Now, Pay Cash" — self-serve FET reservation.
+     *
+     * Creates a real order against the FET catalogue with no online payment:
+     * the cash is collected in person at installation or collection. The
+     * price is recomputed server-side from the catalogue, exactly as in
+     * store().
+     */
+    public function reserve(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'customer_name'  => ['required', 'string', 'max:255'],
+            'customer_email' => ['required', 'email', 'max:255'],
+            'customer_phone' => ['nullable', 'string', 'max:50'],
+            'tier'           => ['required', 'in:car,suv,lighttruck,heavytruck'],
+            'quantity'       => ['nullable', 'integer', 'min:1', 'max:50'],
+            'currency'       => ['nullable', 'in:UGX,USD'],
+            'notes'          => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $currency = $data['currency'] ?? 'UGX';
+        $qty      = (int) ($data['quantity'] ?? 1);
+        $slug     = "fet-{$data['tier']}";
+
+        $product = Product::published()->where('category', 'FET')->where('slug', $slug)->first();
+
+        if (! $product) {
+            throw ValidationException::withMessages([
+                'tier' => 'This FET model is not available right now.',
+            ]);
+        }
+
+        $priceUgx   = (int) ($product->price_ugx ?? 0);
+        $priceCents = (int) ($product->price_usd_cents ?? 0);
+
+        if (($currency === 'UGX' && $priceUgx <= 0) || ($currency === 'USD' && $priceCents <= 0)) {
+            throw ValidationException::withMessages([
+                'tier' => "This FET model isn't available in {$currency}.",
+            ]);
+        }
+
+        $unitInCurrency = $currency === 'USD' ? $priceCents : $priceUgx;
+        $lineTotal      = $unitInCurrency * $qty;
+
+        $order = DB::transaction(function () use ($data, $currency, $qty, $lineTotal, $product, $request) {
+            $order = Order::create([
+                'reference'        => self::makeReference(),
+                'user_id'          => $request->user()?->id,
+                'customer_name'    => $data['customer_name'],
+                'customer_email'   => $data['customer_email'],
+                'customer_phone'   => $data['customer_phone'] ?? null,
+                'currency'         => $currency,
+                'subtotal'         => $lineTotal,
+                'total'            => $lineTotal,
+                'status'           => 'pending',
+                'payment_method'   => 'cash',
+                'payment_status'   => 'pending',
+                'shipping_address' => [],
+                'notes'            => $data['notes'] ?? null,
+            ]);
+
+            $order->items()->create([
+                'product_id'           => $product->id,
+                'product_name'         => $product->name,
+                'product_slug'         => $product->slug,
+                'options'              => [],
+                'quantity'             => $qty,
+                'unit_price_ugx'       => $product->price_ugx,
+                'unit_price_usd_cents' => $product->price_usd_cents,
+                'line_total'           => $lineTotal,
+            ]);
+
+            return $order;
+        });
+
+        $order->load('items');
+
+        try {
+            app(DocumentService::class)->generateReservationConfirmation($order);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to generate reservation confirmation PDF', [
+                'order_id' => $order->id,
+                'error'    => $e->getMessage(),
+            ]);
+        }
+
+        Mail::to($order->customer_email)->send(new ReservationConfirmation($order));
+        Mail::to(config('mail.team_address'))->send(new NewOrder($order));
+
+        return response()->json([
+            'data'    => $order,
+            'message' => 'Reservation received. Payment is collected in cash at installation — our team will be in touch to confirm details.',
+        ], 201);
+    }
+
     /** Public order lookup by reference — used by the confirmation page. */
     public function show(string $reference): JsonResponse
     {
@@ -149,7 +247,7 @@ class OrderController extends Controller
     }
 
     /** Generate a unique, human-friendly order reference (e.g. VIT-7Q3K8M2A). */
-    private function makeReference(): string
+    public static function makeReference(): string
     {
         do {
             $reference = 'VIT-' . Str::upper(Str::random(8));
