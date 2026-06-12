@@ -27,11 +27,11 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   cancelled:   { bg: "rgba(192,57,43,0.1)",    fg: "#C0392B" },
 };
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, label }: { status: string; label?: string }) {
   const c = STATUS_COLORS[status] ?? { bg: "rgba(0,0,0,0.06)", fg: "#777777" };
   return (
     <span className="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide" style={{ background: c.bg, color: c.fg }}>
-      {status.replace(/_/g, " ")}
+      {label ?? status.replace(/_/g, " ")}
     </span>
   );
 }

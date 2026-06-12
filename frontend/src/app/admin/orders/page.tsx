@@ -31,6 +31,25 @@ const DOC_LABELS: Record<string, string> = {
   installation_certificate: "Installation certificate",
 };
 
+// Mirrors the customer-facing OrderTimeline labels (account/OrderTimeline.tsx)
+// so staff see the same language the customer sees for FET orders.
+const FET_STATUS_LABELS: Record<string, string> = {
+  pending: "Reserved",
+  processing: "Confirmed",
+  shipped: "Installation scheduled",
+  delivered: "Installed",
+  complete: "Complete",
+  cancelled: "Cancelled",
+};
+
+function isFetOrder(o: Order): boolean {
+  return o.items?.some((it) => it.product_slug?.startsWith("fet-")) ?? false;
+}
+
+function statusLabel(status: string, fet: boolean): string {
+  return fet ? FET_STATUS_LABELS[status] ?? status : status;
+}
+
 function money(total: number, currency: string) {
   return currency === "USD" ? `$${(total / 100).toFixed(2)}` : `UGX ${total.toLocaleString()}`;
 }
@@ -99,7 +118,7 @@ export default function OrdersPage() {
                   </div>
                   <p className="text-xs truncate" style={{ color: "#999999" }}>{o.customer_name ?? o.user?.name ?? "Guest"} · {money(o.total, o.currency)} · {formatDate(o.created_at)}</p>
                 </div>
-                <StatusBadge status={o.status} />
+                <StatusBadge status={o.status} label={isFetOrder(o) ? statusLabel(o.status, true) : undefined} />
                 <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === o.id ? "rotate-180" : ""}`} style={{ color: "#BBBBBB" }} />
               </button>
 
@@ -134,7 +153,7 @@ export default function OrdersPage() {
                     <span className="text-xs font-semibold" style={{ color: "#777" }}>Status:</span>
                     {STATUSES.map((s) => (
                       <button key={s} onClick={() => updateStatus(o.id, s)} className="text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize transition-colors" style={{ background: o.status === s ? "#C5B27A" : "#F2F2F2", color: o.status === s ? "#1E1E1E" : "#888" }}>
-                        {s}
+                        {statusLabel(s, isFetOrder(o))}
                       </button>
                     ))}
                   </div>
