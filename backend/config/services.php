@@ -35,6 +35,11 @@ return [
         ],
     ],
 
+    'plausible' => [
+        'api_key' => env('PLAUSIBLE_API_KEY'),
+        'site_id' => env('PLAUSIBLE_SITE_ID', 'vitorra.org'),
+    ],
+
     'exchange_rate' => [
         'key'                  => env('EXCHANGE_RATE_API_KEY'),
         'fallback_ugx_per_usd' => env('EXCHANGE_RATE_FALLBACK', 3750),

@@ -91,6 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:admin,ops')->prefix('admin')->group(function () {
         // Dashboard — every staff member sees this.
         Route::get('/stats',                            [AdminController::class, 'stats']);
+        Route::get('/analytics',                        [AdminController::class, 'analytics']);
 
         // Operational modules — each gated by the staff member's permissions.
         Route::middleware('perm:enquiries')->group(function () {
