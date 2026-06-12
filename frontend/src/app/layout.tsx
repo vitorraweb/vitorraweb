@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { DM_Sans, Cormorant_Garamond } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -6,6 +7,7 @@ import "./globals.css";
 import { CookieBanner } from "@/components/ui/cookie-banner";
 import { CartProvider } from "@/lib/cart";
 import { Toaster } from "@/components/ui/sonner";
+import { ANALYTICS_ENABLED, PLAUSIBLE_DOMAIN } from "@/lib/constants";
 
 /* ── Body: DM Sans — geometric humanist, cleaner and more distinctive than
    Inter. Used by Notion, Google product pages, and many premium SaaS brands.
@@ -101,6 +103,15 @@ export default async function RootLayout({
             <Toaster position="bottom-right" />
           </CartProvider>
         </NextIntlClientProvider>
+        {ANALYTICS_ENABLED && (
+          <Script
+            defer
+            data-domain={PLAUSIBLE_DOMAIN}
+            data-exclude="/admin/**"
+            src="https://plausible.io/js/script.outbound-links.file-downloads.js"
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );

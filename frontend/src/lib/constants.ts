@@ -11,6 +11,12 @@ export const COMPANY_REG_NO = "80034340923220";
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
+/* Plausible Analytics — cookieless, so no cookie-consent gating needed.
+   Set NEXT_PUBLIC_ENABLE_ANALYTICS=true on the production Vercel env only,
+   so preview/local builds don't send traffic into the live dashboard. */
+export const ANALYTICS_ENABLED = process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === "true";
+export const PLAUSIBLE_DOMAIN = "vitorra.org";
+
 export const PRODUCTS = {
   FET: "fuel-eco-tech",
   SEAL: "seal-wound-spray",
