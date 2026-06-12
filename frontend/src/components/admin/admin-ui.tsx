@@ -56,3 +56,39 @@ export function Empty({ label }: { label: string }) {
     </div>
   );
 }
+
+/** Minimal inline trend line — pass a week of daily counts. */
+export function Sparkline({ data, color = "#C5B27A" }: { data: number[]; color?: string }) {
+  if (!data || data.length < 2) return null;
+  const w = 100;
+  const h = 28;
+  const max = Math.max(1, ...data);
+  const step = w / (data.length - 1);
+  const points = data.map((v, i) => `${i * step},${h - (v / max) * h}`).join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-7 mt-2" aria-hidden="true">
+      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** "3m ago" / "2h ago" / "5d ago" — pass a ticking `now` (ms) so it stays live without calling Date.now() in render. */
+export function formatRelativeTime(iso: string, now: number): string {
+  const diffSec = Math.max(0, Math.floor((now - new Date(iso).getTime()) / 1000));
+  if (diffSec < 60) return "just now";
+  const min = Math.floor(diffSec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  return `${Math.floor(hr / 24)}d ago`;
+}
+
+/** Small pulsing dot used for the "live" polling indicator. */
+export function LiveDot() {
+  return (
+    <span className="relative inline-flex w-2 h-2">
+      <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ background: "#16A34A" }} />
+      <span className="relative inline-flex rounded-full w-2 h-2" style={{ background: "#16A34A" }} />
+    </span>
+  );
+}

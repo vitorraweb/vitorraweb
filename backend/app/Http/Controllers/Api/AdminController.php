@@ -80,6 +80,56 @@ class AdminController extends Controller
         $prospectTotal = Prospect::count();
         $prospectReached = $prospectTotal - $prospectStatus['not_contacted'] - $prospectStatus['bounced'];
 
+        /* ── 7-day trend lines (for KPI sparklines) ─────────────────────── */
+        $sevenDaysAgo = $now->copy()->subDays(6)->startOfDay();
+        $enqTrendRaw = Enquiry::where('created_at', '>=', $sevenDaysAgo)
+            ->selectRaw('DATE(created_at) d, COUNT(*) c')->groupBy('d')->pluck('c', 'd');
+        $ordTrendRaw = Order::where('created_at', '>=', $sevenDaysAgo)
+            ->selectRaw('DATE(created_at) d, COUNT(*) c')->groupBy('d')->pluck('c', 'd');
+
+        $trendLabels = [];
+        $enqTrend = [];
+        $ordTrend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $day = $now->copy()->subDays($i);
+            $key = $day->format('Y-m-d');
+            $trendLabels[] = $day->format('D');
+            $enqTrend[] = (int) ($enqTrendRaw[$key] ?? 0);
+            $ordTrend[] = (int) ($ordTrendRaw[$key] ?? 0);
+        }
+
+        /* ── Recent activity feed (latest enquiries, orders, messages) ──── */
+        $recentEnquiries = Enquiry::latest()->take(8)->get(['id', 'name', 'product_category', 'status', 'created_at'])
+            ->map(fn ($e) => [
+                'type'       => 'enquiry',
+                'title'      => "{$e->name} — " . ($e->product_category ?: 'General') . ' enquiry',
+                'meta'       => ucfirst(str_replace('_', ' ', $e->status)),
+                'created_at' => $e->created_at,
+                'href'       => '/admin/enquiries',
+            ]);
+
+        $recentOrders = Order::latest()->take(8)->get(['id', 'reference', 'customer_name', 'total', 'currency', 'status', 'created_at'])
+            ->map(fn ($o) => [
+                'type'       => 'order',
+                'title'      => "Order {$o->reference} — " . ($o->customer_name ?: 'Guest'),
+                'meta'       => $o->currency === 'USD' ? '$' . number_format($o->total / 100, 2) : 'UGX ' . number_format($o->total),
+                'created_at' => $o->created_at,
+                'href'       => '/admin/orders',
+            ]);
+
+        $recentMessages = ContactMessage::latest()->take(8)->get(['id', 'name', 'subject', 'created_at'])
+            ->map(fn ($m) => [
+                'type'       => 'message',
+                'title'      => "{$m->name} — " . ($m->subject ?: 'Contact message'),
+                'meta'       => 'Message',
+                'created_at' => $m->created_at,
+                'href'       => '/admin/messages',
+            ]);
+
+        $recentActivity = $recentEnquiries->concat($recentOrders)->concat($recentMessages)
+            ->sortByDesc('created_at')->take(10)->values()
+            ->map(fn ($a) => [...$a, 'created_at' => $a['created_at']->toIso8601String()]);
+
         return response()->json([
             'data' => [
                 // Legacy headline keys (kept for compatibility).
@@ -117,6 +167,12 @@ class AdminController extends Controller
                     'by_status'     => $prospectStatus,
                     'by_category'   => $prospectCat,
                 ],
+                'trends' => [
+                    'labels'    => $trendLabels,
+                    'enquiries' => $enqTrend,
+                    'orders'    => $ordTrend,
+                ],
+                'recent_activity' => $recentActivity,
             ],
         ]);
     }

@@ -1,11 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { MessageSquare, Mail, ShoppingCart, Loader2, ArrowRight, Target, Inbox, Clock } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
+import { Sparkline, LiveDot, formatRelativeTime } from "@/components/admin/admin-ui";
 
 type Money = { UGX: number; USD: number };
+
+type ActivityItem = {
+  type: "enquiry" | "order" | "message";
+  title: string;
+  meta: string;
+  created_at: string;
+  href: string;
+};
 
 type Stats = {
   messages_unread: number;
@@ -27,6 +36,20 @@ type Stats = {
     by_status: Record<string, number>;
     by_category: Record<string, number>;
   };
+  trends: {
+    labels: string[];
+    enquiries: number[];
+    orders: number[];
+  };
+  recent_activity: ActivityItem[];
+};
+
+const POLL_MS = 45_000;
+
+const ACTIVITY_ICON: Record<ActivityItem["type"], typeof Mail> = {
+  enquiry: MessageSquare,
+  order: ShoppingCart,
+  message: Mail,
 };
 
 const PRODUCTS: [string, string][] = [
@@ -59,19 +82,45 @@ function money(m: Money): string {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+  const [now, setNow] = useState<number | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await apiAdmin<{ data: Stats }>("/admin/stats");
+      setStats(res.data);
+      setLastUpdated(Date.now());
+      setError("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load");
+    }
+  }, []);
 
   useEffect(() => {
-    apiAdmin<{ data: Stats }>("/admin/stats")
-      .then((res) => setStats(res.data))
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"));
+    load();
+    const id = setInterval(load, POLL_MS);
+    return () => clearInterval(id);
+  }, [load]);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
   }, []);
 
   return (
     <div>
-      <h1 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "28px", fontWeight: 700, color: "#1E1E1E" }}>
-        Dashboard
-      </h1>
-      <p className="text-sm mb-8" style={{ color: "#777777" }}>Enquiry funnel, conversion, and orders at a glance.</p>
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
+        <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "28px", fontWeight: 700, color: "#1E1E1E" }}>
+          Dashboard
+        </h1>
+        {lastUpdated && (
+          <div className="flex items-center gap-2 text-xs" style={{ color: "#999" }}>
+            <LiveDot />
+            Live · updated {now ? formatRelativeTime(new Date(lastUpdated).toISOString(), now) : "just now"}
+          </div>
+        )}
+      </div>
+      <p className="text-sm mb-8" style={{ color: "#777777" }}>Enquiry funnel, conversion, and orders at a glance. Refreshes automatically.</p>
 
       {error && (
         <div className="rounded-2xl p-5 mb-6" style={{ background: "rgba(192,57,43,0.08)", border: "1px solid rgba(192,57,43,0.25)" }}>
@@ -95,6 +144,8 @@ export default function AdminDashboard() {
               label="Total enquiries"
               sub={deltaLabel(stats.enquiries.this_month, stats.enquiries.last_month)}
               href="/admin/enquiries"
+              trend={stats.trends.enquiries}
+              trendColor="#C5B27A"
             />
             <Kpi
               icon={Target}
@@ -163,7 +214,7 @@ export default function AdminDashboard() {
           {/* ── Orders & revenue ─────────────────────────────────────────── */}
           <Card title="Orders & revenue" href="/admin/orders">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <Metric label="Orders this month" value={String(stats.orders.this_month)} sub={`${stats.orders.total} all-time`} />
+              <Metric label="Orders this month" value={String(stats.orders.this_month)} sub={`${stats.orders.total} all-time`} trend={stats.trends.orders} trendColor="#7A6020" />
               <Metric label="Awaiting fulfilment" value={String(stats.orders.pending)} sub={money(stats.orders.pending_value)} />
               <Metric label="Revenue (paid)" value={money(stats.orders.revenue)} sub="UGX & USD shown separately" />
             </div>
@@ -199,6 +250,37 @@ export default function AdminDashboard() {
             })()}
           </Card>
 
+          {/* ── Recent activity ──────────────────────────────────────────── */}
+          <Card title="Recent activity">
+            {stats.recent_activity.length === 0 ? (
+              <p className="text-sm" style={{ color: "#999" }}>Nothing yet — new enquiries, orders, and messages will appear here.</p>
+            ) : (
+              <div className="space-y-1">
+                {stats.recent_activity.map((a, i) => {
+                  const Icon = ACTIVITY_ICON[a.type];
+                  return (
+                    <Link
+                      key={`${a.type}-${i}-${a.created_at}`}
+                      href={a.href}
+                      className="flex items-center gap-3 -mx-2 px-2 py-2.5 rounded-xl transition-colors hover:bg-black/[0.02]"
+                    >
+                      <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
+                        <Icon className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: "#1E1E1E" }}>{a.title}</p>
+                        <p className="text-xs" style={{ color: "#999" }}>{a.meta}</p>
+                      </div>
+                      <span className="text-xs shrink-0" style={{ color: "#BBBBBB" }}>
+                        {now ? formatRelativeTime(a.created_at, now) : "—"}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+
           {/* ── Quick links ──────────────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <QuickLink href="/admin/enquiries" icon={MessageSquare} label="Enquiries" sub={`${stats.enquiries.open} open`} />
@@ -219,7 +301,7 @@ function deltaLabel(thisMonth: number, lastMonth: number): string {
   return `${thisMonth} this month  ${arrow} ${d >= 0 ? "+" : ""}${d} vs last`;
 }
 
-function Kpi({ icon: Icon, value, label, sub, href }: { icon: typeof Target; value: string | number; label: string; sub: string; href?: string }) {
+function Kpi({ icon: Icon, value, label, sub, href, trend, trendColor }: { icon: typeof Target; value: string | number; label: string; sub: string; href?: string; trend?: number[]; trendColor?: string }) {
   const inner = (
     <>
       <div className="flex items-center justify-between mb-4">
@@ -231,6 +313,7 @@ function Kpi({ icon: Icon, value, label, sub, href }: { icon: typeof Target; val
       <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "40px", fontWeight: 700, lineHeight: 1, color: "#1E1E1E" }}>{value}</p>
       <p className="mt-2 text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
       <p className="text-xs" style={{ color: "#999999" }}>{sub}</p>
+      {trend && <Sparkline data={trend} color={trendColor} />}
     </>
   );
   const cls = "block bg-white rounded-[24px] p-6 border border-black/[0.05]";
@@ -249,12 +332,13 @@ function Card({ title, href, children }: { title: string; href?: string; childre
   );
 }
 
-function Metric({ label, value, sub }: { label: string; value: string; sub: string }) {
+function Metric({ label, value, sub, trend, trendColor }: { label: string; value: string; sub: string; trend?: number[]; trendColor?: string }) {
   return (
     <div className="rounded-xl p-5" style={{ background: "#F8F7F5" }}>
       <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "26px", fontWeight: 700, lineHeight: 1.1, color: "#1E1E1E" }}>{value}</p>
       <p className="mt-2 text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
       <p className="text-xs" style={{ color: "#999" }}>{sub}</p>
+      {trend && <Sparkline data={trend} color={trendColor} />}
     </div>
   );
 }
