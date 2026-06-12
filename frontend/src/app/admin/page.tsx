@@ -36,12 +36,12 @@ type Stats = {
     by_status: Record<string, number>;
     by_category: Record<string, number>;
   };
-  trends: {
+  trends?: {
     labels: string[];
     enquiries: number[];
     orders: number[];
   };
-  recent_activity: ActivityItem[];
+  recent_activity?: ActivityItem[];
 };
 
 const POLL_MS = 45_000;
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
               label="Total enquiries"
               sub={deltaLabel(stats.enquiries.this_month, stats.enquiries.last_month)}
               href="/admin/enquiries"
-              trend={stats.trends.enquiries}
+              trend={stats.trends?.enquiries}
               trendColor="#C5B27A"
             />
             <Kpi
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
           {/* ── Orders & revenue ─────────────────────────────────────────── */}
           <Card title="Orders & revenue" href="/admin/orders">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <Metric label="Orders this month" value={String(stats.orders.this_month)} sub={`${stats.orders.total} all-time`} trend={stats.trends.orders} trendColor="#7A6020" />
+              <Metric label="Orders this month" value={String(stats.orders.this_month)} sub={`${stats.orders.total} all-time`} trend={stats.trends?.orders} trendColor="#7A6020" />
               <Metric label="Awaiting fulfilment" value={String(stats.orders.pending)} sub={money(stats.orders.pending_value)} />
               <Metric label="Revenue (paid)" value={money(stats.orders.revenue)} sub="UGX & USD shown separately" />
             </div>
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
 
           {/* ── Recent activity ──────────────────────────────────────────── */}
           <Card title="Recent activity">
-            {stats.recent_activity.length === 0 ? (
+            {!stats.recent_activity || stats.recent_activity.length === 0 ? (
               <p className="text-sm" style={{ color: "#999" }}>Nothing yet — new enquiries, orders, and messages will appear here.</p>
             ) : (
               <div className="space-y-1">
