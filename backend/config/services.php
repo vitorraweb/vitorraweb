@@ -17,6 +17,10 @@ return [
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
+     'plausible' => [
+          'api_key' => env('PLAUSIBLE_API_KEY'),
+          'site_id' => env('PLAUSIBLE_SITE_ID', 'vitorra.org'),
+      ],
 
     'resend' => [
         'key' => env('RESEND_API_KEY'),

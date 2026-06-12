@@ -8,6 +8,7 @@ use App\Models\Enquiry;
 use App\Models\Order;
 use App\Models\Prospect;
 use App\Services\DocumentService;
+use App\Services\PlausibleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -121,6 +122,13 @@ class AdminController extends Controller
         ]);
     }
 
+     /** Website traffic (Plausible Stats API) — for the dashboard's "Website
+  traffic" card. */
+      public function analytics(): JsonResponse
+      {
+          return response()->json(['data' =>
+  app(PlausibleService::class)->getStats()]);
+      }
     /** Paginated enquiries list (newest first) */
     public function enquiries(Request $request): JsonResponse
     {
