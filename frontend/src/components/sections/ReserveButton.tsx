@@ -4,9 +4,6 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight, Check, Loader2, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { reserveFet } from "@/lib/api";
 import type { FetTier } from "@/lib/fet-pricing";
 import type { Order } from "@/types";
@@ -18,6 +15,23 @@ import type { Order } from "@/types";
 
 type Form = { customer_name: string; customer_email: string; customer_phone: string; quantity: string; notes: string };
 const EMPTY: Form = { customer_name: "", customer_email: "", customer_phone: "", quantity: "1", notes: "" };
+
+/* Field styling mirrors the customer-portal profile form (Vitorra design
+   system: rounded, gold focus ring) instead of the generic shadcn defaults. */
+const fieldCls = "w-full h-11 rounded-xl px-3.5 text-[14px] bg-white outline-none border transition-colors focus:border-[#C5B27A]";
+const labelCls = "block text-[11px] font-bold uppercase tracking-[0.14em] mb-1.5";
+
+function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className={labelCls} style={{ color: "#8a8a8a" }}>
+        {label} {required && <span style={{ color: "#7A6020" }}>*</span>}
+      </label>
+      {children}
+      {error && <p className="mt-1 text-xs" style={{ color: "#C0392B" }}>{error}</p>}
+    </div>
+  );
+}
 
 export default function ReserveButton({ tier }: { tier: FetTier }) {
   const tr = useTranslations("fetPricing");
@@ -133,53 +147,77 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
               </div>
             ) : (
               <>
+                <span
+                  className="inline-flex items-center gap-1.5 mb-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.08em]"
+                  style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}
+                >
+                  {tier.model}
+                </span>
                 <h3
                   style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "22px", fontWeight: 700, color: "#1E1E1E" }}
                   className="mb-1 pr-8"
                 >
                   {tr("reserveTitle", { model: tier.model })}
                 </h3>
-                <p className="text-sm mb-5" style={{ color: "#777777" }}>{tr("reserveSub")}</p>
+                <p className="text-sm mb-6" style={{ color: "#777777" }}>{tr("reserveSub")}</p>
 
                 <div className="space-y-4">
-                  <div>
-                    <Label className="mb-1.5" style={{ color: "#1E1E1E" }}>
-                      {tr("reserveFieldName")} <span style={{ color: "#C5B27A" }}>*</span>
-                    </Label>
-                    <Input value={form.customer_name} onChange={(e) => set("customer_name", e.target.value)} className="h-10 rounded-lg px-3" aria-invalid={!!errors.customer_name} />
-                    {errors.customer_name && <p className="mt-1 text-xs" style={{ color: "#C0392B" }}>{errors.customer_name}</p>}
-                  </div>
+                  <Field label={tr("reserveFieldName")} required error={errors.customer_name}>
+                    <input
+                      value={form.customer_name}
+                      onChange={(e) => set("customer_name", e.target.value)}
+                      className={fieldCls}
+                      style={{ borderColor: errors.customer_name ? "#C0392B" : "rgba(0,0,0,0.1)" }}
+                    />
+                  </Field>
 
-                  <div>
-                    <Label className="mb-1.5" style={{ color: "#1E1E1E" }}>
-                      {tr("reserveFieldEmail")} <span style={{ color: "#C5B27A" }}>*</span>
-                    </Label>
-                    <Input type="email" value={form.customer_email} onChange={(e) => set("customer_email", e.target.value)} className="h-10 rounded-lg px-3" aria-invalid={!!errors.customer_email} />
-                    {errors.customer_email && <p className="mt-1 text-xs" style={{ color: "#C0392B" }}>{errors.customer_email}</p>}
-                  </div>
+                  <Field label={tr("reserveFieldEmail")} required error={errors.customer_email}>
+                    <input
+                      type="email"
+                      value={form.customer_email}
+                      onChange={(e) => set("customer_email", e.target.value)}
+                      className={fieldCls}
+                      style={{ borderColor: errors.customer_email ? "#C0392B" : "rgba(0,0,0,0.1)" }}
+                    />
+                  </Field>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="mb-1.5" style={{ color: "#1E1E1E" }}>{tr("reserveFieldPhone")}</Label>
-                      <Input value={form.customer_phone} onChange={(e) => set("customer_phone", e.target.value)} className="h-10 rounded-lg px-3" />
-                    </div>
-                    <div>
-                      <Label className="mb-1.5" style={{ color: "#1E1E1E" }}>{tr("reserveFieldQuantity")}</Label>
-                      <Input type="number" min={1} max={50} value={form.quantity} onChange={(e) => set("quantity", e.target.value)} className="h-10 rounded-lg px-3" aria-invalid={!!errors.quantity} />
-                      {errors.quantity && <p className="mt-1 text-xs" style={{ color: "#C0392B" }}>{errors.quantity}</p>}
-                    </div>
+                    <Field label={tr("reserveFieldPhone")}>
+                      <input
+                        value={form.customer_phone}
+                        onChange={(e) => set("customer_phone", e.target.value)}
+                        className={fieldCls}
+                        style={{ borderColor: "rgba(0,0,0,0.1)" }}
+                      />
+                    </Field>
+                    <Field label={tr("reserveFieldQuantity")} error={errors.quantity}>
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={form.quantity}
+                        onChange={(e) => set("quantity", e.target.value)}
+                        className={fieldCls}
+                        style={{ borderColor: errors.quantity ? "#C0392B" : "rgba(0,0,0,0.1)" }}
+                      />
+                    </Field>
                   </div>
 
-                  <div>
-                    <Label className="mb-1.5" style={{ color: "#1E1E1E" }}>{tr("reserveFieldNotes")}</Label>
-                    <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} className="min-h-20 rounded-lg px-3 py-2" />
-                  </div>
+                  <Field label={tr("reserveFieldNotes")}>
+                    <textarea
+                      value={form.notes}
+                      onChange={(e) => set("notes", e.target.value)}
+                      rows={3}
+                      className={`${fieldCls} h-auto py-2.5 resize-none`}
+                      style={{ borderColor: "rgba(0,0,0,0.1)" }}
+                    />
+                  </Field>
 
                   {status === "error" && (
                     <p className="text-sm" style={{ color: "#C0392B" }}>{tr("reserveError")}</p>
                   )}
 
-                  <p className="text-xs leading-relaxed" style={{ color: "#777777" }}>{tr("reserveCashNotice")}</p>
+                  <p className="text-xs leading-relaxed pt-1 border-t" style={{ color: "#777777", borderColor: "rgba(0,0,0,0.06)" }}>{tr("reserveCashNotice")}</p>
 
                   <button
                     type="button"
