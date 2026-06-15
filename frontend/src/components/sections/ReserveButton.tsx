@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight, Check, Loader2, Mail, Minus, Phone, Plus, User, X } from "lucide-react";
@@ -127,7 +128,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
         {tr("reserveNow")}
       </button>
 
-      {open && (
+      {open && createPortal(
         <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true">
           <div
             className="absolute inset-0 animate-[vitorra-fade-in_0.2s_ease-out]"
@@ -327,7 +328,8 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

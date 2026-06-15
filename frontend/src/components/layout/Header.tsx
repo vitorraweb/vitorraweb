@@ -192,7 +192,7 @@ export default function Header() {
               </Link>
               <Link
                 href="/enquire"
-                className="hidden lg:inline-flex btn-primary text-sm"
+                className="!hidden lg:!inline-flex btn-primary text-sm"
                 style={{ padding: "8px 22px", fontSize: "14px", borderRadius: "20px" }}
               >
                 {t("common.requestQuote")}
