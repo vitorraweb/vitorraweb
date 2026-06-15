@@ -1,5 +1,10 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { ChevronDown, ExternalLink, LogOut } from "lucide-react";
+import type { AdminUser } from "@/lib/auth";
+
 export type Paginated<T> = {
   data: T[];
   current_page: number;
@@ -90,5 +95,100 @@ export function LiveDot() {
       <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ background: "#16A34A" }} />
       <span className="relative inline-flex rounded-full w-2 h-2" style={{ background: "#16A34A" }} />
     </span>
+  );
+}
+
+/** Two-letter initials from a display name, used for avatar chips. */
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/** Header profile chip — avatar, name/role, and a dropdown with site link + logout. */
+export function UserMenu({ user, onLogout }: { user: AdminUser; onLogout: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex items-center gap-2.5 pl-1.5 pr-2.5 sm:pr-3 py-1.5 rounded-full transition-colors hover:bg-black/[0.04]"
+      >
+        <span
+          className="flex items-center justify-center w-8 h-8 rounded-full text-[11px] font-bold shrink-0"
+          style={{ background: "#C5B27A", color: "#1E1E1E" }}
+        >
+          {initials(user.name)}
+        </span>
+        <span className="hidden sm:flex flex-col items-start leading-tight">
+          <span className="text-[13px] font-semibold" style={{ color: "#1E1E1E" }}>{user.name}</span>
+          <span className="text-[11px] capitalize" style={{ color: "#999999" }}>{user.role}</span>
+        </span>
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} style={{ color: "#999999" }} />
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl border border-black/[0.06] py-1.5 z-50 animate-[vitorra-fade-in_0.15s_ease-out]"
+          style={{ boxShadow: "0 16px 48px rgba(0,0,0,0.14)" }}
+          role="menu"
+        >
+          <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
+            <p className="text-sm font-semibold truncate" style={{ color: "#1E1E1E" }}>{user.name}</p>
+            <p className="text-xs truncate mt-0.5" style={{ color: "#999999" }}>{user.email}</p>
+            <span
+              className="inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+              style={{ background: "rgba(197,178,122,0.16)", color: "#7A6020" }}
+            >
+              {user.role}
+            </span>
+          </div>
+          <div className="py-1">
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#F2F2F2]"
+              style={{ color: "#454545" }}
+              role="menuitem"
+            >
+              <ExternalLink className="w-4 h-4" style={{ color: "#999999" }} />
+              View site
+            </Link>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left transition-colors hover:bg-[#FBEAEA]"
+              style={{ color: "#C0392B" }}
+              role="menuitem"
+            >
+              <LogOut className="w-4 h-4" />
+              Log out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
