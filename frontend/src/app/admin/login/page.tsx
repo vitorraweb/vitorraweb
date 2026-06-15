@@ -25,6 +25,17 @@ export default function AdminLoginPage() {
         "/auth/login",
         { method: "POST", body: JSON.stringify({ email, password }) }
       );
+      const role = res.data.user.role?.toLowerCase();
+      if (role !== "admin" && role !== "ops") {
+        // Revoke the token we just issued — this account has no admin-panel access.
+        const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+        fetch(`${base}/auth/logout`, {
+          method: "POST",
+          headers: { Accept: "application/json", Authorization: `Bearer ${res.data.token}` },
+        }).catch(() => { /* best-effort */ });
+        setError("This account doesn't have admin panel access.");
+        return;
+      }
       auth.save(res.data.token, res.data.user);
       router.push("/admin");
     } catch (err: unknown) {

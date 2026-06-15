@@ -38,6 +38,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (pathname === "/admin/login") return;
     const u = auth.getUser();
     if (!u) { router.push("/admin/login"); return; }
+    // Non-staff accounts (e.g. customer portal logins) have no admin-panel
+    // access at all — bounce them out and clear the stale session.
+    const role = u.role?.toLowerCase();
+    if (role !== "admin" && role !== "ops") {
+      auth.clear();
+      router.push("/admin/login");
+      return;
+    }
     setUser(u);
     // Defense-in-depth: if the current screen maps to a module/role this user
     // lacks, bounce to the dashboard (the backend also returns 403 regardless).
