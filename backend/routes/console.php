@@ -19,3 +19,7 @@ Schedule::command('backup:run')->daily()->at('01:30')
 
 // Emails the team if the most recent backup is missing or too old/large.
 Schedule::command('backup:monitor')->daily()->at('02:00');
+
+// Personalised "what needs attention today" email for each staff member.
+Schedule::command('digest:send')->dailyAt('07:00')
+    ->onFailure(fn () => logger()->error('Scheduled digest:send failed'));

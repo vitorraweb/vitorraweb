@@ -92,6 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Dashboard — every staff member sees this.
         Route::get('/stats',                            [AdminController::class, 'stats']);
         Route::get('/analytics',                        [AdminController::class, 'analytics']);
+        Route::get('/alerts',                           [AdminController::class, 'alerts']);
 
         // Operational modules — each gated by the staff member's permissions.
         Route::middleware('perm:enquiries')->group(function () {
@@ -123,6 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/customers',                    [CustomerController::class, 'index']);
             Route::get('/customers/detail',             [CustomerController::class, 'detail']);
             Route::put('/customers/note',               [CustomerController::class, 'saveNote']);
+            Route::put('/customers/pipeline',           [CustomerController::class, 'updatePipeline']);
         });
         Route::middleware('perm:media')->group(function () {
             Route::get('/media',                        [MediaController::class, 'index']);

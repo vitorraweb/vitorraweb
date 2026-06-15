@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { MessageSquare, Mail, ShoppingCart, Loader2, ArrowRight, Target, Inbox, Clock, Globe } from "lucide-react";
+import { MessageSquare, Mail, ShoppingCart, Loader2, ArrowRight, Target, Inbox, Clock, Globe, AlertTriangle } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { Sparkline, LiveDot, formatRelativeTime } from "@/components/admin/admin-ui";
 
@@ -42,6 +42,21 @@ type Stats = {
     orders: number[];
   };
   recent_activity?: ActivityItem[];
+};
+
+type Alerts = {
+  stale_contacts: {
+    count: number;
+    items: { email: string; name: string; stage: string; owner: { id: number; name: string } | null; last_activity: string; days_idle: number }[];
+  };
+  overdue_tasks: {
+    count: number;
+    items: { id: number; title: string; due_date: string; assignee: { id: number; name: string } | null }[];
+  };
+  unactioned_enquiries: {
+    count: number;
+    items: { id: number; name: string; product_category: string | null; created_at: string }[];
+  };
 };
 
 type Analytics = {
@@ -94,6 +109,7 @@ function money(m: Money): string {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [alerts, setAlerts] = useState<Alerts | null>(null);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [now, setNow] = useState<number | null>(null);
@@ -107,6 +123,12 @@ export default function AdminDashboard() {
       setError("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
+    }
+    try {
+      const res = await apiAdmin<{ data: Alerts }>("/admin/alerts");
+      setAlerts(res.data);
+    } catch {
+      setAlerts(null);
     }
   }, []);
 
@@ -196,6 +218,35 @@ export default function AdminDashboard() {
               sub={stats.enquiries.avg_response_hours != null ? "Submission → first reply" : "No replies yet"}
             />
           </div>
+
+          {/* ── Needs attention ───────────────────────────────────────────── */}
+          {alerts && (alerts.stale_contacts.count > 0 || alerts.overdue_tasks.count > 0 || alerts.unactioned_enquiries.count > 0) && (
+            <Card title="Needs attention">
+              <div className="space-y-4">
+                {alerts.stale_contacts.count > 0 && (
+                  <AlertRow
+                    href="/admin/pipeline"
+                    label={`${alerts.stale_contacts.count} contact${alerts.stale_contacts.count === 1 ? "" : "s"} going cold`}
+                    items={alerts.stale_contacts.items.map((c) => c.name || c.email)}
+                  />
+                )}
+                {alerts.overdue_tasks.count > 0 && (
+                  <AlertRow
+                    href="/admin/tasks"
+                    label={`${alerts.overdue_tasks.count} overdue task${alerts.overdue_tasks.count === 1 ? "" : "s"}`}
+                    items={alerts.overdue_tasks.items.map((t) => t.title)}
+                  />
+                )}
+                {alerts.unactioned_enquiries.count > 0 && (
+                  <AlertRow
+                    href="/admin/enquiries"
+                    label={`${alerts.unactioned_enquiries.count} new enquir${alerts.unactioned_enquiries.count === 1 ? "y" : "ies"} unactioned (24h+)`}
+                    items={alerts.unactioned_enquiries.items.map((e) => e.name)}
+                  />
+                )}
+              </div>
+            </Card>
+          )}
 
           {/* ── Enquiries by product + pipeline ──────────────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -451,6 +502,27 @@ function Metric({ label, value, sub, trend, trendColor }: { label: string; value
       <p className="text-xs" style={{ color: "#999" }}>{sub}</p>
       {trend && <Sparkline data={trend} color={trendColor} />}
     </div>
+  );
+}
+
+function AlertRow({ href, label, items }: { href: string; label: string; items: string[] }) {
+  const shown = items.slice(0, 3).filter(Boolean);
+  const extra = items.length - shown.length;
+  return (
+    <Link href={href} className="flex items-start gap-3 -mx-2 px-2 py-2.5 rounded-xl transition-colors hover:bg-black/[0.02]">
+      <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: "rgba(192,57,43,0.1)", color: "#C0392B" }}>
+        <AlertTriangle className="w-4 h-4" />
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
+        {shown.length > 0 && (
+          <p className="text-xs truncate" style={{ color: "#999" }}>
+            {shown.join(", ")}{extra > 0 ? `, +${extra} more` : ""}
+          </p>
+        )}
+      </div>
+      <ArrowRight className="w-4 h-4 arrow-nudge shrink-0 mt-2.5" style={{ color: "#CCCCCC" }} />
+    </Link>
   );
 }
 

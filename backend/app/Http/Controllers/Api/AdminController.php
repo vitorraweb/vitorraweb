@@ -7,6 +7,7 @@ use App\Models\ContactMessage;
 use App\Models\Enquiry;
 use App\Models\Order;
 use App\Models\Prospect;
+use App\Models\Task;
 use App\Services\DocumentService;
 use App\Services\PlausibleService;
 use Illuminate\Http\JsonResponse;
@@ -182,6 +183,57 @@ class AdminController extends Controller
     public function analytics(): JsonResponse
     {
         return response()->json(['data' => app(PlausibleService::class)->getStats()]);
+    }
+
+    /**
+     * "Needs attention" feed for the dashboard — contacts going cold in the
+     * pipeline, overdue tasks, and enquiries nobody has actioned yet.
+     * Scoped the same way as TaskController::stats(): admins see everything,
+     * everyone else sees their own + their department's.
+     */
+    public function alerts(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $staleContacts = app(CustomerController::class)->staleContacts($user->isAdmin() ? null : $user->id);
+
+        $taskQuery = Task::with('assignee:id,name')
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', now()->startOfDay())
+            ->where('status', '!=', 'done');
+
+        if (! $user->isAdmin()) {
+            $taskQuery->where(function ($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                    ->orWhere('created_by', $user->id);
+                if ($user->department) {
+                    $q->orWhere('department', $user->department);
+                }
+            });
+        }
+
+        $overdueTasks = $taskQuery->orderBy('due_date')->get();
+
+        $unactionedQuery = Enquiry::where('status', 'new')
+            ->where('created_at', '<', now()->subHours(24))
+            ->latest();
+
+        return response()->json(['data' => [
+            'stale_contacts' => $staleContacts,
+            'overdue_tasks' => [
+                'count' => $overdueTasks->count(),
+                'items' => $overdueTasks->take(10)->map(fn ($t) => [
+                    'id'       => $t->id,
+                    'title'    => $t->title,
+                    'due_date' => $t->due_date,
+                    'assignee' => $t->assignee,
+                ])->values(),
+            ],
+            'unactioned_enquiries' => [
+                'count' => $unactionedQuery->count(),
+                'items' => $unactionedQuery->take(10)->get(['id', 'name', 'product_category', 'created_at']),
+            ],
+        ]]);
     }
 
     /** Paginated enquiries list (newest first) */

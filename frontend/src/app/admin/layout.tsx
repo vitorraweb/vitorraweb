@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, Menu, X, CheckSquare } from "lucide-react";
+import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, Menu, X, CheckSquare, Workflow } from "lucide-react";
 import { auth, apiAdmin, canAccess } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 import { UserMenu } from "@/components/admin/admin-ui";
@@ -15,6 +15,7 @@ const nav: NavItem[] = [
   { label: "Dashboard",   href: "/admin",              icon: LayoutDashboard },
   { label: "Enquiries",   href: "/admin/enquiries",    icon: MessageSquare, module: "enquiries" },
   { label: "Customers",   href: "/admin/customers",    icon: Contact,       module: "customers" },
+  { label: "Pipeline",    href: "/admin/pipeline",     icon: Workflow,      module: "customers" },
   { label: "Prospects",   href: "/admin/prospects",    icon: Users,         module: "prospects" },
   { label: "Products",    href: "/admin/products",     icon: Package,       module: "products" },
   { label: "Blog",        href: "/admin/blog",         icon: FileText,      module: "blog" },
