@@ -52,19 +52,19 @@ export default function FetSavingsWidget({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div>
           <p className="text-[11px] mb-1" style={{ color: "#999" }}>{t("savingsFleetSize")}</p>
-          <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{quantity}</p>
+          <p className="font-numeric" style={{ fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{quantity}</p>
         </div>
         <div>
           <p className="text-[11px] mb-1" style={{ color: "#999" }}>{t("savingsSinceInstall")}</p>
-          <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{fmt(savedSoFarEur)}</p>
+          <p className="font-numeric" style={{ fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{fmt(savedSoFarEur)}</p>
         </div>
         <div>
           <p className="text-[11px] mb-1" style={{ color: "#999" }}>{t("savingsAnnualProjection")}</p>
-          <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{fmt(savings.annualSavingEurFleet)}</p>
+          <p className="font-numeric" style={{ fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{fmt(savings.annualSavingEurFleet)}</p>
         </div>
         <div>
           <p className="text-[11px] mb-1" style={{ color: "#999" }}>{t("savingsCo2")}</p>
-          <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{co2SoFarKg.toFixed(0)} kg</p>
+          <p className="font-numeric" style={{ fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{co2SoFarKg.toFixed(0)} kg</p>
         </div>
       </div>
     </div>

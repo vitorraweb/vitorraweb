@@ -105,11 +105,11 @@ export default function FetPricing() {
                 <div className="mt-auto">
                   <p className="text-[11px] mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>{tr("from")}</p>
                   <p
+                    className="font-numeric"
                     style={{
-                      fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
                       fontSize: "34px",
                       fontWeight: 700,
-                      letterSpacing: "-0.02em",
+                      letterSpacing: "-0.01em",
                       lineHeight: 1,
                       color: "#FFFFFF",
                     }}

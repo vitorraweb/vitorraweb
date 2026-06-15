@@ -109,17 +109,12 @@ function StatCard({
 
         {/* Scrambling / locked number */}
         <div
-          className="relative z-10"
+          className="relative z-10 font-numeric"
           style={{
-            fontFamily:
-              "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
             fontSize: "clamp(52px, 6vw, 88px)",
-            fontWeight: 700,
-            letterSpacing: "-0.04em",
+            fontWeight: 800,
+            letterSpacing: "-0.03em",
             lineHeight: 1,
-            /* Subtle monospace-width trick: tabular-nums keeps the layout stable
-               while digits scramble so the card doesn't resize each frame.     */
-            fontVariantNumeric: "tabular-nums",
           }}
         >
           {/* Scrambling digit(s) */}

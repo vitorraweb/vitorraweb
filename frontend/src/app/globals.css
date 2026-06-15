@@ -189,6 +189,18 @@
   .section-padding-sm { @apply py-12 md:py-16 px-6 md:px-12 lg:px-20; }
   .container-max      { @apply max-w-[1200px] mx-auto; }
 
+  /* ── Numeric display font ─────────────────────────────────────────────
+     Cormorant Garamond's display numerals are thin/delicate at large
+     sizes — fine for words, but stat figures, prices and percentages read
+     weak. DM Sans with tabular/lining figures gives big numbers the same
+     crisp, confident weight Stripe/Mercury/Linear use, while the serif
+     stays for headings and labels around them.                          */
+  .font-numeric {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+  }
+
   /* Hero CTA row — buttons go full-width (and centered) on phones for easy
      tapping, then revert to natural width from the sm breakpoint up. */
   .hero-cta > * { width: 100%; justify-content: center; }

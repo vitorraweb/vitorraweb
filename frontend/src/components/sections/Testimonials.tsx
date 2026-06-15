@@ -107,11 +107,11 @@ export default function Testimonials() {
 
                 {/* The big number */}
                 <div
+                  className="font-numeric"
                   style={{
-                    fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
                     fontSize:      "clamp(64px, 9vw, 110px)",
-                    fontWeight:    700,
-                    letterSpacing: "-0.05em",
+                    fontWeight:    800,
+                    letterSpacing: "-0.03em",
                     lineHeight:    0.9,
                     color:         "#C5B27A",
                     marginBottom:  "16px",
@@ -172,8 +172,8 @@ export default function Testimonials() {
                         {t("withoutFet")}
                       </span>
                       <span
+                        className="font-numeric"
                         style={{
-                          fontFamily: "var(--font-playfair, Georgia, serif)",
                           fontSize: "18px", fontWeight: 700,
                           color: "rgba(255,255,255,0.55)",
                         }}
@@ -207,8 +207,8 @@ export default function Testimonials() {
                         {t("withFet")}
                       </span>
                       <span
+                        className="font-numeric"
                         style={{
-                          fontFamily: "var(--font-playfair, Georgia, serif)",
                           fontSize: "18px", fontWeight: 700,
                           color: "#C5B27A",
                         }}
@@ -311,11 +311,11 @@ export default function Testimonials() {
                 }}
               >
                 <div
+                  className="font-numeric"
                   style={{
-                    fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
                     fontSize:      "clamp(28px, 3.5vw, 40px)",
-                    fontWeight:    700,
-                    letterSpacing: "-0.035em",
+                    fontWeight:    800,
+                    letterSpacing: "-0.02em",
                     lineHeight:    1,
                     color:         "#1E1E1E",
                   }}

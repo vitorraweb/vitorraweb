@@ -196,8 +196,8 @@ export default function FetCalculator() {
               <div className="flex items-baseline justify-between mb-2">
                 <Label>{tc("expectedSavings")}</Label>
                 <span
+                  className="font-numeric"
                   style={{
-                    fontFamily: "var(--font-playfair, Georgia, serif)",
                     fontSize: "20px",
                     fontWeight: 700,
                     color: "#7A6020",
@@ -359,11 +359,11 @@ function Result({ label, value, sub }: { label: string; value: string; sub: stri
         {label}
       </p>
       <p
+        className="font-numeric"
         style={{
-          fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
           fontSize: "clamp(24px, 3.4vw, 34px)",
           fontWeight: 700,
-          letterSpacing: "-0.02em",
+          letterSpacing: "-0.01em",
           lineHeight: 1,
           color: "#C5B27A",
         }}

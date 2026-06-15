@@ -57,6 +57,7 @@ export default function Header() {
   const t = useTranslations();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
 
   useEffect(() => {
@@ -65,14 +66,32 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Closes the drawer and collapses the Products accordion together, so it
+  // doesn't reopen mid-section the next time the drawer slides in.
+  const closeMobileMenu = () => {
+    setMobileOpen(false);
+    setMobileProductsOpen(false);
+  };
+
+  // Lock page scroll while the mobile drawer is open and allow Escape to close it.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMobileMenu();
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobileOpen]);
+
   return (
     <>
       {/* ── Floating Pill Navigation (Mastercard signature) ───────────── */}
       <header
-        className={cn(
-          "fixed inset-x-0 top-0 z-50 flex justify-center px-4 md:px-6 transition-all duration-300",
-          mobileOpen && "inset-x-0 bg-transparent"
-        )}
+        className="fixed inset-x-0 top-0 z-[60] flex justify-center px-4 md:px-6 transition-all duration-300"
         style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
       >
         {/* The pill itself */}
@@ -180,7 +199,7 @@ export default function Header() {
               </Link>
               <button
                 className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full bg-charcoal/5 hover:bg-charcoal/10 transition-colors text-charcoal"
-                onClick={() => setMobileOpen(!mobileOpen)}
+                onClick={() => (mobileOpen ? closeMobileMenu() : setMobileOpen(true))}
                 aria-label={t("header.toggleMenu")}
               >
                 {mobileOpen ? <X className="w-4.5 h-4.5" /> : <Menu className="w-4.5 h-4.5" />}
@@ -190,69 +209,139 @@ export default function Header() {
         </nav>
       </header>
 
-      {/* ── Mobile menu ──────────────────────────────────────────────────── */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-40 pt-24 px-4 bg-[#F2F2F2]">
-          <div className="bg-white rounded-[32px] shadow-card p-6">
-            <nav className="flex flex-col gap-1">
-              <p className="eyebrow mb-3 px-3">{t("header.navigation")}</p>
-              {navLinks.map((link) =>
-                link.hasDropdown ? (
-                  <div key={link.key}>
-                    <p className="px-3 py-1 text-xs font-bold uppercase tracking-widest text-charcoal/40 mt-4 mb-1">
-                      {t("header.productsHeading")}
-                    </p>
+      {/* ── Mobile nav: backdrop ─────────────────────────────────────────── */}
+      <div
+        className={cn(
+          "fixed inset-0 z-50 bg-charcoal/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden",
+          mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={closeMobileMenu}
+        aria-hidden="true"
+      />
+
+      {/* ── Mobile nav: slide-in drawer ──────────────────────────────────── */}
+      <div
+        className={cn(
+          "fixed inset-y-0 right-0 z-50 w-[85%] max-w-[360px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hidden",
+          mobileOpen ? "translate-x-0" : "translate-x-full"
+        )}
+        style={{
+          paddingTop: "max(1.25rem, env(safe-area-inset-top))",
+          paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))",
+        }}
+        role="dialog"
+        aria-modal="true"
+        aria-hidden={!mobileOpen}
+        aria-label={t("header.navigation")}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between px-6 pb-5 border-b border-black/5">
+          <Link href="/" className="flex items-center gap-2.5" onClick={closeMobileMenu}>
+            <Image
+              src="/logo.png"
+              alt="Vitorra Holdings Limited"
+              width={34}
+              height={34}
+              className="mix-blend-multiply"
+            />
+            <span
+              className="font-serif text-charcoal text-base leading-tight"
+              style={{ fontFamily: "var(--font-playfair, Georgia, serif)", letterSpacing: "-0.01em" }}
+            >
+              Vitorra<span className="text-[#A89255]"> Holdings</span>
+            </span>
+          </Link>
+          <button
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-charcoal/5 hover:bg-charcoal/10 transition-colors text-charcoal"
+            onClick={closeMobileMenu}
+            aria-label={t("header.toggleMenu")}
+          >
+            <X className="w-4.5 h-4.5" />
+          </button>
+        </div>
+
+        {/* Scrollable nav links */}
+        <nav className="flex-1 overflow-y-auto px-3 py-3">
+          {navLinks.map((link) =>
+            link.hasDropdown ? (
+              <div key={link.key}>
+                <button
+                  type="button"
+                  onClick={() => setMobileProductsOpen((v) => !v)}
+                  aria-expanded={mobileProductsOpen}
+                  className="flex items-center justify-between w-full px-3 py-3.5 text-[15px] font-medium text-charcoal rounded-[16px] hover:bg-[#F2F2F2] transition-colors"
+                >
+                  {t(`nav.${link.key}`)}
+                  <ChevronDown
+                    className={cn(
+                      "w-4 h-4 text-charcoal/40 transition-transform duration-200",
+                      mobileProductsOpen && "rotate-180"
+                    )}
+                  />
+                </button>
+                <div
+                  className={cn(
+                    "overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                    mobileProductsOpen ? "max-h-[420px]" : "max-h-0"
+                  )}
+                >
+                  <div className="pl-2 pb-1 space-y-0.5">
                     {products.map((p) => (
                       <Link
                         key={p.href}
                         href={p.href}
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-3 px-3 py-3 rounded-[16px] hover:bg-[#F2F2F2] transition-colors"
+                        onClick={closeMobileMenu}
+                        className="flex items-center gap-3 px-3 py-3 rounded-[14px] hover:bg-[#F2F2F2] transition-colors"
                       >
                         <div>
                           <p className="text-sm font-semibold text-charcoal">{t(`products.${p.key}.name`)}</p>
-                          <p className="text-xs text-charcoal/50">{t(`products.${p.key}.tagline`)}</p>
+                          <p className="text-xs text-charcoal/50 mt-0.5 leading-relaxed">{t(`products.${p.key}.tagline`)}</p>
                         </div>
                       </Link>
                     ))}
                   </div>
-                ) : (
-                  <Link
-                    key={link.key}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="px-3 py-3 text-sm font-medium text-charcoal rounded-[16px] hover:bg-[#F2F2F2] transition-colors"
-                  >
-                    {t(`nav.${link.key}`)}
-                  </Link>
-                )
-              )}
-              <div className="pt-4 mt-2 border-t border-black/5 space-y-2">
-                <div className="flex items-center justify-between px-3 py-2">
-                  <span className="text-xs font-bold uppercase tracking-widest text-charcoal/40">
-                    {t("common.language")}
-                  </span>
-                  <LanguageSwitcher />
                 </div>
-                <Link
-                  href="/account/dashboard"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-3 text-sm font-medium text-charcoal rounded-[16px] hover:bg-[#F2F2F2] transition-colors"
-                >
-                  <User className="w-4 h-4" />{t("common.myAccount")}
-                </Link>
-                <Link
-                  href="/enquire"
-                  onClick={() => setMobileOpen(false)}
-                  className="btn-primary w-full justify-center"
-                >
-                  {t("common.requestQuote")}
-                </Link>
               </div>
-            </nav>
+            ) : (
+              <Link
+                key={link.key}
+                href={link.href}
+                onClick={closeMobileMenu}
+                className="block px-3 py-3.5 text-[15px] font-medium text-charcoal rounded-[16px] hover:bg-[#F2F2F2] transition-colors"
+              >
+                {t(`nav.${link.key}`)}
+              </Link>
+            )
+          )}
+
+          <div className="mt-3 pt-3 border-t border-black/5 space-y-1">
+            <div className="flex items-center justify-between px-3 py-2.5">
+              <span className="text-xs font-bold uppercase tracking-widest text-charcoal/40">
+                {t("common.language")}
+              </span>
+              <LanguageSwitcher />
+            </div>
+            <Link
+              href="/account/dashboard"
+              onClick={closeMobileMenu}
+              className="flex items-center gap-2.5 px-3 py-3.5 text-[15px] font-medium text-charcoal rounded-[16px] hover:bg-[#F2F2F2] transition-colors"
+            >
+              <User className="w-4 h-4" />{t("common.myAccount")}
+            </Link>
           </div>
+        </nav>
+
+        {/* Pinned CTA */}
+        <div className="px-6 pt-3">
+          <Link
+            href="/enquire"
+            onClick={closeMobileMenu}
+            className="btn-primary w-full justify-center"
+          >
+            {t("common.requestQuote")}
+          </Link>
         </div>
-      )}
+      </div>
     </>
   );
 }
