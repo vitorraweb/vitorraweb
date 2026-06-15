@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, ChevronDown, Mail, Phone, Building2, MapPin, StickyNote, MessageSquare, ShoppingCart, FileText, ChevronLeft, ChevronRight, Save } from "lucide-react";
+import { Loader2, ChevronDown, Mail, Phone, Building2, MapPin, StickyNote, MessageSquare, ShoppingCart, FileText, ChevronLeft, ChevronRight, Save, Send } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { PageHeader, Empty, formatDate } from "@/components/admin/admin-ui";
 
@@ -9,13 +9,18 @@ type Contact = {
   email: string; name: string; company: string | null; phone: string | null; country: string | null;
   enquiries: number; orders: number; messages: number; first_seen: string; last_activity: string; has_note: boolean;
 };
+type Communication = {
+  id: number; subject: string | null; body: string; sender: { id: number; name: string } | null; created_at: string;
+};
 type Detail = {
   email: string;
   enquiries: { id: number; product_category: string | null; message: string; status: string; assigned_to: string | null; created_at: string }[];
   orders: { id: number; reference: string; currency: string; total: number; status: string; payment_status: string; created_at: string }[];
   messages: { id: number; subject: string | null; message: string; status: string; created_at: string }[];
+  communications: Communication[];
   note: string | null;
 };
+type ThreadItem = { key: string; direction: "in" | "out"; label: string; text: string; date: string; sender?: string };
 
 const money = (currency: string, total: number) =>
   currency === "USD" ? `$${(total / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `UGX ${total.toLocaleString("en-US")}`;
@@ -32,6 +37,9 @@ export default function CustomersPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [note, setNote]       = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [replySubject, setReplySubject] = useState("");
+  const [replyBody, setReplyBody]       = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -53,6 +61,7 @@ export default function CustomersPage() {
   const expand = async (email: string) => {
     if (open === email) { setOpen(null); return; }
     setOpen(email); setDetail(null); setDetailLoading(true);
+    setReplySubject(""); setReplyBody("");
     try {
       const res = await apiAdmin<{ data: Detail }>(`/admin/customers/detail?email=${encodeURIComponent(email)}`);
       setDetail(res.data);
@@ -68,6 +77,20 @@ export default function CustomersPage() {
       setList((l) => l.map((c) => (c.email.toLowerCase() === email.toLowerCase() ? { ...c, has_note: !!note.trim() } : c)));
     } catch { /* ignore */ }
     finally { setSavingNote(false); }
+  };
+
+  const sendReply = async (email: string, name: string) => {
+    if (!replyBody.trim()) return;
+    setSendingReply(true);
+    try {
+      const res = await apiAdmin<{ data: Communication }>("/admin/communications", {
+        method: "POST",
+        body: JSON.stringify({ email, name, subject: replySubject.trim() || undefined, body: replyBody.trim() }),
+      });
+      setDetail((d) => (d ? { ...d, communications: [res.data, ...d.communications] } : d));
+      setReplySubject(""); setReplyBody("");
+    } catch { /* ignore */ }
+    finally { setSendingReply(false); }
   };
 
   return (
@@ -120,13 +143,6 @@ export default function CustomersPage() {
                       <div className="flex items-center gap-2 text-sm py-3" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading history…</div>
                     ) : detail && detail.email.toLowerCase() === c.email.toLowerCase() ? (
                       <div className="space-y-4">
-                        {detail.enquiries.length > 0 && (
-                          <HistoryBlock title="Enquiries">
-                            {detail.enquiries.map((e) => (
-                              <Item key={`e${e.id}`} tag={e.product_category ?? "General"} status={e.status} date={e.created_at} text={e.message} />
-                            ))}
-                          </HistoryBlock>
-                        )}
                         {detail.orders.length > 0 && (
                           <HistoryBlock title="Orders">
                             {detail.orders.map((o) => (
@@ -134,13 +150,33 @@ export default function CustomersPage() {
                             ))}
                           </HistoryBlock>
                         )}
-                        {detail.messages.length > 0 && (
-                          <HistoryBlock title="Messages">
-                            {detail.messages.map((m) => (
-                              <Item key={`m${m.id}`} tag={m.subject || "Message"} status={m.status} date={m.created_at} text={m.message} />
-                            ))}
-                          </HistoryBlock>
-                        )}
+
+                        <div>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#999" }}>Conversation</p>
+                          {(() => {
+                            const thread: ThreadItem[] = [
+                              ...detail.enquiries.map((e) => ({ key: `e${e.id}`, direction: "in" as const, label: e.product_category ?? "Enquiry", text: e.message, date: e.created_at })),
+                              ...detail.messages.map((m) => ({ key: `m${m.id}`, direction: "in" as const, label: m.subject || "Message", text: m.message, date: m.created_at })),
+                              ...detail.communications.map((cm) => ({ key: `c${cm.id}`, direction: "out" as const, label: cm.subject || "Reply", text: cm.body, date: cm.created_at, sender: cm.sender?.name })),
+                            ].sort((a, b) => a.date.localeCompare(b.date));
+
+                            return thread.length > 0 ? (
+                              <div className="space-y-1.5 mb-3">
+                                {thread.map((t) => <ThreadBubble key={t.key} item={t} />)}
+                              </div>
+                            ) : (
+                              <p className="text-xs mb-3" style={{ color: "#999" }}>No messages yet.</p>
+                            );
+                          })()}
+
+                          <div className="rounded-xl border p-3" style={{ borderColor: "rgba(0,0,0,0.08)", background: "#F8F7F5" }}>
+                            <input value={replySubject} onChange={(e) => setReplySubject(e.target.value)} placeholder="Subject (optional)" className="w-full text-sm rounded-lg px-3 py-1.5 border mb-2 outline-none" style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
+                            <textarea value={replyBody} onChange={(e) => setReplyBody(e.target.value)} placeholder={`Reply to ${c.name || c.email}…`} className="w-full text-sm rounded-lg px-3 py-2 border min-h-20 outline-none" style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
+                            <button onClick={() => sendReply(c.email, c.name)} disabled={sendingReply || !replyBody.trim()} className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold px-3.5 py-1.5 rounded-full disabled:opacity-50" style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                              {sendingReply ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}Send reply
+                            </button>
+                          </div>
+                        </div>
 
                         <div>
                           <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "#999" }}>Internal note</p>
@@ -183,6 +219,21 @@ function HistoryBlock({ title, children }: { title: string; children: React.Reac
     <div>
       <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#999" }}>{title}</p>
       <div className="space-y-1.5">{children}</div>
+    </div>
+  );
+}
+
+function ThreadBubble({ item }: { item: ThreadItem }) {
+  const isOut = item.direction === "out";
+  return (
+    <div className="rounded-xl px-3.5 py-2.5" style={{ background: isOut ? "rgba(197,178,122,0.12)" : "#F8F7F5", borderLeft: isOut ? "3px solid #C5B27A" : "3px solid transparent" }}>
+      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#fff", color: "#888" }}>{item.label}</span>
+        <span className="text-[11px]" style={{ color: "#999" }}>
+          {isOut ? `Reply${item.sender ? ` · ${item.sender}` : ""}` : "Received"} · {formatDate(item.date)}
+        </span>
+      </div>
+      {item.text && <p className="text-xs whitespace-pre-line" style={{ color: "#555" }}>{item.text}</p>}
     </div>
   );
 }

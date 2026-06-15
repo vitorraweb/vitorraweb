@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\StaffReply;
+use App\Models\Communication;
 use App\Models\ContactMessage;
 use App\Models\CustomerNote;
 use App\Models\Enquiry;
@@ -12,6 +14,7 @@ use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
@@ -82,6 +85,8 @@ class CustomerController extends Controller
                 ->get(['id', 'reference', 'currency', 'total', 'status', 'payment_status', 'created_at']),
             'messages'  => ContactMessage::whereRaw('lower(email) = ?', [$key])->latest()
                 ->get(['id', 'subject', 'message', 'status', 'created_at']),
+            'communications' => Communication::with('sender:id,name')->whereRaw('lower(email) = ?', [$key])->latest()
+                ->get(['id', 'email', 'subject', 'body', 'sent_by', 'created_at']),
             'note'           => optional($note)->note,
             'pipeline_stage' => optional($note)->pipeline_stage,
             'owner'          => optional($note)->owner,
@@ -102,6 +107,44 @@ class CustomerController extends Controller
         );
 
         return response()->json(['message' => 'Note saved.']);
+    }
+
+    /**
+     * Send a reply to a contact from within the admin — records it on the
+     * contact's conversation thread and emails them, with reply-to set to
+     * the sending staff member's own inbox.
+     */
+    public function sendReply(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email'        => ['required', 'email'],
+            'name'         => ['nullable', 'string', 'max:255'],
+            'subject'      => ['nullable', 'string', 'max:255'],
+            'body'         => ['required', 'string', 'max:5000'],
+            'related_type' => ['nullable', 'in:enquiry,message'],
+            'related_id'   => ['nullable', 'integer'],
+        ]);
+
+        $email   = mb_strtolower(trim($data['email']));
+        $subject = $data['subject'] ?? 'Re: your message to Vitorra';
+        $toName  = $data['name'] ?? $email;
+
+        $communication = Communication::create([
+            'email'        => $email,
+            'subject'      => $subject,
+            'body'         => $data['body'],
+            'sent_by'      => $request->user()->id,
+            'related_type' => $data['related_type'] ?? null,
+            'related_id'   => $data['related_id'] ?? null,
+        ]);
+
+        Mail::to($email)->send(new StaffReply($toName, $subject, $data['body'], $request->user()));
+
+        if (($data['related_type'] ?? null) === 'enquiry' && ! empty($data['related_id'])) {
+            Enquiry::where('id', $data['related_id'])->whereNull('replied_at')->update(['replied_at' => now()]);
+        }
+
+        return response()->json(['data' => $communication->load('sender:id,name')]);
     }
 
     /** Set the pipeline owner and/or stage override for a contact. */

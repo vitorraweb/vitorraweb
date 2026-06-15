@@ -125,6 +125,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/customers/detail',             [CustomerController::class, 'detail']);
             Route::put('/customers/note',               [CustomerController::class, 'saveNote']);
             Route::put('/customers/pipeline',           [CustomerController::class, 'updatePipeline']);
+            Route::post('/communications',              [CustomerController::class, 'sendReply']);
         });
         Route::middleware('perm:media')->group(function () {
             Route::get('/media',                        [MediaController::class, 'index']);
