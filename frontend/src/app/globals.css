@@ -825,6 +825,13 @@
   50%       { transform: translateY(-16px); }
 }
 
+/* Reserve-now modal entrance — rises + settles; works as a bottom-sheet
+   lift on mobile and a gentle pop on centered desktop dialogs. */
+@keyframes reserve-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-enter,
   .hover-lift,
