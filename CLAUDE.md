@@ -123,7 +123,7 @@ Dark → Gold strip → White → Dark → White → Ivory → Dark → Ivory �
 | 404 | `/_not-found` | ✅ Complete | Branded |
 | Admin panel | `/admin/*` | ✅ Functional | **Dashboard**, enquiries, **customers**, **prospects CRM** (CSV import), **blog CMS** (sanitised), **media library**, **product management**, **system settings** + **users & roles** (admin-only), messages, orders |
 | Admin login | `/admin/login` | ✅ Complete | Sanctum auth |
-| Contact | `/contact` | ✅ Built | Needs design alignment |
+| Contact | `/contact` | ✅ Complete | Premium redesign + bilingual EN/SW (2026-06-08) |
 
 ### Pending Build
 
@@ -353,7 +353,7 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 
 ### Medium Priority
 
-6. **Contact page** — built but needs design alignment with homepage
+6. ~~**Contact page**~~ ✅ done (2026-06-08) — premium redesign matching homepage, bilingual EN/SW
 7. ~~**Customer portal**~~ ✅ done (2026-06-04) — `/account/*` register/login, orders + tracking, enquiry status, documents, profile (invoice download wired to `invoice_url` when present)
 8. **Blog content** — team needs to write and publish posts
 9. **Testimonials** — written client consent needed before publishing real quotes

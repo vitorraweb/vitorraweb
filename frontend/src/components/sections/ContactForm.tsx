@@ -9,9 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
-/* General contact form. Submission is simulated until the backend endpoint
-   exists — swap the marked line for a real submitContact() call. */
-
 type Form = { name: string; email: string; subject: string; message: string };
 const EMPTY: Form = { name: "", email: "", subject: "", message: "" };
 
@@ -40,7 +37,7 @@ export default function ContactForm() {
     if (!validate()) return;
     setStatus("submitting");
     try {
-            await submitContact(form);
+      await submitContact(form);
       setStatus("success");
     } catch {
       setStatus("error");
