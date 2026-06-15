@@ -93,4 +93,44 @@ class TaskTest extends TestCase
         $this->actingAs($creator, 'sanctum')->deleteJson("/api/admin/tasks/{$task->id}")->assertOk();
         $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
     }
+
+    public function test_stats_summarise_workload_by_person_and_department(): void
+    {
+        $admin   = $this->user('admin');
+        $sarah   = $this->user('ops', 'marketing');
+        $finance = $this->user('ops', 'finance');
+
+        Task::create(['title' => 'Done one', 'created_by' => $admin->id, 'assigned_to' => $sarah->id, 'department' => 'marketing', 'status' => 'done']);
+        Task::create(['title' => 'Overdue one', 'created_by' => $admin->id, 'assigned_to' => $sarah->id, 'department' => 'marketing', 'status' => 'todo', 'due_date' => now()->subDay()]);
+        Task::create(['title' => 'Finance task', 'created_by' => $admin->id, 'assigned_to' => $finance->id, 'department' => 'finance', 'status' => 'in_progress']);
+
+        $res = $this->actingAs($admin, 'sanctum')->getJson('/api/admin/tasks/stats')->assertOk();
+
+        $res->assertJsonPath('data.total', 3)
+            ->assertJsonPath('data.overdue', 1)
+            ->assertJsonPath('data.completion_rate', 33);
+
+        $sarahStat = collect($res->json('data.by_person'))->firstWhere('id', $sarah->id);
+        $this->assertSame(2, $sarahStat['total']);
+        $this->assertSame(1, $sarahStat['done']);
+        $this->assertSame(1, $sarahStat['overdue']);
+        $this->assertSame(50, $sarahStat['completion_rate']);
+
+        $marketingStat = collect($res->json('data.by_department'))->firstWhere('department', 'marketing');
+        $this->assertSame(2, $marketingStat['total']);
+        $this->assertSame(1, $marketingStat['overdue']);
+    }
+
+    public function test_stats_are_scoped_for_non_admins(): void
+    {
+        $marketing = $this->user('ops', 'marketing');
+        $finance   = $this->user('ops', 'finance');
+
+        Task::create(['title' => 'Mine', 'created_by' => $marketing->id, 'assigned_to' => $marketing->id, 'department' => 'marketing']);
+        Task::create(['title' => 'Not mine', 'created_by' => $finance->id, 'assigned_to' => $finance->id, 'department' => 'finance']);
+
+        $this->actingAs($marketing, 'sanctum')->getJson('/api/admin/tasks/stats')
+            ->assertOk()
+            ->assertJsonPath('data.total', 1);
+    }
 }

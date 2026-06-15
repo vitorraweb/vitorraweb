@@ -6,6 +6,20 @@ import { apiAdmin, auth } from "@/lib/auth";
 import { PageHeader, Empty } from "@/components/admin/admin-ui";
 
 type Person = { id: number; name: string; department?: string | null };
+type PersonStat = {
+  id: number; name: string; department?: string | null;
+  total: number; done: number; in_progress: number; blocked: number; todo: number;
+  overdue: number; completion_rate: number;
+};
+type DeptStat = { department: string; label: string; total: number; done: number; overdue: number; completion_rate: number };
+type TaskStats = {
+  total: number;
+  by_status: Record<string, number>;
+  overdue: number;
+  completion_rate: number;
+  by_person: PersonStat[];
+  by_department: DeptStat[];
+};
 type Task = {
   id: number;
   title: string;
@@ -42,6 +56,7 @@ export default function TasksPage() {
   const me = auth.getUser();
   const [list, setList] = useState<Task[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
+  const [stats, setStats] = useState<TaskStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [mine, setMine] = useState(false);
@@ -68,6 +83,15 @@ export default function TasksPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const loadStats = useCallback(async () => {
+    try {
+      const res = await apiAdmin<{ data: TaskStats }>("/admin/tasks/stats");
+      setStats(res.data);
+    } catch { /* non-critical — panel just stays hidden */ }
+  }, []);
+
+  useEffect(() => { loadStats(); }, [loadStats]);
+
   const expand = (t: Task) => {
     setRowMsg("");
     if (open === t.id) { setOpen(null); setDraft(null); return; }
@@ -90,7 +114,7 @@ export default function TasksPage() {
           department: add.department || null,
         }),
       });
-      setAdd({ ...blankNew }); setAddOpen(false); load();
+      setAdd({ ...blankNew }); setAddOpen(false); load(); loadStats();
     } catch (e) { setAddMsg(e instanceof Error ? e.message : "Failed to create task."); }
     finally { setAdding(false); }
   };
@@ -98,7 +122,7 @@ export default function TasksPage() {
   // Fast inline status change from the collapsed card.
   const quickStatus = async (t: Task, status: string) => {
     setList((l) => l.map((x) => (x.id === t.id ? { ...x, status } : x)));
-    try { await apiAdmin(`/admin/tasks/${t.id}`, { method: "PATCH", body: JSON.stringify({ status }) }); }
+    try { await apiAdmin(`/admin/tasks/${t.id}`, { method: "PATCH", body: JSON.stringify({ status }) }); loadStats(); }
     catch { load(); }
   };
 
@@ -114,13 +138,13 @@ export default function TasksPage() {
         }),
       });
       setList((l) => l.map((x) => (x.id === draft.id ? res.data : x)));
-      setRowMsg("Saved.");
+      setRowMsg("Saved."); loadStats();
     } catch (e) { setRowMsg(e instanceof Error ? e.message : "Save failed."); }
   };
 
   const removeTask = async (id: number) => {
     if (!confirm("Delete this task?")) return;
-    try { await apiAdmin(`/admin/tasks/${id}`, { method: "DELETE" }); setList((l) => l.filter((x) => x.id !== id)); setOpen(null); }
+    try { await apiAdmin(`/admin/tasks/${id}`, { method: "DELETE" }); setList((l) => l.filter((x) => x.id !== id)); setOpen(null); loadStats(); }
     catch (e) { setRowMsg(e instanceof Error ? e.message : "Delete failed."); }
   };
 
@@ -134,6 +158,39 @@ export default function TasksPage() {
           <Plus className="w-4 h-4" />New task
         </button>
       </div>
+
+      {/* Team progress / KPIs */}
+      {stats && stats.total > 0 && (
+        <div className="mb-6 space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <MiniStat label="Total tasks" value={stats.total} />
+            <MiniStat label="Completed" value={`${stats.completion_rate}%`} />
+            <MiniStat label="In progress" value={stats.by_status.in_progress ?? 0} />
+            <MiniStat label="Overdue" value={stats.overdue} alert={stats.overdue > 0} />
+          </div>
+
+          {(stats.by_person.length > 0 || stats.by_department.length > 0) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {stats.by_person.length > 0 && (
+                <div className="bg-white rounded-[20px] border border-black/[0.05] p-5">
+                  <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "#999" }}>Workload by person</p>
+                  <div className="space-y-3">
+                    {stats.by_person.map((p) => <WorkloadRow key={p.id} label={p.name} {...p} />)}
+                  </div>
+                </div>
+              )}
+              {stats.by_department.length > 0 && (
+                <div className="bg-white rounded-[20px] border border-black/[0.05] p-5">
+                  <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "#999" }}>Workload by department</p>
+                  <div className="space-y-3">
+                    {stats.by_department.map((d) => <WorkloadRow key={d.department} {...d} />)}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {addOpen && (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">
@@ -232,6 +289,32 @@ export default function TasksPage() {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+function MiniStat({ label, value, alert }: { label: string; value: string | number; alert?: boolean }) {
+  return (
+    <div className="bg-white rounded-[18px] p-4 border border-black/[0.05]">
+      <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "28px", fontWeight: 700, lineHeight: 1, color: alert ? "#C0392B" : "#1E1E1E" }}>{value}</p>
+      <p className="mt-1 text-xs font-semibold" style={{ color: "#999" }}>{label}</p>
+    </div>
+  );
+}
+
+function WorkloadRow({ label, total, done, overdue, completion_rate }: { label: string; total: number; done: number; overdue: number; completion_rate: number }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5 gap-2">
+        <span className="text-sm font-medium truncate" style={{ color: "#1E1E1E" }}>{label}</span>
+        <span className="text-xs shrink-0">
+          <span style={{ color: "#999" }}>{done}/{total} done</span>
+          {overdue > 0 && <span style={{ color: "#C0392B", fontWeight: 600 }}> · {overdue} overdue</span>}
+        </span>
+      </div>
+      <div style={{ height: "6px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${completion_rate}%`, borderRadius: "999px", background: overdue > 0 ? "linear-gradient(90deg,#C0392B,#E8A39A)" : "linear-gradient(90deg,#C5B27A,#D4C49A)", transition: "width .4s" }} />
+      </div>
     </div>
   );
 }

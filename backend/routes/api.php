@@ -134,6 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
         Route::middleware('perm:tasks')->group(function () {
             Route::get('/tasks',                        [TaskController::class, 'index']);
+            Route::get('/tasks/stats',                  [TaskController::class, 'stats']);
             Route::post('/tasks',                       [TaskController::class, 'store']);
             Route::match(['put', 'patch'], '/tasks/{task}', [TaskController::class, 'update']);
             Route::delete('/tasks/{task}',              [TaskController::class, 'destroy']);

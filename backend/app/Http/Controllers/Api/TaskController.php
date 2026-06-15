@@ -61,6 +61,92 @@ class TaskController extends Controller
         ]);
     }
 
+    /**
+     * Team progress / KPI summary: overall completion rate and overdue count,
+     * plus a workload breakdown per person and per department. Scoped the
+     * same way as index() — admins see everything, everyone else sees their
+     * own + their department's tasks.
+     */
+    public function stats(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $query = Task::query();
+
+        if (! $user->isAdmin()) {
+            $query->where(function ($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                    ->orWhere('created_by', $user->id);
+                if ($user->department) {
+                    $q->orWhere('department', $user->department);
+                }
+            });
+        }
+
+        $tasks = $query->get(['id', 'assigned_to', 'department', 'status', 'due_date']);
+        $today = now()->startOfDay();
+        $isOverdue = fn (Task $t) => $t->due_date && $t->status !== 'done' && $t->due_date->lt($today);
+
+        $byStatus = array_fill_keys(Task::STATUSES, 0);
+        foreach ($tasks as $task) {
+            $byStatus[$task->status] = ($byStatus[$task->status] ?? 0) + 1;
+        }
+        $total = $tasks->count();
+        $done = $byStatus['done'] ?? 0;
+
+        $byPerson = User::whereIn('role', ['admin', 'ops'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'department'])
+            ->map(function ($person) use ($tasks, $isOverdue) {
+                $mine = $tasks->where('assigned_to', $person->id);
+                $personTotal = $mine->count();
+                $personDone = $mine->where('status', 'done')->count();
+
+                return [
+                    'id'              => $person->id,
+                    'name'            => $person->name,
+                    'department'      => $person->department,
+                    'total'           => $personTotal,
+                    'done'            => $personDone,
+                    'in_progress'     => $mine->where('status', 'in_progress')->count(),
+                    'blocked'         => $mine->where('status', 'blocked')->count(),
+                    'todo'            => $mine->where('status', 'todo')->count(),
+                    'overdue'         => $mine->filter($isOverdue)->count(),
+                    'completion_rate' => $personTotal > 0 ? (int) round($personDone / $personTotal * 100) : 0,
+                ];
+            })
+            ->filter(fn ($p) => $p['total'] > 0)
+            ->values();
+
+        $deptLabels = config('admin_modules.department_labels', []);
+        $byDepartment = collect($deptLabels)
+            ->map(function ($label, $dept) use ($tasks, $isOverdue) {
+                $mine = $tasks->where('department', $dept);
+                $deptTotal = $mine->count();
+                $deptDone = $mine->where('status', 'done')->count();
+
+                return [
+                    'department'      => $dept,
+                    'label'           => $label,
+                    'total'           => $deptTotal,
+                    'done'            => $deptDone,
+                    'overdue'         => $mine->filter($isOverdue)->count(),
+                    'completion_rate' => $deptTotal > 0 ? (int) round($deptDone / $deptTotal * 100) : 0,
+                ];
+            })
+            ->filter(fn ($d) => $d['total'] > 0)
+            ->values();
+
+        return response()->json(['data' => [
+            'total'           => $total,
+            'by_status'       => $byStatus,
+            'overdue'         => $tasks->filter($isOverdue)->count(),
+            'completion_rate' => $total > 0 ? (int) round($done / $total * 100) : 0,
+            'by_person'       => $byPerson,
+            'by_department'   => $byDepartment,
+        ]]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate($this->rules(creating: true));
