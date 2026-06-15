@@ -40,7 +40,7 @@ The priority revenue product (FET) now has a **public full-line pricing guide an
 | Technology Foundation (SEO & Growth) | 50% | 50% | ISR on blog/homepage/shop; sitemap pending |
 | Security & Customer Trust | 60% | 40% | Server-side price validation added; active risks remain (see Known Issues) |
 | Business Operations (Orders, Admin) | 80% | 20% | Checkout built (orders + line items) but paused while coffee is gated; admin order management updated |
-| Backend API & Integrations | 55% | 45% | Products, blog, enquiry, contact, orders/checkout wired; payment gateway + email provider pending |
+| Backend API & Integrations | 65% | 35% | Products, blog, enquiry, contact, orders/checkout, transactional email (Resend) wired; payment gateway pending |
 | Reliability & Uptime Systems | 30% | 70% | No monitoring in place |
 
 ---
@@ -242,7 +242,7 @@ All 9 members now have real photos. No placeholder slots remain.
 ### Pending
 
 - **Live payment gateway** — blocked on business account (see Payment Strategy)
-- **Real email provider** — Postmark/Resend (dev uses `log` driver)
+- ~~**Real email provider**~~ ✅ done (2026-06-15) — Resend live in production (`send.` subdomain, `MAIL_MAILER=resend`); dev still uses `log` driver
 - **WhatsApp Business** notifications, DHL tracking
 - **Decrement stock on payment confirmation** (intentionally not done at order placement)
 
@@ -276,7 +276,8 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 - **DNS + email at GoDaddy** — nameservers **must stay at GoDaddy** (it runs Microsoft 365 email). ⚠ **Never** touch the M365 MX/SPF/DKIM/autodiscover records or change nameservers. Web records: `A @`/`A api` + `CNAME www`.
 - **CORS** (`backend/config/cors.php`): allows apex + www + `localhost:3000` + `FRONTEND_URL`, plus `*.vercel.app` previews (pattern) and comma-separated `CORS_ALLOWED_ORIGINS`. Auth is Bearer-token (stateless), so no cross-subdomain cookie config needed.
 - **Fresh-prod note:** dev enquiries/orders were guest test data and don't carry over — empty admin tables on launch are expected. **Prospects** are the only real business data: restore with `php artisan prospects:import --fresh` (loads the 163 cleaned leads from `backend/database/data/fet-prospects.json`).
-- **Pending on prod:** live payment gateway + real email provider (Resend planned — use a `send.` subdomain so its SPF/DKIM don't clash with M365); change the seeded `changeme123` admin/ops passwords.
+- **Email:** Resend is live in prod (`send.` subdomain, doesn't clash with M365 SPF/DKIM) — order/enquiry/admin-reply emails send for real.
+- **Pending on prod:** live payment gateway; change the seeded `changeme123` admin/ops passwords (use `php artisan staff:invite <email>` to reset + email new credentials).
 - Full runbook: the deployment plan file (GoDaddy/Vercel/cPanel/Resend steps).
 
 ---
@@ -342,7 +343,7 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 ### High Priority (Revenue-blocking)
 
 1. **Live payment gateway** — pick Flutterwave/PayPal (or Stripe via foreign entity) once the business account exists; provider-agnostic skeleton already in place
-2. **Real transactional email provider** — Postmark/Resend (order + enquiry emails already built; dev uses `log` driver)
+2. ~~**Real transactional email provider**~~ ✅ done (2026-06-15) — Resend live in production
 3. **Confirm coffee retail prices** — ⚠ **now gating the live shop.** Coffee retail is switched off (`COFFEE_SHOP_ENABLED = false`) until the team confirms real prices; current placeholders (UGX 38k/135k/82k) are not trusted. Once prices land: edit them in **`/admin/products`** (no code change), then flip the flag back on.
 4. **WhatsApp Business** — enquiry/order notifications to Marketing team
 5. ~~**Blog admin CRUD**~~ ✅ done (2026-06-04) — `/admin/blog` Markdown CMS (create/edit/publish, sanitised). Team still needs to *write* the posts (content task below).
