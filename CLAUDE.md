@@ -228,6 +228,7 @@ All 9 members now have real photos. No placeholder slots remain.
 - **Products:** `GET /products`, `/products/{slug}`, `/coffee/products` (returns `price_usd` from cents); **admin CRUD** `GET/POST/GET/PATCH/DELETE /admin/products[/{id}]`
 - **Blog:** `GET /blog/posts`, `/blog/posts/{slug}` (serves sanitised `content_html`); **admin CRUD** `GET/POST/GET/PATCH/DELETE /admin/blog/posts[/{id}]`
 - **Forms:** `POST /enquiries` (now accepts structured `requirements` JSON from the product-aware form; team email renders the full brief), `POST /contact` — team-notification emails, reply-to → sender
+- **Newsletter:** `POST /newsletter/subscribe` (single opt-in, honeypot, consent IP/timestamp logged for GDPR), token-based `POST /newsletter/unsubscribe`; admin `GET /admin/newsletter/subscribers` (list only — **no admin UI or send capability yet**, see Pending)
 - **Checkout:** `POST /orders` (guest, server-recomputes prices, stock check, reference), `GET /orders/{reference}`
 - **Payments (gateway-agnostic):** `POST /orders/{reference}/pay`, `POST /payments/webhook/{provider}`
 - **Exchange rate:** `GET /exchange-rate` (cached live rate, config fallback, **admin manual override** via settings)
@@ -332,6 +333,10 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 | `backend/app/Contracts/PaymentGateway.php` | Payment provider interface (+ `Services/Payments/ManualGateway`) |
 | `backend/config/payments.php` | `PAYMENT_DRIVER` selection |
 | `backend/database/seeders/DatabaseSeeder.php` | Admin/ops accounts + coffee catalogue |
+| `backend/app/Http/Controllers/Api/NewsletterController.php` | Subscribe (single opt-in, honeypot), token unsubscribe, admin subscriber list |
+| `backend/app/Models/NewsletterSubscriber.php` | `email, status, token, source, locale, consent_ip, consent_at, unsubscribed_at` |
+| `frontend/src/components/sections/NewsletterSignup.tsx` | Footer signup form → `/newsletter/subscribe` |
+| `frontend/src/app/[locale]/unsubscribe/page.tsx` | Token-based unsubscribe confirmation page |
 | `planning/04-brd-complete.md` | Business Requirements Document (signed off) |
 | `planning/05-phase1-system-design.md` | System design + API contract |
 | `planning/06-design-system.md` | Design system spec |
@@ -374,8 +379,9 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 
 19. Animation Waves 2–3 (swipe gestures, sticky mobile CTA)
 20. Tone-of-voice guide (Marketing)
-21. Newsletter unsubscribe flow (GDPR)
-22. Careers page
+21. ~~Newsletter signup + GDPR unsubscribe~~ ✅ done — single opt-in footer form, consent IP/timestamp logged, token-based one-click unsubscribe page. **Collection-only**: subscribers accumulate but nothing reads/sends to the list yet (see item 22).
+22. **Newsletter sending (MVP)** — planned next: (a) `/admin/newsletter` subscriber list page (route exists, no UI yet), (b) a compose/broadcast screen (Markdown editor, like the blog CMS) that emails everyone with `status=subscribed` via Resend, with a mandatory per-recipient unsubscribe link. Full campaign features (segments by locale/source, scheduling, open-rate analytics) deferred until subscriber volume justifies it.
+23. Careers page
 
 ---
 
