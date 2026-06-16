@@ -141,7 +141,7 @@ export default function CustomersPage() {
     finally { setSavingInfo(false); }
   };
 
-  const useTemplate = (t: Template) => {
+  const applyTemplate = (t: Template) => {
     setReplySubject(t.subject);
     setReplyBody(t.body);
     setTemplateOpen(false);
@@ -291,7 +291,7 @@ export default function CustomersPage() {
                                   <div className="absolute left-0 top-full mt-1 z-20 rounded-xl border shadow-lg overflow-hidden w-72"
                                     style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
                                     {templates.map((t) => (
-                                      <button key={t.id} onClick={() => useTemplate(t)}
+                                      <button key={t.id} onClick={() => applyTemplate(t)}
                                         className="w-full text-left px-3.5 py-2.5 hover:bg-black/[0.03] transition-colors border-b last:border-0"
                                         style={{ borderColor: "rgba(0,0,0,0.05)" }}>
                                         <p className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>{t.name}</p>

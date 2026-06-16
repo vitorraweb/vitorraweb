@@ -106,7 +106,7 @@ function SubscriberList() {
                 </tr>
               </thead>
               <tbody>
-                {list.map((s, i) => (
+                {list.map((s) => (
                   <tr key={s.id} className="border-b last:border-0 hover:bg-black/[0.015] transition-colors"
                     style={{ borderColor: "rgba(0,0,0,0.04)" }}>
                     <td className="px-4 py-3 font-medium" style={{ color: "#1E1E1E" }}>{s.email}</td>
