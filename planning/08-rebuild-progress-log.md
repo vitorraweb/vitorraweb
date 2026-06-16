@@ -123,3 +123,47 @@
 - **SEO:** `app/robots.ts` (`/robots.txt` — blocks /admin, /account, checkout), `app/sitemap.ts` (`/sitemap.xml` — public pages + live blog posts, graceful fallback), and a generated branded **Open Graph / Twitter card** (`app/opengraph-image.tsx`, dark + gold) applied site-wide. Closes Known-Issue #7.
 - **Mobile (Android + iOS) hardening:** explicit `viewport` (device-width, `viewport-fit: cover`), `overflow-x: clip` (no horizontal scroll, keeps sticky working), `text-size-adjust` + tap-highlight reset, **16px inputs on phones** (kills iOS focus-zoom), `100dvh` auth screen (iOS address-bar fix), safe-area insets on the floating nav + cookie banner.
 - **Mobile fixes:** product/shop **hero content no longer slides under the fixed nav** (heroes switched `justify-end` → `mt-auto` + top clearance, so tall content can't overflow upward); **hero CTAs go full-width on phones** (`.hero-cta`); customer-portal **tabs scroll horizontally** on mobile instead of wrapping. (Visual device-width QA still recommended.)
+
+---
+
+## Week 4 — Admin Sales & Marketing Upgrade (2026-06-16)
+
+### Communication Hub — Edit customer info + reply templates (2026-06-16)
+
+- **Edit customer info:** because the customer directory is aggregated (no single customer row), added an `override_*` layer via the `customer_notes` table. New fields: `override_name`, `override_phone`, `override_company`, `override_country`. Staff click "Edit info" in the customer detail panel to correct mistakes; overrides take highest priority over all source-record values. Backend: `PUT /admin/customers/info`, migration `2026_06_16_000004`.
+- **Reply templates:** a full CRUD system for reusable email templates (`/admin/templates`). Staff create templates with a name, optional category, subject, and body. When composing a reply in the customer panel, a "Use template" dropdown fills subject + body in one click. Backend: `reply_templates` table (migration `2026_06_16_000006`), `ReplyTemplate` model + `ReplyTemplateController`, routes under `perm:customers`. Frontend: `/admin/templates` page with inline create/edit, category filter chips, delete-with-confirm.
+- **Newsletter admin UI** (`/admin/newsletter`): 3-tab page — (1) Subscriber list with status filter, email search, pagination; (2) Compose & broadcast (subject + body, subscriber count preview, send); (3) Broadcast history (past sends, recipient count, sender, timestamp). Backend: `newsletter_broadcasts` table (migration `2026_06_16_000005`), `NewsletterBroadcast` model, `broadcast()` and `broadcasts()` on `NewsletterController`. Nav updated with Newsletter (Send icon) and Templates (LayoutTemplate icon).
+
+### Customer Tags / Labels (2026-06-16)
+
+- Added a **tag/label system** to the customer directory. Staff can add any free-text label (e.g. "VIP", "FET Lead", "Follow up") to any customer and remove them individually. Tags are stored as a JSON array in `customer_notes` (migration `2026_06_16_000007`, `tags` column). Each add/remove saves immediately via `PUT /admin/customers/tags`. Displayed as gold chips in the customer detail panel.
+- `CustomerNote` model updated: `tags` added to `$fillable` + cast to array.
+
+### CSV Exports (2026-06-16)
+
+- **Customers export:** `GET /admin/customers/export` streams a CSV with columns: Email, Name, Company, Phone, Country, Tags, Stage, Enquiries, Orders, Messages, First Seen, Last Activity. Gold "Export" button in the customer page header.
+- **Enquiries export:** `GET /admin/enquiries/export` streams a CSV with columns: ID, Date, Name, Email, Company, Phone, Country, Product, Status, Assigned To, Message. Export button added to the enquiries page header.
+- **Prospects export:** `GET /admin/prospects/export` streams a CSV with columns: Name, Industry, Email, Phone, Location, Status, Assigned To, Feedback, Follow-up. Export button added to the prospects page header.
+- All three use Laravel's `response()->stream()` (memory-efficient) and a `downloadCsv(path, filename)` utility in `frontend/src/lib/auth.ts` that fetches with the Bearer token and triggers a browser file download (avoids the `<a href>` Bearer-auth limitation).
+
+### Prospect → Enquiry Conversion (2026-06-16)
+
+- **One-click convert:** a "Convert to enquiry" button appears in every expanded prospect detail row. Clicking it calls `POST /admin/prospects/{id}/convert`, which creates a new `Enquiry` record from the prospect's data (name, email, phone, company, location → country, product category → FET) and updates the prospect's `outreach_status` to `converted`. The button is replaced by a green "✓ Converted to enquiry" label after success.
+- Closes the long-standing CRM gap: a qualified prospect can now flow directly into the enquiry pipeline with one action — no manual data re-entry.
+
+### Bulk Email to Selected Prospects (2026-06-16)
+
+- **Row checkboxes** on the prospects page (left of each row). Selected rows highlight with a gold border. When any rows are selected, a **sticky dark action bar** appears at the bottom of the screen showing the count and a "Bulk email (N with email)" button.
+- **Bulk email modal:** subject input, body textarea, "Use template" dropdown (loads from the reply templates system), Send button. Calls `POST /admin/prospects/bulk-email` with the selected IDs, subject, and body. The backend sends personalised emails via Resend to prospects that have an email address, marks `not_contacted` → `contacted`, and returns sent/skipped counts. The result is shown in the modal before it closes.
+- Backend: `ProspectOutreach` Mailable + `emails/prospect-outreach` blade view (includes prospect's first name + sender's reply-to). `bulkEmail()` method on `ProspectController`.
+- Selection clears automatically when filters/search/page changes.
+
+### Newsletter Deliverability Fix + Welcome Email (2026-06-16)
+
+- **Welcome email on subscribe (was missing entirely):** the `subscribe()` endpoint previously saved the record and returned JSON with no email sent. Now every new subscriber (and any re-subscriber) receives a branded HTML welcome email (`WelcomeSubscriber` mailable + `emails/welcome-subscriber` blade view — dark header, gold accents, unsubscribe footer link).
+- **Broadcast inbox placement fix:** the `NewsletterBroadcast` mailable was missing three headers that Gmail looks for when routing bulk mail. Added: `List-Unsubscribe` (with the per-subscriber token URL), `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (Google's Feb 2024 one-click requirement), and `Precedence: bulk`. The broadcast blade view was also upgraded from bare plain text to a full branded HTML email (matching the welcome email design) — necessary for correct MIME typing and better spam scores.
+
+### Access Control — confirmed correct for all staff (2026-06-16)
+
+- Verified that all new features map to existing permission modules that marketing staff already hold by default: `customers` (tags, export, templates), `enquiries` (export), `prospects` (bulk email, convert, export), `newsletter` (broadcast).
+- Marketing members (Thurayya, Sarah, Nagawa) need `role=ops` + `department=marketing` accounts created via `/admin/users` or `php artisan staff:invite <email>` — the department default covers all marketing-relevant modules automatically. Admins (Solomon) get full access automatically.
