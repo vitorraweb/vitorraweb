@@ -98,6 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Operational modules — each gated by the staff member's permissions.
         Route::middleware('perm:enquiries')->group(function () {
             Route::get('/enquiries',                    [AdminController::class, 'enquiries']);
+            Route::get('/enquiries/export',             [AdminController::class, 'exportEnquiries']);
             Route::patch('/enquiries/{enquiry}',        [AdminController::class, 'updateEnquiry']);
             Route::post('/enquiries/{enquiry}/convert', [AdminController::class, 'convertEnquiryToOrder']);
         });
@@ -110,9 +111,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/orders/{order}',             [AdminController::class, 'updateOrder']);
         });
         Route::middleware('perm:prospects')->group(function () {
-            Route::get('/prospects',                    [ProspectController::class, 'index']);
-            Route::patch('/prospects/{prospect}',       [ProspectController::class, 'update']);
-            Route::post('/prospects/import',            [ProspectController::class, 'import']);
+            Route::get('/prospects',                        [ProspectController::class, 'index']);
+            Route::get('/prospects/export',                 [ProspectController::class, 'export']);
+            Route::post('/prospects/bulk-email',            [ProspectController::class, 'bulkEmail']);
+            Route::post('/prospects/import',                [ProspectController::class, 'import']);
+            Route::post('/prospects/{prospect}/convert',    [ProspectController::class, 'convert']);
+            Route::patch('/prospects/{prospect}',           [ProspectController::class, 'update']);
         });
         Route::middleware('perm:products')->group(function () {
             Route::get('/products',                     [ProductAdminController::class, 'index']);
@@ -123,9 +127,11 @@ Route::middleware('auth:sanctum')->group(function () {
         });
         Route::middleware('perm:customers')->group(function () {
             Route::get('/customers',                    [CustomerController::class, 'index']);
+            Route::get('/customers/export',             [CustomerController::class, 'export']);
             Route::get('/customers/detail',             [CustomerController::class, 'detail']);
             Route::put('/customers/note',               [CustomerController::class, 'saveNote']);
             Route::put('/customers/info',               [CustomerController::class, 'updateInfo']);
+            Route::put('/customers/tags',               [CustomerController::class, 'updateTags']);
             Route::put('/customers/pipeline',           [CustomerController::class, 'updatePipeline']);
             Route::post('/communications',              [CustomerController::class, 'sendReply']);
             // Reply templates

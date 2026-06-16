@@ -4,14 +4,15 @@ import { useEffect, useState, useCallback } from "react";
 import {
   Loader2, ChevronDown, Mail, Phone, Building2, MapPin, StickyNote,
   MessageSquare, ShoppingCart, FileText, ChevronLeft, ChevronRight,
-  Save, Send, Pencil, X,
+  Save, Send, Pencil, X, Download, Plus, Tag,
 } from "lucide-react";
-import { apiAdmin } from "@/lib/auth";
+import { apiAdmin, downloadCsv } from "@/lib/auth";
 import { PageHeader, Empty, formatDate } from "@/components/admin/admin-ui";
 
 type Contact = {
   email: string; name: string; company: string | null; phone: string | null; country: string | null;
   enquiries: number; orders: number; messages: number; first_seen: string; last_activity: string; has_note: boolean;
+  tags: string[];
 };
 type Communication = {
   id: number; subject: string | null; body: string; sender: { id: number; name: string } | null; created_at: string;
@@ -27,6 +28,7 @@ type Detail = {
   override_phone: string | null;
   override_company: string | null;
   override_country: string | null;
+  tags: string[];
 };
 type Template = { id: number; name: string; subject: string; body: string; category: string | null };
 type ThreadItem = { key: string; direction: "in" | "out"; label: string; text: string; date: string; sender?: string };
@@ -63,6 +65,12 @@ export default function CustomersPage() {
   const [infoForm, setInfoForm]         = useState({ name: "", phone: "", company: "", country: "" });
   const [savingInfo, setSavingInfo]     = useState(false);
 
+  // Tags
+  const [tags, setTags]         = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
+  const [savingTags, setSavingTags] = useState(false);
+  const [exporting, setExporting]   = useState(false);
+
   const load = useCallback(async () => {
     try {
       const params = new URLSearchParams();
@@ -89,11 +97,12 @@ export default function CustomersPage() {
   const expand = async (email: string) => {
     if (open === email) { setOpen(null); return; }
     setOpen(email); setDetail(null); setDetailLoading(true);
-    setReplySubject(""); setReplyBody(""); setEditingInfo(false);
+    setReplySubject(""); setReplyBody(""); setEditingInfo(false); setTagInput("");
     try {
       const res = await apiAdmin<{ data: Detail }>(`/admin/customers/detail?email=${encodeURIComponent(email)}`);
       setDetail(res.data);
       setNote(res.data.note ?? "");
+      setTags(res.data.tags ?? []);
       setInfoForm({
         name:    res.data.override_name    ?? "",
         phone:   res.data.override_phone   ?? "",
@@ -141,6 +150,36 @@ export default function CustomersPage() {
     finally { setSavingInfo(false); }
   };
 
+  const saveTags = async (email: string, nextTags: string[]) => {
+    setSavingTags(true);
+    try {
+      await apiAdmin("/admin/customers/tags", { method: "PUT", body: JSON.stringify({ email, tags: nextTags }) });
+      setTags(nextTags);
+      setList((l) => l.map((c) => c.email.toLowerCase() === email.toLowerCase() ? { ...c, tags: nextTags } : c));
+    } catch { /* ignore */ }
+    finally { setSavingTags(false); }
+  };
+
+  const addTag = (email: string) => {
+    const t = tagInput.trim();
+    if (!t || tags.includes(t)) { setTagInput(""); return; }
+    const next = [...tags, t];
+    setTagInput("");
+    saveTags(email, next);
+  };
+
+  const removeTag = (email: string, tag: string) => {
+    saveTags(email, tags.filter((t) => t !== tag));
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await downloadCsv("/admin/customers/export", `customers-${new Date().toISOString().slice(0, 10)}.csv`);
+    } catch { /* ignore */ }
+    finally { setExporting(false); }
+  };
+
   const applyTemplate = (t: Template) => {
     setReplySubject(t.subject);
     setReplyBody(t.body);
@@ -172,6 +211,11 @@ export default function CustomersPage() {
             style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
           <button onClick={search} className="text-sm font-semibold px-3.5 py-2 rounded-full"
             style={{ background: "#F2F2F2", color: "#555" }}>Search</button>
+          <button onClick={handleExport} disabled={exporting}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full disabled:opacity-50"
+            style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}Export
+          </button>
         </div>
       </div>
 
@@ -244,6 +288,37 @@ export default function CustomersPage() {
                           <Pencil className="w-3 h-3" />Edit info
                         </button>
                       )}
+                    </div>
+
+                    {/* Tags */}
+                    <div className="mb-3">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#999" }}>
+                        <Tag className="w-3 h-3 inline mr-1" style={{ color: "#C5B27A" }} />Labels
+                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {tags.map((tag) => (
+                          <span key={tag} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                            style={{ background: "rgba(197,178,122,0.15)", color: "#7A6020", border: "1px solid rgba(197,178,122,0.3)" }}>
+                            {tag}
+                            <button onClick={() => removeTag(c.email, tag)} disabled={savingTags}
+                              className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity">
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </span>
+                        ))}
+                        <div className="flex items-center gap-1">
+                          <input value={tagInput} onChange={(e) => setTagInput(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(c.email); } }}
+                            placeholder="Add label…"
+                            className="text-[11px] rounded-full px-2.5 py-1 border outline-none w-28"
+                            style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
+                          <button onClick={() => addTag(c.email)} disabled={!tagInput.trim() || savingTags}
+                            className="p-1 rounded-full disabled:opacity-40"
+                            style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                            {savingTags ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     {detailLoading ? (

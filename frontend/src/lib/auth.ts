@@ -69,6 +69,21 @@ export async function apiAdmin<T>(path: string, options?: RequestInit): Promise<
   return res.json();
 }
 
+/** Fetch a CSV from an admin endpoint and trigger a browser file download. */
+export async function downloadCsv(path: string, filename: string): Promise<void> {
+  const token = auth.getToken();
+  const base  = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const res   = await fetch(`${base}${path}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "", Accept: "text/csv" },
+  });
+  if (!res.ok) throw new Error("Export failed");
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
 /* Multipart upload — lets the browser set the Content-Type boundary (don't set it). */
 export async function uploadAdmin<T>(path: string, form: FormData): Promise<T> {
   const token = auth.getToken();

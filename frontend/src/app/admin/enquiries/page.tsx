@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { Loader2, ChevronDown, Mail, Phone, Building2, UserCheck, ArrowRight } from "lucide-react";
-import { apiAdmin } from "@/lib/auth";
+import { Loader2, ChevronDown, Mail, Phone, Building2, UserCheck, ArrowRight, Download } from "lucide-react";
+import { apiAdmin, downloadCsv } from "@/lib/auth";
 import { StatusBadge, PageHeader, formatDate, Empty, type Paginated } from "@/components/admin/admin-ui";
 import { FET_TIERS } from "@/lib/fet-pricing";
 
@@ -57,6 +57,14 @@ export default function EnquiriesPage() {
   const [filter, setFilter]   = useState("");
   const [cat, setCat]         = useState("");
   const [open, setOpen]       = useState<number | null>(null);
+
+  const [exporting, setExporting] = useState(false);
+  const handleExport = async () => {
+    setExporting(true);
+    try { await downloadCsv("/admin/enquiries/export", `enquiries-${new Date().toISOString().slice(0, 10)}.csv`); }
+    catch { /* ignore */ }
+    finally { setExporting(false); }
+  };
 
   const [convertOpen, setConvertOpen]     = useState<number | null>(null);
   const [convertForms, setConvertForms]   = useState<Record<number, ConvertForm>>({});
@@ -141,7 +149,14 @@ export default function EnquiriesPage() {
 
   return (
     <div>
-      <PageHeader title="Enquiries" subtitle="Quote requests submitted through the site — auto-routed to the owning team." />
+      <div className="flex items-start justify-between gap-4 flex-wrap mb-1">
+        <PageHeader title="Enquiries" subtitle="Quote requests submitted through the site — auto-routed to the owning team." />
+        <button onClick={handleExport} disabled={exporting}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full disabled:opacity-50 shrink-0"
+          style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+          {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}Export CSV
+        </button>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-3">

@@ -10,7 +10,10 @@ class CustomerNote extends Model
     protected $fillable = [
         'email', 'note', 'updated_by', 'owner_id', 'pipeline_stage',
         'override_name', 'override_phone', 'override_company', 'override_country',
+        'tags',
     ];
+
+    protected $casts = ['tags' => 'array'];
 
     /** Unified pipeline stages, in the order they're worked. */
     public const STAGES = ['lead', 'contacted', 'qualified', 'quoted', 'won', 'fulfilled', 'lost'];

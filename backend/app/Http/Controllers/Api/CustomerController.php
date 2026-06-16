@@ -14,6 +14,7 @@ use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
@@ -94,6 +95,7 @@ class CustomerController extends Controller
             'override_phone'   => optional($note)->override_phone,
             'override_company' => optional($note)->override_company,
             'override_country' => optional($note)->override_country,
+            'tags'             => optional($note)->tags ?? [],
         ]]);
     }
 
@@ -126,6 +128,58 @@ class CustomerController extends Controller
         );
 
         return response()->json(['message' => 'Contact info updated.']);
+    }
+
+    /** Update the label tags for a contact (full replacement). */
+    public function updateTags(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email'  => ['required', 'email'],
+            'tags'   => ['required', 'array'],
+            'tags.*' => ['string', 'max:50'],
+        ]);
+
+        $email = mb_strtolower(trim($data['email']));
+        $tags  = array_values(array_unique(array_filter(array_map('trim', $data['tags']))));
+
+        CustomerNote::updateOrCreate(
+            ['email' => $email],
+            ['tags' => $tags ?: null, 'updated_by' => $request->user()->name ?? null]
+        );
+
+        return response()->json(['tags' => $tags]);
+    }
+
+    /** Stream all contacts as a CSV download. */
+    public function export(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $contacts = $this->aggregate();
+
+        return response()->stream(function () use ($contacts) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Email', 'Name', 'Company', 'Phone', 'Country', 'Tags', 'Stage', 'Enquiries', 'Orders', 'Messages', 'First Seen', 'Last Activity']);
+            foreach ($contacts as $c) {
+                fputcsv($out, [
+                    $c['email'],
+                    $c['name'] ?? '',
+                    $c['company'] ?? '',
+                    $c['phone'] ?? '',
+                    $c['country'] ?? '',
+                    implode(', ', $c['tags'] ?? []),
+                    $c['stage'] ?? '',
+                    $c['enquiries'],
+                    $c['orders'],
+                    $c['messages'],
+                    $c['first_seen'],
+                    $c['last_activity'],
+                ]);
+            }
+            fclose($out);
+        }, 200, [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="customers-' . now()->format('Y-m-d') . '.csv"',
+            'Cache-Control'       => 'no-cache, no-store',
+        ]);
     }
 
     /** Upsert the internal note for a contact. */
@@ -325,6 +379,7 @@ class CustomerController extends Controller
             $derived = CustomerNote::deriveStage($contact['_order_statuses'], $contact['_enquiry_statuses'], $contact['_prospect_statuses']);
 
             $contact['has_note'] = $note !== null && trim((string) $note->note) !== '';
+            $contact['tags']          = $note?->tags ?? [];
             $contact['pipeline_stage'] = $note?->pipeline_stage;
             $contact['stage'] = $note?->pipeline_stage ?? $derived;
             $contact['owner'] = $note?->owner ? ['id' => $note->owner->id, 'name' => $note->owner->name] : null;

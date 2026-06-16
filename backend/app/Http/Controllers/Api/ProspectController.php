@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ProspectOutreach;
+use App\Models\Enquiry;
 use App\Models\Prospect;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class ProspectController extends Controller
@@ -49,6 +52,101 @@ class ProspectController extends Controller
         $prospect->update($data);
 
         return response()->json(['data' => $prospect]);
+    }
+
+    /**
+     * Convert a prospect into a formal enquiry and mark them as converted.
+     * Creates a pre-filled enquiry from the prospect's data so it lands in
+     * the enquiry pipeline immediately with full context.
+     */
+    public function convert(Request $request, Prospect $prospect): JsonResponse
+    {
+        $enquiry = Enquiry::create([
+            'product_category' => 'FET',
+            'name'             => $prospect->name,
+            'email'            => $prospect->email ?? '',
+            'phone'            => $prospect->phone,
+            'message'          => trim(implode("\n", array_filter([
+                "Converted from FET prospect database.",
+                "Industry: {$prospect->category}",
+                $prospect->feedback ? "Notes: {$prospect->feedback}" : null,
+                $prospect->follow_up ? "Follow-up: {$prospect->follow_up}" : null,
+            ]))),
+            'status'           => 'new',
+            'assigned_to'      => $prospect->assigned_to,
+        ]);
+
+        $prospect->update(['outreach_status' => 'converted']);
+
+        return response()->json([
+            'message'  => "Prospect converted to enquiry #{$enquiry->id}.",
+            'enquiry'  => $enquiry,
+        ]);
+    }
+
+    /**
+     * Send a bulk outreach email to a set of selected prospects.
+     * Skips any prospect with no email address and reports the count.
+     * Marks not_contacted prospects as contacted after a successful send.
+     */
+    public function bulkEmail(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids'     => ['required', 'array', 'min:1'],
+            'ids.*'   => ['integer'],
+            'subject' => ['required', 'string', 'max:255'],
+            'body'    => ['required', 'string', 'max:10000'],
+        ]);
+
+        $prospects = Prospect::whereIn('id', $data['ids'])->get();
+        $withEmail = $prospects->filter(fn ($p) => ! empty($p->email));
+        $sent = 0;
+
+        foreach ($withEmail as $prospect) {
+            Mail::to($prospect->email)->send(
+                new ProspectOutreach($prospect->name, $data['subject'], $data['body'], $request->user())
+            );
+            $sent++;
+
+            if ($prospect->outreach_status === 'not_contacted') {
+                $prospect->update(['outreach_status' => 'contacted']);
+            }
+        }
+
+        $skipped = $prospects->count() - $sent;
+
+        return response()->json([
+            'sent'    => $sent,
+            'skipped' => $skipped,
+            'message' => "Sent to {$sent} prospect(s)" . ($skipped > 0 ? ", skipped {$skipped} with no email." : "."),
+        ]);
+    }
+
+    /** Stream all prospects as a CSV download. */
+    public function export(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $query = Prospect::query()->orderBy('category')->orderBy('name');
+        if ($request->filled('category')) $query->where('category', strtoupper($request->category));
+        if ($request->filled('status'))   $query->where('outreach_status', $request->status);
+
+        $prospects = $query->get();
+
+        return response()->stream(function () use ($prospects) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Name', 'Industry', 'Email', 'Phone', 'Location', 'Status', 'Assigned To', 'Feedback', 'Follow-up']);
+            foreach ($prospects as $p) {
+                fputcsv($out, [
+                    $p->name, $p->category, $p->email ?? '', $p->phone ?? '',
+                    $p->location ?? '', $p->outreach_status, $p->assigned_to ?? '',
+                    $p->feedback ?? '', $p->follow_up ?? '',
+                ]);
+            }
+            fclose($out);
+        }, 200, [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="prospects-' . now()->format('Y-m-d') . '.csv"',
+            'Cache-Control'       => 'no-cache, no-store',
+        ]);
     }
 
     /**

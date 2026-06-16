@@ -449,4 +449,38 @@ class AdminController extends Controller
 
         return response()->json(['data' => $order->load(['items', 'documents'])]);
     }
+
+    /** Stream all enquiries as a CSV download. */
+    public function exportEnquiries(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $query = Enquiry::latest();
+        if ($request->filled('status'))   $query->where('status', $request->status);
+        if ($request->filled('category')) $query->where('product_category', strtoupper($request->category));
+        $enquiries = $query->get();
+
+        return response()->stream(function () use ($enquiries) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['ID', 'Date', 'Name', 'Email', 'Company', 'Phone', 'Country', 'Product', 'Status', 'Assigned To', 'Message']);
+            foreach ($enquiries as $e) {
+                fputcsv($out, [
+                    $e->id,
+                    $e->created_at->format('Y-m-d'),
+                    $e->name,
+                    $e->email,
+                    $e->company ?? '',
+                    $e->phone ?? '',
+                    $e->country ?? '',
+                    $e->product_category ?? '',
+                    $e->status,
+                    $e->assigned_to ?? '',
+                    $e->message,
+                ]);
+            }
+            fclose($out);
+        }, 200, [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="enquiries-' . now()->format('Y-m-d') . '.csv"',
+            'Cache-Control'       => 'no-cache, no-store',
+        ]);
+    }
 }
