@@ -7,6 +7,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Symfony\Component\Mime\Email;
 
 class NewsletterBroadcast extends Mailable
 {
@@ -21,7 +22,19 @@ class NewsletterBroadcast extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: $this->subjectLine);
+        return new Envelope(
+            subject: $this->subjectLine,
+            // List-Unsubscribe is required by Gmail for bulk senders and
+            // dramatically improves inbox placement even for small lists.
+            using: [
+                function (Email $message) {
+                    $message->getHeaders()
+                        ->addTextHeader('List-Unsubscribe', '<' . $this->unsubscribeUrl . '>')
+                        ->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click')
+                        ->addTextHeader('Precedence', 'bulk');
+                },
+            ],
+        );
     }
 
     public function content(): Content

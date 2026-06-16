@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Mail\NewsletterBroadcast as NewsletterBroadcastMail;
+use App\Mail\WelcomeSubscriber;
 use App\Models\NewsletterBroadcast;
 use App\Models\NewsletterSubscriber;
 use Illuminate\Http\JsonResponse;
@@ -31,9 +32,10 @@ class NewsletterController extends Controller
         $email = Str::lower(trim($data['email']));
 
         $subscriber = NewsletterSubscriber::firstOrNew(['email' => $email]);
+        $isNew = ! $subscriber->exists || $subscriber->status !== 'subscribed';
 
         // Only (re)set consent fields when subscribing or re-subscribing.
-        if (! $subscriber->exists || $subscriber->status !== 'subscribed') {
+        if ($isNew) {
             $subscriber->fill([
                 'status'          => 'subscribed',
                 'token'           => $subscriber->token ?: NewsletterSubscriber::freshToken(),
@@ -43,6 +45,11 @@ class NewsletterController extends Controller
                 'consent_at'      => now(),
                 'unsubscribed_at' => null,
             ])->save();
+
+            $frontendUrl    = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'https://vitorra.org')), '/');
+            $unsubscribeUrl = $frontendUrl . '/unsubscribe?token=' . $subscriber->token;
+
+            Mail::to($subscriber->email)->send(new WelcomeSubscriber($unsubscribeUrl));
         }
 
         return response()->json([
