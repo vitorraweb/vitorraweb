@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, ChevronDown, Mail, Phone, Building2, MapPin, StickyNote, MessageSquare, ShoppingCart, FileText, ChevronLeft, ChevronRight, Save, Send } from "lucide-react";
+import {
+  Loader2, ChevronDown, Mail, Phone, Building2, MapPin, StickyNote,
+  MessageSquare, ShoppingCart, FileText, ChevronLeft, ChevronRight,
+  Save, Send, Pencil, X,
+} from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { PageHeader, Empty, formatDate } from "@/components/admin/admin-ui";
 
@@ -19,11 +23,18 @@ type Detail = {
   messages: { id: number; subject: string | null; message: string; status: string; created_at: string }[];
   communications: Communication[];
   note: string | null;
+  override_name: string | null;
+  override_phone: string | null;
+  override_company: string | null;
+  override_country: string | null;
 };
+type Template = { id: number; name: string; subject: string; body: string; category: string | null };
 type ThreadItem = { key: string; direction: "in" | "out"; label: string; text: string; date: string; sender?: string };
 
 const money = (currency: string, total: number) =>
-  currency === "USD" ? `$${(total / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `UGX ${total.toLocaleString("en-US")}`;
+  currency === "USD"
+    ? `$${(total / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : `UGX ${total.toLocaleString("en-US")}`;
 
 export default function CustomersPage() {
   const [list, setList]       = useState<Contact[]>([]);
@@ -35,18 +46,31 @@ export default function CustomersPage() {
   const [open, setOpen]       = useState<string | null>(null);
   const [detail, setDetail]   = useState<Detail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [note, setNote]       = useState("");
+  const [templates, setTemplates] = useState<Template[]>([]);
+
+  // Note
+  const [note, setNote]           = useState("");
   const [savingNote, setSavingNote] = useState(false);
+
+  // Reply
   const [replySubject, setReplySubject] = useState("");
   const [replyBody, setReplyBody]       = useState("");
   const [sendingReply, setSendingReply] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
+
+  // Edit info
+  const [editingInfo, setEditingInfo]   = useState(false);
+  const [infoForm, setInfoForm]         = useState({ name: "", phone: "", company: "", country: "" });
+  const [savingInfo, setSavingInfo]     = useState(false);
 
   const load = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (appliedQ) params.set("q", appliedQ);
       params.set("page", String(page));
-      const res = await apiAdmin<{ data: Contact[]; current_page: number; last_page: number; total: number }>(`/admin/customers?${params.toString()}`);
+      const res = await apiAdmin<{ data: Contact[]; current_page: number; last_page: number; total: number }>(
+        `/admin/customers?${params.toString()}`
+      );
       setList(res.data);
       setMeta({ current_page: res.current_page, last_page: res.last_page, total: res.total });
     } catch { setList([]); }
@@ -55,17 +79,27 @@ export default function CustomersPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    apiAdmin<Template[]>("/admin/templates").then((r) => setTemplates(Array.isArray(r) ? r : [])).catch(() => {});
+  }, []);
+
   const search = () => { setLoading(true); setPage(1); setApplied(q.trim()); };
   const goPage = (p: number) => { setLoading(true); setOpen(null); setPage(p); };
 
   const expand = async (email: string) => {
     if (open === email) { setOpen(null); return; }
     setOpen(email); setDetail(null); setDetailLoading(true);
-    setReplySubject(""); setReplyBody("");
+    setReplySubject(""); setReplyBody(""); setEditingInfo(false);
     try {
       const res = await apiAdmin<{ data: Detail }>(`/admin/customers/detail?email=${encodeURIComponent(email)}`);
       setDetail(res.data);
       setNote(res.data.note ?? "");
+      setInfoForm({
+        name:    res.data.override_name    ?? "",
+        phone:   res.data.override_phone   ?? "",
+        company: res.data.override_company ?? "",
+        country: res.data.override_country ?? "",
+      });
     } catch { setDetail(null); }
     finally { setDetailLoading(false); }
   };
@@ -77,6 +111,40 @@ export default function CustomersPage() {
       setList((l) => l.map((c) => (c.email.toLowerCase() === email.toLowerCase() ? { ...c, has_note: !!note.trim() } : c)));
     } catch { /* ignore */ }
     finally { setSavingNote(false); }
+  };
+
+  const saveInfo = async (email: string) => {
+    setSavingInfo(true);
+    try {
+      await apiAdmin("/admin/customers/info", {
+        method: "PUT",
+        body: JSON.stringify({
+          email,
+          override_name:    infoForm.name.trim()    || null,
+          override_phone:   infoForm.phone.trim()   || null,
+          override_company: infoForm.company.trim() || null,
+          override_country: infoForm.country.trim() || null,
+        }),
+      });
+      setList((l) => l.map((c) => {
+        if (c.email.toLowerCase() !== email.toLowerCase()) return c;
+        return {
+          ...c,
+          name:    infoForm.name.trim()    || c.name,
+          phone:   infoForm.phone.trim()   || c.phone,
+          company: infoForm.company.trim() || c.company,
+          country: infoForm.country.trim() || c.country,
+        };
+      }));
+      setEditingInfo(false);
+    } catch { /* ignore */ }
+    finally { setSavingInfo(false); }
+  };
+
+  const useTemplate = (t: Template) => {
+    setReplySubject(t.subject);
+    setReplyBody(t.body);
+    setTemplateOpen(false);
   };
 
   const sendReply = async (email: string, name: string) => {
@@ -98,8 +166,12 @@ export default function CustomersPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <PageHeader title="Customers" subtitle="Everyone who's engaged — aggregated from enquiries, orders, and messages." />
         <div className="flex items-center gap-2">
-          <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") search(); }} placeholder="Search name, email, company…" className="text-sm rounded-full px-4 py-2 border w-64 max-w-full outline-none" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-          <button onClick={search} className="text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>Search</button>
+          <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") search(); }}
+            placeholder="Search name, email, company…"
+            className="text-sm rounded-full px-4 py-2 border w-64 max-w-full outline-none"
+            style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+          <button onClick={search} className="text-sm font-semibold px-3.5 py-2 rounded-full"
+            style={{ background: "#F2F2F2", color: "#555" }}>Search</button>
         </div>
       </div>
 
@@ -124,19 +196,54 @@ export default function CustomersPage() {
                   </div>
                   <div className="hidden sm:flex items-center gap-1.5 shrink-0">
                     {c.enquiries > 0 && <CountChip icon={MessageSquare} n={c.enquiries} />}
-                    {c.orders > 0 && <CountChip icon={ShoppingCart} n={c.orders} />}
-                    {c.messages > 0 && <CountChip icon={FileText} n={c.messages} />}
+                    {c.orders > 0    && <CountChip icon={ShoppingCart}   n={c.orders} />}
+                    {c.messages > 0  && <CountChip icon={FileText}       n={c.messages} />}
                   </div>
                   <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === c.email ? "rotate-180" : ""}`} style={{ color: "#BBB" }} />
                 </button>
 
                 {open === c.email && (
                   <div className="px-4 pb-4 pt-1 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-                    <div className="flex flex-wrap gap-x-5 gap-y-1.5 my-3 text-xs" style={{ color: "#555" }}>
-                      <a href={`mailto:${c.email}`} className="flex items-center gap-1.5 hover:underline"><Mail className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.email}</a>
-                      {c.phone && <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.phone}</span>}
-                      {c.company && <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.company}</span>}
-                      {c.country && <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.country}</span>}
+
+                    {/* Contact info row + edit */}
+                    <div className="flex items-start justify-between gap-2 my-3">
+                      {!editingInfo ? (
+                        <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs" style={{ color: "#555" }}>
+                          <a href={`mailto:${c.email}`} className="flex items-center gap-1.5 hover:underline"><Mail className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.email}</a>
+                          {c.phone   && <span className="flex items-center gap-1.5"><Phone     className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.phone}</span>}
+                          {c.company && <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.company}</span>}
+                          {c.country && <span className="flex items-center gap-1.5"><MapPin     className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.country}</span>}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 text-sm">
+                          {(["name", "phone", "company", "country"] as const).map((field) => (
+                            <div key={field}>
+                              <label className="text-[10px] font-bold uppercase tracking-[0.08em] mb-0.5 block" style={{ color: "#bbb" }}>{field}</label>
+                              <input value={infoForm[field]} onChange={(e) => setInfoForm((f) => ({ ...f, [field]: e.target.value }))}
+                                placeholder={`Override ${field}…`}
+                                className="w-full rounded-xl px-3 py-1.5 border text-sm outline-none"
+                                style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                            </div>
+                          ))}
+                          <div className="sm:col-span-2 flex items-center gap-2 mt-1">
+                            <button onClick={() => saveInfo(c.email)} disabled={savingInfo}
+                              className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full disabled:opacity-50"
+                              style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                              {savingInfo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}Save
+                            </button>
+                            <button onClick={() => setEditingInfo(false)} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full"
+                              style={{ background: "#F2F2F2", color: "#555" }}>
+                              <X className="w-3.5 h-3.5" />Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {!editingInfo && (
+                        <button onClick={() => setEditingInfo(true)} className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0"
+                          style={{ background: "#F2F2F2", color: "#777" }}>
+                          <Pencil className="w-3 h-3" />Edit info
+                        </button>
+                      )}
                     </div>
 
                     {detailLoading ? (
@@ -151,12 +258,13 @@ export default function CustomersPage() {
                           </HistoryBlock>
                         )}
 
+                        {/* Conversation thread */}
                         <div>
                           <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#999" }}>Conversation</p>
                           {(() => {
                             const thread: ThreadItem[] = [
                               ...detail.enquiries.map((e) => ({ key: `e${e.id}`, direction: "in" as const, label: e.product_category ?? "Enquiry", text: e.message, date: e.created_at })),
-                              ...detail.messages.map((m) => ({ key: `m${m.id}`, direction: "in" as const, label: m.subject || "Message", text: m.message, date: m.created_at })),
+                              ...detail.messages.map((m)  => ({ key: `m${m.id}`, direction: "in" as const, label: m.subject || "Message",  text: m.message, date: m.created_at })),
                               ...detail.communications.map((cm) => ({ key: `c${cm.id}`, direction: "out" as const, label: cm.subject || "Reply", text: cm.body, date: cm.created_at, sender: cm.sender?.name })),
                             ].sort((a, b) => a.date.localeCompare(b.date));
 
@@ -169,19 +277,57 @@ export default function CustomersPage() {
                             );
                           })()}
 
+                          {/* Reply composer */}
                           <div className="rounded-xl border p-3" style={{ borderColor: "rgba(0,0,0,0.08)", background: "#F8F7F5" }}>
-                            <input value={replySubject} onChange={(e) => setReplySubject(e.target.value)} placeholder="Subject (optional)" className="w-full text-sm rounded-lg px-3 py-1.5 border mb-2 outline-none" style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
-                            <textarea value={replyBody} onChange={(e) => setReplyBody(e.target.value)} placeholder={`Reply to ${c.name || c.email}…`} className="w-full text-sm rounded-lg px-3 py-2 border min-h-20 outline-none" style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
-                            <button onClick={() => sendReply(c.email, c.name)} disabled={sendingReply || !replyBody.trim()} className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold px-3.5 py-1.5 rounded-full disabled:opacity-50" style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                            {/* Template picker */}
+                            {templates.length > 0 && (
+                              <div className="relative mb-2">
+                                <button onClick={() => setTemplateOpen((o) => !o)}
+                                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
+                                  style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", color: "#555" }}>
+                                  Use template <ChevronDown className={`w-3 h-3 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
+                                </button>
+                                {templateOpen && (
+                                  <div className="absolute left-0 top-full mt-1 z-20 rounded-xl border shadow-lg overflow-hidden w-72"
+                                    style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
+                                    {templates.map((t) => (
+                                      <button key={t.id} onClick={() => useTemplate(t)}
+                                        className="w-full text-left px-3.5 py-2.5 hover:bg-black/[0.03] transition-colors border-b last:border-0"
+                                        style={{ borderColor: "rgba(0,0,0,0.05)" }}>
+                                        <p className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>{t.name}</p>
+                                        <p className="text-[11px] truncate" style={{ color: "#999" }}>{t.subject}</p>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            <input value={replySubject} onChange={(e) => setReplySubject(e.target.value)}
+                              placeholder="Subject (optional)"
+                              className="w-full text-sm rounded-lg px-3 py-1.5 border mb-2 outline-none"
+                              style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
+                            <textarea value={replyBody} onChange={(e) => setReplyBody(e.target.value)}
+                              placeholder={`Reply to ${c.name || c.email}…`}
+                              className="w-full text-sm rounded-lg px-3 py-2 border min-h-20 outline-none"
+                              style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
+                            <button onClick={() => sendReply(c.email, c.name)} disabled={sendingReply || !replyBody.trim()}
+                              className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold px-3.5 py-1.5 rounded-full disabled:opacity-50"
+                              style={{ background: "#C5B27A", color: "#1E1E1E" }}>
                               {sendingReply ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}Send reply
                             </button>
                           </div>
                         </div>
 
+                        {/* Internal note */}
                         <div>
                           <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "#999" }}>Internal note</p>
-                          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Private note about this customer…" className="w-full text-sm rounded-xl px-3 py-2 border min-h-16" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-                          <button onClick={() => saveNote(c.email)} disabled={savingNote} className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: savingNote ? 0.7 : 1 }}>
+                          <textarea value={note} onChange={(e) => setNote(e.target.value)}
+                            placeholder="Private note about this customer…"
+                            className="w-full text-sm rounded-xl px-3 py-2 border min-h-16"
+                            style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                          <button onClick={() => saveNote(c.email)} disabled={savingNote}
+                            className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold px-3.5 py-1.5 rounded-full"
+                            style={{ background: "#C5B27A", color: "#1E1E1E", opacity: savingNote ? 0.7 : 1 }}>
                             {savingNote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}Save note
                           </button>
                         </div>
@@ -195,9 +341,17 @@ export default function CustomersPage() {
 
           {meta.last_page > 1 && (
             <div className="flex items-center justify-center gap-3 mt-6">
-              <button disabled={meta.current_page <= 1} onClick={() => goPage(meta.current_page - 1)} className="inline-flex items-center gap-1 text-sm font-semibold px-3 py-2 rounded-full disabled:opacity-40" style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}><ChevronLeft className="w-4 h-4" />Prev</button>
+              <button disabled={meta.current_page <= 1} onClick={() => goPage(meta.current_page - 1)}
+                className="inline-flex items-center gap-1 text-sm font-semibold px-3 py-2 rounded-full disabled:opacity-40"
+                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>
+                <ChevronLeft className="w-4 h-4" />Prev
+              </button>
               <span className="text-xs" style={{ color: "#777" }}>Page {meta.current_page} of {meta.last_page}</span>
-              <button disabled={meta.current_page >= meta.last_page} onClick={() => goPage(meta.current_page + 1)} className="inline-flex items-center gap-1 text-sm font-semibold px-3 py-2 rounded-full disabled:opacity-40" style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>Next<ChevronRight className="w-4 h-4" /></button>
+              <button disabled={meta.current_page >= meta.last_page} onClick={() => goPage(meta.current_page + 1)}
+                className="inline-flex items-center gap-1 text-sm font-semibold px-3 py-2 rounded-full disabled:opacity-40"
+                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>
+                Next<ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           )}
         </>

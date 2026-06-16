@@ -87,10 +87,45 @@ class CustomerController extends Controller
                 ->get(['id', 'subject', 'message', 'status', 'created_at']),
             'communications' => Communication::with('sender:id,name')->whereRaw('lower(email) = ?', [$key])->latest()
                 ->get(['id', 'email', 'subject', 'body', 'sent_by', 'created_at']),
-            'note'           => optional($note)->note,
-            'pipeline_stage' => optional($note)->pipeline_stage,
-            'owner'          => optional($note)->owner,
+            'note'             => optional($note)->note,
+            'pipeline_stage'   => optional($note)->pipeline_stage,
+            'owner'            => optional($note)->owner,
+            'override_name'    => optional($note)->override_name,
+            'override_phone'   => optional($note)->override_phone,
+            'override_company' => optional($note)->override_company,
+            'override_country' => optional($note)->override_country,
         ]]);
+    }
+
+    /**
+     * Correct the canonical display info for a contact (name, phone, company,
+     * country). These override values take priority over whatever arrived from
+     * enquiries/orders/messages in the aggregate.
+     */
+    public function updateInfo(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email'            => ['required', 'email'],
+            'override_name'    => ['nullable', 'string', 'max:255'],
+            'override_phone'   => ['nullable', 'string', 'max:50'],
+            'override_company' => ['nullable', 'string', 'max:255'],
+            'override_country' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $email = mb_strtolower(trim($data['email']));
+
+        CustomerNote::updateOrCreate(
+            ['email' => $email],
+            [
+                'override_name'    => $data['override_name'] ?? null,
+                'override_phone'   => $data['override_phone'] ?? null,
+                'override_company' => $data['override_company'] ?? null,
+                'override_country' => $data['override_country'] ?? null,
+                'updated_by'       => $request->user()->name ?? null,
+            ]
+        );
+
+        return response()->json(['message' => 'Contact info updated.']);
     }
 
     /** Upsert the internal note for a contact. */
@@ -275,11 +310,19 @@ class CustomerController extends Controller
             }
         }
 
-        $notes = CustomerNote::with('owner:id,name')->get()->keyBy('email'); // keyed by stored (lower-cased) email
+        $notes = CustomerNote::with('owner:id,name')->get()->keyBy('email');
 
         foreach ($map as $key => &$contact) {
-            $derived = CustomerNote::deriveStage($contact['_order_statuses'], $contact['_enquiry_statuses'], $contact['_prospect_statuses']);
+            // Staff overrides win over any source-record values.
             $note = $notes->get($key);
+            if ($note) {
+                foreach (['name' => 'override_name', 'phone' => 'override_phone', 'company' => 'override_company', 'country' => 'override_country'] as $field => $col) {
+                    if (! empty($note->$col)) {
+                        $contact[$field] = $note->$col;
+                    }
+                }
+            }
+            $derived = CustomerNote::deriveStage($contact['_order_statuses'], $contact['_enquiry_statuses'], $contact['_prospect_statuses']);
 
             $contact['has_note'] = $note !== null && trim((string) $note->note) !== '';
             $contact['pipeline_stage'] = $note?->pipeline_stage;

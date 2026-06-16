@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\NewsletterBroadcast as NewsletterBroadcastMail;
+use App\Models\NewsletterBroadcast;
 use App\Models\NewsletterSubscriber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class NewsletterController extends Controller
@@ -76,6 +79,59 @@ class NewsletterController extends Controller
             'email'   => $subscriber->email,
             'message' => 'You have been unsubscribed. You will no longer receive our newsletter.',
         ]);
+    }
+
+    /**
+     * Admin: compose and send a broadcast to all active subscribers.
+     * Each email gets a personalised unsubscribe link. The broadcast is
+     * recorded so marketing can see what was sent and when.
+     */
+    public function broadcast(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'subject' => ['required', 'string', 'max:255'],
+            'body'    => ['required', 'string', 'max:20000'],
+        ]);
+
+        $subscribers = NewsletterSubscriber::where('status', 'subscribed')->get();
+
+        if ($subscribers->isEmpty()) {
+            return response()->json(['message' => 'No active subscribers to send to.'], 422);
+        }
+
+        $frontendUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'https://vitorra.org')), '/');
+
+        foreach ($subscribers as $subscriber) {
+            $unsubscribeUrl = $frontendUrl . '/unsubscribe?token=' . $subscriber->token;
+
+            Mail::to($subscriber->email)->send(new NewsletterBroadcastMail(
+                $data['subject'],
+                $data['body'],
+                $subscriber->token,
+                $unsubscribeUrl,
+            ));
+        }
+
+        $broadcast = NewsletterBroadcast::create([
+            'subject'          => $data['subject'],
+            'body_markdown'    => $data['body'],
+            'sent_by'          => $request->user()->id,
+            'recipient_count'  => $subscribers->count(),
+        ]);
+
+        return response()->json([
+            'message'          => "Sent to {$subscribers->count()} subscriber(s).",
+            'recipient_count'  => $subscribers->count(),
+            'broadcast_id'     => $broadcast->id,
+        ]);
+    }
+
+    /** Admin: list past broadcasts. */
+    public function broadcasts(Request $request): JsonResponse
+    {
+        return response()->json(
+            NewsletterBroadcast::with('sender:id,name')->latest()->paginate(20)
+        );
     }
 
     /** Admin: list subscribers (filterable by status, searchable by email). */

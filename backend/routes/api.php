@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductAdminController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProspectController;
+use App\Http\Controllers\Api\ReplyTemplateController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\UserAdminController;
@@ -124,8 +125,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/customers',                    [CustomerController::class, 'index']);
             Route::get('/customers/detail',             [CustomerController::class, 'detail']);
             Route::put('/customers/note',               [CustomerController::class, 'saveNote']);
+            Route::put('/customers/info',               [CustomerController::class, 'updateInfo']);
             Route::put('/customers/pipeline',           [CustomerController::class, 'updatePipeline']);
             Route::post('/communications',              [CustomerController::class, 'sendReply']);
+            // Reply templates
+            Route::get('/templates',                    [ReplyTemplateController::class, 'index']);
+            Route::post('/templates',                   [ReplyTemplateController::class, 'store']);
+            Route::match(['put','patch'], '/templates/{template}', [ReplyTemplateController::class, 'update']);
+            Route::delete('/templates/{template}',      [ReplyTemplateController::class, 'destroy']);
         });
         Route::middleware('perm:media')->group(function () {
             Route::get('/media',                        [MediaController::class, 'index']);
@@ -133,7 +140,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/media/{media}',             [MediaController::class, 'destroy']);
         });
         Route::middleware('perm:newsletter')->group(function () {
-            Route::get('/newsletter/subscribers',       [NewsletterController::class, 'index']);
+            Route::get('/newsletter/subscribers',        [NewsletterController::class, 'index']);
+            Route::post('/newsletter/broadcast',         [NewsletterController::class, 'broadcast']);
+            Route::get('/newsletter/broadcasts',         [NewsletterController::class, 'broadcasts']);
         });
         Route::middleware('perm:tasks')->group(function () {
             Route::get('/tasks',                        [TaskController::class, 'index']);
