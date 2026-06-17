@@ -1,8 +1,9 @@
 /* Customer (portal) auth — kept separate from the admin session so the two
    never collide. Token in localStorage under a customer-specific key. */
 
-const TOKEN_KEY = "vitorra_customer_token";
-const USER_KEY  = "vitorra_customer_user";
+const TOKEN_KEY  = "vitorra_customer_token";
+const USER_KEY   = "vitorra_customer_user";
+const EXPIRY_KEY = "vitorra_customer_expiry";
 
 export type CustomerUser = { id: number; name: string; email: string; role: string };
 
@@ -15,11 +16,16 @@ export const customerAuth = {
   getUser: (): CustomerUser | null => {
     try { const r = localStorage.getItem(USER_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
   },
-  save: (token: string, user: CustomerUser): void => {
-    try { localStorage.setItem(TOKEN_KEY, token); localStorage.setItem(USER_KEY, JSON.stringify(user)); } catch { /* */ }
+  save: (token: string, user: CustomerUser, expiresAt?: string | null): void => {
+    try {
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      if (expiresAt) localStorage.setItem(EXPIRY_KEY, expiresAt);
+      else localStorage.removeItem(EXPIRY_KEY);
+    } catch { /* */ }
   },
   clear: (): void => {
-    try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); } catch { /* */ }
+    try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); localStorage.removeItem(EXPIRY_KEY); } catch { /* */ }
   },
 };
 
@@ -44,7 +50,7 @@ export async function apiCustomer<T>(path: string, options?: RequestInit): Promi
 }
 
 /** Public register/login — returns the issued token + user (no auth needed). */
-async function postAuth(path: string, body: Record<string, unknown>): Promise<{ data: { user: CustomerUser; token: string } }> {
+async function postAuth(path: string, body: Record<string, unknown>): Promise<{ data: { user: CustomerUser; token: string; expires_at?: string | null } }> {
   const res = await fetch(`${base()}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -59,12 +65,24 @@ async function postAuth(path: string, body: Record<string, unknown>): Promise<{ 
 
 export async function loginCustomer(email: string, password: string) {
   const { data } = await postAuth("/auth/login", { email, password });
-  customerAuth.save(data.token, data.user);
+  customerAuth.save(data.token, data.user, data.expires_at);
   return data.user;
 }
 
 export async function registerCustomer(payload: Record<string, unknown>) {
   const { data } = await postAuth("/auth/register", payload);
-  customerAuth.save(data.token, data.user);
+  customerAuth.save(data.token, data.user, data.expires_at);
   return data.user;
+}
+
+/** Change the signed-in customer's password (verifies the current one). */
+export async function changeCustomerPassword(currentPassword: string, newPassword: string): Promise<void> {
+  await apiCustomer("/auth/password", {
+    method: "POST",
+    body: JSON.stringify({
+      current_password: currentPassword,
+      password: newPassword,
+      password_confirmation: newPassword,
+    }),
+  });
 }

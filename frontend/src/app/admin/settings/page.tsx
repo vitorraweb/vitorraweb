@@ -10,6 +10,7 @@ type Settings = {
   exchange_rate_mode: "live" | "manual"; exchange_rate_manual: number;
   shipping_kampala_ugx: number; shipping_national_ugx: number; shipping_international_note: string;
   notify_email: string; notify_whatsapp: string;
+  staff_session_lifetime_hours: number;
 };
 
 const inputCls = "w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none";
@@ -94,6 +95,13 @@ export default function SettingsPage() {
           </Row>
           <Row label="WhatsApp number" hint="For future order/enquiry alerts.">
             <input value={form.notify_whatsapp} onChange={(e) => set("notify_whatsapp", e.target.value)} placeholder="+256…" className={inputCls} style={inputStyle} />
+          </Row>
+        </Section>
+
+        {/* Security */}
+        <Section title="Security" note="Protects the admin panel if a staff laptop or browser is left unattended.">
+          <Row label="Staff sign-in lasts (hours)" hint="Staff are signed out automatically after this many hours and must log in again. Lower is safer (1–168). Applies on next login.">
+            <input type="number" min={1} max={168} value={form.staff_session_lifetime_hours} onChange={(e) => set("staff_session_lifetime_hours", Number(e.target.value))} className={inputCls} style={inputStyle} />
           </Row>
         </Section>
 

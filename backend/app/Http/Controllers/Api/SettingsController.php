@@ -30,6 +30,7 @@ class SettingsController extends Controller
             'shipping_international_note' => ['sometimes', 'nullable', 'string', 'max:255'],
             'notify_email'               => ['sometimes', 'nullable', 'email', 'max:255'],
             'notify_whatsapp'            => ['sometimes', 'nullable', 'string', 'max:50'],
+            'staff_session_lifetime_hours' => ['sometimes', 'integer', 'min:1', 'max:168'],
         ]);
 
         Setting::put($data);

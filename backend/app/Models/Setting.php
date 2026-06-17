@@ -28,6 +28,9 @@ class Setting extends Model
         // Notifications
         'notify_email'    => 'support@vitorra.org',
         'notify_whatsapp' => '',
+        // Security — how long a staff (admin/ops) session stays signed in
+        // before it expires and must log in again (hours, 1–168).
+        'staff_session_lifetime_hours' => 8,
     ];
 
     /** Stored settings as key => decoded value (cached). */

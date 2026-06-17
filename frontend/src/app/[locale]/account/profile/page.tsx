@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, Save, Check } from "lucide-react";
-import { apiCustomer, customerAuth } from "@/lib/customer-auth";
+import { Loader2, Save, Check, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { apiCustomer, customerAuth, changeCustomerPassword } from "@/lib/customer-auth";
 
 type Profile = { name: string; email: string; company: string | null; phone: string | null; country: string | null };
 
@@ -65,6 +65,85 @@ export default function AccountProfile() {
           </div>
         </div>
       </div>
+
+      <PasswordCard t={t} />
+    </div>
+  );
+}
+
+function PasswordCard({ t }: { t: ReturnType<typeof useTranslations> }) {
+  const [current, setCurrent] = useState("");
+  const [next, setNext]       = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [show, setShow]       = useState(false);
+  const [saving, setSaving]   = useState(false);
+  const [done, setDone]       = useState(false);
+  const [error, setError]     = useState("");
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(""); setDone(false);
+    if (next.length < 8) { setError(t("passwordTooShortNew")); return; }
+    if (next !== confirm) { setError(t("passwordMismatch")); return; }
+    setSaving(true);
+    try {
+      await changeCustomerPassword(current, next);
+      setDone(true); setCurrent(""); setNext(""); setConfirm("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("saveFailed"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="bg-white rounded-[28px] border border-black/[0.05] shadow-card p-7 md:p-9 mt-6">
+      <h2 className="flex items-center gap-2 mb-6" style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "26px", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }}>
+        <ShieldCheck className="w-5 h-5" style={{ color: "#C5B27A" }} />{t("changePassword")}
+      </h2>
+      <div className="space-y-5">
+        <Field label={t("currentPassword")}>
+          <PwInput value={current} onChange={setCurrent} show={show} autoComplete="current-password" />
+        </Field>
+        <Field label={t("newPassword")} hint={t("passwordHint")}>
+          <PwInput value={next} onChange={setNext} show={show} autoComplete="new-password" />
+        </Field>
+        <Field label={t("confirmPassword")}>
+          <PwInput value={confirm} onChange={setConfirm} show={show} autoComplete="new-password" />
+        </Field>
+
+        <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#777" }}>
+          <input type="checkbox" checked={show} onChange={() => setShow((s) => !s)} className="w-3.5 h-3.5 rounded accent-[#C5B27A]" />
+          {t("showPasswords")}
+        </label>
+        <p className="text-xs" style={{ color: "#aaa" }}>{t("passwordOtherDevices")}</p>
+
+        {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
+        <div className="flex items-center gap-3 pt-3 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+          <button type="submit" disabled={saving || !current || !next || !confirm} className="btn-primary" style={{ height: "46px", opacity: saving || !current || !next || !confirm ? 0.6 : 1 }}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}{t("updatePassword")}
+          </button>
+          {done && <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#16A34A" }}><Check className="w-4 h-4" />{t("passwordChanged")}</span>}
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function PwInput({ value, onChange, show, autoComplete }: { value: string; onChange: (v: string) => void; show: boolean; autoComplete: string }) {
+  const [reveal, setReveal] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        type={show || reveal ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        autoComplete={autoComplete}
+        className={`${inputCls} pr-11`}
+      />
+      <button type="button" onClick={() => setReveal((r) => !r)} className="absolute right-4 top-1/2 -translate-y-1/2" style={{ color: "#bbb" }} tabIndex={-1}>
+        {show || reveal ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
     </div>
   );
 }

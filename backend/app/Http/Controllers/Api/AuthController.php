@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -33,14 +36,7 @@ class AuthController extends Controller
             'country'  => $data['country'] ?? 'Uganda',
         ]);
 
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return response()->json([
-            'data' => [
-                'user'  => $user->toAuthArray(),
-                'token' => $token,
-            ],
-        ], 201);
+        return response()->json(['data' => $this->issueToken($user)], 201);
     }
 
     /** Issue a Sanctum token on successful login */
@@ -57,15 +53,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $user  = Auth::user();
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return response()->json([
-            'data'  => [
-                'user'  => $user->toAuthArray(),
-                'token' => $token,
-            ],
-        ]);
+        return response()->json(['data' => $this->issueToken(Auth::user())]);
     }
 
     /** Revoke the current token (logout) */
@@ -82,5 +70,61 @@ class AuthController extends Controller
         return response()->json([
             'data' => $request->user()->toAuthArray(),
         ]);
+    }
+
+    /**
+     * Change the signed-in user's password (staff or customer).
+     * Requires the current password, and revokes every OTHER session so a
+     * stolen token elsewhere is killed the moment the password changes.
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password'         => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($data['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Your current password is incorrect.'],
+            ]);
+        }
+
+        $user->update(['password' => $data['password']]);
+
+        // Keep this session alive; sign out everywhere else.
+        $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
+
+        return response()->json(['message' => 'Password updated. Other sessions have been signed out.']);
+    }
+
+    /**
+     * Create a token whose lifetime reflects the account type. Staff sessions
+     * are short-lived (admin-configurable, default 8h) to limit the window of
+     * a hijacked token; customer portal sessions run longer for convenience.
+     */
+    private function issueToken(User $user): array
+    {
+        $token = $user->createToken('api-token', ['*'], $this->tokenExpiry($user));
+
+        return [
+            'user'       => $user->toAuthArray(),
+            'token'      => $token->plainTextToken,
+            'expires_at' => optional($token->accessToken->expires_at)->toIso8601String(),
+        ];
+    }
+
+    /** When a freshly issued token should expire, by role. */
+    private function tokenExpiry(User $user): CarbonInterface
+    {
+        if (in_array($user->role, ['admin', 'ops'], true)) {
+            $hours = (int) Setting::get('staff_session_lifetime_hours', 8);
+            $hours = max(1, min(168, $hours)); // clamp 1h–7d
+            return now()->addHours($hours);
+        }
+
+        return now()->addDays(30);
     }
 }

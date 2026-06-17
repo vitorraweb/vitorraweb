@@ -41,6 +41,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (pathname === "/admin/login") return;
     const u = auth.getUser();
     if (!u) { router.push("/admin/login"); return; }
+    // Session timeout (anti-hijacking): if the stored expiry has passed, sign
+    // out immediately rather than waiting for the next request to 401.
+    if (auth.isExpired()) { auth.clear(); router.push("/admin/login?expired=1"); return; }
     // Non-staff accounts (e.g. customer portal logins) have no admin-panel
     // access at all — bounce them out and clear the stale session.
     const role = u.role?.toLowerCase();
@@ -58,6 +61,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (current && current.href !== "/admin" && !canAccess(u, current)) {
       router.replace("/admin");
     }
+  }, [pathname, router]);
+
+  // While a tab is left open, watch the clock and sign out the moment the
+  // session expires — don't wait for the next click or API call.
+  useEffect(() => {
+    if (pathname === "/admin/login") return;
+    const id = setInterval(() => {
+      if (auth.isExpired()) { auth.clear(); router.push("/admin/login?expired=1"); }
+    }, 60_000);
+    return () => clearInterval(id);
   }, [pathname, router]);
 
   const logout = async () => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ExternalLink, LogOut } from "lucide-react";
+import { ChevronDown, ExternalLink, LogOut, ShieldCheck } from "lucide-react";
 import type { AdminUser } from "@/lib/auth";
 
 export type Paginated<T> = {
@@ -165,6 +165,16 @@ export function UserMenu({ user, onLogout }: { user: AdminUser; onLogout: () => 
             </span>
           </div>
           <div className="py-1">
+            <Link
+              href="/admin/profile"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#F2F2F2]"
+              style={{ color: "#454545" }}
+              role="menuitem"
+            >
+              <ShieldCheck className="w-4 h-4" style={{ color: "#999999" }} />
+              Profile &amp; security
+            </Link>
             <Link
               href="/"
               target="_blank"

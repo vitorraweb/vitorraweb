@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Loader2, Eye, EyeOff } from "lucide-react";
@@ -15,13 +15,19 @@ export default function AdminLoginPage() {
   const [show, setShow]       = useState(false);
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
+  const [expired, setExpired] = useState(false);
+
+  // Surface "your session expired" when bounced here after a timeout.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("expired") === "1") setExpired(true);
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setError("Both fields are required."); return; }
-    setError(""); setLoading(true);
+    setError(""); setExpired(false); setLoading(true);
     try {
-      const res = await apiAdmin<{ data: { token: string; user: { id: number; name: string; email: string; role: string } } }>(
+      const res = await apiAdmin<{ data: { token: string; expires_at: string | null; user: { id: number; name: string; email: string; role: string } } }>(
         "/auth/login",
         { method: "POST", body: JSON.stringify({ email, password }) }
       );
@@ -36,7 +42,7 @@ export default function AdminLoginPage() {
         setError("This account doesn't have admin panel access.");
         return;
       }
-      auth.save(res.data.token, res.data.user);
+      auth.save(res.data.token, res.data.user, res.data.expires_at);
       router.push("/admin");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed.");
@@ -62,6 +68,11 @@ export default function AdminLoginPage() {
         </div>
 
         <form onSubmit={submit} className="bg-white rounded-[24px] p-7 shadow-2xl space-y-5" style={{ border: "1px solid rgba(197,178,122,0.18)" }}>
+          {expired && (
+            <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(197,178,122,0.12)", color: "#7A6020", border: "1px solid rgba(197,178,122,0.3)" }}>
+              Your session expired for security. Please sign in again.
+            </div>
+          )}
           <div>
             <Label className="mb-2" style={{ color: "#1E1E1E" }}>Email</Label>
             <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@vitorra.org" className="h-11 rounded-xl px-3.5 focus-visible:ring-[#C5B27A]/30 focus-visible:border-[#C5B27A]" required />

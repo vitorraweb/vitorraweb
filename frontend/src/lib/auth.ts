@@ -1,8 +1,9 @@
 /* Minimal client-side auth helpers — token stored in localStorage.
    Replace with HttpOnly cookies + Sanctum CSRF for production hardening. */
 
-const TOKEN_KEY = "vitorra_admin_token";
-const USER_KEY  = "vitorra_admin_user";
+const TOKEN_KEY  = "vitorra_admin_token";
+const USER_KEY   = "vitorra_admin_user";
+const EXPIRY_KEY = "vitorra_admin_expiry";
 
 export type AdminUser = {
   id: number;
@@ -35,16 +36,30 @@ export const auth = {
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   },
-  save: (token: string, user: AdminUser): void => {
+  save: (token: string, user: AdminUser, expiresAt?: string | null): void => {
     try {
       localStorage.setItem(TOKEN_KEY, token);
       localStorage.setItem(USER_KEY, JSON.stringify(user));
+      if (expiresAt) localStorage.setItem(EXPIRY_KEY, expiresAt);
+      else localStorage.removeItem(EXPIRY_KEY);
     } catch { /* */ }
+  },
+  /** ISO timestamp at which this session expires, or null if open-ended. */
+  getExpiry: (): string | null => {
+    try { return localStorage.getItem(EXPIRY_KEY); } catch { return null; }
+  },
+  /** True once the stored session-expiry time has passed. */
+  isExpired: (): boolean => {
+    try {
+      const exp = localStorage.getItem(EXPIRY_KEY);
+      return !!exp && Date.now() >= new Date(exp).getTime();
+    } catch { return false; }
   },
   clear: (): void => {
     try {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(EXPIRY_KEY);
     } catch { /* */ }
   },
 };
@@ -61,7 +76,7 @@ export async function apiAdmin<T>(path: string, options?: RequestInit): Promise<
       ...(options?.headers ?? {}),
     },
   });
-  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login"; }
+  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Request failed" }));
     throw new Error(err.message ?? "Request failed");
@@ -93,7 +108,7 @@ export async function uploadAdmin<T>(path: string, form: FormData): Promise<T> {
     body: form,
     headers: { Accept: "application/json", Authorization: token ? `Bearer ${token}` : "" },
   });
-  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login"; }
+  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Upload failed" }));
     throw new Error(err.message ?? "Upload failed");
