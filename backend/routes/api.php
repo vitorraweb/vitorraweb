@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AccountingController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\BlogAdminController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\CareersController;
@@ -28,6 +30,7 @@ use App\Http\Controllers\Api\ReplyTemplateController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\SupplierAdminController;
+use App\Http\Controllers\Api\SupplierBillController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\UserAdminController;
@@ -255,6 +258,31 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/suppliers/{supplier}/status',   [SupplierAdminController::class, 'updateStatus']);
             Route::post('/suppliers/{supplier}/assign',    [SupplierAdminController::class, 'assignApprover']);
             Route::get('/supplier-documents/{document}/download', [SupplierAdminController::class, 'downloadDocument']);
+        });
+        // Accounting — money ledger (junior records, senior approves).
+        Route::middleware('perm:accounting')->prefix('accounting')->group(function () {
+            Route::get('/accounts',                       [AccountingController::class, 'accounts']);
+            Route::get('/categories',                     [AccountingController::class, 'categories']);
+            Route::get('/transactions',                   [AccountingController::class, 'transactions']);
+            Route::post('/transactions',                  [AccountingController::class, 'storeTransaction']);
+            Route::get('/transactions/{transaction}/receipt', [AccountingController::class, 'downloadReceipt']);
+            Route::get('/bills',                          [SupplierBillController::class, 'index']);
+            Route::post('/bills',                         [SupplierBillController::class, 'store']);
+            Route::post('/bills/{bill}/pay',              [SupplierBillController::class, 'pay']);
+            Route::get('/budgets',                        [BudgetController::class, 'index']);
+            Route::get('/reports',                        [AccountingController::class, 'reports']);
+        });
+        // Senior-finance-only actions (approval, account/category/budget management).
+        Route::middleware('perm:accounting_approve')->prefix('accounting')->group(function () {
+            Route::post('/accounts',                      [AccountingController::class, 'storeAccount']);
+            Route::patch('/accounts/{account}',           [AccountingController::class, 'updateAccount']);
+            Route::post('/categories',                    [AccountingController::class, 'storeCategory']);
+            Route::patch('/categories/{category}',        [AccountingController::class, 'updateCategory']);
+            Route::post('/transactions/{transaction}/approve', [AccountingController::class, 'approveTransaction']);
+            Route::post('/transactions/{transaction}/void',    [AccountingController::class, 'voidTransaction']);
+            Route::post('/bills/{bill}/void',             [SupplierBillController::class, 'void']);
+            Route::put('/budgets',                        [BudgetController::class, 'upsert']);
+            Route::delete('/budgets/{budget}',            [BudgetController::class, 'destroy']);
         });
 
         // System settings + staff management — admin role only (not ops), per the BRD.

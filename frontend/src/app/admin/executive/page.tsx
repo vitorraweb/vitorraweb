@@ -17,6 +17,10 @@ type Summary = {
   avg_response_hours: number | null;
   top_interest: { product: string; count: number }[];
   prospects: { total: number; reached: number; converted: number };
+  books: {
+    income: Record<string, number>; expense: Record<string, number>; net: Record<string, number>;
+    cash: Record<string, number>; payables: Record<string, number>; has_data: boolean;
+  };
 };
 
 const PERIODS: [string, string][] = [["mtd", "This month"], ["last_month", "Last month"], ["week", "Last 7 days"]];
@@ -91,6 +95,31 @@ export default function ExecutivePage() {
               <p className="text-2xl font-bold" style={{ color: "#1E1E1E" }}>{s.avg_response_hours !== null ? `${s.avg_response_hours} hrs` : "—"}</p>
             </Card>
           </div>
+
+          {/* From the books (accounting ledger) */}
+          {s.books?.has_data && (() => {
+            const cur = ["UGX", "USD", "EUR"].filter((c) => s.books.income[c] || s.books.expense[c] || s.books.cash[c] || s.books.payables[c]);
+            const moneyB = (c: string, a: number) => (c === "UGX" ? `UGX ${a.toLocaleString()}` : `${c === "USD" ? "$" : "€"}${(a / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
+            if (!cur.length) return null;
+            return (
+              <div className="bg-white rounded-[20px] border border-black/[0.06] p-6 mb-6">
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] mb-4" style={{ color: "#bbb" }}>From the books (recorded income & spending)</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {cur.map((c) => (
+                    <div key={c} className="rounded-[16px] p-4" style={{ background: "#FAFAF8" }}>
+                      <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "#bbb" }}>{c}</p>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between"><span style={{ color: "#16A34A" }}>Income</span><span className="tabular-nums">{moneyB(c, s.books.income[c] ?? 0)}</span></div>
+                        <div className="flex justify-between"><span style={{ color: "#C0392B" }}>Spent</span><span className="tabular-nums">{moneyB(c, s.books.expense[c] ?? 0)}</span></div>
+                        <div className="flex justify-between font-semibold pt-1 mt-1 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}><span>Profit</span><span className="tabular-nums" style={{ color: (s.books.net[c] ?? 0) >= 0 ? "#16A34A" : "#C0392B" }}>{moneyB(c, s.books.net[c] ?? 0)}</span></div>
+                        <div className="flex justify-between text-xs pt-1" style={{ color: "#999" }}><span>Cash on hand</span><span className="tabular-nums">{moneyB(c, s.books.cash[c] ?? 0)}</span></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* What customers want */}

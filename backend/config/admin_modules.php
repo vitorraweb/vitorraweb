@@ -32,6 +32,8 @@ return [
         'people'     => 'People (HR)',
         'executive'  => 'Executive report',
         'suppliers'  => 'Suppliers',
+        'accounting'         => 'Accounting',
+        'accounting_approve' => 'Accounting — approve',
     ],
 
     // department key => human label
@@ -46,9 +48,9 @@ return [
 
     // department key => default modules (editable per-person via the override)
     'departments' => [
-        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'newsletter', 'tasks', 'people', 'executive', 'suppliers'],
+        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'newsletter', 'tasks', 'people', 'executive', 'suppliers', 'accounting'],
         'operations' => ['dashboard', 'orders', 'enquiries', 'messages', 'customers', 'tasks', 'people', 'suppliers'],
-        'finance'    => ['dashboard', 'orders', 'customers', 'enquiries', 'tasks', 'people', 'executive', 'suppliers'],
+        'finance'    => ['dashboard', 'orders', 'customers', 'enquiries', 'tasks', 'people', 'executive', 'suppliers', 'accounting'],
         'marketing'  => ['dashboard', 'blog', 'media', 'prospects', 'enquiries', 'customers', 'newsletter', 'tasks'],
         'sales'      => ['dashboard', 'enquiries', 'prospects', 'customers', 'orders', 'tasks'],
         'it'         => ['dashboard', 'media', 'tasks'],

@@ -42,6 +42,8 @@ class ExecutiveReportService
             'avg_response_hours' => $this->avgResponseHours(),
             'top_interest'       => $this->topInterest($start, $end),
             'prospects'          => $this->prospectPipeline(),
+            // From the accounting ledger — recorded income/expenses/profit + cash on hand.
+            'books'              => app(FinanceReportService::class)->ledgerTotals($start, $end),
         ];
     }
 
