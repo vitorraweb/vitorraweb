@@ -39,15 +39,50 @@ The priority revenue product (FET) now has a **public full-line pricing guide an
 | Public Pages (Frontend) | **85%** | 15% | Homepage, About, 4 product pages (FET now w/ pricing + calculator), Enquire, Blog done; Coffee Shop gated |
 | Technology Foundation (SEO & Growth) | 50% | 50% | ISR on blog/homepage/shop; sitemap pending |
 | Security & Customer Trust | 60% | 40% | Server-side price validation added; active risks remain (see Known Issues) |
-| Business Operations (Orders, Admin) | 80% | 20% | Checkout built (orders + line items) but paused while coffee is gated; admin order management updated |
+| Business Operations (Orders, Admin) | 80% | 20% | Checkout built (orders + line items) but paused while coffee is gated; admin order management updated; **B2B installment plans added** |
 | Backend API & Integrations | 65% | 35% | Products, blog, enquiry, contact, orders/checkout, transactional email (Resend) wired; payment gateway pending |
 | Reliability & Uptime Systems | 30% | 70% | No monitoring in place |
+| **Internal Operations Platform** | **100%** | — | **Staff/HR portal, leave, monthly reports/probation, recruitment (AI CV), CEO report, supplier onboarding, B2B installments — all shipped (June 2026)** |
 
 ---
 
 ## Rebuild Progress Log
 
 The full week-by-week build history now lives in `planning/08-rebuild-progress-log.md` (moved out to keep this file under its 40k-char limit). The current state, what's built, and what's pending are captured in the sections below; git history holds the rest.
+
+---
+
+## Internal Operations Platform (June 2026)
+
+A full internal-operations suite was built on top of the marketing site (from the Head of Finance's brief). All shipped, tested (95 backend feature tests), and deployed.
+
+### Roles & surfaces
+- **Roles:** `admin`, `ops`, `employee`, `customer`. New `employee` role = staff-portal only (no admin panel).
+- **Three internal surfaces, one `users` table:** `/admin/*` (admin+ops), **`/staff/*`** (all staff — employee self-service), `/account/*` (customers). Plus public **`/careers`** and **`/suppliers`** (English-only, excluded from i18n middleware).
+- **Sessions:** tokens now expire — staff default **8h** (admin-editable in Settings → Security), customers 30 days. Self-service password change (`POST /auth/password`) for staff + customers.
+- **Role fix-up:** `php artisan staff:set-role <email> <admin|ops|employee>` (guards the last admin). Use this — never tinker — to change roles.
+
+### Admin modules (config/admin_modules.php)
+Added `people` (HR — ops/finance/leadership), `executive` (CEO report — leadership/finance), `suppliers` (ops/finance/leadership). Module access is per-department; **existing ops accounts with a custom permission set must have new modules ticked in `/admin/staff`**. Admins always get everything.
+
+### Phase 1 — Staff/HR portal (`/staff`)
+- **Profile & security** (own password change), **My documents** (private contract/HR files), **My supervisor**, **My team** (supervisors only).
+- **Leave:** apply (live working-day count excl. weekends + Uganda public holidays), rules — same-department clash, company-event blackout, annual-balance; sick leave requires a private medical doc; supervisor/HR approve; emails both ways. Admin: **Leave** (review), **Holidays** (Uganda 2026 seeded + company events). `holidays:notify` cron reminds staff ~3 days out.
+- **Monthly reports:** employees submit a checklist + summary; supervisors rate (1–5) + comment; reviewed reports lock. Admin **Probation** watch: staff in first 3 months, days remaining, report status.
+- **Recruitment:** public **`/careers`** (job board + apply with **AI CV extraction** via Claude Haiku → auto-fill), admin **Careers** (openings + applicant pipeline, CV download). CVs on private disk; `applications:purge` enforces 6-month retention.
+
+### Phase 2 — CEO finance report (`/admin/executive`)
+- Business-language dashboard: money received (paid, by currency) + period-over-period deltas, money owed, new orders/enquiries, conversion, response time, product demand, prospect pipeline. Periods: this month / last month / last 7 days.
+- `executive:report` cron emails the summary to the CEO (To) + Ops/Finance (CC) **monthly + weekly**. Recipients set in Settings → Executive report (`exec_report_to` / `exec_report_cc`).
+
+### Phase 3 — Supplier onboarding (`/suppliers`, admin `/admin/suppliers`)
+- Public self-registration: company details, **bank details (encrypted at rest)**, document uploads (private disk). Admin review: approve / reject / request-info, document download, **assign an approver** (creates a Task). Ops emailed on new applications.
+
+### Phase 4 — B2B installments (admin order detail + `/account` portal)
+- Per-order **pay-in-parts plan** (`installment_plans` + `installment_payments`). Staff record each part-payment offline; order `payment_status` auto-updates pending → partial → paid (receipt generated on full pay). Customer sees the schedule + balance in their portal. Provider-agnostic — pay-online-in-parts can layer on when a gateway lands.
+
+### Pending (operations setup, not code)
+- Set executive-report recipients in `/admin/settings`; grant new modules to existing ops accounts; optionally link **Careers** + **Suppliers** in the public footer; set `ANTHROPIC_API_KEY` on prod to enable CV auto-fill (works manually without it).
 
 ---
 
