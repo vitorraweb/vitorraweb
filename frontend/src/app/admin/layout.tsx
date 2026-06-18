@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, Menu, X, CheckSquare, Workflow, Send, LayoutTemplate } from "lucide-react";
+import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, Menu, X, CheckSquare, Workflow, Send, LayoutTemplate, CalendarCheck, CalendarDays, Hourglass } from "lucide-react";
 import { auth, apiAdmin, canAccess } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 import { UserMenu } from "@/components/admin/admin-ui";
@@ -25,6 +25,9 @@ const nav: NavItem[] = [
   { label: "Newsletter",  href: "/admin/newsletter",   icon: Send,          module: "newsletter" },
   { label: "Templates",   href: "/admin/templates",    icon: LayoutTemplate, module: "customers" },
   { label: "Tasks",       href: "/admin/tasks",        icon: CheckSquare,   module: "tasks" },
+  { label: "Leave",       href: "/admin/leave",        icon: CalendarCheck, module: "people" },
+  { label: "Probation",   href: "/admin/probation",    icon: Hourglass,     module: "people" },
+  { label: "Holidays",    href: "/admin/holidays",     icon: CalendarDays,  module: "people" },
   { label: "Settings",    href: "/admin/settings",     icon: Settings,      adminOnly: true },
   { label: "Staff",       href: "/admin/staff",        icon: Users,         adminOnly: true },
 ];

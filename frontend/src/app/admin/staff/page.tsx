@@ -1,21 +1,25 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { Loader2, UserPlus, ChevronDown, Save, Trash2, KeyRound, Plus, X } from "lucide-react";
-import { apiAdmin, auth } from "@/lib/auth";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { Loader2, UserPlus, ChevronDown, Save, Trash2, KeyRound, Plus, X, Upload, Download, FileLock2 } from "lucide-react";
+import { apiAdmin, auth, uploadAdmin, downloadFile } from "@/lib/auth";
 import { PageHeader, Empty } from "@/components/admin/admin-ui";
 
 type Doc = { label: string; url: string };
+type PrivateDoc = { id: number; type: string; title: string; original_name: string | null; size: number | null; created_at: string };
 type Staff = {
   id: number;
   name: string;
   email: string;
-  role: "admin" | "ops";
+  role: "admin" | "ops" | "employee";
   phone?: string | null;
   department?: string | null;
+  supervisor_id?: number | null;
   job_title?: string | null;
+  job_description?: string | null;
   start_date?: string | null;
   staff_status?: string | null;
+  leave_entitlement_days?: number | null;
   permissions?: string[] | null;
   documents?: Doc[] | null;
   notes?: string | null;
@@ -26,7 +30,12 @@ type Registry = {
   department_modules: Record<string, string[]>;
 };
 
-const ROLE_LABEL: Record<string, string> = { admin: "Admin", ops: "Ops" };
+const ROLE_LABEL: Record<string, string> = { admin: "Admin", ops: "Ops", employee: "Employee" };
+const ROLE_BADGE: Record<string, { background: string; color: string }> = {
+  admin:    { background: "rgba(197,178,122,0.16)", color: "#7A6020" },
+  ops:      { background: "rgba(59,130,246,0.12)", color: "#2563EB" },
+  employee: { background: "rgba(0,0,0,0.06)", color: "#666" },
+};
 const STATUS = { active: "Active", on_leave: "On leave", left: "Left" } as const;
 const STATUS_STYLE: Record<string, { background: string; color: string }> = {
   active:   { background: "rgba(34,197,94,0.12)", color: "#16A34A" },
@@ -47,6 +56,13 @@ export default function StaffPage() {
   const [rowMsg, setRowMsg] = useState("");
   const [pw, setPw] = useState("");
 
+  // Private HR files (contract, ID) for the currently-open staff member.
+  const [privDocs, setPrivDocs] = useState<PrivateDoc[]>([]);
+  const [upTitle, setUpTitle] = useState("");
+  const [upType, setUpType] = useState("contract");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
   const [addOpen, setAddOpen] = useState(false);
   const [add, setAdd] = useState({ name: "", email: "", role: "ops", password: "", department: "operations", job_title: "" });
   const [adding, setAdding] = useState(false);
@@ -64,10 +80,35 @@ export default function StaffPage() {
   useEffect(() => { load(); }, [load]);
 
   const expand = (s: Staff) => {
-    setRowMsg(""); setPw("");
+    setRowMsg(""); setPw(""); setPrivDocs([]); setUpTitle(""); setUpType("contract");
     if (open === s.id) { setOpen(null); setDraft(null); return; }
     setOpen(s.id);
     setDraft({ ...s, permissions: s.permissions ?? null, documents: s.documents ?? [] });
+    apiAdmin<{ data: PrivateDoc[] }>(`/admin/users/${s.id}/documents`).then((r) => setPrivDocs(r.data)).catch(() => setPrivDocs([]));
+  };
+
+  const uploadPrivateDoc = async (userId: number) => {
+    const file = fileRef.current?.files?.[0];
+    if (!file || !upTitle.trim()) { setRowMsg("Choose a file and give it a title."); return; }
+    setUploading(true); setRowMsg("");
+    try {
+      const form = new FormData();
+      form.append("file", file); form.append("type", upType); form.append("title", upTitle.trim());
+      const res = await uploadAdmin<{ data: PrivateDoc[] }>(`/admin/users/${userId}/documents`, form);
+      setPrivDocs(res.data); setUpTitle(""); if (fileRef.current) fileRef.current.value = "";
+      setRowMsg("File uploaded.");
+    } catch (e) { setRowMsg(e instanceof Error ? e.message : "Upload failed."); }
+    finally { setUploading(false); }
+  };
+
+  const deletePrivateDoc = async (docId: number) => {
+    if (!confirm("Delete this file permanently?")) return;
+    try { await apiAdmin(`/admin/staff-documents/${docId}`, { method: "DELETE" }); setPrivDocs((p) => p.filter((d) => d.id !== docId)); }
+    catch (e) { setRowMsg(e instanceof Error ? e.message : "Delete failed."); }
+  };
+
+  const downloadPrivateDoc = async (d: PrivateDoc) => {
+    try { await downloadFile(`/staff/documents/${d.id}/download`, d.original_name ?? d.title); } catch { /* ignore */ }
   };
 
   const setD = <K extends keyof Staff>(k: K, v: Staff[K]) => setDraft((d) => (d ? { ...d, [k]: v } : d));
@@ -108,8 +149,10 @@ export default function StaffPage() {
         method: "PATCH",
         body: JSON.stringify({
           name: draft.name, email: draft.email, role: draft.role, phone: draft.phone,
-          department: draft.department, job_title: draft.job_title, start_date: draft.start_date,
-          staff_status: draft.staff_status, permissions: draft.permissions,
+          department: draft.department, supervisor_id: draft.supervisor_id || null,
+          job_title: draft.job_title, job_description: draft.job_description, start_date: draft.start_date,
+          staff_status: draft.staff_status, leave_entitlement_days: draft.leave_entitlement_days,
+          permissions: draft.permissions,
           documents: (draft.documents ?? []).filter((d) => d.label.trim() && d.url.trim()),
           notes: draft.notes,
         }),
@@ -155,6 +198,7 @@ export default function StaffPage() {
             </select>
             <input value={add.job_title} onChange={(e) => setAdd({ ...add, job_title: e.target.value })} placeholder="Job title" className={inputCls} style={inputStyle} />
             <select value={add.role} onChange={(e) => setAdd({ ...add, role: e.target.value })} className={inputCls} style={inputStyle}>
+              <option value="employee">Employee — staff portal only (no admin)</option>
               <option value="ops">Ops — scoped to their department</option>
               <option value="admin">Admin — full access</option>
             </select>
@@ -200,7 +244,7 @@ export default function StaffPage() {
                   </div>
                   {s.department && <span className="text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0 hidden sm:inline" style={{ background: "#F2F2F2", color: "#666" }}>{reg.departments[s.department] ?? s.department}</span>}
                   <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0" style={STATUS_STYLE[s.staff_status ?? "active"] ?? STATUS_STYLE.active}>{STATUS[(s.staff_status ?? "active") as keyof typeof STATUS] ?? s.staff_status}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0" style={s.role === "admin" ? { background: "rgba(197,178,122,0.16)", color: "#7A6020" } : { background: "rgba(59,130,246,0.12)", color: "#2563EB" }}>{ROLE_LABEL[s.role] ?? s.role}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0" style={ROLE_BADGE[s.role] ?? ROLE_BADGE.ops}>{ROLE_LABEL[s.role] ?? s.role}</span>
                   <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "#BBB" }} />
                 </button>
 
@@ -220,7 +264,13 @@ export default function StaffPage() {
                       </Field>
                       <Field label="Role">
                         <select value={d.role} onChange={(e) => setD("role", e.target.value as Staff["role"])} className={inputCls} style={inputStyle}>
-                          <option value="ops">Ops</option><option value="admin">Admin</option>
+                          <option value="employee">Employee</option><option value="ops">Ops</option><option value="admin">Admin</option>
+                        </select>
+                      </Field>
+                      <Field label="Reports to (supervisor)">
+                        <select value={d.supervisor_id ?? ""} onChange={(e) => setD("supervisor_id", e.target.value ? Number(e.target.value) : null)} className={inputCls} style={inputStyle}>
+                          <option value="">— None —</option>
+                          {list.filter((u) => u.id !== d.id).map((u) => <option key={u.id} value={u.id}>{u.name}{u.job_title ? ` (${u.job_title})` : ""}</option>)}
                         </select>
                       </Field>
                       <Field label="Start date"><input value={d.start_date ?? ""} onChange={(e) => setD("start_date", e.target.value)} type="date" className={inputCls} style={inputStyle} /></Field>
@@ -229,7 +279,13 @@ export default function StaffPage() {
                           <option value="active">Active</option><option value="on_leave">On leave</option><option value="left">Left</option>
                         </select>
                       </Field>
+                      <Field label="Annual leave entitlement (days)"><input value={d.leave_entitlement_days ?? 21} onChange={(e) => setD("leave_entitlement_days", e.target.value ? Number(e.target.value) : null)} type="number" min={0} max={365} className={inputCls} style={inputStyle} /></Field>
                     </div>
+
+                    {/* Job description */}
+                    <Field label="Job description (shown to the employee in their portal)">
+                      <textarea value={d.job_description ?? ""} onChange={(e) => setD("job_description", e.target.value)} rows={4} placeholder="Key responsibilities and duties…" className={inputCls} style={inputStyle} />
+                    </Field>
 
                     {/* Access / permissions */}
                     <div className="mt-4 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
@@ -274,6 +330,36 @@ export default function StaffPage() {
                           </div>
                         ))}
                         <button onClick={() => setD("documents", [...(d.documents ?? []), { label: "", url: "" }])} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Plus className="w-3.5 h-3.5" />Add document</button>
+                      </div>
+                    </div>
+
+                    {/* Private HR files (contract, ID) — uploaded to private storage, visible to the employee */}
+                    <div className="mt-4 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: "#777" }}><FileLock2 className="w-3.5 h-3.5" />Private HR files</span>
+                      <p className="text-xs mt-1 mb-2" style={{ color: "#999" }}>Contract, ID, certificates. Stored privately and shown to {d.name.split(" ")[0]} in their staff portal.</p>
+                      <div className="space-y-2 mb-3">
+                        {privDocs.length === 0 && <p className="text-xs" style={{ color: "#bbb" }}>No private files yet.</p>}
+                        {privDocs.map((doc) => (
+                          <div key={doc.id} className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "#F7F7F5" }}>
+                            <FileLock2 className="w-4 h-4 shrink-0" style={{ color: "#7A6020" }} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate" style={{ color: "#1E1E1E" }}>{doc.title}</p>
+                              <p className="text-[11px]" style={{ color: "#999" }}>{doc.type} · {new Date(doc.created_at).toLocaleDateString("en-GB")}</p>
+                            </div>
+                            <button onClick={() => downloadPrivateDoc(doc)} className="shrink-0 p-2 rounded-lg" style={{ background: "#fff", color: "#555" }} title="Download"><Download className="w-4 h-4" /></button>
+                            <button onClick={() => deletePrivateDoc(doc.id)} className="shrink-0 p-2 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }} title="Delete"><X className="w-4 h-4" /></button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select value={upType} onChange={(e) => setUpType(e.target.value)} className="text-sm rounded-xl px-3 py-2 border" style={inputStyle}>
+                          <option value="contract">Contract</option><option value="id">ID</option><option value="certificate">Certificate</option><option value="other">Other</option>
+                        </select>
+                        <input value={upTitle} onChange={(e) => setUpTitle(e.target.value)} placeholder="Title (e.g. Employment contract)" className="text-sm rounded-xl px-3 py-2 border flex-1 min-w-[12rem]" style={inputStyle} />
+                        <input ref={open === d.id ? fileRef : undefined} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="text-sm" />
+                        <button onClick={() => uploadPrivateDoc(d.id)} disabled={uploading} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "#1E1E1E", color: "#fff", opacity: uploading ? 0.7 : 1 }}>
+                          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}Upload
+                        </button>
                       </div>
                     </div>
 

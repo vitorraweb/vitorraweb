@@ -1,0 +1,127 @@
+/* Staff (employee self-service) auth — kept separate from the admin and
+   customer sessions so the three never collide. Token in localStorage under a
+   staff-specific key. Internal portal: English only, mirrors the admin session
+   model (including auto-expiry). */
+
+const TOKEN_KEY  = "vitorra_staff_token";
+const USER_KEY   = "vitorra_staff_user";
+const EXPIRY_KEY = "vitorra_staff_expiry";
+
+export type StaffUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: "admin" | "ops" | "employee";
+};
+
+/** Roles allowed into the staff portal (everyone on the team, not customers). */
+export const STAFF_ROLES = ["admin", "ops", "employee"];
+
+const base = () => process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+
+export const staffAuth = {
+  getToken: (): string | null => {
+    try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+  },
+  getUser: (): StaffUser | null => {
+    try { const r = localStorage.getItem(USER_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
+  },
+  save: (token: string, user: StaffUser, expiresAt?: string | null): void => {
+    try {
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      if (expiresAt) localStorage.setItem(EXPIRY_KEY, expiresAt);
+      else localStorage.removeItem(EXPIRY_KEY);
+    } catch { /* */ }
+  },
+  getExpiry: (): string | null => {
+    try { return localStorage.getItem(EXPIRY_KEY); } catch { return null; }
+  },
+  isExpired: (): boolean => {
+    try {
+      const exp = localStorage.getItem(EXPIRY_KEY);
+      return !!exp && Date.now() >= new Date(exp).getTime();
+    } catch { return false; }
+  },
+  clear: (): void => {
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(EXPIRY_KEY);
+    } catch { /* */ }
+  },
+};
+
+/** Authenticated JSON fetch for the staff portal. */
+export async function apiStaff<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = staffAuth.getToken();
+  const res = await fetch(`${base()}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: token ? `Bearer ${token}` : "",
+      ...(options?.headers ?? {}),
+    },
+  });
+  if (res.status === 401) { staffAuth.clear(); window.location.href = "/staff/login?expired=1"; }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Request failed" }));
+    throw new Error(err.message ?? "Request failed");
+  }
+  return res.json();
+}
+
+/** Multipart upload for the staff portal (browser sets the boundary). */
+export async function uploadStaff<T>(path: string, form: FormData): Promise<T> {
+  const token = staffAuth.getToken();
+  const res = await fetch(`${base()}${path}`, {
+    method: "POST",
+    body: form,
+    headers: { Accept: "application/json", Authorization: token ? `Bearer ${token}` : "" },
+  });
+  if (res.status === 401) { staffAuth.clear(); window.location.href = "/staff/login?expired=1"; }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Upload failed" }));
+    throw new Error(err.message ?? "Upload failed");
+  }
+  return res.json();
+}
+
+/** Download a private file from an authorized endpoint as a browser download. */
+export async function downloadStaffFile(path: string, filename: string): Promise<void> {
+  const token = staffAuth.getToken();
+  const res = await fetch(`${base()}${path}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  if (!res.ok) throw new Error("Download failed");
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Log in to the staff portal; rejects non-staff (e.g. customer) accounts. */
+export async function loginStaff(email: string, password: string): Promise<StaffUser> {
+  const res = await fetch(`${base()}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Login failed" }));
+    throw new Error(err.message ?? "Login failed");
+  }
+  const { data } = (await res.json()) as { data: { token: string; expires_at: string | null; user: StaffUser } };
+  if (!STAFF_ROLES.includes(data.user.role)) {
+    // Revoke the token we just issued — this account isn't a staff account.
+    fetch(`${base()}/auth/logout`, {
+      method: "POST",
+      headers: { Accept: "application/json", Authorization: `Bearer ${data.token}` },
+    }).catch(() => { /* best-effort */ });
+    throw new Error("This account doesn't have staff portal access.");
+  }
+  staffAuth.save(data.token, data.user, data.expires_at);
+  return data.user;
+}

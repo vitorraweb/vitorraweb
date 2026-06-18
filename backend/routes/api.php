@@ -5,11 +5,15 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogAdminController;
 use App\Http\Controllers\Api\BlogController;
+use App\Http\Controllers\Api\CompanyEventController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\EnquiryController;
+use App\Http\Controllers\Api\HolidayController;
+use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\ExchangeRateController;
 use App\Http\Controllers\Api\MediaController;
+use App\Http\Controllers\Api\MonthlyReportController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
@@ -18,6 +22,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProspectController;
 use App\Http\Controllers\Api\ReplyTemplateController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\UserAdminController;
 use Illuminate\Support\Facades\Route;
@@ -83,6 +88,34 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/documents',                       [AccountController::class, 'documents']);
         Route::get('/profile',                         [AccountController::class, 'profile']);
         Route::put('/profile',                         [AccountController::class, 'updateProfile']);
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | Staff self-service portal (all team members: admin, ops, employee)
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('role:admin,ops,employee')->prefix('staff')->group(function () {
+        Route::get('/me',                      [StaffController::class, 'me']);
+        Route::get('/team',                    [StaffController::class, 'team']);
+        Route::get('/documents',               [StaffController::class, 'documents']);
+        Route::get('/documents/{document}/download', [StaffController::class, 'download']);
+
+        // Leave — apply, track, and (for supervisors/HR) review.
+        Route::get('/leave',                       [LeaveController::class, 'index']);
+        Route::get('/leave/preview',               [LeaveController::class, 'preview']);
+        Route::get('/leave/pending',               [LeaveController::class, 'pending']);
+        Route::post('/leave',                      [LeaveController::class, 'store']);
+        Route::post('/leave/{leave}/cancel',       [LeaveController::class, 'cancel']);
+        Route::post('/leave/{leave}/decision',     [LeaveController::class, 'decision']);
+        Route::get('/leave/{leave}/note',          [LeaveController::class, 'downloadNote']);
+        Route::get('/holidays',                    [LeaveController::class, 'holidays']);
+
+        // Monthly work reports — author your own; review your team's.
+        Route::get('/reports',                     [MonthlyReportController::class, 'index']);
+        Route::get('/reports/team',                [MonthlyReportController::class, 'team']);
+        Route::post('/reports',                    [MonthlyReportController::class, 'upsert']);
+        Route::post('/reports/{report}/review',    [MonthlyReportController::class, 'review']);
     });
 
     /*
@@ -165,6 +198,21 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::match(['put', 'patch'], '/blog/posts/{post}', [BlogAdminController::class, 'update']);
             Route::delete('/blog/posts/{post}',         [BlogAdminController::class, 'destroy']);
         });
+        // People / HR — leave overview & review, public holidays, company events.
+        Route::middleware('perm:people')->group(function () {
+            Route::get('/leave',                    [LeaveController::class, 'all']);
+            Route::post('/leave/{leave}/decision',  [LeaveController::class, 'decision']);
+            Route::get('/leave/{leave}/note',       [LeaveController::class, 'downloadNote']);
+            Route::get('/holidays',                 [HolidayController::class, 'index']);
+            Route::post('/holidays',                [HolidayController::class, 'store']);
+            Route::match(['put', 'patch'], '/holidays/{holiday}', [HolidayController::class, 'update']);
+            Route::delete('/holidays/{holiday}',    [HolidayController::class, 'destroy']);
+            Route::get('/events',                   [CompanyEventController::class, 'index']);
+            Route::post('/events',                  [CompanyEventController::class, 'store']);
+            Route::match(['put', 'patch'], '/events/{event}', [CompanyEventController::class, 'update']);
+            Route::delete('/events/{event}',        [CompanyEventController::class, 'destroy']);
+            Route::get('/probation',                [MonthlyReportController::class, 'probation']);
+        });
 
         // System settings + staff management — admin role only (not ops), per the BRD.
         Route::middleware('role:admin')->group(function () {
@@ -175,6 +223,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/users/{user}',              [UserAdminController::class, 'update']);
             Route::post('/users/{user}/password',      [UserAdminController::class, 'resetPassword']);
             Route::delete('/users/{user}',             [UserAdminController::class, 'destroy']);
+            // Private HR documents (employment contract, ID, certificates)
+            Route::get('/users/{user}/documents',          [UserAdminController::class, 'documents']);
+            Route::post('/users/{user}/documents',         [UserAdminController::class, 'uploadDocument']);
+            Route::delete('/staff-documents/{document}',   [UserAdminController::class, 'deleteDocument']);
         });
     });
 });

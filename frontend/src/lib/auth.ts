@@ -99,6 +99,19 @@ export async function downloadCsv(path: string, filename: string): Promise<void>
   URL.revokeObjectURL(url);
 }
 
+/** Download a file from an authorized admin endpoint as a browser download. */
+export async function downloadFile(path: string, filename: string): Promise<void> {
+  const token = auth.getToken();
+  const base  = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const res   = await fetch(`${base}${path}`, { headers: { Authorization: token ? `Bearer ${token}` : "" } });
+  if (!res.ok) throw new Error("Download failed");
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
 /* Multipart upload — lets the browser set the Content-Type boundary (don't set it). */
 export async function uploadAdmin<T>(path: string, form: FormData): Promise<T> {
   const token = auth.getToken();

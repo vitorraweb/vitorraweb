@@ -23,3 +23,7 @@ Schedule::command('backup:monitor')->daily()->at('02:00');
 // Personalised "what needs attention today" email for each staff member.
 Schedule::command('digest:send')->dailyAt('07:00')
     ->onFailure(fn () => logger()->error('Scheduled digest:send failed'));
+
+// Remind active staff ~3 days before each Uganda public holiday.
+Schedule::command('holidays:notify --days=3')->dailyAt('08:00')
+    ->onFailure(fn () => logger()->error('Scheduled holidays:notify failed'));
