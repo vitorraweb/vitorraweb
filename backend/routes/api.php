@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\ProspectController;
 use App\Http\Controllers\Api\ReplyTemplateController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StaffController;
+use App\Http\Controllers\Api\SupplierAdminController;
+use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\UserAdminController;
 use Illuminate\Support\Facades\Route;
@@ -56,6 +58,8 @@ Route::get('/careers/openings/{slug}', [CareersController::class, 'show']);
 Route::middleware('throttle:15,1')->group(function () {
     Route::post('/careers/extract', [CareersController::class, 'extractCv']);
     Route::post('/careers/apply',   [CareersController::class, 'apply']);
+    // Supplier self-onboarding (public, throttled — accepts file uploads).
+    Route::post('/suppliers/onboard', [SupplierController::class, 'onboard']);
 });
 
 // Newsletter — public signup + token-based unsubscribe (GDPR)
@@ -236,6 +240,14 @@ Route::middleware('auth:sanctum')->group(function () {
         // Executive report — CEO business summary (leadership/finance/admin).
         Route::middleware('perm:executive')->group(function () {
             Route::get('/executive/summary', [ExecutiveController::class, 'summary']);
+        });
+        // Suppliers — onboarding review & approval (operations/finance/leadership).
+        Route::middleware('perm:suppliers')->group(function () {
+            Route::get('/suppliers',                       [SupplierAdminController::class, 'index']);
+            Route::get('/suppliers/{supplier}',            [SupplierAdminController::class, 'show']);
+            Route::patch('/suppliers/{supplier}/status',   [SupplierAdminController::class, 'updateStatus']);
+            Route::post('/suppliers/{supplier}/assign',    [SupplierAdminController::class, 'assignApprover']);
+            Route::get('/supplier-documents/{document}/download', [SupplierAdminController::class, 'downloadDocument']);
         });
 
         // System settings + staff management — admin role only (not ops), per the BRD.
