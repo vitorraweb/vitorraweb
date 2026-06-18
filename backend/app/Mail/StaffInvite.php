@@ -21,12 +21,23 @@ class StaffInvite extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Vitorra admin account is ready',
+            subject: 'Welcome to Vitorra — your account is ready',
         );
     }
 
     public function content(): Content
     {
-        return new Content(view: 'emails.staff-invite');
+        // Employees use the staff self-service portal; admin/ops use the admin panel.
+        $isEmployee = $this->staff->role === 'employee';
+
+        return new Content(
+            view: 'emails.staff-invite',
+            with: [
+                'firstName'   => trim(explode(' ', (string) $this->staff->name)[0]) ?: $this->staff->name,
+                'roleLabel'   => $this->staff->job_title ?: ucfirst((string) $this->staff->role),
+                'loginUrl'    => $isEmployee ? 'https://vitorra.org/staff/login' : 'https://vitorra.org/admin/login',
+                'portalLabel' => $isEmployee ? 'staff portal' : 'admin dashboard',
+            ],
+        );
     }
 }
