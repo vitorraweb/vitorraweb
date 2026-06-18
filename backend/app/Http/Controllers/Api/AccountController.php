@@ -24,12 +24,39 @@ class AccountController extends Controller
 
     public function order(Request $request, string $reference): JsonResponse
     {
-        $order = Order::with('items')
+        $order = Order::with(['items', 'installmentPlan.payments'])
             ->whereRaw('lower(customer_email) = ?', [$this->email($request)])
             ->where('reference', $reference)
             ->firstOrFail();
 
-        return response()->json(['data' => $order]);
+        $data = $order->toArray();
+        $data['installment_plan'] = $this->customerPlan($order);
+
+        return response()->json(['data' => $data]);
+    }
+
+    /** Read-only payment-plan view for the customer (schedule, paid, balance). */
+    private function customerPlan(Order $order): ?array
+    {
+        $plan = $order->installmentPlan;
+        if (! $plan) {
+            return null;
+        }
+
+        $paid = (int) $plan->payments->whereNotNull('paid_at')->sum('amount');
+
+        return [
+            'total'   => (int) $order->total,
+            'paid'    => $paid,
+            'balance' => max(0, (int) $order->total - $paid),
+            'payments' => $plan->payments->map(fn ($p) => [
+                'label'    => $p->label,
+                'amount'   => $p->amount,
+                'due_date' => optional($p->due_date)->toDateString(),
+                'paid'     => $p->paid_at !== null,
+                'paid_at'  => optional($p->paid_at)->toDateString(),
+            ])->values()->all(),
+        ];
     }
 
     /**

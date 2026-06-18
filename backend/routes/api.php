@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\EnquiryController;
 use App\Http\Controllers\Api\HolidayController;
+use App\Http\Controllers\Api\InstallmentController;
 use App\Http\Controllers\Api\JobAdminController;
 use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\ExchangeRateController;
@@ -159,6 +160,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('perm:orders')->group(function () {
             Route::get('/orders',                       [AdminController::class, 'orders']);
             Route::patch('/orders/{order}',             [AdminController::class, 'updateOrder']);
+            // B2B installments — pay-in-parts plans recorded against an order.
+            Route::get('/orders/{order}/installments',    [InstallmentController::class, 'show']);
+            Route::post('/orders/{order}/installments',   [InstallmentController::class, 'store']);
+            Route::delete('/orders/{order}/installments', [InstallmentController::class, 'destroy']);
+            Route::post('/installments/{installment}/pay',   [InstallmentController::class, 'pay']);
+            Route::post('/installments/{installment}/unpay', [InstallmentController::class, 'unpay']);
         });
         Route::middleware('perm:prospects')->group(function () {
             Route::get('/prospects',                        [ProspectController::class, 'index']);

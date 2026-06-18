@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, ChevronDown, FileText } from "lucide-react";
+import { Loader2, ChevronDown, FileText, CreditCard, Check, Trash2, Plus } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { StatusBadge, PageHeader, formatDate, Empty, type Paginated } from "@/components/admin/admin-ui";
 
@@ -167,6 +167,8 @@ export default function OrdersPage() {
                     ))}
                   </div>
 
+                  <Installments orderId={o.id} total={o.total} currency={o.currency} onPaymentStatus={(ps) => setList((l) => l.map((x) => x.id === o.id ? { ...x, payment_status: ps } : x))} />
+
                   {o.documents && o.documents.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-semibold" style={{ color: "#777" }}>Documents:</span>
@@ -206,5 +208,126 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
     <button onClick={onClick} className="text-xs font-semibold px-3.5 py-2 rounded-full capitalize transition-colors" style={{ background: active ? "#1E1E1E" : "#FFFFFF", color: active ? "#FFFFFF" : "#777777", border: "1px solid rgba(0,0,0,0.06)" }}>
       {children}
     </button>
+  );
+}
+
+type Pay = { id: number; label: string | null; amount: number; due_date: string | null; paid: boolean; paid_at: string | null; method: string | null; reference: string | null };
+type Plan = { currency: string; total: number; paid: number; balance: number; plan: { id: number; note: string | null; payments: Pay[] } | null };
+type Draft = { label: string; amount: number; due_date: string };
+
+function Installments({ orderId, total, currency, onPaymentStatus }: { orderId: number; total: number; currency: string; onPaymentStatus: (ps: string) => void }) {
+  const [data, setData]     = useState<Plan | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [parts, setParts]   = useState(3);
+  const [rows, setRows]     = useState<Draft[] | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { const r = await apiAdmin<{ data: Plan }>(`/admin/orders/${orderId}/installments`); setData(r.data); }
+    catch { /* */ } finally { setLoading(false); }
+  }, [orderId]);
+  useEffect(() => { load(); }, [load]);
+
+  const pushStatus = (paid: number) => onPaymentStatus(paid <= 0 ? "pending" : paid >= total ? "paid" : "partial");
+
+  const generate = () => {
+    const n = Math.max(1, Math.min(24, parts));
+    const base = Math.floor(total / n);
+    const arr: Draft[] = [];
+    let alloc = 0;
+    for (let i = 0; i < n; i++) {
+      const amount = i === n - 1 ? total - alloc : base;
+      alloc += amount;
+      const d = new Date(); d.setMonth(d.getMonth() + i + 1);
+      arr.push({ label: `Instalment ${i + 1}`, amount, due_date: d.toISOString().slice(0, 10) });
+    }
+    setRows(arr);
+  };
+
+  const setRow = (i: number, patch: Partial<Draft>) => setRows((rs) => (rs ? rs.map((r, j) => (j === i ? { ...r, ...patch } : r)) : rs));
+
+  const save = async () => {
+    if (!rows?.length) return;
+    setSaving(true);
+    try {
+      const r = await apiAdmin<{ data: Plan }>(`/admin/orders/${orderId}/installments`, { method: "POST", body: JSON.stringify({ installments: rows }) });
+      setData(r.data); setRows(null); pushStatus(r.data.paid);
+    } catch { /* */ } finally { setSaving(false); }
+  };
+
+  const mark = async (id: number, action: "pay" | "unpay") => {
+    try { const r = await apiAdmin<{ data: Plan }>(`/admin/installments/${id}/${action}`, { method: "POST", body: "{}" }); setData(r.data); pushStatus(r.data.paid); }
+    catch { /* */ }
+  };
+
+  const del = async () => {
+    if (!confirm("Delete this payment plan?")) return;
+    try { await apiAdmin(`/admin/orders/${orderId}/installments`, { method: "DELETE" }); load(); } catch { /* */ }
+  };
+
+  if (loading) return null;
+  const draftTotal = rows?.reduce((n, r) => n + (Number(r.amount) || 0), 0) ?? 0;
+
+  return (
+    <div className="mb-4 rounded-[16px] p-4" style={{ background: "#FAFAF8", border: "1px solid rgba(0,0,0,0.05)" }}>
+      <div className="flex items-center gap-2 mb-3">
+        <CreditCard className="w-4 h-4" style={{ color: "#C5B27A" }} />
+        <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "#777" }}>Payment plan (pay in parts)</span>
+      </div>
+
+      {data?.plan ? (
+        <>
+          <div className="flex flex-wrap gap-x-6 gap-y-1 mb-3 text-xs">
+            <span style={{ color: "#777" }}>Total: <strong style={{ color: "#1E1E1E" }}>{money(data.total, currency)}</strong></span>
+            <span style={{ color: "#16A34A" }}>Paid: <strong>{money(data.paid, currency)}</strong></span>
+            <span style={{ color: "#C0392B" }}>Balance: <strong>{money(data.balance, currency)}</strong></span>
+          </div>
+          <div className="space-y-1.5 mb-3">
+            {data.plan.payments.map((p) => (
+              <div key={p.id} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 text-xs">
+                <span className="flex-1 min-w-0" style={{ color: "#444" }}>
+                  <span className="font-semibold">{p.label}</span> · {money(p.amount, currency)}
+                  {p.due_date && <span style={{ color: "#999" }}> · due {formatDate(p.due_date)}</span>}
+                </span>
+                {p.paid ? (
+                  <>
+                    <span className="inline-flex items-center gap-1 font-semibold" style={{ color: "#16A34A" }}><Check className="w-3.5 h-3.5" />Paid</span>
+                    <button onClick={() => mark(p.id, "unpay")} className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>Undo</button>
+                  </>
+                ) : (
+                  <button onClick={() => mark(p.id, "pay")} className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}>Record payment</button>
+                )}
+              </div>
+            ))}
+          </div>
+          <button onClick={del} className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><Trash2 className="w-3 h-3" />Delete plan</button>
+        </>
+      ) : rows ? (
+        <>
+          <p className="text-[11px] mb-2" style={{ color: "#999" }}>Adjust amounts/dates if needed, then save. Scheduled: {money(draftTotal, currency)} of {money(total, currency)}.</p>
+          <div className="space-y-1.5 mb-3">
+            {rows.map((r, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                <input value={r.label} onChange={(e) => setRow(i, { label: e.target.value })} className="rounded-lg px-2 py-1 border w-28" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                <input type="number" value={r.amount} onChange={(e) => setRow(i, { amount: Number(e.target.value) })} className="rounded-lg px-2 py-1 border w-28 tabular-nums" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                <input type="date" value={r.due_date} onChange={(e) => setRow(i, { due_date: e.target.value })} className="rounded-lg px-2 py-1 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full disabled:opacity-50" style={{ background: "#1E1E1E", color: "#fff" }}>{saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}Save plan</button>
+            <button onClick={() => setRows(null)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>Cancel</button>
+          </div>
+        </>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs" style={{ color: "#999" }}>Split {money(total, currency)} into</span>
+          <input type="number" min={1} max={24} value={parts} onChange={(e) => setParts(Number(e.target.value))} className="rounded-lg px-2 py-1 border w-16 text-xs" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+          <span className="text-xs" style={{ color: "#999" }}>parts (monthly)</span>
+          <button onClick={generate} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}><Plus className="w-3.5 h-3.5" />Set up plan</button>
+        </div>
+      )}
+    </div>
   );
 }
