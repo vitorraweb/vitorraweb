@@ -59,4 +59,11 @@ return [
         'mode'          => env('PAYPAL_MODE', 'sandbox'),
     ],
 
+    // Anthropic Claude — used to auto-extract applicant details from uploaded CVs.
+    // When the key is unset, CV auto-fill is skipped gracefully (manual entry).
+    'anthropic' => [
+        'key'      => env('ANTHROPIC_API_KEY'),
+        'cv_model' => env('ANTHROPIC_CV_MODEL', 'claude-haiku-4-5'),
+    ],
+
 ];

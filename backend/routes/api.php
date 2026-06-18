@@ -5,11 +5,13 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogAdminController;
 use App\Http\Controllers\Api\BlogController;
+use App\Http\Controllers\Api\CareersController;
 use App\Http\Controllers\Api\CompanyEventController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\EnquiryController;
 use App\Http\Controllers\Api\HolidayController;
+use App\Http\Controllers\Api\JobAdminController;
 use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\ExchangeRateController;
 use App\Http\Controllers\Api\MediaController;
@@ -45,6 +47,15 @@ Route::get('/blog/posts/{slug}',  [BlogController::class, 'show']);
 // Forms — submit enquiry or contact message
 Route::post('/enquiries', [EnquiryController::class, 'store']);
 Route::post('/contact',   [ContactController::class, 'store']);
+
+// Careers — public job listings + two-step application (CV upload + AI prefill).
+// The upload/apply endpoints are throttled (they hit a paid AI API + write files).
+Route::get('/careers/openings',        [CareersController::class, 'index']);
+Route::get('/careers/openings/{slug}', [CareersController::class, 'show']);
+Route::middleware('throttle:15,1')->group(function () {
+    Route::post('/careers/extract', [CareersController::class, 'extractCv']);
+    Route::post('/careers/apply',   [CareersController::class, 'apply']);
+});
 
 // Newsletter — public signup + token-based unsubscribe (GDPR)
 Route::post('/newsletter/subscribe',   [NewsletterController::class, 'subscribe']);
@@ -212,6 +223,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::match(['put', 'patch'], '/events/{event}', [CompanyEventController::class, 'update']);
             Route::delete('/events/{event}',        [CompanyEventController::class, 'destroy']);
             Route::get('/probation',                [MonthlyReportController::class, 'probation']);
+            // Recruitment — job openings + applicants.
+            Route::get('/job-openings',             [JobAdminController::class, 'openings']);
+            Route::post('/job-openings',            [JobAdminController::class, 'storeOpening']);
+            Route::match(['put', 'patch'], '/job-openings/{opening}', [JobAdminController::class, 'updateOpening']);
+            Route::delete('/job-openings/{opening}', [JobAdminController::class, 'destroyOpening']);
+            Route::get('/applications',             [JobAdminController::class, 'applications']);
+            Route::patch('/applications/{application}', [JobAdminController::class, 'updateApplication']);
+            Route::get('/applications/{application}/cv', [JobAdminController::class, 'downloadCv']);
         });
 
         // System settings + staff management — admin role only (not ops), per the BRD.

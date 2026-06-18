@@ -27,3 +27,7 @@ Schedule::command('digest:send')->dailyAt('07:00')
 // Remind active staff ~3 days before each Uganda public holiday.
 Schedule::command('holidays:notify --days=3')->dailyAt('08:00')
     ->onFailure(fn () => logger()->error('Scheduled holidays:notify failed'));
+
+// Enforce the 6-month candidate-data retention policy for job applications.
+Schedule::command('applications:purge')->dailyAt('02:30')
+    ->onFailure(fn () => logger()->error('Scheduled applications:purge failed'));

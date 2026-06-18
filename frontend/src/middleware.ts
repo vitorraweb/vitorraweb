@@ -8,9 +8,10 @@ export const config = {
        - /api            (backend proxy / API routes)
        - /admin          (internal staff panel — English-only, never prefixed)
        - /staff          (employee self-service portal — English-only)
+       - /careers        (public recruitment portal — English-only)
        - /_next /_vercel (framework internals)
        - any path with a "." (static assets: images, sitemap.xml, robots.txt …)
      NOTE: /account is intentionally NOT excluded — the customer portal is
      localized along with the rest of the public site.                         */
-  matcher: ["/((?!api|admin|staff|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|admin|staff|careers|_next|_vercel|.*\\..*).*)"],
 };
