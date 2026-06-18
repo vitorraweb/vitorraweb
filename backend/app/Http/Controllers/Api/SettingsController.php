@@ -31,6 +31,8 @@ class SettingsController extends Controller
             'notify_email'               => ['sometimes', 'nullable', 'email', 'max:255'],
             'notify_whatsapp'            => ['sometimes', 'nullable', 'string', 'max:50'],
             'staff_session_lifetime_hours' => ['sometimes', 'integer', 'min:1', 'max:168'],
+            'exec_report_to'             => ['sometimes', 'nullable', 'email', 'max:255'],
+            'exec_report_cc'             => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
         Setting::put($data);

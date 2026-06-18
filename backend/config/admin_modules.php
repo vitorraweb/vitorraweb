@@ -30,6 +30,7 @@ return [
         'newsletter' => 'Newsletter',
         'tasks'      => 'Tasks',
         'people'     => 'People (HR)',
+        'executive'  => 'Executive report',
     ],
 
     // department key => human label
@@ -44,9 +45,9 @@ return [
 
     // department key => default modules (editable per-person via the override)
     'departments' => [
-        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'newsletter', 'tasks', 'people'],
+        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'newsletter', 'tasks', 'people', 'executive'],
         'operations' => ['dashboard', 'orders', 'enquiries', 'messages', 'customers', 'tasks', 'people'],
-        'finance'    => ['dashboard', 'orders', 'customers', 'enquiries', 'tasks', 'people'],
+        'finance'    => ['dashboard', 'orders', 'customers', 'enquiries', 'tasks', 'people', 'executive'],
         'marketing'  => ['dashboard', 'blog', 'media', 'prospects', 'enquiries', 'customers', 'newsletter', 'tasks'],
         'sales'      => ['dashboard', 'enquiries', 'prospects', 'customers', 'orders', 'tasks'],
         'it'         => ['dashboard', 'media', 'tasks'],

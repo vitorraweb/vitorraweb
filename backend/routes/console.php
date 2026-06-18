@@ -31,3 +31,9 @@ Schedule::command('holidays:notify --days=3')->dailyAt('08:00')
 // Enforce the 6-month candidate-data retention policy for job applications.
 Schedule::command('applications:purge')->dailyAt('02:30')
     ->onFailure(fn () => logger()->error('Scheduled applications:purge failed'));
+
+// CEO business summary — full previous month on the 1st, plus a weekly snapshot.
+Schedule::command('executive:report --period=last_month')->monthlyOn(1, '07:30')
+    ->onFailure(fn () => logger()->error('Scheduled monthly executive:report failed'));
+Schedule::command('executive:report --period=week')->weeklyOn(1, '07:30')
+    ->onFailure(fn () => logger()->error('Scheduled weekly executive:report failed'));

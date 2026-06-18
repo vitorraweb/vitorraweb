@@ -31,6 +31,9 @@ class Setting extends Model
         // Security — how long a staff (admin/ops) session stays signed in
         // before it expires and must log in again (hours, 1–168).
         'staff_session_lifetime_hours' => 8,
+        // Executive report — who the scheduled CEO summary is emailed to.
+        'exec_report_to' => '',   // CEO inbox (To); falls back to notify_email when blank
+        'exec_report_cc' => '',   // comma-separated Ops/Finance addresses (CC)
     ];
 
     /** Stored settings as key => decoded value (cached). */

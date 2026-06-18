@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, Menu, X, CheckSquare, Workflow, Send, LayoutTemplate, CalendarCheck, CalendarDays, Hourglass, Briefcase } from "lucide-react";
+import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, Menu, X, CheckSquare, Workflow, Send, LayoutTemplate, CalendarCheck, CalendarDays, Hourglass, Briefcase, TrendingUp } from "lucide-react";
 import { auth, apiAdmin, canAccess } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 import { UserMenu } from "@/components/admin/admin-ui";
@@ -13,6 +13,7 @@ type NavItem = { label: string; href: string; icon: typeof LayoutDashboard; modu
 
 const nav: NavItem[] = [
   { label: "Dashboard",   href: "/admin",              icon: LayoutDashboard },
+  { label: "Executive",   href: "/admin/executive",    icon: TrendingUp,    module: "executive" },
   { label: "Enquiries",   href: "/admin/enquiries",    icon: MessageSquare, module: "enquiries" },
   { label: "Customers",   href: "/admin/customers",    icon: Contact,       module: "customers" },
   { label: "Pipeline",    href: "/admin/pipeline",     icon: Workflow,      module: "customers" },

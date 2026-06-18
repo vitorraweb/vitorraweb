@@ -11,6 +11,7 @@ type Settings = {
   shipping_kampala_ugx: number; shipping_national_ugx: number; shipping_international_note: string;
   notify_email: string; notify_whatsapp: string;
   staff_session_lifetime_hours: number;
+  exec_report_to: string; exec_report_cc: string;
 };
 
 const inputCls = "w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none";
@@ -95,6 +96,16 @@ export default function SettingsPage() {
           </Row>
           <Row label="WhatsApp number" hint="For future order/enquiry alerts.">
             <input value={form.notify_whatsapp} onChange={(e) => set("notify_whatsapp", e.target.value)} placeholder="+256…" className={inputCls} style={inputStyle} />
+          </Row>
+        </Section>
+
+        {/* Executive report */}
+        <Section title="Executive report" note="Where the automatic CEO business summary is emailed (monthly + weekly).">
+          <Row label="Send to (CEO)" hint="Falls back to the team email above if left blank.">
+            <input type="email" value={form.exec_report_to} onChange={(e) => set("exec_report_to", e.target.value)} placeholder="solomon@vitorra.org" className={inputCls} style={inputStyle} />
+          </Row>
+          <Row label="Copy to (CC)" hint="Comma-separated — e.g. Ops &amp; Finance.">
+            <input value={form.exec_report_cc} onChange={(e) => set("exec_report_cc", e.target.value)} placeholder="ops@vitorra.org, finance@vitorra.org" className={inputCls} style={inputStyle} />
           </Row>
         </Section>
 

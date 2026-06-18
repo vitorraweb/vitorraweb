@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\JobAdminController;
 use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\ExchangeRateController;
+use App\Http\Controllers\Api\ExecutiveController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\MonthlyReportController;
 use App\Http\Controllers\Api\NewsletterController;
@@ -231,6 +232,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/applications',             [JobAdminController::class, 'applications']);
             Route::patch('/applications/{application}', [JobAdminController::class, 'updateApplication']);
             Route::get('/applications/{application}/cv', [JobAdminController::class, 'downloadCv']);
+        });
+        // Executive report — CEO business summary (leadership/finance/admin).
+        Route::middleware('perm:executive')->group(function () {
+            Route::get('/executive/summary', [ExecutiveController::class, 'summary']);
         });
 
         // System settings + staff management — admin role only (not ops), per the BRD.
