@@ -32,6 +32,14 @@ Schedule::command('holidays:notify --days=3')->dailyAt('08:00')
 Schedule::command('applications:purge')->dailyAt('02:30')
     ->onFailure(fn () => logger()->error('Scheduled applications:purge failed'));
 
+// Chase overdue, unpaid customer invoices (at most once every 3 days each).
+Schedule::command('invoices:remind')->dailyAt('09:00')
+    ->onFailure(fn () => logger()->error('Scheduled invoices:remind failed'));
+
+// Generate this month's recurring draft transactions (rent, salaries, subscriptions).
+Schedule::command('finance:recurring')->dailyAt('06:00')
+    ->onFailure(fn () => logger()->error('Scheduled finance:recurring failed'));
+
 // CEO business summary — full previous month on the 1st, plus a weekly snapshot.
 Schedule::command('executive:report --period=last_month')->monthlyOn(1, '07:30')
     ->onFailure(fn () => logger()->error('Scheduled monthly executive:report failed'));

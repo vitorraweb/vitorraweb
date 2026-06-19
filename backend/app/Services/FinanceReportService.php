@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\FinanceAccount;
 use App\Models\FinanceTransaction;
+use App\Models\Invoice;
 use App\Models\SupplierBill;
 use Carbon\Carbon;
 
@@ -34,6 +35,34 @@ class FinanceReportService
             'cash'         => $this->cash(),
             'payables'     => $this->payables(),
         ];
+    }
+
+    /**
+     * VAT summary for a period: output VAT (charged on invoices issued) minus
+     * input VAT (paid within approved expenses) = net VAT payable, per currency.
+     */
+    public function vatReport(string $period): array
+    {
+        [$start, $end, $label] = $this->window($period);
+
+        $output = Invoice::whereNotIn('status', ['draft', 'void'])
+            ->whereDate('issue_date', '>=', $start)->whereDate('issue_date', '<=', $end)
+            ->selectRaw('currency, SUM(vat_total) s')->groupBy('currency')->pluck('s', 'currency');
+
+        $input = FinanceTransaction::where('type', 'expense')->where('status', 'approved')
+            ->whereBetween('occurred_on', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
+            ->selectRaw('currency, SUM(vat_amount) s')->groupBy('currency')->pluck('s', 'currency');
+
+        $rows = [];
+        foreach (self::CURRENCIES as $c) {
+            $o = (int) ($output[$c] ?? 0);
+            $i = (int) ($input[$c] ?? 0);
+            if ($o || $i) {
+                $rows[$c] = ['output' => $o, 'input' => $i, 'payable' => $o - $i];
+            }
+        }
+
+        return ['period_label' => $label, 'by_currency' => $rows];
     }
 
     /** Compact per-currency totals for the executive dashboard (windowed P&L + snapshots). */

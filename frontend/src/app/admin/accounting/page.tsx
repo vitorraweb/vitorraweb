@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Check, X, Plus, Download, Wallet, Landmark, Banknote } from "lucide-react";
+import { Loader2, Check, X, Plus, Download, Wallet, Landmark, Banknote, Sparkles, Send, FileText, Repeat, Trash2 } from "lucide-react";
 import { apiAdmin, uploadAdmin, downloadFile, auth, canAccess } from "@/lib/auth";
 import { PageHeader, Empty } from "@/components/admin/admin-ui";
 
@@ -10,13 +10,13 @@ const money = (c: string, a: number) => (c === "UGX" ? `UGX ${a.toLocaleString()
 const cls = "w-full text-sm rounded-xl px-3 py-2 border outline-none focus:border-[#C5B27A]";
 const st = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
 
-type Tab = "overview" | "transactions" | "accounts" | "bills" | "budgets";
+type Tab = "overview" | "invoices" | "transactions" | "accounts" | "bills" | "budgets" | "recurring";
 
 export default function AccountingPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const canApprove = canAccess(auth.getUser(), { module: "accounting_approve" });
 
-  const tabs: [Tab, string][] = [["overview", "Overview"], ["transactions", "Transactions"], ["accounts", "Accounts"], ["bills", "Bills"], ["budgets", "Budgets"]];
+  const tabs: [Tab, string][] = [["overview", "Overview"], ["invoices", "Invoices"], ["transactions", "Transactions"], ["accounts", "Accounts"], ["bills", "Bills"], ["budgets", "Budgets"], ["recurring", "Recurring"]];
 
   return (
     <div className="pb-12">
@@ -27,10 +27,12 @@ export default function AccountingPage() {
         ))}
       </div>
       {tab === "overview" && <Overview />}
+      {tab === "invoices" && <Invoices canApprove={canApprove} />}
       {tab === "transactions" && <Transactions canApprove={canApprove} />}
       {tab === "accounts" && <Accounts canApprove={canApprove} />}
       {tab === "bills" && <Bills canApprove={canApprove} />}
       {tab === "budgets" && <Budgets canApprove={canApprove} />}
+      {tab === "recurring" && <Recurring canApprove={canApprove} />}
     </div>
   );
 }
@@ -47,15 +49,23 @@ type Report = {
   payables: Record<string, number>;
 };
 
+type Vat = { by_currency: Record<string, { output: number; input: number; payable: number }> };
+
 function Overview() {
   const [period, setPeriod] = useState("mtd");
   const [r, setR] = useState<Report | null>(null);
+  const [vat, setVat] = useState<Vat | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { const res = await apiAdmin<{ data: Report }>(`/admin/accounting/reports?period=${period}`); setR(res.data); }
-    catch { setR(null); } finally { setLoading(false); }
+    try {
+      const [res, v] = await Promise.all([
+        apiAdmin<{ data: Report }>(`/admin/accounting/reports?period=${period}`),
+        apiAdmin<{ data: Vat }>(`/admin/accounting/vat-report?period=${period}`).catch(() => ({ data: { by_currency: {} } as Vat })),
+      ]);
+      setR(res.data); setVat(v.data);
+    } catch { setR(null); } finally { setLoading(false); }
   }, [period]);
   useEffect(() => { load(); }, [load]);
 
@@ -64,12 +74,15 @@ function Overview() {
   const nonZero = CURRENCIES.filter((c) => r.income.by_currency[c] || r.expense.by_currency[c] || r.cash.by_currency[c] || r.payables[c]);
   const cur = nonZero.length ? nonZero : ["UGX"];
 
+  const vatRows = vat ? Object.entries(vat.by_currency) : [];
+
   return (
     <div>
-      <div className="flex gap-2 mb-5">
+      <div className="flex items-center gap-2 mb-5 flex-wrap">
         {[["mtd", "This month"], ["last_month", "Last month"], ["week", "Last 7 days"]].map(([v, l]) => (
           <button key={v} onClick={() => setPeriod(v)} className="text-xs font-semibold px-3.5 py-2 rounded-full" style={period === v ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{l}</button>
         ))}
+        <button onClick={() => downloadFile("/admin/accounting/transactions/export", `vitorra-transactions-${new Date().toISOString().slice(0, 10)}.csv`)} className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Download className="w-3.5 h-3.5" />Export for accountant</button>
       </div>
       <p className="text-xs mb-4" style={{ color: "#999" }}>Showing <strong style={{ color: "#7A6020" }}>{r.period_label}</strong></p>
 
@@ -116,6 +129,21 @@ function Overview() {
           )}
         </Panel>
       </div>
+
+      {/* VAT summary */}
+      {vatRows.length > 0 && (
+        <div className="bg-white rounded-[20px] border border-black/[0.06] p-6 mt-4">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] mb-3" style={{ color: "#bbb" }}>VAT this period</h3>
+          <div className="space-y-1.5 text-sm">
+            {vatRows.map(([c, v]) => (
+              <div key={c} className="flex justify-between">
+                <span style={{ color: "#454545" }}>{c}: charged {money(c, v.output)} − paid {money(c, v.input)}</span>
+                <span className="tabular-nums font-semibold" style={{ color: v.payable >= 0 ? "#C0392B" : "#16A34A" }}>{v.payable >= 0 ? "Payable " : "Reclaim "}{money(c, Math.abs(v.payable))}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -138,8 +166,9 @@ function Transactions({ canApprove }: { canApprove: boolean }) {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [msg, setMsg] = useState("");
-  const [form, setForm] = useState({ type: "expense", finance_account_id: "", transfer_to_account_id: "", finance_category_id: "", sector: "", amount: "", occurred_on: new Date().toISOString().slice(0, 10), description: "" });
+  const [form, setForm] = useState({ type: "expense", finance_account_id: "", transfer_to_account_id: "", finance_category_id: "", sector: "", amount: "", vat_rate: "", occurred_on: new Date().toISOString().slice(0, 10), description: "" });
   const [receipt, setReceipt] = useState<File | null>(null);
 
   const load = useCallback(async () => {
@@ -165,10 +194,31 @@ function Transactions({ canApprove }: { canApprove: boolean }) {
       Object.entries(form).forEach(([k, v]) => { if (v) fd.append(k, v); });
       if (receipt) fd.append("receipt", receipt);
       await uploadAdmin("/admin/accounting/transactions", fd);
-      setForm({ ...form, amount: "", description: "" }); setReceipt(null);
+      setForm({ ...form, amount: "", description: "", vat_rate: "" }); setReceipt(null);
       load();
     } catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); }
     finally { setAdding(false); }
+  };
+
+  // sevDesk-style "document capture" — read the receipt and pre-fill the form.
+  const autofill = async () => {
+    if (!receipt) { setMsg("Choose a receipt file first."); return; }
+    setExtracting(true); setMsg("");
+    try {
+      const fd = new FormData(); fd.append("file", receipt);
+      const res = await uploadAdmin<{ data: { vendor: string; date: string | null; amount_minor: number; vat_rate: number; description: string } | null }>("/admin/accounting/extract-receipt", fd);
+      const d = res.data;
+      if (!d) { setMsg("Couldn't read that receipt — please fill it in manually (or set the AI key)."); return; }
+      setForm((f) => ({
+        ...f,
+        amount: d.amount_minor ? String(d.amount_minor) : f.amount,
+        description: [d.vendor, d.description].filter(Boolean).join(" — ") || f.description,
+        occurred_on: d.date ?? f.occurred_on,
+        vat_rate: d.vat_rate ? String(d.vat_rate) : f.vat_rate,
+      }));
+      setMsg("Filled from the receipt — please check the amount and pick a category.");
+    } catch (e) { setMsg(e instanceof Error ? e.message : "Couldn't read receipt."); }
+    finally { setExtracting(false); }
   };
 
   const act = async (id: number, action: "approve" | "void") => {
@@ -204,6 +254,9 @@ function Transactions({ canApprove }: { canApprove: boolean }) {
             </select>
           )}
           <input type="number" min={1} value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="Amount (e.g. UGX 50000 → 50000)" className={cls} style={st} />
+          {form.type !== "transfer" && (
+            <input type="number" min={0} max={100} value={form.vat_rate} onChange={(e) => setForm({ ...form, vat_rate: e.target.value })} placeholder="VAT % (optional)" className={cls} style={st} />
+          )}
           <select value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} className={cls} style={st}>
             <option value="">Sector (optional)…</option>
             {sectors.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -211,12 +264,15 @@ function Transactions({ canApprove }: { canApprove: boolean }) {
           <input type="date" value={form.occurred_on} onChange={(e) => setForm({ ...form, occurred_on: e.target.value })} className={cls} style={st} />
           <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" className={`${cls} sm:col-span-2`} style={st} />
         </div>
-        <div className="flex items-center gap-3 mt-3">
+        <div className="flex items-center gap-3 mt-3 flex-wrap">
           <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setReceipt(e.target.files?.[0] ?? null)} className="text-xs" />
+          {receipt && form.type !== "transfer" && (
+            <button onClick={autofill} disabled={extracting} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(197,178,122,0.16)", color: "#7A6020" }}>{extracting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}Auto-fill from receipt</button>
+          )}
           <button onClick={submit} disabled={adding} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full ml-auto" style={{ background: "#1E1E1E", color: "#fff", opacity: adding ? 0.6 : 1 }}>{adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Record (draft)</button>
         </div>
-        {msg && <p className="text-sm mt-2" style={{ color: "#C0392B" }}>{msg}</p>}
-        <p className="text-[11px] mt-2" style={{ color: "#bbb" }}>Amounts are whole shillings for UGX, or cents for USD/EUR. Recorded as draft until a senior officer approves.</p>
+        {msg && <p className="text-sm mt-2" style={{ color: /Filled|recorded/.test(msg) ? "#16A34A" : "#C0392B" }}>{msg}</p>}
+        <p className="text-[11px] mt-2" style={{ color: "#bbb" }}>Amounts are whole shillings for UGX, or cents for USD/EUR. Recorded as draft until a senior officer approves. Attach a receipt and tap “Auto-fill” to read it automatically.</p>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
@@ -453,6 +509,209 @@ function Panel({ icon: Icon, title, children }: { icon: typeof Wallet; title: st
     <div className="bg-white rounded-[20px] border border-black/[0.06] p-6">
       <div className="flex items-center gap-2 mb-4"><Icon className="w-4 h-4" style={{ color: "#C5B27A" }} /><h3 className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: "#bbb" }}>{title}</h3></div>
       {children}
+    </div>
+  );
+}
+
+/* ── Invoices (accounts receivable) ───────────────────────────────────── */
+
+type Inv = { id: number; number: string; customer_name: string; currency: string; total: number; amount_paid: number; balance: number; status: string; is_overdue: boolean; due_date: string | null };
+type Line = { description: string; quantity: number; unit_price: number; vat_rate: number };
+
+const INV_STATUS: Record<string, { bg: string; fg: string }> = {
+  draft: { bg: "rgba(0,0,0,0.06)", fg: "#777" }, sent: { bg: "rgba(59,130,246,0.12)", fg: "#2563EB" },
+  partial: { bg: "rgba(197,178,122,0.16)", fg: "#7A6020" }, paid: { bg: "rgba(34,197,94,0.12)", fg: "#16A34A" }, void: { bg: "rgba(0,0,0,0.06)", fg: "#999" },
+};
+
+function Invoices({ canApprove }: { canApprove: boolean }) {
+  const [list, setList] = useState<Inv[]>([]);
+  const [accounts, setAccounts] = useState<Acct[]>([]);
+  const [defaultVat, setDefaultVat] = useState(0);
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [msg, setMsg] = useState("");
+  const blank = { customer_name: "", customer_email: "", customer_address: "", currency: "UGX", sector: "", issue_date: new Date().toISOString().slice(0, 10), due_date: "", notes: "" };
+  const [form, setForm] = useState(blank);
+  const [lines, setLines] = useState<Line[]>([{ description: "", quantity: 1, unit_price: 0, vat_rate: 0 }]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams(); if (status) params.set("status", status);
+      const [inv, ac] = await Promise.all([
+        apiAdmin<{ data: Inv[]; default_vat: number }>(`/admin/accounting/invoices?${params}`),
+        apiAdmin<{ data: Acct[] }>("/admin/accounting/accounts"),
+      ]);
+      setList(inv.data); setDefaultVat(inv.default_vat); setAccounts(ac.data);
+    } catch { setList([]); } finally { setLoading(false); }
+  }, [status]);
+  useEffect(() => { load(); }, [load]);
+
+  const setLine = (i: number, patch: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
+  const sub = lines.reduce((n, l) => n + l.quantity * l.unit_price, 0);
+  const vat = lines.reduce((n, l) => n + Math.round((l.quantity * l.unit_price * l.vat_rate) / 100), 0);
+
+  const create = async () => {
+    if (!form.customer_name.trim() || !lines.some((l) => l.description.trim())) { setMsg("Customer name and at least one line are required."); return; }
+    setMsg("");
+    try {
+      await apiAdmin("/admin/accounting/invoices", { method: "POST", body: JSON.stringify({ ...form, due_date: form.due_date || null, items: lines.filter((l) => l.description.trim()) }) });
+      setForm(blank); setLines([{ description: "", quantity: 1, unit_price: 0, vat_rate: 0 }]); setCreating(false); load();
+    } catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); }
+  };
+
+  const send = async (i: Inv) => { try { await apiAdmin(`/admin/accounting/invoices/${i.id}/send`, { method: "POST" }); setMsg(`Invoice ${i.number} sent.`); load(); } catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); } };
+  const pay = async (i: Inv) => {
+    const acct = accounts.find((a) => a.currency === i.currency);
+    if (!acct) { setMsg(`No ${i.currency} account to receive into — add one under Accounts.`); return; }
+    try { await apiAdmin(`/admin/accounting/invoices/${i.id}/payment`, { method: "POST", body: JSON.stringify({ finance_account_id: acct.id }) }); setMsg("Payment recorded — a senior officer approves it to settle the invoice."); load(); } catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); }
+  };
+  const voidInv = async (i: Inv) => { if (!confirm(`Void invoice ${i.number}?`)) return; try { await apiAdmin(`/admin/accounting/invoices/${i.id}/void`, { method: "POST" }); load(); } catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); } };
+
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        {[["", "All"], ["sent", "Sent"], ["partial", "Partial"], ["paid", "Paid"], ["overdue", "Overdue"], ["draft", "Draft"]].map(([v, l]) => (
+          <button key={v} onClick={() => setStatus(v)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={status === v ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{l}</button>
+        ))}
+        <button onClick={() => { setCreating((c) => !c); setForm((f) => ({ ...f })); setLines((ls) => ls.map((l) => ({ ...l, vat_rate: l.vat_rate || defaultVat })) ); }} className="ml-auto inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#1E1E1E", color: "#fff" }}><Plus className="w-4 h-4" />New invoice</button>
+      </div>
+
+      {creating && (
+        <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+            <input value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} placeholder="Customer name" className={`${cls} sm:col-span-2`} style={st} />
+            <input value={form.customer_email} onChange={(e) => setForm({ ...form, customer_email: e.target.value })} placeholder="Customer email" className={`${cls} sm:col-span-2`} style={st} />
+            <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={cls} style={st}>{CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+            <select value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} className={cls} style={st}><option value="">Sector…</option>{["FET", "SEAL", "COFFEE", "LOGISTICS", "GENERAL"].map((s) => <option key={s} value={s}>{s}</option>)}</select>
+            <label className="text-xs flex items-center gap-1" style={{ color: "#999" }}>Issue<input type="date" value={form.issue_date} onChange={(e) => setForm({ ...form, issue_date: e.target.value })} className="text-sm rounded-lg px-2 py-1.5 border ml-1 w-full" style={st} /></label>
+            <label className="text-xs flex items-center gap-1" style={{ color: "#999" }}>Due<input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} className="text-sm rounded-lg px-2 py-1.5 border ml-1 w-full" style={st} /></label>
+          </div>
+          {/* Line items */}
+          <div className="space-y-2 mb-3">
+            {lines.map((l, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input value={l.description} onChange={(e) => setLine(i, { description: e.target.value })} placeholder="Description" className={`${cls} flex-1`} style={st} />
+                <input type="number" min={1} value={l.quantity} onChange={(e) => setLine(i, { quantity: Number(e.target.value) })} className="text-sm rounded-xl px-2 py-2 border w-16" style={st} title="Qty" />
+                <input type="number" min={0} value={l.unit_price} onChange={(e) => setLine(i, { unit_price: Number(e.target.value) })} placeholder="Unit" className="text-sm rounded-xl px-2 py-2 border w-28" style={st} title="Unit price" />
+                <input type="number" min={0} max={100} value={l.vat_rate} onChange={(e) => setLine(i, { vat_rate: Number(e.target.value) })} className="text-sm rounded-xl px-2 py-2 border w-16" style={st} title="VAT %" />
+                {lines.length > 1 && <button onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))} className="p-2 rounded-lg shrink-0" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><X className="w-4 h-4" /></button>}
+              </div>
+            ))}
+            <button onClick={() => setLines((ls) => [...ls, { description: "", quantity: 1, unit_price: 0, vat_rate: defaultVat }])} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Plus className="w-3.5 h-3.5" />Add line</button>
+          </div>
+          <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Notes (optional)" className={cls} style={st} />
+          <div className="flex items-center justify-between mt-3">
+            <span className="text-sm" style={{ color: "#777" }}>Subtotal {money(form.currency, sub)} · VAT {money(form.currency, vat)} · <strong style={{ color: "#1E1E1E" }}>Total {money(form.currency, sub + vat)}</strong></span>
+            <button onClick={create} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}><FileText className="w-4 h-4" />Create draft</button>
+          </div>
+        </div>
+      )}
+
+      {msg && <p className="text-sm mb-3" style={{ color: /sent|recorded/.test(msg) ? "#16A34A" : "#C0392B" }}>{msg}</p>}
+
+      {list.length === 0 ? <Empty label="No invoices in this view." /> : (
+        <div className="space-y-2">
+          {list.map((i) => {
+            const sc = INV_STATUS[i.status] ?? INV_STATUS.draft;
+            return (
+              <div key={i.id} className="bg-white rounded-[14px] border border-black/[0.05] p-4 flex items-center gap-3 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{i.number}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: sc.bg, color: sc.fg }}>{i.status}</span>
+                    {i.is_overdue && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(192,57,43,0.1)", color: "#C0392B" }}>overdue</span>}
+                  </div>
+                  <p className="text-xs" style={{ color: "#999" }}>{i.customer_name} · {money(i.currency, i.total)}{i.balance > 0 && i.balance < i.total ? ` · ${money(i.currency, i.balance)} due` : ""}{i.due_date ? ` · due ${new Date(i.due_date).toLocaleDateString("en-GB")}` : ""}</p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button onClick={() => downloadFile(`/admin/accounting/invoices/${i.id}/pdf`, `${i.number}.pdf`)} className="p-1.5 rounded-lg" style={{ background: "#F2F2F2", color: "#555" }} title="PDF"><Download className="w-4 h-4" /></button>
+                  {i.status !== "void" && i.status !== "paid" && <button onClick={() => send(i)} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "rgba(59,130,246,0.12)", color: "#2563EB" }}><Send className="w-3.5 h-3.5" />Send</button>}
+                  {(i.status === "sent" || i.status === "partial") && <button onClick={() => pay(i)} className="text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}>Record payment</button>}
+                  {canApprove && i.status !== "void" && i.status !== "paid" && <button onClick={() => voidInv(i)} className="text-[11px] font-semibold px-2 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>Void</button>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Recurring entries ────────────────────────────────────────────────── */
+
+type Rec = { id: number; type: string; account: string | null; category: string | null; sector: string | null; currency: string; amount: number; vat_rate: number; description: string | null; day_of_month: number; is_active: boolean; last_run_period: string | null };
+
+function Recurring({ canApprove }: { canApprove: boolean }) {
+  const [list, setList] = useState<Rec[]>([]);
+  const [accounts, setAccounts] = useState<Acct[]>([]);
+  const [cats, setCats] = useState<Cat[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ type: "expense", finance_account_id: "", finance_category_id: "", sector: "", amount: "", vat_rate: "", description: "", day_of_month: "1" });
+  const [msg, setMsg] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const [r, ac, ca] = await Promise.all([
+        apiAdmin<{ data: Rec[] }>("/admin/accounting/recurring"),
+        apiAdmin<{ data: Acct[] }>("/admin/accounting/accounts"),
+        apiAdmin<{ data: Cat[] }>("/admin/accounting/categories"),
+      ]);
+      setList(r.data); setAccounts(ac.data); setCats(ca.data);
+    } catch { /* */ } finally { setLoading(false); }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const add = async () => {
+    if (!form.finance_account_id || !form.amount) { setMsg("Account and amount are required."); return; }
+    setMsg("");
+    try { await apiAdmin("/admin/accounting/recurring", { method: "POST", body: JSON.stringify({ ...form, amount: Number(form.amount), vat_rate: Number(form.vat_rate) || 0, day_of_month: Number(form.day_of_month) }) }); setForm({ ...form, amount: "", description: "" }); load(); }
+    catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); }
+  };
+  const toggle = async (r: Rec) => { try { await apiAdmin(`/admin/accounting/recurring/${r.id}`, { method: "PATCH", body: JSON.stringify({ is_active: !r.is_active }) }); load(); } catch { /* */ } };
+  const del = async (id: number) => { if (!confirm("Delete this recurring entry?")) return; try { await apiAdmin(`/admin/accounting/recurring/${id}`, { method: "DELETE" }); load(); } catch { /* */ } };
+
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+
+  return (
+    <div>
+      <p className="text-xs mb-4" style={{ color: "#999" }}>Recurring entries auto-create a draft transaction each month (on/after the chosen day) for a senior officer to approve — rent, salaries, subscriptions.</p>
+      <div className="space-y-2 mb-5">
+        {list.length === 0 && <Empty label="No recurring entries yet." />}
+        {list.map((r) => (
+          <div key={r.id} className="bg-white rounded-[14px] border border-black/[0.05] p-4 flex items-center gap-3">
+            <Repeat className="w-4 h-4 shrink-0" style={{ color: "#C5B27A" }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{r.description || (r.category ?? r.type)}</p>
+              <p className="text-xs" style={{ color: "#999" }}>{r.type === "income" ? "In" : "Out"} · {r.account} · day {r.day_of_month} · {money(r.currency, r.amount)}{r.vat_rate ? ` · VAT ${r.vat_rate}%` : ""}</p>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={r.is_active ? { background: "rgba(34,197,94,0.12)", color: "#16A34A" } : { background: "rgba(0,0,0,0.06)", color: "#999" }}>{r.is_active ? "active" : "paused"}</span>
+            {canApprove && <button onClick={() => toggle(r)} className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>{r.is_active ? "Pause" : "Resume"}</button>}
+            {canApprove && <button onClick={() => del(r.id)} className="p-1.5 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><Trash2 className="w-4 h-4" /></button>}
+          </div>
+        ))}
+      </div>
+
+      {canApprove ? (
+        <div className="bg-white rounded-[20px] border border-black/[0.06] p-5">
+          <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "#1E1E1E" }}>Add recurring entry</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className={cls} style={st}><option value="expense">Money out</option><option value="income">Money in</option></select>
+            <select value={form.finance_account_id} onChange={(e) => setForm({ ...form, finance_account_id: e.target.value })} className={cls} style={st}><option value="">Account…</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>)}</select>
+            <select value={form.finance_category_id} onChange={(e) => setForm({ ...form, finance_category_id: e.target.value })} className={cls} style={st}><option value="">Category…</option>{cats.filter((c) => c.kind === (form.type === "income" ? "income" : "expense")).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+            <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="Amount" className={cls} style={st} />
+            <input type="number" min={0} max={100} value={form.vat_rate} onChange={(e) => setForm({ ...form, vat_rate: e.target.value })} placeholder="VAT %" className={cls} style={st} />
+            <input type="number" min={1} max={28} value={form.day_of_month} onChange={(e) => setForm({ ...form, day_of_month: e.target.value })} placeholder="Day of month" className={cls} style={st} />
+            <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description (e.g. Office rent)" className={`${cls} sm:col-span-2`} style={st} />
+          </div>
+          {msg && <p className="text-sm mt-2" style={{ color: "#C0392B" }}>{msg}</p>}
+          <button onClick={add} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full mt-3" style={{ background: "#1E1E1E", color: "#fff" }}><Plus className="w-4 h-4" />Add recurring</button>
+        </div>
+      ) : <p className="text-xs" style={{ color: "#bbb" }}>Only a senior finance officer can set up recurring entries.</p>}
     </div>
   );
 }

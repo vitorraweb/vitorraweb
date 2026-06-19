@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\FinanceAccount;
 use App\Models\FinanceCategory;
 use App\Models\FinanceTransaction;
+use App\Models\Invoice;
+use App\Models\RecurringEntry;
 use App\Models\SupplierBill;
 use App\Services\FinanceReportService;
+use App\Services\ReceiptExtractionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -28,6 +31,38 @@ class AccountingController extends Controller
         $period = $request->validate(['period' => ['sometimes', Rule::in(['mtd', 'last_month', 'week'])]])['period'] ?? 'mtd';
 
         return response()->json(['data' => $reports->report($period)]);
+    }
+
+    /** VAT summary — output VAT (invoices) minus input VAT (expenses), per currency. */
+    public function vatReport(Request $request, FinanceReportService $reports): JsonResponse
+    {
+        $period = $request->validate(['period' => ['sometimes', Rule::in(['mtd', 'last_month', 'week'])]])['period'] ?? 'mtd';
+
+        return response()->json(['data' => $reports->vatReport($period)]);
+    }
+
+    /** Stream all transactions as a CSV for the accountant. */
+    public function exportTransactions(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $rows = FinanceTransaction::with(['account:id,name', 'toAccount:id,name', 'category:id,name'])
+            ->orderBy('occurred_on')->orderBy('id')->get();
+
+        return response()->stream(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Date', 'Type', 'Status', 'Account', 'To account', 'Category', 'Sector', 'Description', 'Reference', 'Currency', 'Amount', 'VAT rate %', 'VAT amount']);
+            foreach ($rows as $t) {
+                fputcsv($out, [
+                    $t->occurred_on->toDateString(), $t->type, $t->status,
+                    $t->account?->name, $t->toAccount?->name, $t->category?->name, $t->sector,
+                    $t->description, $t->reference, $t->currency, $t->amount, $t->vat_rate, $t->vat_amount,
+                ]);
+            }
+            fclose($out);
+        }, 200, [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="vitorra-transactions-'.now()->format('Y-m-d').'.csv"',
+            'Cache-Control'       => 'no-cache, no-store',
+        ]);
     }
 
     /* ── Accounts ────────────────────────────────────────────────────────── */
@@ -137,6 +172,7 @@ class AccountingController extends Controller
             'finance_category_id'    => ['nullable', 'required_unless:type,transfer', Rule::exists('finance_categories', 'id')],
             'sector'                 => ['nullable', Rule::in(FinanceTransaction::SECTORS)],
             'amount'                 => ['required', 'integer', 'min:1'],
+            'vat_rate'               => ['nullable', 'integer', 'min:0', 'max:100'],
             'occurred_on'            => ['required', 'date'],
             'description'            => ['nullable', 'string', 'max:500'],
             'reference'              => ['nullable', 'string', 'max:255'],
@@ -161,6 +197,10 @@ class AccountingController extends Controller
             }
         }
 
+        // VAT carried within the (gross) amount — input VAT on expenses, output on income.
+        $vatRate = $data['type'] === 'transfer' ? 0 : (int) ($data['vat_rate'] ?? 0);
+        $vatAmount = $vatRate > 0 ? (int) round($data['amount'] * $vatRate / (100 + $vatRate)) : 0;
+
         $tx = FinanceTransaction::create([
             'type'                   => $data['type'],
             'finance_account_id'     => $account->id,
@@ -169,6 +209,8 @@ class AccountingController extends Controller
             'sector'                 => $data['sector'] ?? null,
             'currency'               => $account->currency,
             'amount'                 => $data['amount'],
+            'vat_rate'               => $vatRate,
+            'vat_amount'             => $vatAmount,
             'occurred_on'            => $data['occurred_on'],
             'description'            => $data['description'] ?? null,
             'reference'              => $data['reference'] ?? null,
@@ -193,19 +235,89 @@ class AccountingController extends Controller
         if ($transaction->source === 'bill' && $transaction->source_id) {
             SupplierBill::where('id', $transaction->source_id)->update(['status' => 'paid', 'paid_transaction_id' => $transaction->id]);
         }
+        // An invoice receipt settles the invoice (partial or paid).
+        if ($transaction->source === 'invoice' && $transaction->source_id) {
+            $this->settleInvoice($transaction->source_id, $transaction->amount);
+        }
 
         return response()->json(['data' => $this->shape($transaction->fresh(['account', 'toAccount', 'category']))]);
     }
 
-    /** Void a transaction (correction). Reverts a linked bill to unpaid. */
+    /** Void a transaction (correction). Reverses any linked bill/invoice settlement. */
     public function voidTransaction(FinanceTransaction $transaction): JsonResponse
     {
+        $wasApproved = $transaction->status === 'approved';
+
         if ($transaction->source === 'bill' && $transaction->source_id) {
             SupplierBill::where('id', $transaction->source_id)->update(['status' => 'unpaid', 'paid_transaction_id' => null]);
+        }
+        if ($wasApproved && $transaction->source === 'invoice' && $transaction->source_id) {
+            $this->settleInvoice($transaction->source_id, -$transaction->amount);
         }
         $transaction->update(['status' => 'void']);
 
         return response()->json(['data' => $this->shape($transaction->fresh(['account', 'toAccount', 'category']))]);
+    }
+
+    /** AI-read an uploaded receipt to pre-fill the transaction form (best-effort). */
+    public function extractReceipt(Request $request, ReceiptExtractionService $service): JsonResponse
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:8192']]);
+
+        return response()->json(['data' => $service->extract($request->file('file'))]);
+    }
+
+    /* ── Recurring entries ───────────────────────────────────────────────── */
+
+    public function recurring(): JsonResponse
+    {
+        $rows = RecurringEntry::with(['account:id,name,currency', 'category:id,name'])->latest()->get()
+            ->map(fn (RecurringEntry $r) => [
+                'id' => $r->id, 'type' => $r->type, 'account' => $r->account?->name, 'category' => $r->category?->name,
+                'sector' => $r->sector, 'currency' => $r->currency, 'amount' => $r->amount, 'vat_rate' => $r->vat_rate,
+                'description' => $r->description, 'day_of_month' => $r->day_of_month, 'is_active' => $r->is_active,
+                'last_run_period' => $r->last_run_period,
+            ]);
+
+        return response()->json(['data' => $rows]);
+    }
+
+    public function storeRecurring(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'type'                => ['required', Rule::in(['income', 'expense'])],
+            'finance_account_id'  => ['required', Rule::exists('finance_accounts', 'id')],
+            'finance_category_id' => ['nullable', Rule::exists('finance_categories', 'id')],
+            'sector'              => ['nullable', Rule::in(FinanceTransaction::SECTORS)],
+            'amount'              => ['required', 'integer', 'min:1'],
+            'vat_rate'            => ['nullable', 'integer', 'min:0', 'max:100'],
+            'description'         => ['nullable', 'string', 'max:255'],
+            'day_of_month'        => ['required', 'integer', 'min:1', 'max:28'],
+        ]);
+
+        $account = FinanceAccount::findOrFail($data['finance_account_id']);
+        $entry = RecurringEntry::create($data + ['currency' => $account->currency, 'created_by' => $request->user()->id]);
+
+        return response()->json(['data' => $entry], 201);
+    }
+
+    public function updateRecurring(Request $request, RecurringEntry $recurring): JsonResponse
+    {
+        $recurring->update($request->validate([
+            'amount'       => ['sometimes', 'integer', 'min:1'],
+            'day_of_month' => ['sometimes', 'integer', 'min:1', 'max:28'],
+            'is_active'    => ['sometimes', 'boolean'],
+            'description'  => ['sometimes', 'nullable', 'string', 'max:255'],
+        ]));
+
+        return response()->json(['data' => $recurring]);
+    }
+
+    public function destroyRecurring(RecurringEntry $recurring): JsonResponse
+    {
+        $recurring->delete();
+
+        return response()->json(['message' => 'Recurring entry removed.']);
     }
 
     public function downloadReceipt(FinanceTransaction $transaction): StreamedResponse|JsonResponse
@@ -215,6 +327,20 @@ class AccountingController extends Controller
         }
 
         return Storage::disk('local')->download($transaction->receipt_path);
+    }
+
+    /** Apply (or reverse, with a negative delta) a payment against an invoice. */
+    private function settleInvoice(int $invoiceId, int $delta): void
+    {
+        $invoice = Invoice::find($invoiceId);
+        if (! $invoice) {
+            return;
+        }
+        $paid = max(0, min($invoice->total, $invoice->amount_paid + $delta));
+        $invoice->update([
+            'amount_paid' => $paid,
+            'status'      => $paid >= $invoice->total ? 'paid' : ($paid > 0 ? 'partial' : 'sent'),
+        ]);
     }
 
     private function shape(FinanceTransaction $t): array

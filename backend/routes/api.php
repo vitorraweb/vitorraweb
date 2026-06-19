@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\EnquiryController;
 use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\InstallmentController;
+use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\JobAdminController;
 use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\ExchangeRateController;
@@ -271,6 +272,18 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/bills/{bill}/pay',              [SupplierBillController::class, 'pay']);
             Route::get('/budgets',                        [BudgetController::class, 'index']);
             Route::get('/reports',                        [AccountingController::class, 'reports']);
+            Route::get('/vat-report',                     [AccountingController::class, 'vatReport']);
+            Route::get('/transactions/export',            [AccountingController::class, 'exportTransactions']);
+            Route::post('/extract-receipt',               [AccountingController::class, 'extractReceipt']);
+            Route::get('/recurring',                      [AccountingController::class, 'recurring']);
+            // Invoices (accounts receivable).
+            Route::get('/invoices',                       [InvoiceController::class, 'index']);
+            Route::get('/invoices/{invoice}',             [InvoiceController::class, 'show']);
+            Route::post('/invoices',                      [InvoiceController::class, 'store']);
+            Route::match(['put', 'patch'], '/invoices/{invoice}', [InvoiceController::class, 'update']);
+            Route::post('/invoices/{invoice}/send',       [InvoiceController::class, 'send']);
+            Route::post('/invoices/{invoice}/payment',    [InvoiceController::class, 'recordPayment']);
+            Route::get('/invoices/{invoice}/pdf',         [InvoiceController::class, 'pdf']);
         });
         // Senior-finance-only actions (approval, account/category/budget management).
         Route::middleware('perm:accounting_approve')->prefix('accounting')->group(function () {
@@ -281,8 +294,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/transactions/{transaction}/approve', [AccountingController::class, 'approveTransaction']);
             Route::post('/transactions/{transaction}/void',    [AccountingController::class, 'voidTransaction']);
             Route::post('/bills/{bill}/void',             [SupplierBillController::class, 'void']);
+            Route::post('/invoices/{invoice}/void',       [InvoiceController::class, 'void']);
             Route::put('/budgets',                        [BudgetController::class, 'upsert']);
             Route::delete('/budgets/{budget}',            [BudgetController::class, 'destroy']);
+            Route::post('/recurring',                     [AccountingController::class, 'storeRecurring']);
+            Route::patch('/recurring/{recurring}',        [AccountingController::class, 'updateRecurring']);
+            Route::delete('/recurring/{recurring}',       [AccountingController::class, 'destroyRecurring']);
         });
 
         // System settings + staff management — admin role only (not ops), per the BRD.
