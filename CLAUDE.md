@@ -42,7 +42,7 @@ The priority revenue product (FET) now has a **public full-line pricing guide an
 | Business Operations (Orders, Admin) | 80% | 20% | Checkout built (orders + line items) but paused while coffee is gated; admin order management updated; **B2B installment plans added** |
 | Backend API & Integrations | 65% | 35% | Products, blog, enquiry, contact, orders/checkout, transactional email (Resend) wired; payment gateway pending |
 | Reliability & Uptime Systems | 30% | 70% | No monitoring in place |
-| **Internal Operations Platform** | **100%** | — | **Staff/HR portal, leave, monthly reports/probation, recruitment (AI CV), CEO report, supplier onboarding, B2B installments — all shipped (June 2026)** |
+| **Internal Operations Platform** | **100%** | — | **Staff/HR portal, leave, monthly reports/probation, recruitment (AI CV), CEO report, supplier onboarding, B2B installments, full accounting (invoicing/VAT/AI receipts/recurring) — all shipped (June 2026)** |
 
 ---
 
@@ -54,7 +54,7 @@ The full week-by-week build history now lives in `planning/08-rebuild-progress-l
 
 ## Internal Operations Platform (June 2026)
 
-A full internal-operations suite was built on top of the marketing site (from the Head of Finance's brief). All shipped, tested (95 backend feature tests), and deployed.
+A full internal-operations suite was built on top of the marketing site (from the Head of Finance's brief). All shipped, tested (108 backend feature tests), and deployed.
 
 ### Roles & surfaces
 - **Roles:** `admin`, `ops`, `employee`, `customer`. New `employee` role = staff-portal only (no admin panel).
@@ -63,7 +63,7 @@ A full internal-operations suite was built on top of the marketing site (from th
 - **Role fix-up:** `php artisan staff:set-role <email> <admin|ops|employee>` (guards the last admin). Use this — never tinker — to change roles.
 
 ### Admin modules (config/admin_modules.php)
-Added `people` (HR — ops/finance/leadership), `executive` (CEO report — leadership/finance), `suppliers` (ops/finance/leadership). Module access is per-department; **existing ops accounts with a custom permission set must have new modules ticked in `/admin/staff`**. Admins always get everything.
+Added `people` (HR — ops/finance/leadership), `executive` (CEO report — leadership/finance), `suppliers` (ops/finance/leadership), `accounting` (finance/leadership — record + view), and `accounting_approve` (senior finance only — approve + manage; **per-person grant**, not a department default). Module access is per-department; **existing ops accounts with a custom permission set must have new modules ticked in `/admin/staff`**. Admins always get everything.
 
 ### Phase 1 — Staff/HR portal (`/staff`)
 - **Profile & security** (own password change), **My documents** (private contract/HR files), **My supervisor**, **My team** (supervisors only).
@@ -81,8 +81,20 @@ Added `people` (HR — ops/finance/leadership), `executive` (CEO report — lead
 ### Phase 4 — B2B installments (admin order detail + `/account` portal)
 - Per-order **pay-in-parts plan** (`installment_plans` + `installment_payments`). Staff record each part-payment offline; order `payment_status` auto-updates pending → partial → paid (receipt generated on full pay). Customer sees the schedule + balance in their portal. Provider-agnostic — pay-online-in-parts can layer on when a gateway lands.
 
+### Phase 5 — Accounting ("Vitorra Books", `/admin/accounting`)
+A multi-currency cash-ledger bookkeeping tool with **maker–checker** approvals (junior finance records drafts; senior finance — `accounting_approve` — approves; only approved entries move balances/P&L). Built up to sevDesk-style capability.
+- **Core:** finance accounts (UGX/USD/EUR balances), categorised income/expense/transfer transactions (draft→approve→void), supplier **bills/payables**, **budgets** (actual-vs-cap), and reports — P&L, cash position, payables, **per-sector profit** (FET/SEAL/Coffee/Logistics). Feeds the Executive "from the books" block (income/spend/profit/cash).
+- **Invoicing (A/R):** auto-numbered (`INV-YYYY-####`), per-line **VAT**, branded **PDF**, email **send**, statuses draft→sent→partial→paid + overdue; record payment posts a draft income txn that settles the invoice on approval. `invoices:remind` cron chases overdue.
+- **AI receipt capture:** `ReceiptExtractionService` (Claude) reads an uploaded receipt → auto-fills the transaction (vendor/date/amount/VAT). Reuses `ANTHROPIC_API_KEY`; graceful without it.
+- **VAT:** per-line output VAT on invoices + input VAT on expenses → VAT report (payable/reclaim per currency).
+- **Recurring:** monthly rent/salary/subscription templates → `finance:recurring` cron generates drafts. **Accountant CSV export** of all transactions.
+- All amounts per currency (never summed across currencies). Tables: `finance_accounts`, `finance_categories`, `finance_transactions` (+`vat_rate`/`vat_amount`), `supplier_bills`, `finance_budgets`, `invoices`, `invoice_items`, `recurring_entries`. Default categories via `FinanceCategoriesSeeder`.
+
+### Scheduled commands (ride the existing cPanel `schedule:run` cron)
+`holidays:notify`, `digest:send`, `executive:report` (monthly+weekly), `applications:purge` (6-month), `invoices:remind`, `finance:recurring`, plus the spatie backups.
+
 ### Pending (operations setup, not code)
-- Set executive-report recipients in `/admin/settings`; grant new modules to existing ops accounts; optionally link **Careers** + **Suppliers** in the public footer; set `ANTHROPIC_API_KEY` on prod to enable CV auto-fill (works manually without it).
+- Set executive-report recipients in `/admin/settings`; grant new modules to existing ops accounts (incl. **"Accounting — approve"** for the Senior Finance Officer); optionally link **Careers** + **Suppliers** in the public footer; set `ANTHROPIC_API_KEY` on prod to enable CV/receipt auto-read (both work manually without it).
 
 ---
 

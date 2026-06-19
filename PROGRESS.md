@@ -23,6 +23,7 @@
 | Transactional email (Resend) | ✅ Live in production |
 | **Account security — self-service password change + auto-expiring sessions** | ✅ **Done** |
 | **Internal operations platform** (Staff/HR, CEO report, Suppliers, Installments) | ✅ **Built & deployed** |
+| **Accounting — "Vitorra Books"** (ledger, invoicing, VAT, AI receipts, recurring) | ✅ **Built & deployed** |
 | Coffee shop (storefront/cart/checkout) | ⏸ Built, gated until retail prices confirmed |
 | Live payment gateway | ⛔ Blocked on business account |
 | Monitoring / backups / CI/CD | ⏳ Sentry DSNs configured; uptime/backups/CI still to verify |
@@ -31,7 +32,7 @@
 
 ## ✅ Internal operations platform (June 2026)
 
-Built from the Head of Finance's brief — a full internal suite on top of the marketing site. All shipped, tested (95 backend tests), and deployed.
+Built from the Head of Finance's brief — a full internal suite on top of the marketing site. All shipped, tested (108 backend tests), and deployed.
 
 ### Staff / HR portal — `vitorra.org/staff`
 Every employee gets a login (new `employee` role). They can:
@@ -54,6 +55,14 @@ Suppliers self-register (company info, **encrypted bank details**, documents). O
 ### B2B installments
 Any order can be set up as a **pay-in-parts plan**; staff record each payment as it arrives and the order's status updates automatically (pending → partially paid → paid). The customer sees the schedule and balance in their account.
 
+### Accounting — "Vitorra Books" — `/admin/accounting`
+A multi-currency bookkeeping tool with a **maker–checker** rule: the junior finance officer records entries; the senior officer approves them (only then do they count). Covers:
+- **Accounts** (bank/cash/mobile-money balances), a categorised **money ledger** (in/out/transfer), **supplier bills** (what we owe), **budgets** (actual-vs-cap), and reports — profit & loss, cash on hand, and **profit by business line** (FET/SEAL/Coffee/Logistics). These feed the CEO's Executive screen ("from the books").
+- **Customer invoicing:** create branded, numbered invoices with VAT, send them as a PDF, track paid/overdue, and **chase late payers automatically**.
+- **AI receipt capture:** snap/upload a receipt and it's read automatically to fill in the expense.
+- **VAT** tracking (charged vs. paid) with a VAT summary, **recurring** monthly entries (rent/salaries), and a one-click **CSV export for the accountant**.
+- Senior vs junior is enforced: the **Senior Finance Officer** needs "Accounting — approve" ticked in `/admin/staff`; the junior records only.
+
 ---
 
 ## ✅ Already in place (earlier in the rebuild)
@@ -75,8 +84,8 @@ Any order can be set up as a **pay-in-parts plan**; staff record each payment as
 
 **Operations setup (not code)**
 3. Set **executive-report recipients** in `/admin/settings`.
-4. Grant the new **People / Executive / Suppliers** modules to existing ops accounts in `/admin/staff` (admins already have them).
-5. Set `ANTHROPIC_API_KEY` on prod to enable **CV auto-fill** (careers works manually without it).
+4. Grant the new **People / Executive / Suppliers / Accounting** modules to existing ops accounts in `/admin/staff` — and **"Accounting — approve"** to the **Senior Finance Officer** (admins already have everything).
+5. Set `ANTHROPIC_API_KEY` on prod to enable **CV + receipt auto-read** (both work manually without it).
 6. Optionally link **Careers** and **Suppliers** in the public site footer.
 7. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
 
