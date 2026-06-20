@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FinanceBudget;
 use App\Models\FinanceCategory;
 use App\Models\FinanceTransaction;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -20,8 +21,14 @@ class BudgetController extends Controller
         $budgets = FinanceBudget::with('category:id,name')->where('period', $period)->get();
 
         // Actual approved expense per category for the month, per currency.
+        // Use a date range (not strftime) so it works on both SQLite and MySQL.
+        // '!' resets all fields so no current day/time bleeds in (which could
+        // overflow for short months, e.g. Feb on the 30th).
+        $start = Carbon::createFromFormat('!Y-m-d', $period.'-01');
+        $next  = $start->copy()->addMonth();
         $actuals = FinanceTransaction::where('type', 'expense')->where('status', 'approved')
-            ->whereRaw("strftime('%Y-%m', occurred_on) = ?", [$period])
+            ->where('occurred_on', '>=', $start->toDateString())
+            ->where('occurred_on', '<', $next->toDateString())
             ->selectRaw('finance_category_id, currency, SUM(amount) s')
             ->groupBy('finance_category_id', 'currency')->get();
 

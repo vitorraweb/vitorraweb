@@ -116,6 +116,11 @@ class AccountingTest extends TestCase
             'type' => 'expense', 'finance_account_id' => $acct->id, 'finance_category_id' => $cat->id,
             'currency' => 'UGX', 'amount' => 20000, 'occurred_on' => now()->toDateString(), 'status' => 'approved',
         ]);
+        // An expense in a different month must NOT count toward this period's actual.
+        FinanceTransaction::create([
+            'type' => 'expense', 'finance_account_id' => $acct->id, 'finance_category_id' => $cat->id,
+            'currency' => 'UGX', 'amount' => 99000, 'occurred_on' => now()->subMonthNoOverflow()->toDateString(), 'status' => 'approved',
+        ]);
         FinanceBudget::create(['finance_category_id' => $cat->id, 'period' => now()->format('Y-m'), 'currency' => 'UGX', 'amount' => 50000]);
 
         $res = $this->withHeaders($this->h($admin))->getJson('/api/admin/accounting/budgets?period='.now()->format('Y-m'))->assertOk();
