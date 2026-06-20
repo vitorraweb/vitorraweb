@@ -32,7 +32,7 @@ class StaffDirectoryTest extends TestCase
             'name'        => 'Sarah Marketing',
             'email'       => 'sarah@vitorra.org',
             'role'        => 'ops',
-            'password'    => 'password123',
+            'password'    => 'password1234',
             'department'  => 'marketing',
             'job_title'   => 'Marketing Officer',
             'start_date'  => '2026-06-01',
@@ -63,7 +63,7 @@ class StaffDirectoryTest extends TestCase
     public function test_invalid_department_is_rejected(): void
     {
         $this->actingAs($this->admin(), 'sanctum')->postJson('/api/admin/users', [
-            'name' => 'X', 'email' => 'x@vitorra.org', 'role' => 'ops', 'password' => 'password123',
+            'name' => 'X', 'email' => 'x@vitorra.org', 'role' => 'ops', 'password' => 'password1234',
             'department' => 'not-a-department',
         ])->assertStatus(422);
     }

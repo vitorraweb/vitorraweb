@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
     try {
       const res = await apiAdmin<{ data: { two_factor_required?: boolean; token: string; expires_at: string | null; user: { id: number; name: string; email: string; role: string } } }>(
         "/auth/login",
-        { method: "POST", body: JSON.stringify({ email, password, code: code || undefined }) }
+        { method: "POST", body: JSON.stringify({ email, password, code: code || undefined, scope: "admin" }) }
       );
       // Password was right but this account needs a second factor.
       if (res.data.two_factor_required) {

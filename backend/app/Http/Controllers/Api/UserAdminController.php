@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UserAdminController extends Controller
 {
@@ -81,7 +82,7 @@ class UserAdminController extends Controller
 
     public function resetPassword(Request $request, User $user): JsonResponse
     {
-        $data = $request->validate(['password' => ['required', 'string', 'min:8']]);
+        $data = $request->validate(['password' => ['required', Password::defaults()]]);
         $user->update(['password' => $data['password']]);
         // Force the affected user to re-authenticate everywhere with the new password.
         $user->tokens()->delete();
@@ -156,7 +157,7 @@ class UserAdminController extends Controller
             'name'         => [$required, 'string', 'max:255'],
             'email'        => [$required, 'email', 'max:255', Rule::unique('users', 'email')->ignore($user?->id)],
             'role'         => [$required, Rule::in(['admin', 'ops', 'employee'])],
-            'password'     => [$creating ? 'required' : 'sometimes', 'string', 'min:8'],
+            'password'     => [$creating ? 'required' : 'sometimes', Password::defaults()],
             'phone'        => ['nullable', 'string', 'max:50'],
             'department'   => ['nullable', Rule::in($departments)],
             'supervisor_id'   => ['nullable', 'integer', Rule::exists('users', 'id')->where(fn ($q) => $q->whereIn('role', ['admin', 'ops', 'employee'])), Rule::notIn([$user?->id])],

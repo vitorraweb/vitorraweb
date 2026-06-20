@@ -127,7 +127,7 @@ export async function loginStaff(
   const res = await fetch(`${base()}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ email, password, code: code || undefined }),
+    body: JSON.stringify({ email, password, code: code || undefined, scope: "staff" }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Login failed" }));

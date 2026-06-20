@@ -111,7 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | Customer self-service portal (any authenticated user)
     |----------------------------------------------------------------------
     */
-    Route::prefix('account')->group(function () {
+    Route::middleware('ability:customer')->prefix('account')->group(function () {
         Route::get('/orders',                          [AccountController::class, 'orders']);
         Route::get('/orders/{reference}',              [AccountController::class, 'order']);
         Route::patch('/orders/{reference}/installation', [AccountController::class, 'updateInstallation']);
@@ -126,7 +126,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | Staff self-service portal (all team members: admin, ops, employee)
     |----------------------------------------------------------------------
     */
-    Route::middleware('role:admin,ops,employee')->prefix('staff')->group(function () {
+    Route::middleware(['role:admin,ops,employee', 'ability:staff'])->prefix('staff')->group(function () {
         Route::get('/me',                      [StaffController::class, 'me']);
         Route::get('/team',                    [StaffController::class, 'team']);
         Route::get('/documents',               [StaffController::class, 'documents']);
@@ -154,7 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | Admin routes (ops + admin roles only)
     |----------------------------------------------------------------------
     */
-    Route::middleware('role:admin,ops')->prefix('admin')->group(function () {
+    Route::middleware(['role:admin,ops', 'ability:admin'])->prefix('admin')->group(function () {
         // Dashboard — every staff member sees this.
         Route::get('/stats',                            [AdminController::class, 'stats']);
         Route::get('/analytics',                        [AdminController::class, 'analytics']);

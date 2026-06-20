@@ -64,7 +64,7 @@ async function postAuth(path: string, body: Record<string, unknown>): Promise<{ 
 }
 
 export async function loginCustomer(email: string, password: string) {
-  const { data } = await postAuth("/auth/login", { email, password });
+  const { data } = await postAuth("/auth/login", { email, password, scope: "customer" });
   customerAuth.save(data.token, data.user, data.expires_at);
   return data.user;
 }

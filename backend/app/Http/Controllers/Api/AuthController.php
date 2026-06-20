@@ -11,6 +11,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -21,7 +23,8 @@ class AuthController extends Controller
         $data = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
+            // Customer-grade policy: 8+ chars, plus a breach check in production.
+            'password' => ['required', app()->isProduction() ? Password::min(8)->uncompromised() : Password::min(8)],
             'company'  => ['nullable', 'string', 'max:255'],
             'phone'    => ['nullable', 'string', 'max:50'],
             'country'  => ['nullable', 'string', 'max:100'],
@@ -37,7 +40,7 @@ class AuthController extends Controller
             'country'  => $data['country'] ?? 'Uganda',
         ]);
 
-        return response()->json(['data' => $this->issueToken($user)], 201);
+        return response()->json(['data' => $this->issueToken($user, 'customer')], 201);
     }
 
     /** Issue a Sanctum token on successful login (challenging for 2FA if on). */
@@ -47,6 +50,7 @@ class AuthController extends Controller
             'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
             'code'     => ['nullable', 'string'], // 2FA code or recovery code, when enabled
+            'scope'    => ['nullable', Rule::in(['admin', 'staff', 'customer'])], // which portal this token is for
         ]);
 
         if (! Auth::attempt(['email' => $data['email'], 'password' => $data['password']])) {
@@ -70,7 +74,7 @@ class AuthController extends Controller
             }
         }
 
-        return response()->json(['data' => $this->issueToken($user)]);
+        return response()->json(['data' => $this->issueToken($user, $data['scope'] ?? null)]);
     }
 
     /** Revoke the current token (logout) */
@@ -98,7 +102,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'current_password' => ['required', 'string'],
-            'password'         => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
+            'password'         => ['required', Password::defaults(), 'confirmed', 'different:current_password'],
         ]);
 
         $user = $request->user();
@@ -122,15 +126,43 @@ class AuthController extends Controller
      * are short-lived (admin-configurable, default 8h) to limit the window of
      * a hijacked token; customer portal sessions run longer for convenience.
      */
-    private function issueToken(User $user): array
+    private function issueToken(User $user, ?string $scope = null): array
     {
-        $token = $user->createToken('api-token', ['*'], $this->tokenExpiry($user));
+        $token = $user->createToken('api-token', $this->tokenAbilities($user, $scope), $this->tokenExpiry($user));
 
         return [
             'user'       => $user->toAuthArray(),
             'token'      => $token->plainTextToken,
             'expires_at' => optional($token->accessToken->expires_at)->toIso8601String(),
         ];
+    }
+
+    /**
+     * Surface-scope a token so a leak is contained. A token issued for the
+     * staff portal cannot reach /admin even if the holder is an admin — they
+     * sign into the admin panel separately to get an admin-scoped token. The
+     * requested scope is clamped to what the user's role actually allows, and
+     * falls back to a role-derived default when no scope is supplied (keeps
+     * older clients working).
+     *
+     * @return array<int, string>
+     */
+    private function tokenAbilities(User $user, ?string $scope): array
+    {
+        // Admin-panel tokens also need 'staff' — the panel legitimately calls a
+        // few /staff endpoints (e.g. downloading an employee's HR document).
+        $default = match (true) {
+            $user->isOps()   => ['admin', 'staff'], // admin + ops
+            $user->isStaff() => ['staff'],          // employee
+            default          => ['customer'],
+        };
+
+        return match ($scope) {
+            'admin'    => $user->isOps() ? ['admin', 'staff'] : $default,
+            'staff'    => $user->isStaff() ? ['staff'] : $default,
+            'customer' => ['customer'],
+            default    => $default,
+        };
     }
 
     /** When a freshly issued token should expire, by role. */

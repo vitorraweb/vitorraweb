@@ -17,8 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: ['api/*']);
         // Role-based access guard for admin routes
         $middleware->alias([
-            'role' => \App\Http\Middleware\RequireRole::class,
-            'perm' => \App\Http\Middleware\RequirePermission::class,
+            'role'    => \App\Http\Middleware\RequireRole::class,
+            'perm'    => \App\Http\Middleware\RequirePermission::class,
+            // Surface scoping by token ability (only constrains real bearer
+            // tokens; '*' tokens pass all).
+            'ability' => \App\Http\Middleware\RequireTokenAbility::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

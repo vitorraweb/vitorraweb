@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Contracts\PaymentGateway;
 use App\Services\Payments\ManualGateway;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Baseline password policy (used wherever Password::defaults() is the
+        // rule): at least 12 characters with letters and numbers. In production
+        // we also reject passwords found in known breach corpora (HaveIBeenPwned
+        // k-anonymity API) — skipped locally/in tests to avoid a network call.
+        Password::defaults(function () {
+            $rule = Password::min(12)->letters()->numbers();
+
+            return $this->app->isProduction() ? $rule->uncompromised() : $rule;
+        });
     }
 }
