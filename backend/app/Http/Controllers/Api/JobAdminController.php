@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\JobApplication;
 use App\Models\JobOpening;
 use App\Support\Audit;
+use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class JobAdminController extends Controller
@@ -81,7 +83,7 @@ class JobAdminController extends Controller
         return response()->json(['data' => $application->fresh()->load('opening:id,title')]);
     }
 
-    public function downloadCv(JobApplication $application): StreamedResponse|JsonResponse
+    public function downloadCv(JobApplication $application): Response
     {
         if (! $application->cv_path || ! Storage::disk('local')->exists($application->cv_path)) {
             return response()->json(['message' => 'No CV on file.'], 404);
@@ -89,7 +91,9 @@ class JobAdminController extends Controller
 
         Audit::log('cv.download', 'Downloaded the CV of applicant '.$application->name, $application);
 
-        return Storage::disk('local')->download($application->cv_path, basename($application->cv_path));
+        $ext = pathinfo($application->cv_path, PATHINFO_EXTENSION) ?: 'pdf';
+
+        return SecureFile::download($application->cv_path, 'CV - '.$application->name.'.'.$ext);
     }
 
     private function validateOpening(Request $request, bool $creating): array

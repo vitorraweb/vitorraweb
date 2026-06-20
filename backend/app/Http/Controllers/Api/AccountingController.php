@@ -12,11 +12,13 @@ use App\Models\SupplierBill;
 use App\Services\FinanceReportService;
 use App\Services\ReceiptExtractionService;
 use App\Support\Audit;
+use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -217,7 +219,7 @@ class AccountingController extends Controller
             'reference'              => $data['reference'] ?? null,
             'status'                 => 'draft',
             'recorded_by'            => $request->user()->id,
-            'receipt_path'           => $request->hasFile('receipt') ? $request->file('receipt')->store('finance/receipts', 'local') : null,
+            'receipt_path'           => $request->hasFile('receipt') ? SecureFile::storeUpload($request->file('receipt'), 'finance/receipts') : null,
         ]);
 
         return response()->json(['data' => $this->shape($tx->fresh(['account', 'toAccount', 'category']))], 201);
@@ -325,13 +327,15 @@ class AccountingController extends Controller
         return response()->json(['message' => 'Recurring entry removed.']);
     }
 
-    public function downloadReceipt(FinanceTransaction $transaction): StreamedResponse|JsonResponse
+    public function downloadReceipt(FinanceTransaction $transaction): Response
     {
         if (! $transaction->receipt_path || ! Storage::disk('local')->exists($transaction->receipt_path)) {
             return response()->json(['message' => 'No receipt on file.'], 404);
         }
 
-        return Storage::disk('local')->download($transaction->receipt_path);
+        $ext = pathinfo($transaction->receipt_path, PATHINFO_EXTENSION) ?: 'pdf';
+
+        return SecureFile::download($transaction->receipt_path, "receipt-{$transaction->id}.{$ext}");
     }
 
     /** Apply (or reverse, with a negative delta) a payment against an invoice. */

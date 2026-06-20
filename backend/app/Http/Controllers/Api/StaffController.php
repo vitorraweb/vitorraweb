@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\StaffDocument;
 use App\Models\User;
 use App\Support\Audit;
+use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -64,7 +66,7 @@ class StaffController extends Controller
      * Stream a staff document from the private disk. Allowed for the owner, the
      * owner's supervisor, and HR (admin/ops) — never a public URL.
      */
-    public function download(Request $request, StaffDocument $document): StreamedResponse|JsonResponse
+    public function download(Request $request, StaffDocument $document): Response
     {
         if (! $this->canAccessDocument($request->user(), $document)) {
             return response()->json(['message' => 'Forbidden.'], 403);
@@ -78,7 +80,7 @@ class StaffController extends Controller
             Audit::log('hr_document.download', 'Downloaded HR document "'.$document->title.'" of '.($document->user?->name ?? 'a staff member'), $document);
         }
 
-        return Storage::disk('local')->download($document->path, $document->original_name ?? $document->title);
+        return SecureFile::download($document->path, $document->original_name ?? $document->title);
     }
 
     /** Whether a staff member may read another's document. */

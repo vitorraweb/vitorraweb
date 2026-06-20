@@ -8,6 +8,7 @@ use App\Models\JobApplication;
 use App\Models\JobOpening;
 use App\Models\Setting;
 use App\Services\CvExtractionService;
+use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -123,9 +124,11 @@ class CareersController extends Controller
             'status'         => 'new',
         ]);
 
-        // Move the CV out of pending into the application's own folder.
+        // Move the CV out of pending into the application's own folder, then
+        // encrypt it at rest (pending stays plaintext for the AI read above).
         $finalPath = 'applications/'.$application->id.'/'.basename($pending);
         Storage::disk('local')->move($pending, $finalPath);
+        SecureFile::encryptExisting($finalPath);
         Storage::disk('local')->delete($jsonPath);
         $application->update(['cv_path' => $finalPath]);
 

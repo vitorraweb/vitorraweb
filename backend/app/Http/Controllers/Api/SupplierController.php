@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\SupplierOnboarded;
 use App\Models\Setting;
 use App\Models\Supplier;
+use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -48,7 +49,8 @@ class SupplierController extends Controller
         ));
 
         foreach ($request->file('documents', []) as $file) {
-            $path = $file->store("suppliers/{$supplier->id}", 'local');
+            $path = SecureFile::storeUpload($file, "suppliers/{$supplier->id}"); // encrypted at rest
+
             $supplier->documents()->create([
                 'type'          => 'other',
                 'title'         => $file->getClientOriginalName(),

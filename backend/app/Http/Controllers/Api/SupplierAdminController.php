@@ -8,10 +8,12 @@ use App\Models\SupplierDocument;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Audit;
+use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SupplierAdminController extends Controller
@@ -108,7 +110,7 @@ class SupplierAdminController extends Controller
         return response()->json(['message' => "Assigned to {$approver->name}.", 'task_id' => $task->id]);
     }
 
-    public function downloadDocument(SupplierDocument $document): StreamedResponse|JsonResponse
+    public function downloadDocument(SupplierDocument $document): Response
     {
         if (! Storage::disk('local')->exists($document->path)) {
             return response()->json(['message' => 'File not found.'], 404);
@@ -116,6 +118,6 @@ class SupplierAdminController extends Controller
 
         Audit::log('supplier_document.download', 'Downloaded supplier document "'.$document->title.'"', $document);
 
-        return Storage::disk('local')->download($document->path, $document->original_name ?? $document->title);
+        return SecureFile::download($document->path, $document->original_name ?? $document->title);
     }
 }

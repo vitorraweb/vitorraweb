@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StaffDocument;
 use App\Models\User;
 use App\Support\Audit;
+use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -123,7 +124,7 @@ class UserAdminController extends Controller
         ]);
 
         $file = $request->file('file');
-        $path = $file->store("staff/{$user->id}", 'local'); // private disk
+        $path = SecureFile::storeUpload($file, "staff/{$user->id}"); // private disk, encrypted at rest
 
         $doc = $user->staffDocuments()->create([
             'type'          => $data['type'],

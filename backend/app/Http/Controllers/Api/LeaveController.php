@@ -12,6 +12,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\LeaveService;
 use App\Support\Audit;
+use App\Support\SecureFile;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LeaveController extends Controller
@@ -102,7 +104,7 @@ class LeaveController extends Controller
         }
 
         $path = $request->hasFile('document')
-            ? $request->file('document')->store("staff/{$user->id}/leave", 'local')
+            ? SecureFile::storeUpload($request->file('document'), "staff/{$user->id}/leave") // encrypted at rest (health data)
             : null;
 
         $leave = $user->leaveRequests()->create([
@@ -224,7 +226,7 @@ class LeaveController extends Controller
      * People/HR module — currently Operations) may open it. A line manager who
      * is not HR can approve the leave but cannot read the medical note.
      */
-    public function downloadNote(Request $request, LeaveRequest $leave): StreamedResponse|JsonResponse
+    public function downloadNote(Request $request, LeaveRequest $leave): Response
     {
         if (! $leave->document_path) {
             return response()->json(['message' => 'No document.'], 404);
@@ -243,7 +245,9 @@ class LeaveController extends Controller
             Audit::log('sick_note.download', 'Opened the medical note for '.($leave->loadMissing('user')->user?->name ?? 'a staff member'), $leave);
         }
 
-        return Storage::disk('local')->download($leave->document_path);
+        $ext = pathinfo($leave->document_path, PATHINFO_EXTENSION) ?: 'pdf';
+
+        return SecureFile::download($leave->document_path, "medical-note-{$leave->id}.{$ext}");
     }
 
     /* ── helpers ─────────────────────────────────────────────────────────── */
