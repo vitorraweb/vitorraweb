@@ -6,6 +6,7 @@ import { auth, apiAdmin } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/admin-ui";
 import { TwoFactorPanel } from "@/components/TwoFactorPanel";
+import { SessionsPanel } from "@/components/SessionsPanel";
 
 export default function AdminProfilePage() {
   const [user, setUser] = useState<AdminUser | null>(null);
@@ -134,6 +135,9 @@ export default function AdminProfilePage() {
 
       {/* Two-factor authentication */}
       <TwoFactorPanel api={apiAdmin} />
+
+      {/* Active sessions */}
+      <SessionsPanel api={apiAdmin} />
     </div>
   );
 }

@@ -106,6 +106,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/2fa/confirm', [TwoFactorController::class, 'confirm']);
     Route::post('/auth/2fa/disable', [TwoFactorController::class, 'disable']);
 
+    // Active sessions (signed-in devices) — list + revoke.
+    Route::get('/auth/sessions',                  [AuthController::class, 'sessions']);
+    Route::delete('/auth/sessions/{id}',          [AuthController::class, 'revokeSession']);
+    Route::post('/auth/sessions/revoke-others',   [AuthController::class, 'revokeOtherSessions']);
+
     /*
     |----------------------------------------------------------------------
     | Customer self-service portal (any authenticated user)

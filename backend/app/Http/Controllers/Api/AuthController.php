@@ -93,6 +93,45 @@ class AuthController extends Controller
         ]);
     }
 
+    /** List this account's active sessions (signed-in devices). */
+    public function sessions(Request $request): JsonResponse
+    {
+        $current = $request->user()->currentAccessToken();
+
+        $sessions = $request->user()->tokens()
+            ->orderByRaw('last_used_at IS NULL, last_used_at DESC')
+            ->get()
+            ->map(fn ($t) => [
+                'id'           => $t->id,
+                'name'         => $t->name,
+                'last_used_at' => optional($t->last_used_at)->toIso8601String(),
+                'created_at'   => optional($t->created_at)->toIso8601String(),
+                'expires_at'   => optional($t->expires_at)->toIso8601String(),
+                'current'      => $current ? $t->id === $current->id : false,
+            ]);
+
+        return response()->json(['data' => $sessions]);
+    }
+
+    /** Revoke one session by id (must belong to the signed-in user). */
+    public function revokeSession(Request $request, int $id): JsonResponse
+    {
+        $request->user()->tokens()->whereKey($id)->delete();
+
+        return response()->json(['message' => 'Session signed out.']);
+    }
+
+    /** Sign out of every other device, keeping the current session alive. */
+    public function revokeOtherSessions(Request $request): JsonResponse
+    {
+        $current = $request->user()->currentAccessToken();
+        $request->user()->tokens()
+            ->when($current, fn ($q) => $q->where('id', '!=', $current->id))
+            ->delete();
+
+        return response()->json(['message' => 'Signed out of all other devices.']);
+    }
+
     /**
      * Change the signed-in user's password (staff or customer).
      * Requires the current password, and revokes every OTHER session so a
@@ -128,7 +167,11 @@ class AuthController extends Controller
      */
     private function issueToken(User $user, ?string $scope = null): array
     {
-        $token = $user->createToken('api-token', $this->tokenAbilities($user, $scope), $this->tokenExpiry($user));
+        $token = $user->createToken(
+            $this->sessionLabel($scope, request()),
+            $this->tokenAbilities($user, $scope),
+            $this->tokenExpiry($user),
+        );
 
         return [
             'user'       => $user->toAuthArray(),
@@ -163,6 +206,37 @@ class AuthController extends Controller
             'customer' => ['customer'],
             default    => $default,
         };
+    }
+
+    /** A human-readable session label (portal · browser on OS) for the device list. */
+    private function sessionLabel(?string $scope, Request $request): string
+    {
+        $ua = (string) $request->userAgent();
+
+        $browser = match (true) {
+            str_contains($ua, 'Edg')     => 'Edge',
+            str_contains($ua, 'OPR')     => 'Opera',
+            str_contains($ua, 'Chrome')  => 'Chrome',
+            str_contains($ua, 'Firefox') => 'Firefox',
+            str_contains($ua, 'Safari')  => 'Safari',
+            default                      => 'Browser',
+        };
+        $os = match (true) {
+            str_contains($ua, 'Windows')                                     => 'Windows',
+            str_contains($ua, 'iPhone') || str_contains($ua, 'iPad')         => 'iOS',
+            str_contains($ua, 'Mac')                                         => 'macOS',
+            str_contains($ua, 'Android')                                     => 'Android',
+            str_contains($ua, 'Linux')                                       => 'Linux',
+            default                                                          => null,
+        };
+        $portal = match ($scope) {
+            'admin'    => 'Admin panel',
+            'staff'    => 'Staff portal',
+            'customer' => 'Customer portal',
+            default    => 'Session',
+        };
+
+        return $portal.' · '.$browser.($os ? ' on '.$os : '');
     }
 
     /** When a freshly issued token should expire, by role. */
