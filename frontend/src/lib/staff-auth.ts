@@ -88,6 +88,18 @@ export async function uploadStaff<T>(path: string, form: FormData): Promise<T> {
   return res.json();
 }
 
+/** Pull the server-supplied filename out of a Content-Disposition header. */
+function filenameFromResponse(res: Response, fallback: string): string {
+  const cd = res.headers.get("Content-Disposition");
+  if (cd) {
+    const star = /filename\*=(?:UTF-8'')?["']?([^"';]+)/i.exec(cd);
+    const plain = /filename=["']?([^"';]+)/i.exec(cd);
+    const raw = star?.[1] ?? plain?.[1];
+    if (raw) { try { return decodeURIComponent(raw); } catch { return raw; } }
+  }
+  return fallback;
+}
+
 /** Download a private file from an authorized endpoint as a browser download. */
 export async function downloadStaffFile(path: string, filename: string): Promise<void> {
   const token = staffAuth.getToken();
@@ -98,7 +110,7 @@ export async function downloadStaffFile(path: string, filename: string): Promise
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
+  a.href = url; a.download = filenameFromResponse(res, filename); a.click();
   URL.revokeObjectURL(url);
 }
 

@@ -27,7 +27,10 @@ return [
     // Vercel preview/deploy URLs, e.g. https://vitorraweb-git-master-xyz.vercel.app
     'allowed_origins_patterns' => ['/^https:\/\/[a-z0-9-]+\.vercel\.app$/'],
     'allowed_headers'          => ['*'],
-    'exposed_headers'          => [],
+    // Let the browser read the real download filename (private file downloads
+    // are fetched cross-origin as blobs; without this the client can't see the
+    // server-supplied name + extension).
+    'exposed_headers'          => ['Content-Disposition'],
     'max_age'                  => 0,
     'supports_credentials'     => true,
 ];
