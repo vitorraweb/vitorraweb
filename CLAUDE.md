@@ -38,7 +38,7 @@ The priority revenue product (FET) now has a **public full-line pricing guide an
 | Brand Identity & Visual Design | **85%** | 15% | Premium redesign shipped |
 | Public Pages (Frontend) | **85%** | 15% | Homepage, About, 4 product pages (FET now w/ pricing + calculator), Enquire, Blog done; Coffee Shop gated |
 | Technology Foundation (SEO & Growth) | 50% | 50% | ISR on blog/homepage/shop; sitemap pending |
-| Security & Customer Trust | 60% | 40% | Server-side price validation added; active risks remain (see Known Issues) |
+| Security & Customer Trust | **90%** | 10% | Server-side price validation; **2FA, audit log, login throttle, token surface-scoping, encrypted file uploads, HttpOnly-cookie auth option, 12-char + breached-password policy** (see Security Hardening) |
 | Business Operations (Orders, Admin) | 80% | 20% | Checkout built (orders + line items) but paused while coffee is gated; admin order management updated; **B2B installment plans added** |
 | Backend API & Integrations | 65% | 35% | Products, blog, enquiry, contact, orders/checkout, transactional email (Resend) wired; payment gateway pending |
 | Reliability & Uptime Systems | 30% | 70% | No monitoring in place |
@@ -95,6 +95,23 @@ A multi-currency cash-ledger bookkeeping tool with **maker–checker** approvals
 
 ### Pending (operations setup, not code)
 - Set executive-report recipients in `/admin/settings`; grant new modules to existing ops accounts (incl. **"Accounting — approve"** for the Senior Finance Officer); optionally link **Careers** + **Suppliers** in the public footer; set `ANTHROPIC_API_KEY` on prod to enable CV/receipt auto-read (both work manually without it).
+
+---
+
+## Security Hardening
+
+A dedicated June 2026 security pass after auditing the staff/finance/ops modules. All shipped + tested; default behaviour unchanged on deploy.
+
+- **Two-factor auth (TOTP):** self-service per staff member at `/admin/profile` + `/staff/profile` (`TwoFactorPanel`). `pragmarx/google2fa` + `bacon/bacon-qr-code`; secret + recovery codes **encrypted at rest**; confirm-before-enable (lockout-safe, opt-in). Login: a valid password with 2FA on returns `two_factor_required`, then the client re-submits with a TOTP or recovery code. Endpoints: `/auth/2fa/{setup,confirm,disable}`.
+- **Audit trail:** `activity_logs` table + `App\Support\Audit::log()`. Records HR-doc / medical-note / CV / supplier-bank-detail access and transaction approve/void, role change, password reset, 2FA on/off. Admin-only viewer at **`/admin/audit`** (`AuditController`).
+- **Encryption at rest for confidential uploads:** `App\Support\SecureFile` — every private-disk upload (HR docs, medical notes, supplier docs, CVs, finance receipts) is stored as `VENC1:` + encrypted payload; downloads transparently decrypt; legacy plaintext files still read. CVs stay plaintext only in the short-lived `applications/pending` folder (for the AI read), encrypted on move.
+- **Access tightening:** medical notes are **HR-only** (admin or `people` module — a line manager can approve leave but not open the doctor's note); admin password reset revokes that user's other sessions; login throttled (`throttle:8,1`).
+- **Sessions & passwords:** all staff sessions use the short, admin-configurable lifetime (default 8h); **active-sessions** panel (list signed-in devices / "sign out other devices", `/auth/sessions*`, `SessionsPanel`); password policy `Password::defaults()` = min 12 + breached-password check (`uncompromised()`) in prod.
+- **Token surface-scoping:** login takes a `scope` (`admin`|`staff`|`customer`); the Sanctum token carries that ability (clamped to role), and `/admin`, `/staff`, `/account` are gated by `RequireTokenAbility` — a staff-portal token can't be replayed against the admin panel. `*` tokens (legacy) pass; only real bearer tokens are constrained.
+- **HttpOnly-cookie auth option (XSS hardening):** Sanctum SPA mode built **alongside** Bearer tokens (`statefulApi()` + `lib/http.ts` `authFetch`). **Off by default**; switch on with backend `SANCTUM_STATEFUL_DOMAINS` + `SESSION_DOMAIN=.vitorra.org` + `SESSION_SECURE_COOKIE=true` and Vercel `NEXT_PUBLIC_AUTH_MODE=cookie`. Reversible by unsetting.
+- ⚠ **Never rotate `APP_KEY` in prod** — encrypted files + 2FA secrets become unreadable.
+
+Tests: `Tier1SecurityTest`, `TwoFactorTest`, `TokenScopeTest`, `SessionsTest`, `SecureFileTest`.
 
 ---
 
@@ -359,6 +376,9 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 | `backend/app/Http/Controllers/Api/BlogAdminController.php` | Admin blog CRUD (slug, publish, validation) |
 | `frontend/src/components/admin/BlogEditor.tsx` | Markdown post editor (new + edit) |
 | `backend/app/Models/Setting.php` | Key/value settings (cached defaults + `get/put`) |
+| `backend/app/Support/{Audit,SecureFile}.php` | Audit-log writer; encrypt-at-rest helper for private uploads |
+| `backend/app/Services/TwoFactorService.php` + `Middleware/RequireTokenAbility.php` | TOTP 2FA; token surface-scoping (`ability:admin/staff/customer`) |
+| `frontend/src/lib/http.ts` + `components/{TwoFactorPanel,SessionsPanel}.tsx` | `authFetch` (token/cookie transport); 2FA + active-session widgets |
 | `backend/app/Http/Controllers/Api/SettingsController.php` | Admin settings read/update |
 | `frontend/src/app/admin/settings/page.tsx` | System settings screen (tax/currency/shipping/notifications) |
 | `backend/app/Http/Controllers/Api/ProductAdminController.php` | Admin product catalogue CRUD (USD↔cents, slug) |

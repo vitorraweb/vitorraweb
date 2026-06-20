@@ -22,6 +22,7 @@
 | FET pricing + savings calculator + currency helper | ✅ Complete |
 | Transactional email (Resend) | ✅ Live in production |
 | **Account security — self-service password change + auto-expiring sessions** | ✅ **Done** |
+| **Security hardening** (2FA, audit log, login throttle, token scoping, encrypted files, cookie-auth option) | ✅ **Done** |
 | **Internal operations platform** (Staff/HR, CEO report, Suppliers, Installments) | ✅ **Built & deployed** |
 | **Accounting — "Vitorra Books"** (ledger, invoicing, VAT, AI receipts, recurring) | ✅ **Built & deployed** |
 | Coffee shop (storefront/cart/checkout) | ⏸ Built, gated until retail prices confirmed |
@@ -65,6 +66,23 @@ A multi-currency bookkeeping tool with a **maker–checker** rule: the junior fi
 
 ---
 
+## ✅ Security hardening (June 2026)
+
+A focused pass after a full audit of the staff/finance/ops modules, in business terms: protecting confidential staff, finance and supplier data, and the money tools, against stolen passwords, lost devices, and leaked files.
+
+- **Two-factor authentication (2FA):** any staff member can switch on app-based 2FA (Google/Microsoft Authenticator, Authy) from their profile — a code on login on top of the password, with one-time recovery codes for a lost phone. Self-service and optional, so nobody is locked out.
+- **Activity log (`/admin/audit`, admin-only):** a tamper-evident record of who opened a contract, medical note, CV or supplier bank details, and who approved/voided money or changed a role — accountability after the fact.
+- **Confidential files encrypted at rest:** HR documents, medical notes, supplier documents, CVs and finance receipts are now scrambled on disk, so a stolen backup or server copy is useless without the company key.
+- **Tighter access:** medical notes are HR-only (a line manager can approve leave but can't open the doctor's note); staff sessions are short; sign-in is rate-limited against password guessing; an admin-set password reset signs that person out everywhere.
+- **Active sessions:** everyone can see their signed-in devices and "sign out other devices" from their profile.
+- **Stronger passwords:** 12+ characters and a check against known-breached passwords (in production).
+- **Session isolation:** a sign-in is scoped to the portal it was made on, so a staff-portal session can't be used to reach the admin panel.
+- **Login can move to HttpOnly cookies** (a further hardening against browser-script attacks) — built and ready, switched on via configuration when the team chooses; the default is unchanged until then.
+
+> Technical detail (engineering): TOTP via `pragmarx/google2fa`; `activity_logs` table + `App\Support\Audit`; `App\Support\SecureFile` (encrypt-on-store, transparent decrypt, legacy-plaintext safe); Sanctum token abilities (`admin`/`staff`/`customer`) gated by `RequireTokenAbility`; `Password::defaults()` (min 12 + `uncompromised()` in prod); cookie mode via `statefulApi()` + `NEXT_PUBLIC_AUTH_MODE`/`SANCTUM_STATEFUL_DOMAINS`. Covered by feature tests (Tier1Security, TwoFactor, TokenScope, Sessions, SecureFile).
+
+---
+
 ## ✅ Already in place (earlier in the rebuild)
 
 - Premium redesign + design system; all public pages; bilingual EN/SW.
@@ -88,9 +106,10 @@ A multi-currency bookkeeping tool with a **maker–checker** rule: the junior fi
 5. Set `ANTHROPIC_API_KEY` on prod to enable **CV + receipt auto-read** (both work manually without it).
 6. Optionally link **Careers** and **Suppliers** in the public site footer.
 7. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
+8. **Optional — switch login to HttpOnly cookies** (extra XSS hardening): set `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN=.vitorra.org`, `SESSION_SECURE_COOKIE=true` (backend) + `NEXT_PUBLIC_AUTH_MODE=cookie` (Vercel). Reversible by unsetting; default stays token-based.
 
 **Reliability**
-8. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
+9. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
 
 **Content / lower priority**
 9. Native-speaker review of the Swahili legal pages; blog posts; client testimonials; coffee photos; hero videos.
@@ -104,10 +123,13 @@ Frontend auto-deploys via Vercel on push to `master`. Backend:
 ```bash
 cd /home/okelvaxj/vitorraweb && git pull origin master
 cd backend
+# Run composer when dependencies changed (e.g. the 2FA libs / guzzle patch):
+/opt/alt/php83/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader
 /opt/alt/php83/usr/bin/php artisan migrate --force
 /opt/alt/php83/usr/bin/php artisan config:cache
 /opt/alt/php83/usr/bin/php artisan route:cache
 ```
 
 > The server's default `php` is 8.2 but the app needs 8.3 — always run artisan with `/opt/alt/php83/usr/bin/php`.
+> ⚠ Never rotate `APP_KEY` in production — it would make encrypted files (`SecureFile`) and 2FA secrets unreadable.
 > Scheduled jobs (holiday reminders, executive report, application purge, backups, daily digest) ride the existing `php artisan schedule:run` cron.
