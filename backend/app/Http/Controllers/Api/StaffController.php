@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\StaffDocument;
 use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -70,6 +71,11 @@ class StaffController extends Controller
         }
         if (! Storage::disk('local')->exists($document->path)) {
             return response()->json(['message' => 'File not found.'], 404);
+        }
+
+        // Record HR/supervisor access to someone else's private HR file.
+        if ($document->user_id !== $request->user()->id) {
+            Audit::log('hr_document.download', 'Downloaded HR document "'.$document->title.'" of '.($document->user?->name ?? 'a staff member'), $document);
         }
 
         return Storage::disk('local')->download($document->path, $document->original_name ?? $document->title);

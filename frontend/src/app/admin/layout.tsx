@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, Menu, X, CheckSquare, Workflow, Send, LayoutTemplate, CalendarCheck, CalendarDays, Hourglass, Briefcase, TrendingUp, Truck, Wallet } from "lucide-react";
+import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, Menu, X, CheckSquare, Workflow, Send, LayoutTemplate, CalendarCheck, CalendarDays, Hourglass, Briefcase, TrendingUp, Truck, Wallet, ShieldCheck } from "lucide-react";
 import { auth, apiAdmin, canAccess } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 import { UserMenu } from "@/components/admin/admin-ui";
@@ -34,6 +34,7 @@ const nav: NavItem[] = [
   { label: "Holidays",    href: "/admin/holidays",     icon: CalendarDays,  module: "people" },
   { label: "Settings",    href: "/admin/settings",     icon: Settings,      adminOnly: true },
   { label: "Staff",       href: "/admin/staff",        icon: Users,         adminOnly: true },
+  { label: "Activity log", href: "/admin/audit",       icon: ShieldCheck,   adminOnly: true },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -119,7 +119,11 @@ class AuthController extends Controller
     /** When a freshly issued token should expire, by role. */
     private function tokenExpiry(User $user): CarbonInterface
     {
-        if (in_array($user->role, ['admin', 'ops'], true)) {
+        // Every internal account (admin, ops AND employee) gets the short,
+        // admin-configurable session — the staff portal holds confidential HR
+        // data, so an employee token must not be long-lived. Only customer
+        // portal sessions run the longer 30-day window for convenience.
+        if ($user->isStaff()) {
             $hours = (int) Setting::get('staff_session_lifetime_hours', 8);
             $hours = max(1, min(168, $hours)); // clamp 1h–7d
             return now()->addHours($hours);

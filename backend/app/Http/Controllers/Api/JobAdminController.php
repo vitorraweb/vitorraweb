@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\JobApplication;
 use App\Models\JobOpening;
+use App\Support\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -85,6 +86,8 @@ class JobAdminController extends Controller
         if (! $application->cv_path || ! Storage::disk('local')->exists($application->cv_path)) {
             return response()->json(['message' => 'No CV on file.'], 404);
         }
+
+        Audit::log('cv.download', 'Downloaded the CV of applicant '.$application->name, $application);
 
         return Storage::disk('local')->download($application->cv_path, basename($application->cv_path));
     }

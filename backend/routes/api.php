@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AccountingController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AuditController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\BlogAdminController;
@@ -88,8 +89,11 @@ Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);
 | Auth
 |--------------------------------------------------------------------------
 */
-Route::post('/auth/login',    [AuthController::class, 'login']);
-Route::post('/auth/register', [AuthController::class, 'register']);
+// Throttled to blunt password-guessing / credential-stuffing (per IP).
+Route::middleware('throttle:8,1')->group(function () {
+    Route::post('/auth/login',    [AuthController::class, 'login']);
+    Route::post('/auth/register', [AuthController::class, 'register']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout',   [AuthController::class, 'logout']);
@@ -306,6 +310,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('role:admin')->group(function () {
             Route::get('/settings',  [SettingsController::class, 'index']);
             Route::put('/settings',  [SettingsController::class, 'update']);
+            // Audit trail (read-only) — sensitive-action history.
+            Route::get('/audit',     [AuditController::class, 'index']);
             Route::get('/users',                       [UserAdminController::class, 'index']);
             Route::post('/users',                      [UserAdminController::class, 'store']);
             Route::patch('/users/{user}',              [UserAdminController::class, 'update']);

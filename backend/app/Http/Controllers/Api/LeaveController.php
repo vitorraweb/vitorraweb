@@ -11,6 +11,7 @@ use App\Models\PublicHoliday;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\LeaveService;
+use App\Support\Audit;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -217,18 +218,29 @@ class LeaveController extends Controller
         return response()->json(['holidays' => $holidays, 'blackouts' => $blackouts]);
     }
 
-    /** Stream a sick-note document (owner, supervisor, or HR only). */
+    /**
+     * Stream a sick-note document. This is health data, so access is tighter
+     * than leave *approval*: only the owner or HR (admin, or anyone with the
+     * People/HR module — currently Operations) may open it. A line manager who
+     * is not HR can approve the leave but cannot read the medical note.
+     */
     public function downloadNote(Request $request, LeaveRequest $leave): StreamedResponse|JsonResponse
     {
         if (! $leave->document_path) {
             return response()->json(['message' => 'No document.'], 404);
         }
         $actor = $request->user();
-        if ($leave->user_id !== $actor->id && ! $this->canReview($actor, $leave)) {
+        $isHr  = $actor->isAdmin() || $actor->canModule('people');
+        if ($leave->user_id !== $actor->id && ! $isHr) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
         if (! Storage::disk('local')->exists($leave->document_path)) {
             return response()->json(['message' => 'File not found.'], 404);
+        }
+
+        // Record HR access to an employee's medical document (accountability).
+        if ($leave->user_id !== $actor->id) {
+            Audit::log('sick_note.download', 'Opened the medical note for '.($leave->loadMissing('user')->user?->name ?? 'a staff member'), $leave);
         }
 
         return Storage::disk('local')->download($leave->document_path);

@@ -7,6 +7,7 @@ use App\Models\Supplier;
 use App\Models\SupplierDocument;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -36,6 +37,9 @@ class SupplierAdminController extends Controller
     /** Full supplier record incl. decrypted bank details + documents. */
     public function show(Supplier $supplier): JsonResponse
     {
+        // Viewing this record exposes decrypted bank details — record the access.
+        Audit::log('supplier.view_bank', 'Viewed bank details for '.$supplier->company_name, $supplier);
+
         return response()->json(['data' => [
             'id'           => $supplier->id,
             'company_name' => $supplier->company_name,
@@ -109,6 +113,8 @@ class SupplierAdminController extends Controller
         if (! Storage::disk('local')->exists($document->path)) {
             return response()->json(['message' => 'File not found.'], 404);
         }
+
+        Audit::log('supplier_document.download', 'Downloaded supplier document "'.$document->title.'"', $document);
 
         return Storage::disk('local')->download($document->path, $document->original_name ?? $document->title);
     }

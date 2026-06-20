@@ -11,6 +11,7 @@ use App\Models\RecurringEntry;
 use App\Models\SupplierBill;
 use App\Services\FinanceReportService;
 use App\Services\ReceiptExtractionService;
+use App\Support\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -231,6 +232,8 @@ class AccountingController extends Controller
 
         $transaction->update(['status' => 'approved', 'approved_by' => $request->user()->id, 'approved_at' => now()]);
 
+        Audit::log('transaction.approve', 'Approved '.$transaction->type.' of '.$transaction->currency.' '.$transaction->amount, $transaction);
+
         // A bill payment becomes "paid" once its transaction is approved.
         if ($transaction->source === 'bill' && $transaction->source_id) {
             SupplierBill::where('id', $transaction->source_id)->update(['status' => 'paid', 'paid_transaction_id' => $transaction->id]);
@@ -255,6 +258,8 @@ class AccountingController extends Controller
             $this->settleInvoice($transaction->source_id, -$transaction->amount);
         }
         $transaction->update(['status' => 'void']);
+
+        Audit::log('transaction.void', 'Voided '.$transaction->type.' of '.$transaction->currency.' '.$transaction->amount, $transaction);
 
         return response()->json(['data' => $this->shape($transaction->fresh(['account', 'toAccount', 'category']))]);
     }

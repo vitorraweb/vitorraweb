@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\StaffDocument;
 use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -67,7 +68,13 @@ class UserAdminController extends Controller
             $update['email'] = $data['email'];
         }
 
+        $previousRole = $user->role;
+        $roleChanged  = isset($data['role']) && $data['role'] !== $previousRole;
         $user->update($update);
+
+        if ($roleChanged) {
+            Audit::log('user.role_change', $user->name.' role changed from '.$previousRole.' to '.$data['role'], $user, ['from' => $previousRole, 'to' => $data['role']]);
+        }
 
         return response()->json(['data' => $user->fresh()->only(self::FIELDS)]);
     }
@@ -76,6 +83,10 @@ class UserAdminController extends Controller
     {
         $data = $request->validate(['password' => ['required', 'string', 'min:8']]);
         $user->update(['password' => $data['password']]);
+        // Force the affected user to re-authenticate everywhere with the new password.
+        $user->tokens()->delete();
+
+        Audit::log('user.password_reset', 'Reset the password for '.$user->name, $user);
 
         return response()->json(['message' => 'Password updated.']);
     }
@@ -89,6 +100,7 @@ class UserAdminController extends Controller
             return response()->json(['message' => 'You cannot delete the last admin.'], 422);
         }
 
+        Audit::log('user.delete', 'Removed staff member '.$user->name.' ('.$user->email.')', null, ['user_id' => $user->id, 'role' => $user->role]);
         $user->delete();
 
         return response()->json(['message' => 'Staff member removed.']);
