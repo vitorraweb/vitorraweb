@@ -38,6 +38,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     protected function casts(): array
@@ -49,7 +51,16 @@ class User extends Authenticatable
             'permissions'            => 'array',
             'documents'              => 'array',
             'leave_entitlement_days' => 'integer',
+            'two_factor_secret'         => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_confirmed_at'   => 'datetime',
         ];
+    }
+
+    /** Whether app-based two-factor is fully set up and active for this user. */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return ! is_null($this->two_factor_secret) && ! is_null($this->two_factor_confirmed_at);
     }
 
     public function isAdmin(): bool { return $this->role === 'admin'; }
@@ -124,7 +135,10 @@ class User extends Authenticatable
     {
         return array_merge(
             $this->only(['id', 'name', 'email', 'role', 'department', 'job_title', 'staff_status']),
-            ['permissions' => $this->effectivePermissions()],
+            [
+                'permissions'        => $this->effectivePermissions(),
+                'two_factor_enabled' => $this->hasTwoFactorEnabled(),
+            ],
         );
     }
 

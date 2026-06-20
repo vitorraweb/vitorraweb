@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2, Check, ShieldCheck, Eye, EyeOff, Clock } from "lucide-react";
 import { staffAuth, apiStaff } from "@/lib/staff-auth";
 import type { StaffUser } from "@/lib/staff-auth";
+import { TwoFactorPanel } from "@/components/TwoFactorPanel";
 
 export default function StaffProfilePage() {
   const [user, setUser]     = useState<StaffUser | null>(null);
@@ -106,6 +107,9 @@ export default function StaffProfilePage() {
           </div>
         </div>
       </form>
+
+      {/* Two-factor authentication */}
+      <TwoFactorPanel api={apiStaff} />
     </div>
   );
 }

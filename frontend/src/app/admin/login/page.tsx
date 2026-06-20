@@ -16,6 +16,8 @@ export default function AdminLoginPage() {
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
   const [expired, setExpired] = useState(false);
+  const [twoFactor, setTwoFactor] = useState(false); // second step: code entry
+  const [code, setCode]       = useState("");
 
   // Surface "your session expired" when bounced here after a timeout.
   useEffect(() => {
@@ -25,12 +27,19 @@ export default function AdminLoginPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setError("Both fields are required."); return; }
+    if (twoFactor && !code) { setError("Enter your authentication code."); return; }
     setError(""); setExpired(false); setLoading(true);
     try {
-      const res = await apiAdmin<{ data: { token: string; expires_at: string | null; user: { id: number; name: string; email: string; role: string } } }>(
+      const res = await apiAdmin<{ data: { two_factor_required?: boolean; token: string; expires_at: string | null; user: { id: number; name: string; email: string; role: string } } }>(
         "/auth/login",
-        { method: "POST", body: JSON.stringify({ email, password }) }
+        { method: "POST", body: JSON.stringify({ email, password, code: code || undefined }) }
       );
+      // Password was right but this account needs a second factor.
+      if (res.data.two_factor_required) {
+        setTwoFactor(true);
+        setLoading(false);
+        return;
+      }
       const role = res.data.user.role?.toLowerCase();
       if (role !== "admin" && role !== "ops") {
         // Revoke the token we just issued — this account has no admin-panel access.
@@ -86,9 +95,21 @@ export default function AdminLoginPage() {
               </button>
             </div>
           </div>
+          {twoFactor && (
+            <div>
+              <Label className="mb-2" style={{ color: "#1E1E1E" }}>Authentication code</Label>
+              <Input
+                type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus
+                value={code} onChange={e => setCode(e.target.value)}
+                placeholder="6-digit code or recovery code"
+                className="h-11 rounded-xl px-3.5 tracking-widest focus-visible:ring-[#C5B27A]/30 focus-visible:border-[#C5B27A]"
+              />
+              <p className="mt-2 text-xs" style={{ color: "#999" }}>Open your authenticator app and enter the current code. Lost your device? Use a recovery code.</p>
+            </div>
+          )}
           {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
           <button type="submit" disabled={loading} className="btn-primary w-full" style={{ justifyContent: "center", opacity: loading ? 0.7 : 1 }}>
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Signing in…</> : "Sign in"}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Signing in…</> : twoFactor ? "Verify & sign in" : "Sign in"}
           </button>
         </form>
 

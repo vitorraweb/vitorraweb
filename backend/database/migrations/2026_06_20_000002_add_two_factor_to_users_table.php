@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * App-based two-factor (TOTP). The secret + recovery codes are stored
+     * encrypted at rest (see the User casts). `confirmed_at` is only set once
+     * the staff member proves a working code, so a half-finished setup never
+     * locks anyone out.
+     */
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->text('two_factor_secret')->nullable()->after('password');
+            $table->text('two_factor_recovery_codes')->nullable()->after('two_factor_secret');
+            $table->timestamp('two_factor_confirmed_at')->nullable()->after('two_factor_recovery_codes');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at']);
+        });
+    }
+};

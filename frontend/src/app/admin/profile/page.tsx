@@ -5,6 +5,7 @@ import { Loader2, Check, ShieldCheck, Eye, EyeOff, Clock } from "lucide-react";
 import { auth, apiAdmin } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/admin-ui";
+import { TwoFactorPanel } from "@/components/TwoFactorPanel";
 
 export default function AdminProfilePage() {
   const [user, setUser] = useState<AdminUser | null>(null);
@@ -130,6 +131,9 @@ export default function AdminProfilePage() {
           </div>
         </div>
       </form>
+
+      {/* Two-factor authentication */}
+      <TwoFactorPanel api={apiAdmin} />
     </div>
   );
 }

@@ -114,18 +114,29 @@ export async function downloadStaffFile(path: string, filename: string): Promise
   URL.revokeObjectURL(url);
 }
 
-/** Log in to the staff portal; rejects non-staff (e.g. customer) accounts. */
-export async function loginStaff(email: string, password: string): Promise<StaffUser> {
+/**
+ * Log in to the staff portal; rejects non-staff (e.g. customer) accounts.
+ * When the account has two-factor on, the first call (no code) resolves to
+ * `{ twoFactorRequired: true }` — the caller then re-invokes with the code.
+ */
+export async function loginStaff(
+  email: string,
+  password: string,
+  code?: string,
+): Promise<{ twoFactorRequired: true } | { twoFactorRequired: false; user: StaffUser }> {
   const res = await fetch(`${base()}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, code: code || undefined }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Login failed" }));
     throw new Error(err.message ?? "Login failed");
   }
-  const { data } = (await res.json()) as { data: { token: string; expires_at: string | null; user: StaffUser } };
+  const { data } = (await res.json()) as {
+    data: { two_factor_required?: boolean; token: string; expires_at: string | null; user: StaffUser };
+  };
+  if (data.two_factor_required) return { twoFactorRequired: true };
   if (!STAFF_ROLES.includes(data.user.role)) {
     // Revoke the token we just issued — this account isn't a staff account.
     fetch(`${base()}/auth/logout`, {
@@ -135,5 +146,5 @@ export async function loginStaff(email: string, password: string): Promise<Staff
     throw new Error("This account doesn't have staff portal access.");
   }
   staffAuth.save(data.token, data.user, data.expires_at);
-  return data.user;
+  return { twoFactorRequired: false, user: data.user };
 }

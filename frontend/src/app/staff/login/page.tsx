@@ -16,6 +16,8 @@ export default function StaffLoginPage() {
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [expired, setExpired]   = useState(false);
+  const [twoFactor, setTwoFactor] = useState(false);
+  const [code, setCode]         = useState("");
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("expired") === "1") setExpired(true);
@@ -24,9 +26,15 @@ export default function StaffLoginPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setError("Both fields are required."); return; }
+    if (twoFactor && !code) { setError("Enter your authentication code."); return; }
     setError(""); setExpired(false); setLoading(true);
     try {
-      await loginStaff(email, password);
+      const result = await loginStaff(email, password, code || undefined);
+      if (result.twoFactorRequired) {
+        setTwoFactor(true);
+        setLoading(false);
+        return;
+      }
       router.push("/staff");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed.");
@@ -70,9 +78,21 @@ export default function StaffLoginPage() {
               </button>
             </div>
           </div>
+          {twoFactor && (
+            <div>
+              <Label className="mb-2" style={{ color: "#1E1E1E" }}>Authentication code</Label>
+              <Input
+                type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus
+                value={code} onChange={e => setCode(e.target.value)}
+                placeholder="6-digit code or recovery code"
+                className="h-11 rounded-xl px-3.5 tracking-widest focus-visible:ring-[#C5B27A]/30 focus-visible:border-[#C5B27A]"
+              />
+              <p className="mt-2 text-xs" style={{ color: "#999" }}>Open your authenticator app and enter the current code. Lost your device? Use a recovery code.</p>
+            </div>
+          )}
           {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
           <button type="submit" disabled={loading} className="btn-primary w-full" style={{ justifyContent: "center", opacity: loading ? 0.7 : 1 }}>
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Signing in…</> : "Sign in"}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Signing in…</> : twoFactor ? "Verify & sign in" : "Sign in"}
           </button>
         </form>
 

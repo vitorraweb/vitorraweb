@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\SupplierAdminController;
 use App\Http\Controllers\Api\SupplierBillController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\TaskController;
+use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\UserAdminController;
 use Illuminate\Support\Facades\Route;
 
@@ -99,6 +100,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout',   [AuthController::class, 'logout']);
     Route::get('/auth/me',        [AuthController::class, 'me']);
     Route::post('/auth/password', [AuthController::class, 'changePassword']);
+
+    // Self-service app-based two-factor (enrol / confirm / disable).
+    Route::post('/auth/2fa/setup',   [TwoFactorController::class, 'setup']);
+    Route::post('/auth/2fa/confirm', [TwoFactorController::class, 'confirm']);
+    Route::post('/auth/2fa/disable', [TwoFactorController::class, 'disable']);
 
     /*
     |----------------------------------------------------------------------

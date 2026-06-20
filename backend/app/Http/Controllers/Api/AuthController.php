@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\TwoFactorService;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,21 +40,37 @@ class AuthController extends Controller
         return response()->json(['data' => $this->issueToken($user)], 201);
     }
 
-    /** Issue a Sanctum token on successful login */
-    public function login(Request $request): JsonResponse
+    /** Issue a Sanctum token on successful login (challenging for 2FA if on). */
+    public function login(Request $request, TwoFactorService $tfa): JsonResponse
     {
         $data = $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
+            'code'     => ['nullable', 'string'], // 2FA code or recovery code, when enabled
         ]);
 
-        if (!Auth::attempt($data)) {
+        if (! Auth::attempt(['email' => $data['email'], 'password' => $data['password']])) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        return response()->json(['data' => $this->issueToken(Auth::user())]);
+        $user = Auth::user();
+
+        // Second factor: password was right, but this account requires a code.
+        if ($user->hasTwoFactorEnabled()) {
+            if (empty($data['code'])) {
+                // Credentials are valid — tell the client to collect the code.
+                return response()->json(['data' => ['two_factor_required' => true]]);
+            }
+            if (! $tfa->passesChallenge($user, $data['code'])) {
+                throw ValidationException::withMessages([
+                    'code' => ['That authentication code is not valid.'],
+                ]);
+            }
+        }
+
+        return response()->json(['data' => $this->issueToken($user)]);
     }
 
     /** Revoke the current token (logout) */
