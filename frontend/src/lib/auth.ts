@@ -1,5 +1,8 @@
-/* Minimal client-side auth helpers — token stored in localStorage.
-   Replace with HttpOnly cookies + Sanctum CSRF for production hardening. */
+/* Client-side auth helpers. Supports two transports (see lib/http.ts):
+   token mode (Bearer in localStorage, default) and cookie mode (Sanctum SPA
+   HttpOnly session). Switch with NEXT_PUBLIC_AUTH_MODE=cookie. */
+
+import { authFetch } from "./http";
 
 const TOKEN_KEY  = "vitorra_admin_token";
 const USER_KEY   = "vitorra_admin_user";
@@ -36,9 +39,9 @@ export const auth = {
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   },
-  save: (token: string, user: AdminUser, expiresAt?: string | null): void => {
+  save: (token: string | null, user: AdminUser, expiresAt?: string | null): void => {
     try {
-      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(TOKEN_KEY, token ?? ""); // empty in cookie mode — auth rides the HttpOnly cookie
       localStorage.setItem(USER_KEY, JSON.stringify(user));
       if (expiresAt) localStorage.setItem(EXPIRY_KEY, expiresAt);
       else localStorage.removeItem(EXPIRY_KEY);
@@ -65,17 +68,8 @@ export const auth = {
 };
 
 export async function apiAdmin<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = auth.getToken();
-  const base  = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
-  const res   = await fetch(`${base}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type":  "application/json",
-      Accept:          "application/json",
-      Authorization:   token ? `Bearer ${token}` : "",
-      ...(options?.headers ?? {}),
-    },
-  });
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const res  = await authFetch(base, path, auth.getToken(), options ?? {});
   if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Request failed" }));
@@ -108,33 +102,24 @@ async function saveBlob(res: Response, fallback: string): Promise<void> {
 
 /** Fetch a CSV from an admin endpoint and trigger a browser file download. */
 export async function downloadCsv(path: string, filename: string): Promise<void> {
-  const token = auth.getToken();
-  const base  = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
-  const res   = await fetch(`${base}${path}`, {
-    headers: { Authorization: token ? `Bearer ${token}` : "", Accept: "text/csv" },
-  });
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const res  = await authFetch(base, path, auth.getToken(), { headers: { Accept: "text/csv" } }, false);
   if (!res.ok) throw new Error("Export failed");
   await saveBlob(res, filename);
 }
 
 /** Download a file from an authorized admin endpoint as a browser download. */
 export async function downloadFile(path: string, filename: string): Promise<void> {
-  const token = auth.getToken();
-  const base  = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
-  const res   = await fetch(`${base}${path}`, { headers: { Authorization: token ? `Bearer ${token}` : "" } });
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const res  = await authFetch(base, path, auth.getToken(), {}, false);
   if (!res.ok) throw new Error("Download failed");
   await saveBlob(res, filename);
 }
 
 /* Multipart upload — lets the browser set the Content-Type boundary (don't set it). */
 export async function uploadAdmin<T>(path: string, form: FormData): Promise<T> {
-  const token = auth.getToken();
-  const base  = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
-  const res   = await fetch(`${base}${path}`, {
-    method: "POST",
-    body: form,
-    headers: { Accept: "application/json", Authorization: token ? `Bearer ${token}` : "" },
-  });
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const res  = await authFetch(base, path, auth.getToken(), { method: "POST", body: form }, false);
   if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Upload failed" }));

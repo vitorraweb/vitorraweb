@@ -1,5 +1,8 @@
 /* Customer (portal) auth — kept separate from the admin session so the two
-   never collide. Token in localStorage under a customer-specific key. */
+   never collide. Token in localStorage under a customer-specific key. Supports
+   cookie mode (see lib/http.ts). */
+
+import { authFetch } from "./http";
 
 const TOKEN_KEY  = "vitorra_customer_token";
 const USER_KEY   = "vitorra_customer_user";
@@ -16,9 +19,9 @@ export const customerAuth = {
   getUser: (): CustomerUser | null => {
     try { const r = localStorage.getItem(USER_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
   },
-  save: (token: string, user: CustomerUser, expiresAt?: string | null): void => {
+  save: (token: string | null, user: CustomerUser, expiresAt?: string | null): void => {
     try {
-      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(TOKEN_KEY, token ?? ""); // empty in cookie mode
       localStorage.setItem(USER_KEY, JSON.stringify(user));
       if (expiresAt) localStorage.setItem(EXPIRY_KEY, expiresAt);
       else localStorage.removeItem(EXPIRY_KEY);
@@ -31,16 +34,7 @@ export const customerAuth = {
 
 /** Authenticated fetch for the customer portal. */
 export async function apiCustomer<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = customerAuth.getToken();
-  const res = await fetch(`${base()}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
-      ...(options?.headers ?? {}),
-    },
-  });
+  const res = await authFetch(base(), path, customerAuth.getToken(), options ?? {});
   if (res.status === 401) { customerAuth.clear(); window.location.href = "/account/login"; }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Request failed" }));
@@ -49,13 +43,9 @@ export async function apiCustomer<T>(path: string, options?: RequestInit): Promi
   return res.json();
 }
 
-/** Public register/login — returns the issued token + user (no auth needed). */
-async function postAuth(path: string, body: Record<string, unknown>): Promise<{ data: { user: CustomerUser; token: string; expires_at?: string | null } }> {
-  const res = await fetch(`${base()}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify(body),
-  });
+/** Public register/login — returns the issued token (token mode) + user. */
+async function postAuth(path: string, body: Record<string, unknown>): Promise<{ data: { user: CustomerUser; token: string | null; expires_at?: string | null } }> {
+  const res = await authFetch(base(), path, null, { method: "POST", body: JSON.stringify(body) });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Request failed" }));
     throw new Error(err.message ?? "Request failed");

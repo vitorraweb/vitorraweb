@@ -1,7 +1,9 @@
 /* Staff (employee self-service) auth — kept separate from the admin and
    customer sessions so the three never collide. Token in localStorage under a
    staff-specific key. Internal portal: English only, mirrors the admin session
-   model (including auto-expiry). */
+   model (including auto-expiry). Supports cookie mode (see lib/http.ts). */
+
+import { authFetch } from "./http";
 
 const TOKEN_KEY  = "vitorra_staff_token";
 const USER_KEY   = "vitorra_staff_user";
@@ -26,9 +28,9 @@ export const staffAuth = {
   getUser: (): StaffUser | null => {
     try { const r = localStorage.getItem(USER_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
   },
-  save: (token: string, user: StaffUser, expiresAt?: string | null): void => {
+  save: (token: string | null, user: StaffUser, expiresAt?: string | null): void => {
     try {
-      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(TOKEN_KEY, token ?? ""); // empty in cookie mode
       localStorage.setItem(USER_KEY, JSON.stringify(user));
       if (expiresAt) localStorage.setItem(EXPIRY_KEY, expiresAt);
       else localStorage.removeItem(EXPIRY_KEY);
@@ -54,16 +56,7 @@ export const staffAuth = {
 
 /** Authenticated JSON fetch for the staff portal. */
 export async function apiStaff<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = staffAuth.getToken();
-  const res = await fetch(`${base()}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
-      ...(options?.headers ?? {}),
-    },
-  });
+  const res = await authFetch(base(), path, staffAuth.getToken(), options ?? {});
   if (res.status === 401) { staffAuth.clear(); window.location.href = "/staff/login?expired=1"; }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Request failed" }));
@@ -74,12 +67,7 @@ export async function apiStaff<T>(path: string, options?: RequestInit): Promise<
 
 /** Multipart upload for the staff portal (browser sets the boundary). */
 export async function uploadStaff<T>(path: string, form: FormData): Promise<T> {
-  const token = staffAuth.getToken();
-  const res = await fetch(`${base()}${path}`, {
-    method: "POST",
-    body: form,
-    headers: { Accept: "application/json", Authorization: token ? `Bearer ${token}` : "" },
-  });
+  const res = await authFetch(base(), path, staffAuth.getToken(), { method: "POST", body: form }, false);
   if (res.status === 401) { staffAuth.clear(); window.location.href = "/staff/login?expired=1"; }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Upload failed" }));
@@ -102,10 +90,7 @@ function filenameFromResponse(res: Response, fallback: string): string {
 
 /** Download a private file from an authorized endpoint as a browser download. */
 export async function downloadStaffFile(path: string, filename: string): Promise<void> {
-  const token = staffAuth.getToken();
-  const res = await fetch(`${base()}${path}`, {
-    headers: { Authorization: token ? `Bearer ${token}` : "" },
-  });
+  const res = await authFetch(base(), path, staffAuth.getToken(), {}, false);
   if (!res.ok) throw new Error("Download failed");
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -124,9 +109,8 @@ export async function loginStaff(
   password: string,
   code?: string,
 ): Promise<{ twoFactorRequired: true } | { twoFactorRequired: false; user: StaffUser }> {
-  const res = await fetch(`${base()}/auth/login`, {
+  const res = await authFetch(base(), "/auth/login", null, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ email, password, code: code || undefined, scope: "staff" }),
   });
   if (!res.ok) {
@@ -134,15 +118,12 @@ export async function loginStaff(
     throw new Error(err.message ?? "Login failed");
   }
   const { data } = (await res.json()) as {
-    data: { two_factor_required?: boolean; token: string; expires_at: string | null; user: StaffUser };
+    data: { two_factor_required?: boolean; token: string | null; expires_at: string | null; user: StaffUser };
   };
   if (data.two_factor_required) return { twoFactorRequired: true };
   if (!STAFF_ROLES.includes(data.user.role)) {
-    // Revoke the token we just issued — this account isn't a staff account.
-    fetch(`${base()}/auth/logout`, {
-      method: "POST",
-      headers: { Accept: "application/json", Authorization: `Bearer ${data.token}` },
-    }).catch(() => { /* best-effort */ });
+    // Revoke the session/token we just issued — this account isn't a staff account.
+    authFetch(base(), "/auth/logout", data.token, { method: "POST" }).catch(() => { /* best-effort */ });
     throw new Error("This account doesn't have staff portal access.");
   }
   staffAuth.save(data.token, data.user, data.expires_at);

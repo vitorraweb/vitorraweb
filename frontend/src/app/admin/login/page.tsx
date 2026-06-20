@@ -7,6 +7,7 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { auth, apiAdmin } from "@/lib/auth";
+import { authFetch } from "@/lib/http";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function AdminLoginPage() {
     if (twoFactor && !code) { setError("Enter your authentication code."); return; }
     setError(""); setExpired(false); setLoading(true);
     try {
-      const res = await apiAdmin<{ data: { two_factor_required?: boolean; token: string; expires_at: string | null; user: { id: number; name: string; email: string; role: string } } }>(
+      const res = await apiAdmin<{ data: { two_factor_required?: boolean; token: string | null; expires_at: string | null; user: { id: number; name: string; email: string; role: string } } }>(
         "/auth/login",
         { method: "POST", body: JSON.stringify({ email, password, code: code || undefined, scope: "admin" }) }
       );
@@ -42,12 +43,9 @@ export default function AdminLoginPage() {
       }
       const role = res.data.user.role?.toLowerCase();
       if (role !== "admin" && role !== "ops") {
-        // Revoke the token we just issued — this account has no admin-panel access.
+        // Revoke the session/token we just issued — no admin-panel access.
         const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
-        fetch(`${base}/auth/logout`, {
-          method: "POST",
-          headers: { Accept: "application/json", Authorization: `Bearer ${res.data.token}` },
-        }).catch(() => { /* best-effort */ });
+        authFetch(base, "/auth/logout", res.data.token, { method: "POST" }).catch(() => { /* best-effort */ });
         setError("This account doesn't have admin panel access.");
         return;
       }

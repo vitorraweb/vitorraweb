@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -74,13 +75,37 @@ class AuthController extends Controller
             }
         }
 
+        // Cookie/SPA mode: the request is stateful (came from a SANCTUM_STATEFUL
+        // domain), so the session cookie is the credential — establish it and
+        // return no token (nothing sensitive for JS to store). Otherwise fall
+        // back to a Bearer token for token-mode clients.
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+
+            return response()->json(['data' => [
+                'user'       => $user->toAuthArray(),
+                'token'      => null,
+                'expires_at' => null,
+            ]]);
+        }
+
         return response()->json(['data' => $this->issueToken($user, $data['scope'] ?? null)]);
     }
 
-    /** Revoke the current token (logout) */
+    /** Sign out — revokes the Bearer token (token mode) and/or the session (cookie mode). */
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->user()?->currentAccessToken();
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        }
+
+        // Cookie/SPA session, if any.
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return response()->json(['message' => 'Logged out.']);
     }
@@ -154,8 +179,11 @@ class AuthController extends Controller
 
         $user->update(['password' => $data['password']]);
 
-        // Keep this session alive; sign out everywhere else.
-        $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
+        // Keep this session alive; sign out every other Bearer-token session.
+        $current = $user->currentAccessToken();
+        $user->tokens()
+            ->when($current instanceof PersonalAccessToken, fn ($q) => $q->where('id', '!=', $current->id))
+            ->delete();
 
         return response()->json(['message' => 'Password updated. Other sessions have been signed out.']);
     }

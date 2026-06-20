@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Allow the Next.js frontend to call the API
         $middleware->validateCsrfTokens(except: ['api/*']);
+        // Cookie (HttpOnly) auth for the SPA alongside Bearer tokens. Inert until
+        // SANCTUM_STATEFUL_DOMAINS lists the frontend hosts — only requests from
+        // those domains become stateful (session cookie); everything else stays
+        // token-based, so this is a no-op until that env var is set in prod.
+        $middleware->statefulApi();
         // Role-based access guard for admin routes
         $middleware->alias([
             'role'    => \App\Http\Middleware\RequireRole::class,
