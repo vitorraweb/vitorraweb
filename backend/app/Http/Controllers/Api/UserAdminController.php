@@ -53,7 +53,7 @@ class UserAdminController extends Controller
             ],
         ));
 
-        return response()->json(['data' => $user->only(self::FIELDS)], 201);
+        return response()->json(['data' => $this->payload($user)], 201);
     }
 
     public function update(Request $request, User $user): JsonResponse
@@ -78,7 +78,19 @@ class UserAdminController extends Controller
             Audit::log('user.role_change', $user->name.' role changed from '.$previousRole.' to '.$data['role'], $user, ['from' => $previousRole, 'to' => $data['role']]);
         }
 
-        return response()->json(['data' => $user->fresh()->only(self::FIELDS)]);
+        return response()->json(['data' => $this->payload($user->fresh())]);
+    }
+
+    /**
+     * Staff record shaped for API output. `only()` returns a raw Carbon for the
+     * date-cast `start_date`, which JSON-encodes to a full ISO timestamp the
+     * frontend's <input type="date"> can't display — so normalise it to Y-m-d.
+     */
+    private function payload(User $user): array
+    {
+        return array_merge($user->only(self::FIELDS), [
+            'start_date' => optional($user->start_date)->toDateString(),
+        ]);
     }
 
     public function resetPassword(Request $request, User $user): JsonResponse

@@ -47,7 +47,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
-            'start_date'             => 'date',
+            'start_date'             => 'date:Y-m-d',
             'permissions'            => 'array',
             'documents'              => 'array',
             'leave_entitlement_days' => 'integer',

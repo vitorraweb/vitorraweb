@@ -121,7 +121,10 @@ class AuthController extends Controller
     /** List this account's active sessions (signed-in devices). */
     public function sessions(Request $request): JsonResponse
     {
+        // In cookie/SPA (stateful) mode the "current" credential is a
+        // TransientToken with no id — only a real bearer token has one.
         $current = $request->user()->currentAccessToken();
+        $currentId = $current instanceof PersonalAccessToken ? $current->getKey() : null;
 
         $sessions = $request->user()->tokens()
             ->orderByRaw('last_used_at IS NULL, last_used_at DESC')
@@ -132,7 +135,7 @@ class AuthController extends Controller
                 'last_used_at' => optional($t->last_used_at)->toIso8601String(),
                 'created_at'   => optional($t->created_at)->toIso8601String(),
                 'expires_at'   => optional($t->expires_at)->toIso8601String(),
-                'current'      => $current ? $t->id === $current->id : false,
+                'current'      => $t->getKey() === $currentId,
             ]);
 
         return response()->json(['data' => $sessions]);
@@ -150,8 +153,9 @@ class AuthController extends Controller
     public function revokeOtherSessions(Request $request): JsonResponse
     {
         $current = $request->user()->currentAccessToken();
+        $currentId = $current instanceof PersonalAccessToken ? $current->getKey() : null;
         $request->user()->tokens()
-            ->when($current, fn ($q) => $q->where('id', '!=', $current->id))
+            ->when($currentId, fn ($q) => $q->where('id', '!=', $currentId))
             ->delete();
 
         return response()->json(['message' => 'Signed out of all other devices.']);
