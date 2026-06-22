@@ -27,6 +27,7 @@ return [
         'media'      => 'Media',
         'messages'   => 'Messages',
         'orders'     => 'Orders',
+        'fet'        => 'FET savings',
         'newsletter' => 'Newsletter',
         'tasks'      => 'Tasks',
         'people'     => 'People (HR)',
@@ -48,11 +49,11 @@ return [
 
     // department key => default modules (editable per-person via the override)
     'departments' => [
-        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'newsletter', 'tasks', 'people', 'executive', 'suppliers', 'accounting'],
-        'operations' => ['dashboard', 'orders', 'enquiries', 'messages', 'customers', 'tasks', 'people', 'suppliers'],
+        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'fet', 'newsletter', 'tasks', 'people', 'executive', 'suppliers', 'accounting'],
+        'operations' => ['dashboard', 'orders', 'fet', 'enquiries', 'messages', 'customers', 'tasks', 'people', 'suppliers'],
         'finance'    => ['dashboard', 'orders', 'customers', 'enquiries', 'tasks', 'people', 'executive', 'suppliers', 'accounting'],
         'marketing'  => ['dashboard', 'blog', 'media', 'prospects', 'enquiries', 'customers', 'newsletter', 'tasks'],
-        'sales'      => ['dashboard', 'enquiries', 'prospects', 'customers', 'orders', 'tasks'],
+        'sales'      => ['dashboard', 'enquiries', 'prospects', 'customers', 'orders', 'fet', 'tasks'],
         'it'         => ['dashboard', 'media', 'tasks'],
     ],
 ];

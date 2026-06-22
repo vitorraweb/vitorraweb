@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CompanyEventController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\EnquiryController;
+use App\Http\Controllers\Api\FetInstallationController;
 use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\InstallmentController;
 use App\Http\Controllers\Api\InvoiceController;
@@ -121,6 +122,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders/{reference}',              [AccountController::class, 'order']);
         Route::patch('/orders/{reference}/installation', [AccountController::class, 'updateInstallation']);
         Route::get('/enquiries',                       [AccountController::class, 'enquiries']);
+        // FET proven-savings: see your installations, log fill-ups, get a certificate.
+        Route::get('/fet',                             [AccountController::class, 'fetInstallations']);
+        Route::get('/fet/{reference}',                 [AccountController::class, 'fetInstallation']);
+        Route::post('/fet/{reference}/logs',           [AccountController::class, 'fetLog']);
+        Route::get('/fet/{reference}/certificate',     [AccountController::class, 'fetCertificate']);
         Route::get('/documents',                       [AccountController::class, 'documents']);
         Route::get('/profile',                         [AccountController::class, 'profile']);
         Route::put('/profile',                         [AccountController::class, 'updateProfile']);
@@ -185,6 +191,17 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/orders/{order}/installments', [InstallmentController::class, 'destroy']);
             Route::post('/installments/{installment}/pay',   [InstallmentController::class, 'pay']);
             Route::post('/installments/{installment}/unpay', [InstallmentController::class, 'unpay']);
+        });
+        // FET proven-savings — installations + fuel logs + measured savings.
+        Route::middleware('perm:fet')->group(function () {
+            Route::get('/fet',                              [FetInstallationController::class, 'index']);
+            Route::post('/fet',                             [FetInstallationController::class, 'store']);
+            Route::get('/fet/{installation}',               [FetInstallationController::class, 'show']);
+            Route::match(['put', 'patch'], '/fet/{installation}', [FetInstallationController::class, 'update']);
+            Route::delete('/fet/{installation}',            [FetInstallationController::class, 'destroy']);
+            Route::get('/fet/{installation}/certificate',   [FetInstallationController::class, 'certificate']);
+            Route::post('/fet/{installation}/logs',         [FetInstallationController::class, 'storeLog']);
+            Route::delete('/fet/{installation}/logs/{log}', [FetInstallationController::class, 'destroyLog']);
         });
         Route::middleware('perm:prospects')->group(function () {
             Route::get('/prospects',                        [ProspectController::class, 'index']);

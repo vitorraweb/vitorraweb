@@ -43,6 +43,17 @@ export async function apiCustomer<T>(path: string, options?: RequestInit): Promi
   return res.json();
 }
 
+/** Download a protected file (e.g. the FET savings certificate) as a browser download. */
+export async function downloadCustomerFile(path: string, filename: string): Promise<void> {
+  const res = await authFetch(base(), path, customerAuth.getToken(), {}, false);
+  if (!res.ok) throw new Error("Download failed");
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
 /** Public register/login — returns the issued token (token mode) + user. */
 async function postAuth(path: string, body: Record<string, unknown>): Promise<{ data: { user: CustomerUser; token: string | null; expires_at?: string | null } }> {
   const res = await authFetch(base(), path, null, { method: "POST", body: JSON.stringify(body) });

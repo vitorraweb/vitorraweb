@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, Menu, X, CheckSquare, Workflow, Send, LayoutTemplate, CalendarCheck, CalendarDays, Hourglass, Briefcase, TrendingUp, Truck, Wallet, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, FileText, Package, Images, Settings, Menu, X, CheckSquare, Workflow, Send, LayoutTemplate, CalendarCheck, CalendarDays, Hourglass, Briefcase, TrendingUp, Truck, Wallet, ShieldCheck, Gauge } from "lucide-react";
 import { auth, apiAdmin, canAccess } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 import { UserMenu } from "@/components/admin/admin-ui";
@@ -24,6 +24,7 @@ const nav: NavItem[] = [
   { label: "Media",       href: "/admin/media",        icon: Images,        module: "media" },
   { label: "Messages",    href: "/admin/messages",     icon: Mail,          module: "messages" },
   { label: "Orders",      href: "/admin/orders",       icon: ShoppingCart,  module: "orders" },
+  { label: "FET savings", href: "/admin/fet",          icon: Gauge,         module: "fet" },
   { label: "Suppliers",   href: "/admin/suppliers",    icon: Truck,         module: "suppliers" },
   { label: "Newsletter",  href: "/admin/newsletter",   icon: Send,          module: "newsletter" },
   { label: "Templates",   href: "/admin/templates",    icon: LayoutTemplate, module: "customers" },

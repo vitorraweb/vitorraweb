@@ -5,12 +5,64 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\Enquiry;
+use App\Models\FetInstallation;
 use App\Models\Order;
+use App\Services\FetSavingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class AccountController extends Controller
 {
+    public function __construct(private readonly FetSavingsService $savings)
+    {
+    }
+
+    /* ── FET installations (proven savings) ────────────────────────────────── */
+
+    /** The signed-in customer's FET installations, each with measured savings. */
+    public function fetInstallations(Request $request): JsonResponse
+    {
+        $controller = app(FetInstallationController::class);
+
+        $data = $this->fetQuery($request)->with('fuelLogs')->latest()->get()
+            ->map(fn (FetInstallation $i) => $controller->shape($i, staff: false));
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function fetInstallation(Request $request, string $reference): JsonResponse
+    {
+        $installation = $this->fetQuery($request)->where('reference', $reference)->firstOrFail();
+
+        return response()->json(['data' => app(FetInstallationController::class)->shape($installation, staff: false)]);
+    }
+
+    /** Customer self-logs a fill-up (always an 'after' reading). */
+    public function fetLog(Request $request, string $reference): JsonResponse
+    {
+        $installation = $this->fetQuery($request)->where('reference', $reference)->firstOrFail();
+
+        $data = app(FetInstallationController::class)->validateLog($request, staff: false);
+        $data['source'] = 'customer';
+        $installation->fuelLogs()->create($data);
+
+        return response()->json(['data' => app(FetInstallationController::class)->shape($installation->fresh(), staff: false)], 201);
+    }
+
+    public function fetCertificate(Request $request, string $reference): Response
+    {
+        $installation = $this->fetQuery($request)->where('reference', $reference)->firstOrFail();
+
+        return FetInstallationController::renderCertificate($installation, $this->savings);
+    }
+
+    /** Installations belonging to the signed-in customer (matched by email). */
+    private function fetQuery(Request $request)
+    {
+        return FetInstallation::whereRaw('lower(customer_email) = ?', [$this->email($request)]);
+    }
+
     /**
      * Customer self-service. Orders and enquiries are guest records keyed by
      * email, so each customer sees the records matching their own email.

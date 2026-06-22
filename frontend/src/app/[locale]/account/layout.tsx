@@ -6,11 +6,12 @@ import { usePathname, useRouter, Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { customerAuth, type CustomerUser } from "@/lib/customer-auth";
-import { LayoutDashboard, ShoppingBag, MessageSquare, FileText, User, LogOut } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, MessageSquare, FileText, User, LogOut, Gauge } from "lucide-react";
 
 const TAB_META = [
   { labelKey: "tabDashboard", href: "/account/dashboard", icon: LayoutDashboard },
   { labelKey: "tabOrders",    href: "/account/orders",    icon: ShoppingBag },
+  { labelKey: "tabFet",       href: "/account/fet",       icon: Gauge },
   { labelKey: "tabEnquiries", href: "/account/enquiries", icon: MessageSquare },
   { labelKey: "tabDocuments", href: "/account/documents", icon: FileText },
   { labelKey: "tabProfile",   href: "/account/profile",   icon: User },
