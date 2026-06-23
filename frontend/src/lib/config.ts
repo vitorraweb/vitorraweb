@@ -12,6 +12,16 @@
    left intact, nothing is deleted.                                          */
 export const COFFEE_SHOP_ENABLED = false;
 
+/* ONLINE_PAYMENTS_ENABLED — whether to offer "pay online" (Pesapal: cards +
+   MTN/Airtel mobile money) anywhere a customer can be charged (FET reservations
+   now; coffee checkout / invoices / installments as they come online).
+   Driven by an env var so it can be switched the day the live Pesapal account is
+   ready, without a code change — set NEXT_PUBLIC_ONLINE_PAYMENTS=true on Vercel.
+   While off: FET reservations stay "reserve, pay offline" exactly as before, and
+   no payment buttons appear. The backend PAYMENT_DRIVER must be set to "pesapal"
+   in tandem (this flag only controls what the customer is offered).            */
+export const ONLINE_PAYMENTS_ENABLED = process.env.NEXT_PUBLIC_ONLINE_PAYMENTS === "true";
+
 /* SWAHILI_ENABLED — shows the language switcher and exposes the Swahili (/sw)
    experience. Swahili copy falls back to English for any untranslated key, so
    the site never breaks; this flag simply controls whether visitors are

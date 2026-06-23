@@ -31,6 +31,12 @@ interface PaymentGateway
      */
     public function verify(string $reference): array;
 
-    /** Process an inbound provider webhook (signature check + state update). */
-    public function handleWebhook(Request $request): void;
+    /**
+     * Process an inbound provider webhook (signature/lookup check + state update).
+     *
+     * @return array the JSON body to acknowledge the webhook with. Some providers
+     *   (e.g. Pesapal) require a specific echo payload or they keep retrying; the
+     *   manual flow has no callbacks and returns a generic ack.
+     */
+    public function handleWebhook(Request $request): array;
 }

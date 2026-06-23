@@ -80,8 +80,9 @@ Route::post('/orders/reserve',         [OrderController::class, 'reserve']);
 Route::get('/orders/{reference}',      [OrderController::class, 'show']);
 
 // Payments — initiate payment for an order + provider webhooks (gateway-agnostic)
-Route::post('/orders/{reference}/pay', [PaymentController::class, 'pay']);
-Route::post('/payments/webhook/{provider}', [PaymentController::class, 'webhook']);
+Route::post('/orders/{reference}/pay',           [PaymentController::class, 'pay']);
+Route::get('/orders/{reference}/payment-status', [PaymentController::class, 'status']);
+Route::post('/payments/webhook/{provider}',      [PaymentController::class, 'webhook']);
 
 // Live exchange rate (cached 1 hr; falls back to config if API key not set)
 Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);

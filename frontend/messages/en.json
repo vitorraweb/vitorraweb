@@ -576,7 +576,15 @@
     "reserveErrEmailRequired": "Please enter your email.",
     "reserveErrEmailInvalid": "Please enter a valid email.",
     "reserveErrQuantity": "Enter a quantity between 1 and 50.",
-    "reserveClose": "Close"
+    "reserveClose": "Close",
+    "reserveNowPay": "Reserve & pay securely",
+    "reserveSubmitPay": "Continue to secure payment",
+    "reserveTitlePay": "Reserve & pay for your {model}",
+    "reserveSubPay": "Reserve your unit and pay securely online by Mobile Money or card. Our team will then arrange your installation.",
+    "reserveRedirecting": "Taking you to secure payment…",
+    "reserveOnlineNotice": "Secured by Pesapal — pay by MTN, Airtel, Visa or Mastercard.",
+    "reservePayOffline": "Prefer to pay offline? Reserve and we'll contact you",
+    "reservePayFailed": "We couldn't start the payment just now. Your reservation is saved — our team will contact you to complete it."
   },
   "fetCalculator": {
     "eyebrow": "Savings calculator",
@@ -1522,5 +1530,25 @@
       "errEmailInvalid": "Enter a valid email address.",
       "errMessage": "Please enter a message."
     }
+  },
+  "payment": {
+    "checkingTitle": "Confirming your payment…",
+    "checkingBody": "This only takes a moment. For Mobile Money, approve the prompt on your phone — please don't close this page.",
+    "successTitle": "Payment received",
+    "successBody": "Thank you. We've emailed your receipt for order {reference}.",
+    "successNextLabel": "What happens next",
+    "successNextBody": "Our team will be in touch to arrange your FET installation. You can follow everything from your account.",
+    "pendingTitle": "Still confirming your payment",
+    "pendingBody": "Mobile Money approvals can take a minute. Approve the prompt on your phone, then refresh — or check your account shortly. Order {reference}.",
+    "failedTitle": "Payment not completed",
+    "failedBody": "Your order {reference} is saved but hasn't been paid yet. You can try again, or contact us to pay another way.",
+    "errorTitle": "We couldn't check your payment",
+    "errorBody": "Something went wrong confirming your payment. Please check your account or contact us — your order is safe.",
+    "missingRef": "We couldn't find your payment reference. Please check your account or contact us.",
+    "trackOrder": "Go to my account",
+    "tryAgain": "Try payment again",
+    "refresh": "Refresh status",
+    "contactUs": "Contact us",
+    "secured": "Secured by Pesapal"
   }
 }

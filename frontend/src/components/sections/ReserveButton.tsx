@@ -4,8 +4,9 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { ArrowRight, Check, Loader2, Mail, Minus, Phone, Plus, User, X } from "lucide-react";
-import { reserveFet } from "@/lib/api";
+import { ArrowRight, Check, Loader2, Mail, Minus, Phone, Plus, ShieldCheck, User, X } from "lucide-react";
+import { payOrder, reserveFet } from "@/lib/api";
+import { ONLINE_PAYMENTS_ENABLED } from "@/lib/config";
 import { formatEur, type FetTier } from "@/lib/fet-pricing";
 import type { Order } from "@/types";
 
@@ -63,8 +64,15 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form>(EMPTY);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "submitting" | "redirecting" | "success" | "error">("idle");
   const [order, setOrder] = useState<Order | null>(null);
+  // True when the order was reserved but online payment couldn't be started —
+  // the reservation is safe; we just soften the success copy.
+  const [payFailed, setPayFailed] = useState(false);
+
+  // Whether to offer paying online (Pesapal). When off, this stays the original
+  // "reserve, pay offline" flow, byte-for-byte.
+  const online = ONLINE_PAYMENTS_ENABLED;
 
   const set = (k: keyof Form, v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
@@ -85,6 +93,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
     setErrors({});
     setStatus("idle");
     setOrder(null);
+    setPayFailed(false);
   };
 
   const validate = () => {
@@ -98,8 +107,15 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
     return Object.keys(e).length === 0;
   };
 
-  const submit = async () => {
+  /**
+   * Reserve the unit, then (when paying online) start a Pesapal payment and hand
+   * the customer over to the hosted page. `payNow=false` is the offline path —
+   * the order is created and the team follows up, exactly as before.
+   * The reservation is always saved first, so a payment hiccup never loses it.
+   */
+  const submit = async (payNow: boolean) => {
     if (!validate()) return;
+    setPayFailed(false);
     setStatus("submitting");
     try {
       const { order } = await reserveFet({
@@ -111,6 +127,22 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
         notes: form.notes || undefined,
       });
       setOrder(order);
+
+      if (payNow && online) {
+        try {
+          const payment = await payOrder(order.reference);
+          if (payment.redirect_url) {
+            setStatus("redirecting");
+            window.location.href = payment.redirect_url;
+            return; // leaving the page — Pesapal takes over
+          }
+          // No redirect (e.g. backend still on the manual driver): treat as a
+          // saved reservation rather than a failure.
+        } catch {
+          setPayFailed(true);
+        }
+      }
+
       setStatus("success");
     } catch {
       setStatus("error");
@@ -125,7 +157,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
         className="inline-flex items-center justify-center gap-1.5 mt-3 w-full rounded-full px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
         style={{ background: "#C5B27A", color: "#1E1E1E" }}
       >
-        {tr("reserveNow")}
+        {online ? tr("reserveNowPay") : tr("reserveNow")}
       </button>
 
       {open && createPortal(
@@ -158,7 +190,14 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
               </button>
 
               <div className="p-6 pt-2 sm:pt-6 md:p-8 md:pt-6">
-                {status === "success" && order ? (
+                {status === "redirecting" ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="w-8 h-8 mx-auto mb-5 animate-spin" style={{ color: "#7A6020" }} />
+                    <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>
+                      {tr("reserveRedirecting")}
+                    </p>
+                  </div>
+                ) : status === "success" && order ? (
                   <div className="text-center py-2">
                     <div
                       className="mx-auto mb-5 flex items-center justify-center w-14 h-14 rounded-full"
@@ -176,7 +215,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
                       {tr("reserveSuccess", { reference: order.reference })}
                     </p>
                     <p className="text-sm leading-relaxed mt-3" style={{ color: "#777777" }}>
-                      {tr("reserveCashNotice")}
+                      {payFailed ? tr("reservePayFailed") : tr("reserveCashNotice")}
                     </p>
                     <Link
                       href="/account/orders"
@@ -212,9 +251,11 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
                       style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "22px", fontWeight: 700, color: "#1E1E1E" }}
                       className="mb-1"
                     >
-                      {tr("reserveTitle", { model: tier.model })}
+                      {online ? tr("reserveTitlePay", { model: tier.model }) : tr("reserveTitle", { model: tier.model })}
                     </h3>
-                    <p className="text-sm mb-6" style={{ color: "#777777" }}>{tr("reserveSub")}</p>
+                    <p className="text-sm mb-6" style={{ color: "#777777" }}>
+                      {online ? tr("reserveSubPay") : tr("reserveSub")}
+                    </p>
 
                     <div className="space-y-4">
                       <Field label={tr("reserveFieldName")} required error={errors.customer_name} icon={User}>
@@ -298,8 +339,8 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
                 )}
               </div>
 
-              {/* Sticky footer — cash notice + submit stay reachable below the keyboard */}
-              {!(status === "success" && order) && (
+              {/* Sticky footer — notice + submit stay reachable below the keyboard */}
+              {status !== "redirecting" && !(status === "success" && order) && (
                 <div
                   className="sticky bottom-0 px-6 md:px-8 pt-3 bg-white border-t"
                   style={{ borderColor: "rgba(0,0,0,0.06)", paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
@@ -307,10 +348,16 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
                   {status === "error" && (
                     <p className="text-sm mb-2" style={{ color: errBorder }}>{tr("reserveError")}</p>
                   )}
-                  <p className="text-xs leading-relaxed mb-3" style={{ color: "#777777" }}>{tr("reserveCashNotice")}</p>
+                  <p
+                    className="inline-flex items-center gap-1.5 text-xs leading-relaxed mb-3"
+                    style={{ color: "#777777" }}
+                  >
+                    {online && <ShieldCheck className="w-3.5 h-3.5 shrink-0" style={{ color: "#7A6020" }} />}
+                    {online ? tr("reserveOnlineNotice") : tr("reserveCashNotice")}
+                  </p>
                   <button
                     type="button"
-                    onClick={submit}
+                    onClick={() => submit(online)}
                     disabled={status === "submitting"}
                     className="w-full inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-3 text-sm font-semibold transition-opacity"
                     style={{ background: "#1E1E1E", color: "#FFFFFF", opacity: status === "submitting" ? 0.7 : 1 }}
@@ -321,9 +368,23 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
                         {tr("reserveSubmitting")}
                       </>
                     ) : (
-                      tr("reserveSubmit")
+                      online ? tr("reserveSubmitPay") : tr("reserveSubmit")
                     )}
                   </button>
+
+                  {/* Offline fallback — keep the original "reserve, we'll contact you"
+                      motion available for buyers who want an invoice / bank transfer. */}
+                  {online && (
+                    <button
+                      type="button"
+                      onClick={() => submit(false)}
+                      disabled={status === "submitting"}
+                      className="w-full mt-2.5 text-center text-xs font-semibold transition-opacity hover:opacity-80 disabled:opacity-50"
+                      style={{ color: "#7A6020" }}
+                    >
+                      {tr("reservePayOffline")}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

@@ -59,6 +59,19 @@ return [
         'mode'          => env('PAYPAL_MODE', 'sandbox'),
     ],
 
+    // Pesapal (API 3.0) — Uganda local cards + MTN/Airtel mobile money. Set
+    // PAYMENT_DRIVER=pesapal (config/payments.php) to make it the live gateway.
+    // After deploying, run `php artisan pesapal:register-ipn` once — it stores the
+    // IPN id in Settings, so PESAPAL_IPN_ID below is an optional fallback only.
+    'pesapal' => [
+        'consumer_key'    => env('PESAPAL_CONSUMER_KEY'),
+        'consumer_secret' => env('PESAPAL_CONSUMER_SECRET'),
+        'env'             => env('PESAPAL_ENV', 'sandbox'),   // sandbox | live
+        'ipn_id'          => env('PESAPAL_IPN_ID'),
+        // Browser-return page; the gateway appends ?reference=… per order.
+        'callback_url'    => env('PESAPAL_CALLBACK_URL', rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/') . '/pay/return'),
+    ],
+
     // Anthropic Claude — used to auto-extract applicant details from uploaded CVs.
     // When the key is unset, CV auto-fill is skipped gracefully (manual entry).
     'anthropic' => [

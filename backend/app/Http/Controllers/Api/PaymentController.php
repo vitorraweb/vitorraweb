@@ -37,13 +37,38 @@ class PaymentController extends Controller
     }
 
     /**
+     * Reconcile an order's payment state with the provider on demand. The
+     * browser-return page polls this after the customer comes back from the
+     * hosted page — mobile-money approvals are async, so we actively confirm
+     * rather than waiting for the (server-to-server) webhook to arrive.
+     */
+    public function status(string $reference): JsonResponse
+    {
+        $order = Order::where('reference', $reference)->firstOrFail();
+
+        // Only call the provider while still unsettled; once paid we trust state.
+        if ($order->payment_status !== 'paid') {
+            $this->gateway->verify($reference);
+            $order->refresh();
+        }
+
+        return response()->json([
+            'data' => [
+                'reference'      => $order->reference,
+                'payment_status' => $order->payment_status,
+                'status'         => $order->status,
+            ],
+        ]);
+    }
+
+    /**
      * Inbound provider webhook. The {provider} segment lets each gateway have a
      * stable URL; the bound gateway verifies the signature and updates state.
      */
     public function webhook(string $provider, Request $request): JsonResponse
     {
-        $this->gateway->handleWebhook($request);
+        $response = $this->gateway->handleWebhook($request);
 
-        return response()->json(['received' => true]);
+        return response()->json($response);
     }
 }

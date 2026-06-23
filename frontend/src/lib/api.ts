@@ -5,7 +5,9 @@ import type {
   Enquiry,
   EnquiryFormData,
   Order,
+  OrderStatus,
   PaginatedResponse,
+  PaymentStatus,
   Product,
 } from "@/types";
 
@@ -160,6 +162,36 @@ export async function createOrder(payload: CheckoutPayload): Promise<Order> {
 
 export async function getOrder(reference: string): Promise<Order> {
   const res = await request<ApiResponse<Order>>(`/orders/${reference}`);
+  return res.data;
+}
+
+/* ─── Payments (gateway-agnostic) ──────────────────────────────────────────
+   The backend's active PAYMENT_DRIVER decides the behaviour. With Pesapal live,
+   `initiate` returns status "redirect" + a hosted-checkout URL to send the
+   customer to; with the manual driver it returns "pending" (pay offline).      */
+
+export interface PaymentInitiation {
+  status: "redirect" | "pending" | "paid";
+  redirect_url: string | null;
+  reference: string | null;
+  message: string;
+}
+
+/** Begin payment for an order. Send the customer to `redirect_url` when present. */
+export async function payOrder(reference: string): Promise<PaymentInitiation> {
+  const res = await request<ApiResponse<PaymentInitiation>>(`/orders/${reference}/pay`, {
+    method: "POST",
+  });
+  return res.data;
+}
+
+/** Reconcile an order's payment state with the provider (polled by /pay/return). */
+export async function getPaymentStatus(
+  reference: string
+): Promise<{ reference: string; payment_status: PaymentStatus; status: OrderStatus }> {
+  const res = await request<
+    ApiResponse<{ reference: string; payment_status: PaymentStatus; status: OrderStatus }>
+  >(`/orders/${reference}/payment-status`);
   return res.data;
 }
 

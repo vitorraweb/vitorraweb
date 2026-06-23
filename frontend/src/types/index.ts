@@ -28,7 +28,7 @@ export type OrderStatus =
   | "complete"
   | "cancelled";
 
-export type PaymentMethod = "flutterwave" | "paypal" | "stripe" | "manual" | "eft" | "cash";
+export type PaymentMethod = "pesapal" | "flutterwave" | "paypal" | "stripe" | "manual" | "eft" | "cash";
 export type PaymentStatus = "pending" | "partial" | "paid";
 export type Currency = "UGX" | "USD";
 

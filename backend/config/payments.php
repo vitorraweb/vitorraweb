@@ -9,7 +9,10 @@ return [
     |
     | The gateway used to take payment. Until a provider account is live this
     | stays "manual" — orders are placed and the team confirms payment offline.
-    | Supported (once implemented): manual | flutterwave | paypal | stripe.
+    | Supported: manual | pesapal (live). Scaffolded: flutterwave | paypal | stripe.
+    |
+    | "pesapal" is the live Uganda gateway (cards + MTN/Airtel mobile money) —
+    | set its keys in config/services.php and run `php artisan pesapal:register-ipn`.
     |
     */
 

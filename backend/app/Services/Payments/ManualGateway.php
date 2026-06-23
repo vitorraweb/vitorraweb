@@ -44,8 +44,9 @@ class ManualGateway implements PaymentGateway
         ];
     }
 
-    public function handleWebhook(Request $request): void
+    public function handleWebhook(Request $request): array
     {
         // No-op: the manual flow has no provider callbacks.
+        return ['received' => true];
     }
 }
