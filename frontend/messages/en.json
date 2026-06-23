@@ -1540,7 +1540,7 @@
     "successTitle": "Payment received",
     "successBody": "Thank you. We've emailed your receipt for order {reference}.",
     "successNextLabel": "What happens next",
-    "successNextBody": "Our team will be in touch to arrange your FET installation. You can follow everything from your account.",
+    "successNextBody": "Our team will confirm your order and be in touch with the next steps. You can follow everything from your account.",
     "pendingTitle": "Still confirming your payment",
     "pendingBody": "Mobile Money approvals can take a minute. Approve the prompt on your phone, then refresh — or check your account shortly. Order {reference}.",
     "failedTitle": "Payment not completed",

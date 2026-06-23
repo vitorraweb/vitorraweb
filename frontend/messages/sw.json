@@ -1540,7 +1540,7 @@
     "successTitle": "Malipo yamepokelewa",
     "successBody": "Asante. Tumetuma risiti yako ya oda {reference} kwa barua pepe.",
     "successNextLabel": "Kinachofuata",
-    "successNextBody": "Timu yetu itawasiliana nawe kupanga usakinishaji wa FET. Unaweza kufuatilia kila kitu kutoka kwenye akaunti yako.",
+    "successNextBody": "Timu yetu itathibitisha oda yako na kuwasiliana nawe kuhusu hatua zinazofuata. Unaweza kufuatilia kila kitu kutoka kwenye akaunti yako.",
     "pendingTitle": "Bado tunathibitisha malipo yako",
     "pendingBody": "Uidhinishaji wa Mobile Money unaweza kuchukua dakika. Idhinisha ombi kwenye simu yako, kisha onyesha upya — au angalia akaunti yako baadaye. Oda {reference}.",
     "failedTitle": "Malipo hayakukamilika",

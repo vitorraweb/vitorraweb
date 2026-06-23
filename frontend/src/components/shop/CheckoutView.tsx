@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import CurrencyToggle from "./CurrencyToggle";
 import { useCart, lineKey } from "@/lib/cart";
 import { formatPrice } from "@/lib/coffee-catalog";
-import { createOrder } from "@/lib/api";
+import { createOrder, payOrder } from "@/lib/api";
+import { ONLINE_PAYMENTS_ENABLED } from "@/lib/config";
 
 interface Form {
   name: string;
@@ -83,6 +84,24 @@ export default function CheckoutView() {
         notes: form.notes.trim() || undefined,
       });
       setReference(order.reference);
+
+      // With a live gateway, hand off to Pesapal (cards + MTN/Airtel). The
+      // customer returns to /pay/return, which confirms payment. Falls back to
+      // the offline "order received" screen when online payment isn't available.
+      if (ONLINE_PAYMENTS_ENABLED) {
+        try {
+          const payment = await payOrder(order.reference);
+          const url = payment.redirect_url;
+          if (url) {
+            clear();
+            window.location.assign(url);
+            return;
+          }
+        } catch {
+          /* fall through to the offline confirmation — the order is saved */
+        }
+      }
+
       setStatus("success");
       clear();
     } catch (err) {
@@ -142,7 +161,6 @@ export default function CheckoutView() {
             <p className="text-xs font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#7A6020" }}>What happens next</p>
             <p className="text-sm leading-relaxed" style={{ color: "#555555" }}>
               Our team will confirm stock, delivery, and payment with you within 24 hours.
-              Secure online card &amp; mobile-money checkout is coming soon.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
