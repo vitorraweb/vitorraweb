@@ -6,10 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\InstallmentPayment;
 use App\Models\InstallmentPlan;
 use App\Models\Order;
-use App\Services\DocumentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 /**
@@ -106,34 +104,10 @@ class InstallmentController extends Controller
 
     /* ── helpers ─────────────────────────────────────────────────────────── */
 
-    /**
-     * Drive the order's payment_status from how much of the plan is paid.
-     * Generates the payment receipt the first time it reaches fully paid.
-     */
+    /** Drive the order's payment_status from how much of the plan is paid. */
     private function recompute(Order $order): void
     {
-        $plan = $order->installmentPlan;
-        if (! $plan) {
-            return;
-        }
-
-        $paid   = $plan->paidAmount();
-        $status = $paid <= 0 ? 'pending' : ($paid >= $order->total ? 'paid' : 'partial');
-
-        if ($status === $order->payment_status) {
-            return;
-        }
-
-        $wasPaid = $order->payment_status === 'paid';
-        $order->update(['payment_status' => $status]);
-
-        if ($status === 'paid' && ! $wasPaid) {
-            try {
-                app(DocumentService::class)->generatePaymentReceipt($order);
-            } catch (\Throwable $e) {
-                Log::warning('Failed to generate payment receipt for installment-paid order', ['order_id' => $order->id, 'error' => $e->getMessage()]);
-            }
-        }
+        $order->recomputeInstallmentStatus();
     }
 
     /** Plan + schedule + summary shape (shared by the admin endpoints). */

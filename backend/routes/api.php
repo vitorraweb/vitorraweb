@@ -128,6 +128,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders',                          [AccountController::class, 'orders']);
         Route::get('/orders/{reference}',              [AccountController::class, 'order']);
         Route::patch('/orders/{reference}/installation', [AccountController::class, 'updateInstallation']);
+        // Pay a due installment online (Pesapal) + reconcile after returning.
+        Route::post('/installments/{installment}/pay-online',  [AccountController::class, 'payInstallmentOnline']);
+        Route::get('/orders/{reference}/installment-status',   [AccountController::class, 'installmentStatus']);
         Route::get('/enquiries',                       [AccountController::class, 'enquiries']);
         // FET proven-savings: see your installations, log fill-ups, get a certificate.
         Route::get('/fet',                             [AccountController::class, 'fetInstallations']);

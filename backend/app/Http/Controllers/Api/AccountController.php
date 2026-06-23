@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Contracts\PaymentGateway;
 use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\Enquiry;
 use App\Models\FetInstallation;
+use App\Models\InstallmentPayment;
 use App\Models\Order;
 use App\Services\FetSavingsService;
 use Illuminate\Http\JsonResponse;
@@ -100,11 +102,18 @@ class AccountController extends Controller
 
         $paid = (int) $plan->payments->whereNotNull('paid_at')->sum('amount');
 
+        // Customers can pay a part online only when a live gateway is configured
+        // and the plan currency is one Pesapal settles (UGX/USD).
+        $onlineEnabled = config('payments.driver') === 'pesapal'
+            && in_array($order->currency, ['UGX', 'USD'], true);
+
         return [
-            'total'   => (int) $order->total,
-            'paid'    => $paid,
-            'balance' => max(0, (int) $order->total - $paid),
+            'total'          => (int) $order->total,
+            'paid'           => $paid,
+            'balance'        => max(0, (int) $order->total - $paid),
+            'online_enabled' => $onlineEnabled,
             'payments' => $plan->payments->map(fn ($p) => [
+                'id'       => $p->id,
                 'label'    => $p->label,
                 'amount'   => $p->amount,
                 'due_date' => optional($p->due_date)->toDateString(),
@@ -189,6 +198,58 @@ class AccountController extends Controller
                 ['name' => 'Fuel Eco Tech — Product Datasheet', 'url' => '/downloads/vitorra-fet-datasheet.pdf', 'type' => 'PDF'],
             ],
         ]]);
+    }
+
+    /* ── Pay an installment online (B2B pay-in-parts) ──────────────────────── */
+
+    /** Start a Pesapal payment for one due installment of the customer's order. */
+    public function payInstallmentOnline(Request $request, PaymentGateway $gateway, InstallmentPayment $installment): JsonResponse
+    {
+        $this->authorizeInstallment($request, $installment);
+
+        if ($installment->payableIsPaid()) {
+            return response()->json(['message' => 'This instalment is already paid.'], 422);
+        }
+
+        $order = $installment->plan->order;
+        if (config('payments.driver') !== 'pesapal' || ! in_array($order->currency, ['UGX', 'USD'], true)) {
+            return response()->json(['message' => 'Online payment isn’t available for this plan. Please pay another way.'], 422);
+        }
+
+        $result = $gateway->initiate($installment);
+
+        if (($result['status'] ?? null) !== 'redirect') {
+            return response()->json(['message' => 'Online payment isn’t available right now. Please try again later.'], 422);
+        }
+
+        return response()->json(['data' => $result, 'message' => $result['message'] ?? 'Payment initiated.']);
+    }
+
+    /** Reconcile any online-initiated, still-pending instalments for an order. */
+    public function installmentStatus(Request $request, PaymentGateway $gateway, string $reference): JsonResponse
+    {
+        $order = Order::with('installmentPlan.payments')
+            ->whereRaw('lower(customer_email) = ?', [$this->email($request)])
+            ->where('reference', $reference)
+            ->firstOrFail();
+
+        $plan = $order->installmentPlan;
+        if ($plan) {
+            foreach ($plan->payments as $payment) {
+                if (! $payment->payableIsPaid() && $payment->payment_reference) {
+                    $gateway->verify($payment->payableReference());
+                }
+            }
+        }
+
+        return response()->json(['data' => $this->customerPlan($order->fresh('installmentPlan.payments'))]);
+    }
+
+    /** Guard: the installment must belong to an order owned by this customer. */
+    private function authorizeInstallment(Request $request, InstallmentPayment $installment): void
+    {
+        $email = mb_strtolower(trim((string) $installment->plan->order->customer_email));
+        abort_unless($email === $this->email($request), 403);
     }
 
     private function email(Request $request): string

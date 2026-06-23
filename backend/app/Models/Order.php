@@ -157,4 +157,35 @@ class Order extends Model implements Payable
     {
         return '/pay/return?reference='.$this->reference;
     }
+
+    /**
+     * Drive this order's payment_status from how much of its installment plan is
+     * paid (pending → partial → paid). Generates the receipt the first time it
+     * reaches fully paid. Shared by staff recording + online installment payments.
+     */
+    public function recomputeInstallmentStatus(): void
+    {
+        $plan = $this->installmentPlan;
+        if (! $plan) {
+            return;
+        }
+
+        $paid   = $plan->paidAmount();
+        $status = $paid <= 0 ? 'pending' : ($paid >= $this->total ? 'paid' : 'partial');
+
+        if ($status === $this->payment_status) {
+            return;
+        }
+
+        $wasPaid = $this->payment_status === 'paid';
+        $this->update(['payment_status' => $status]);
+
+        if ($status === 'paid' && ! $wasPaid) {
+            try {
+                app(DocumentService::class)->generatePaymentReceipt($this);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to generate payment receipt for installment-paid order', ['order_id' => $this->id, 'error' => $e->getMessage()]);
+            }
+        }
+    }
 }

@@ -2,23 +2,26 @@
 
 import { use, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import { Loader2, ArrowLeft, Download } from "lucide-react";
+import { Loader2, ArrowLeft, Download, ShieldCheck } from "lucide-react";
 import { apiCustomer } from "@/lib/customer-auth";
+import { ONLINE_PAYMENTS_ENABLED } from "@/lib/config";
 import OrderTimeline from "@/components/account/OrderTimeline";
 import FetSavingsWidget from "@/components/account/FetSavingsWidget";
 import InstallationScheduler from "@/components/account/InstallationScheduler";
 
 type Item = { id: number; product_name: string; product_slug: string; options: { grind?: string } | null; quantity: number; line_total: number };
+type Plan = {
+  total: number; paid: number; balance: number; online_enabled?: boolean;
+  payments: { id: number; label: string | null; amount: number; due_date: string | null; paid: boolean; paid_at: string | null }[];
+};
 type Order = {
   reference: string; currency: string; subtotal: number; total: number; status: string; payment_status: string;
   tracking_number: string | null; invoice_url: string | null; shipping_address: Record<string, string> | null;
   preferred_installation_date: string | null; installation_location: string | null; delivered_at: string | null;
   items: Item[]; created_at: string;
-  installment_plan?: {
-    total: number; paid: number; balance: number;
-    payments: { label: string | null; amount: number; due_date: string | null; paid: boolean; paid_at: string | null }[];
-  } | null;
+  installment_plan?: Plan | null;
 };
 
 const money = (c: string, t: number) => (c === "USD" ? `$${(t / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}` : `UGX ${t.toLocaleString("en-US")}`);
@@ -26,12 +29,52 @@ const money = (c: string, t: number) => (c === "USD" ? `$${(t / 100).toLocaleStr
 export default function OrderDetail({ params }: { params: Promise<{ reference: string }> }) {
   const t = useTranslations("account");
   const { reference } = use(params);
+  const justPaid = useSearchParams().get("paid") === "1";
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
+  const [payingId, setPayingId] = useState<number | null>(null);
+  const [confirming, setConfirming] = useState(justPaid);
 
   useEffect(() => {
     apiCustomer<{ data: Order }>(`/account/orders/${reference}`).then((r) => setOrder(r.data)).catch((e) => setError(e instanceof Error ? e.message : t("notFound")));
   }, [reference, t]);
+
+  // Returning from Pesapal: reconcile the just-paid instalment, refreshing the
+  // schedule until a payment lands (mobile money is async) or we give up polling.
+  useEffect(() => {
+    if (!justPaid) return;
+    let active = true;
+    let attempts = 0;
+    let lastPaid = -1;
+    const tick = async () => {
+      attempts += 1;
+      try {
+        const r = await apiCustomer<{ data: Plan }>(`/account/orders/${reference}/installment-status`);
+        if (!active) return;
+        setOrder((o) => (o ? { ...o, installment_plan: r.data } : o));
+        if (lastPaid >= 0 && r.data.paid > lastPaid) { setConfirming(false); return; } // a payment landed
+        lastPaid = r.data.paid;
+      } catch {
+        /* transient — keep polling */
+      }
+      if (active && attempts < 6) setTimeout(tick, 2500);
+      else if (active) setConfirming(false);
+    };
+    tick();
+    return () => { active = false; };
+  }, [justPaid, reference]);
+
+  async function payInstallment(id: number) {
+    setPayingId(id);
+    try {
+      const r = await apiCustomer<{ data: { redirect_url: string | null } }>(`/account/installments/${id}/pay-online`, { method: "POST" });
+      const url = r.data.redirect_url;
+      if (url) { window.location.assign(url); return; }
+      setPayingId(null);
+    } catch {
+      setPayingId(null);
+    }
+  }
 
   if (error) return <p className="text-sm" style={{ color: "#C0392B" }}>{error}. <Link href="/account/orders" className="underline">{t("backToOrders")}</Link></p>;
   if (!order) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
@@ -84,23 +127,54 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
               <span style={{ color: "#16A34A" }}>{t("paymentPaid")}: <strong>{money(order.currency, order.installment_plan.paid)}</strong></span>
               <span style={{ color: "#C0392B" }}>{t("balanceLabel")}: <strong>{money(order.currency, order.installment_plan.balance)}</strong></span>
             </div>
+            {confirming && (
+              <div className="flex items-center gap-2 mb-3 rounded-xl px-3.5 py-2.5 text-sm" style={{ background: "rgba(197,178,122,0.12)", color: "#7A6020" }}>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {t("confirmingPayment")}
+              </div>
+            )}
             <div className="space-y-1.5">
-              {order.installment_plan.payments.map((p, i) => (
-                <div key={i} className="flex items-center justify-between gap-3 text-sm rounded-xl px-3.5 py-2.5" style={{ background: "#FAFAF8" }}>
-                  <span style={{ color: "#454545" }}>
-                    {p.label}
-                    {p.due_date && !p.paid && <span style={{ color: "#999" }}> · {t("dueLabel")} {new Date(p.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>}
-                    {p.paid && p.paid_at && <span style={{ color: "#999" }}> · {new Date(p.paid_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>}
-                  </span>
-                  <span className="flex items-center gap-2 shrink-0">
-                    <span className="tabular-nums" style={{ color: "#1E1E1E" }}>{money(order.currency, p.amount)}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={p.paid ? { background: "rgba(34,197,94,0.12)", color: "#16A34A" } : { background: "rgba(0,0,0,0.06)", color: "#888" }}>
-                      {p.paid ? t("paymentPaid") : t("dueLabel")}
+              {order.installment_plan.payments.map((p) => {
+                const canPay = ONLINE_PAYMENTS_ENABLED && !!order.installment_plan?.online_enabled && !p.paid;
+                return (
+                  <div key={p.id} className="flex items-center justify-between gap-3 text-sm rounded-xl px-3.5 py-2.5" style={{ background: "#FAFAF8" }}>
+                    <span style={{ color: "#454545" }}>
+                      {p.label}
+                      {p.due_date && !p.paid && <span style={{ color: "#999" }}> · {t("dueLabel")} {new Date(p.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>}
+                      {p.paid && p.paid_at && <span style={{ color: "#999" }}> · {new Date(p.paid_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>}
                     </span>
-                  </span>
-                </div>
-              ))}
+                    <span className="flex items-center gap-2 shrink-0">
+                      <span className="tabular-nums" style={{ color: "#1E1E1E" }}>{money(order.currency, p.amount)}</span>
+                      {p.paid ? (
+                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}>
+                          {t("paymentPaid")}
+                        </span>
+                      ) : canPay ? (
+                        <button
+                          type="button"
+                          onClick={() => payInstallment(p.id)}
+                          disabled={payingId !== null}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full transition-opacity hover:opacity-90 disabled:opacity-50"
+                          style={{ background: "#C5B27A", color: "#1E1E1E" }}
+                        >
+                          {payingId === p.id ? <Loader2 className="w-3 h-3 animate-spin" /> : t("payOnline")}
+                        </button>
+                      ) : (
+                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.06)", color: "#888" }}>
+                          {t("dueLabel")}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
+            {ONLINE_PAYMENTS_ENABLED && order.installment_plan.online_enabled && order.installment_plan.balance > 0 && (
+              <p className="inline-flex items-center gap-1.5 mt-3 text-xs" style={{ color: "#999" }}>
+                <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#7A6020" }} />
+                {t("payOnlineNotice")}
+              </p>
+            )}
           </div>
         )}
 
