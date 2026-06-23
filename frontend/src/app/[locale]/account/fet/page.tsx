@@ -17,6 +17,11 @@ type Install = {
   device_model: string | null; currency: string; installed_on: string | null;
   status: string; savings: Savings; logs: FuelLog[];
 };
+type Fleet = {
+  vehicles: number; vehicles_with_data: number;
+  by_currency: Record<string, { vehicles: number; litres_saved: number; money_saved: number; co2_saved_kg: number }>;
+  total_litres_saved: number; total_co2_saved_kg: number; avg_reduction_pct: number | null;
+};
 
 const money = (c: string, a: number | null): string => {
   if (a === null) return "—";
@@ -28,8 +33,11 @@ const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString("en-GB
 export default function AccountFet() {
   const t = useTranslations("account");
   const [list, setList] = useState<Install[] | null>(null);
+  const [fleet, setFleet] = useState<Fleet | null>(null);
 
-  const load = () => apiCustomer<{ data: Install[] }>("/account/fet").then((r) => setList(r.data)).catch(() => setList([]));
+  const load = () => apiCustomer<{ data: Install[]; fleet: Fleet }>("/account/fet")
+    .then((r) => { setList(r.data); setFleet(r.fleet); })
+    .catch(() => setList([]));
   useEffect(() => { load(); }, []);
 
   if (!list) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
@@ -43,9 +51,40 @@ export default function AccountFet() {
     );
   }
 
+  // Fleet band — only meaningful with more than one vehicle that has data.
+  const showFleet = fleet && fleet.vehicles > 1 && fleet.vehicles_with_data > 0;
+
   return (
     <div className="space-y-5">
+      {showFleet && (
+        <div className="rounded-[24px] p-6 text-white relative overflow-hidden" style={{ background: "#141414" }}>
+          <div aria-hidden className="hero-aurora-right" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+              <span className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: "#C5B27A" }}>{t("fetFleetTitle")}</span>
+              <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{t("fetFleetVehicles", { n: fleet!.vehicles })}</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <FleetStat label={t("fetAvgReduction")} value={fleet!.avg_reduction_pct != null ? `${fleet!.avg_reduction_pct}%` : "—"} highlight />
+              {Object.entries(fleet!.by_currency).filter(([, v]) => v.money_saved > 0).slice(0, 1).map(([cur, v]) => (
+                <FleetStat key={cur} label={t("fetTotalSaved")} value={money(cur, v.money_saved)} />
+              ))}
+              <FleetStat label={t("fetTotalFuel")} value={`${fleet!.total_litres_saved} L`} />
+              <FleetStat label="CO₂" value={`${fleet!.total_co2_saved_kg} kg`} />
+            </div>
+          </div>
+        </div>
+      )}
       {list.map((i) => <InstallCard key={i.id} install={i} onLogged={load} />)}
+    </div>
+  );
+}
+
+function FleetStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>{label}</p>
+      <p className="font-bold" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "26px", color: highlight ? "#C5B27A" : "#fff" }}>{value}</p>
     </div>
   );
 }

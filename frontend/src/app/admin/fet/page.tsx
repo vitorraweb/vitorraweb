@@ -35,6 +35,11 @@ type Install = {
   savings: Savings; logs: FuelLog[];
 };
 type Tier = { model: string; label: string; baseline_l_per_100: number };
+type Fleet = {
+  vehicles: number; vehicles_with_data: number;
+  by_currency: Record<string, { vehicles: number; litres_saved: number; money_saved: number; co2_saved_kg: number }>;
+  total_litres_saved: number; total_co2_saved_kg: number; avg_reduction_pct: number | null;
+};
 
 const inputCls = "w-full text-sm rounded-xl px-3 py-2 border outline-none";
 const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
@@ -61,6 +66,7 @@ const EMPTY_NEW = {
 export default function FetPage() {
   const [list, setList] = useState<Install[] | null>(null);
   const [tiers, setTiers] = useState<Record<string, Tier>>({});
+  const [fleet, setFleet] = useState<Fleet | null>(null);
   const [open, setOpen] = useState<number | null>(null);
   const [draft, setDraft] = useState<Install | null>(null);
   const [rowMsg, setRowMsg] = useState("");
@@ -76,8 +82,8 @@ export default function FetPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await apiAdmin<{ data: Install[]; tiers: Record<string, Tier> }>("/admin/fet");
-      setList(res.data); setTiers(res.tiers);
+      const res = await apiAdmin<{ data: Install[]; tiers: Record<string, Tier>; fleet: Fleet }>("/admin/fet");
+      setList(res.data); setTiers(res.tiers); setFleet(res.fleet);
     } catch { setList([]); }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -163,6 +169,16 @@ export default function FetPage() {
           <Plus className="w-4 h-4" />Add installation
         </button>
       </div>
+
+      {/* Book-wide rollup */}
+      {fleet && fleet.vehicles > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5 mt-1">
+          <Stat label="Installations" value={`${fleet.vehicles}`} hint={`${fleet.vehicles_with_data} with measured data`} />
+          <Stat label="Avg reduction" value={fleet.avg_reduction_pct != null ? `${fleet.avg_reduction_pct}%` : "—"} hint="distance-weighted" highlight />
+          <Stat label="Money saved" value={Object.entries(fleet.by_currency).filter(([, v]) => v.money_saved > 0).map(([c, v]) => money(c, v.money_saved)).join(" · ") || "—"} hint="per currency" />
+          <Stat label="Fuel saved" value={`${fleet.total_litres_saved} L`} hint={`${fleet.total_co2_saved_kg} kg CO₂`} />
+        </div>
+      )}
 
       {addOpen && (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">

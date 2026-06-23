@@ -45,3 +45,7 @@ Schedule::command('executive:report --period=last_month')->monthlyOn(1, '07:30')
     ->onFailure(fn () => logger()->error('Scheduled monthly executive:report failed'));
 Schedule::command('executive:report --period=week')->weeklyOn(1, '07:30')
     ->onFailure(fn () => logger()->error('Scheduled weekly executive:report failed'));
+
+// FET customers' monthly measured-savings digest (+ nudge to log overdue readings).
+Schedule::command('fet:digest')->monthlyOn(1, '08:30')
+    ->onFailure(fn () => logger()->error('Scheduled fet:digest failed'));

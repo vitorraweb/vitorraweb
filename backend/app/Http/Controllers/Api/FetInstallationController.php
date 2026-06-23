@@ -34,6 +34,7 @@ class FetInstallationController extends Controller
         return response()->json([
             'data'  => $installations,
             'tiers' => config('fet.tiers'),
+            'fleet' => $this->savings->fleetFromSummaries($installations->pluck('savings')->all()),
         ]);
     }
 

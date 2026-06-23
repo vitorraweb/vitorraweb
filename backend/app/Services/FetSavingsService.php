@@ -134,4 +134,60 @@ class FetSavingsService
             'has_enough_data'   => $hasData,
         ];
     }
+
+    /**
+     * Roll several installations' savings up into a fleet total. Money is kept
+     * separate per currency (never summed across currencies — same rule as the
+     * accounting module); litres and CO₂ are physical units so they total. The
+     * headline reduction is distance-weighted across the vehicles with data.
+     *
+     * @param  array<int, array<string, mixed>>  $summaries  output of summary()
+     * @return array<string, mixed>
+     */
+    public function fleetFromSummaries(array $summaries): array
+    {
+        $byCurrency = [];
+        $totalLitres = 0.0;
+        $totalCo2 = 0.0;
+        $withData = 0;
+        $weightedReduction = 0.0;
+        $distanceTotal = 0;
+
+        foreach ($summaries as $s) {
+            if (! ($s['has_enough_data'] ?? false)) {
+                continue;
+            }
+            $withData++;
+            $cur = $s['currency'];
+            $byCurrency[$cur] ??= ['vehicles' => 0, 'litres_saved' => 0.0, 'money_saved' => 0, 'co2_saved_kg' => 0.0];
+            $byCurrency[$cur]['vehicles']++;
+            $byCurrency[$cur]['litres_saved'] += $s['litres_saved'] ?? 0;
+            $byCurrency[$cur]['co2_saved_kg'] += $s['co2_saved_kg'] ?? 0;
+            if ($s['money_saved'] !== null) {
+                $byCurrency[$cur]['money_saved'] += $s['money_saved'];
+            }
+
+            $totalLitres += $s['litres_saved'] ?? 0;
+            $totalCo2 += $s['co2_saved_kg'] ?? 0;
+            if (($s['distance_km'] ?? 0) > 0 && $s['reduction_pct'] !== null) {
+                $weightedReduction += $s['reduction_pct'] * $s['distance_km'];
+                $distanceTotal += $s['distance_km'];
+            }
+        }
+
+        foreach ($byCurrency as &$v) {
+            $v['litres_saved'] = round($v['litres_saved'], 1);
+            $v['co2_saved_kg'] = round($v['co2_saved_kg'], 1);
+        }
+        unset($v);
+
+        return [
+            'vehicles'            => count($summaries),
+            'vehicles_with_data'  => $withData,
+            'by_currency'         => $byCurrency,
+            'total_litres_saved'  => round($totalLitres, 1),
+            'total_co2_saved_kg'  => round($totalCo2, 1),
+            'avg_reduction_pct'   => $distanceTotal > 0 ? round($weightedReduction / $distanceTotal, 1) : null,
+        ];
+    }
 }

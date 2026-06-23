@@ -28,7 +28,10 @@ class AccountController extends Controller
         $data = $this->fetQuery($request)->with('fuelLogs')->latest()->get()
             ->map(fn (FetInstallation $i) => $controller->shape($i, staff: false));
 
-        return response()->json(['data' => $data]);
+        return response()->json([
+            'data'  => $data,
+            'fleet' => $this->savings->fleetFromSummaries($data->pluck('savings')->all()),
+        ]);
     }
 
     public function fetInstallation(Request $request, string $reference): JsonResponse

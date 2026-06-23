@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Mail\FetSavingsDigest;
 use App\Models\FetInstallation;
 use App\Models\User;
 use App\Services\FetSavingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class FetSavingsTest extends TestCase
@@ -114,5 +116,60 @@ class FetSavingsTest extends TestCase
             ->assertCreated();
 
         $this->assertDatabaseHas('fet_fuel_logs', ['odometer_km' => 2000, 'source' => 'customer', 'phase' => 'after']);
+    }
+
+    /** A vehicle with three after-readings spanning 1000 km at ~8.5 l/100km. */
+    private function installWithData(string $ref, string $currency, string $email = null): FetInstallation
+    {
+        $i = FetInstallation::create([
+            'reference' => $ref, 'customer_name' => 'Fleet Co', 'customer_email' => $email,
+            'tier' => 'suv', 'currency' => $currency, 'baseline_l_per_100' => 10, 'baseline_source' => 'declared',
+        ]);
+        $i->fuelLogs()->createMany([
+            ['logged_on' => now()->subDays(20)->toDateString(), 'odometer_km' => 10000, 'litres' => 50, 'cost' => 250000, 'phase' => 'after'],
+            ['logged_on' => now()->subDays(10)->toDateString(), 'odometer_km' => 10500, 'litres' => 42, 'cost' => 210000, 'phase' => 'after'],
+            ['logged_on' => now()->subDays(2)->toDateString(),  'odometer_km' => 11000, 'litres' => 43, 'cost' => 215000, 'phase' => 'after'],
+        ]);
+
+        return $i;
+    }
+
+    public function test_fleet_rollup_separates_money_by_currency_and_totals_physical_units(): void
+    {
+        $svc = app(FetSavingsService::class);
+        $ugx = $this->installWithData('FET-INST-2026-0030', 'UGX');
+        $usd = $this->installWithData('FET-INST-2026-0031', 'USD');
+
+        $fleet = $svc->fleetFromSummaries([$svc->summary($ugx), $svc->summary($usd)]);
+
+        $this->assertEquals(2, $fleet['vehicles']);
+        $this->assertEquals(2, $fleet['vehicles_with_data']);
+        // Money never crosses currencies.
+        $this->assertArrayHasKey('UGX', $fleet['by_currency']);
+        $this->assertArrayHasKey('USD', $fleet['by_currency']);
+        // Litres + CO₂ are physical units → they total across both vehicles (15 L each).
+        $this->assertEqualsWithDelta(30.0, $fleet['total_litres_saved'], 0.2);
+        // Both reduced 15% over equal distance → weighted average 15%.
+        $this->assertEqualsWithDelta(15.0, $fleet['avg_reduction_pct'], 0.1);
+    }
+
+    public function test_digest_emails_customers_with_data_or_overdue_readings_only(): void
+    {
+        Mail::fake();
+
+        // A: has measured data (recent readings) → savings email.
+        $this->installWithData('FET-INST-2026-0040', 'UGX', 'a@example.com');
+        // B: an install with no readings at all → overdue nudge.
+        FetInstallation::create(['reference' => 'FET-INST-2026-0041', 'customer_name' => 'Bee', 'customer_email' => 'b@example.com', 'tier' => 'car', 'currency' => 'UGX']);
+        // C: one recent reading — not overdue, not enough data → no email.
+        $c = FetInstallation::create(['reference' => 'FET-INST-2026-0042', 'customer_name' => 'Cee', 'customer_email' => 'c@example.com', 'tier' => 'car', 'currency' => 'UGX']);
+        $c->fuelLogs()->create(['logged_on' => now()->subDay()->toDateString(), 'odometer_km' => 100, 'litres' => 30, 'phase' => 'after']);
+
+        $this->artisan('fet:digest')->assertExitCode(0);
+
+        Mail::assertSent(FetSavingsDigest::class, fn ($m) => $m->hasTo('a@example.com') && $m->hasData);
+        Mail::assertSent(FetSavingsDigest::class, fn ($m) => $m->hasTo('b@example.com') && $m->reminder);
+        Mail::assertNotSent(FetSavingsDigest::class, fn ($m) => $m->hasTo('c@example.com'));
+        Mail::assertSent(FetSavingsDigest::class, 2);
     }
 }
