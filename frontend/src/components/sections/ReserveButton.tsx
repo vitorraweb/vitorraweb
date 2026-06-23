@@ -125,22 +125,26 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
         customer_phone: form.customer_phone || undefined,
         quantity: Number(form.quantity),
         notes: form.notes || undefined,
+        pay_online: payNow && online,
       });
       setOrder(order);
 
       if (payNow && online) {
         try {
           const payment = await payOrder(order.reference);
-          if (payment.redirect_url) {
+          const url = payment.redirect_url;
+          if (url) {
             setStatus("redirecting");
-            window.location.href = payment.redirect_url;
+            window.location.assign(url);
             return; // leaving the page — Pesapal takes over
           }
-          // No redirect (e.g. backend still on the manual driver): treat as a
-          // saved reservation rather than a failure.
         } catch {
-          setPayFailed(true);
+          /* fall through */
         }
+        // Online was intended but no checkout came back (gateway not live yet):
+        // show "saved, we'll be in touch to complete payment" — never the cash
+        // claim, which would contradict what the customer chose.
+        setPayFailed(true);
       }
 
       setStatus("success");

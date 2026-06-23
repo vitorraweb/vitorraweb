@@ -259,6 +259,8 @@ export interface ReserveFetPayload {
   quantity?: number;
   currency?: "UGX" | "USD";
   notes?: string;
+  /** Customer will pay online next — tunes the confirmation email/copy. */
+  pay_online?: boolean;
 }
 
 export async function reserveFet(payload: ReserveFetPayload): Promise<{ order: Order; message: string }> {

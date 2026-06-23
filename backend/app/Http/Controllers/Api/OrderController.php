@@ -161,7 +161,13 @@ class OrderController extends Controller
             'quantity'       => ['nullable', 'integer', 'min:1', 'max:50'],
             'currency'       => ['nullable', 'in:UGX,USD'],
             'notes'          => ['nullable', 'string', 'max:2000'],
+            'pay_online'     => ['nullable', 'boolean'],
         ]);
+
+        // The customer intends to pay online next (the client will start payment
+        // right after). Only honour it when a live gateway is actually configured,
+        // so the confirmation copy never promises online payment we can't take.
+        $payOnline = ! empty($data['pay_online']) && config('payments.driver') !== 'manual';
 
         $currency = $data['currency'] ?? 'UGX';
         $qty      = (int) ($data['quantity'] ?? 1);
@@ -229,12 +235,14 @@ class OrderController extends Controller
             ]);
         }
 
-        Mail::to($order->customer_email)->send(new ReservationConfirmation($order));
+        Mail::to($order->customer_email)->send(new ReservationConfirmation($order, online: $payOnline));
         Mail::to(config('mail.team_address'))->send(new NewOrder($order));
 
         return response()->json([
             'data'    => $order,
-            'message' => 'Reservation received. Our team will be in touch to arrange cash payment before installation.',
+            'message' => $payOnline
+                ? 'Reservation received. Continue to secure payment to confirm your installation.'
+                : 'Reservation received. Our team will be in touch to arrange cash payment before installation.',
         ], 201);
     }
 

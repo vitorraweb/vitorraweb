@@ -13,7 +13,10 @@ class ReservationConfirmation extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public readonly Order $order) {}
+    public function __construct(
+        public readonly Order $order,
+        public readonly bool $online = false,
+    ) {}
 
     public function envelope(): Envelope
     {
@@ -24,7 +27,7 @@ class ReservationConfirmation extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.reservation-confirmation');
+        return new Content(view: 'emails.reservation-confirmation', with: ['online' => $this->online]);
     }
 
     public function attachments(): array
