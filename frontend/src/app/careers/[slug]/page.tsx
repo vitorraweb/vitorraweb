@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Loader2, MapPin, Briefcase, Upload, Check, ArrowLeft, Sparkles } from "lucide-react";
@@ -15,11 +16,9 @@ type Extracted = {
 };
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
-const TYPE_LABEL: Record<string, string> = {
-  full_time: "Full-time", part_time: "Part-time", contract: "Contract", internship: "Internship",
-};
 
 export default function ApplyPage() {
+  const t = useTranslations("careersPortal");
   const slug = String(useParams().slug ?? "");
   const [opening, setOpening] = useState<Opening | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -39,6 +38,9 @@ export default function ApplyPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+
+  const typeLabel = (type: string) =>
+    ({ full_time: t("typeFullTime"), part_time: t("typePartTime"), contract: t("typeContract"), internship: t("typeInternship") } as Record<string, string>)[type] ?? type;
 
   useEffect(() => {
     if (!slug) return;
@@ -66,7 +68,7 @@ export default function ApplyPage() {
         setAutofilled(true);
       }
     } catch {
-      setError("We couldn't read that file. Please try a PDF, or fill the form manually.");
+      setError(t("errCvRead"));
     } finally {
       setUploading(false);
     }
@@ -75,8 +77,8 @@ export default function ApplyPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!cvToken) { setError("Please upload your CV first."); return; }
-    if (!name.trim() || !email.trim()) { setError("Name and email are required."); return; }
+    if (!cvToken) { setError(t("errCvFirst")); return; }
+    if (!name.trim() || !email.trim()) { setError(t("errNameEmail")); return; }
     setSubmitting(true);
     try {
       const res = await fetch(`${API}/careers/apply`, {
@@ -85,12 +87,12 @@ export default function ApplyPage() {
         body: JSON.stringify({ cv_token: cvToken, slug, name, email, phone, location, cover_note: coverNote, website }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "Submission failed." }));
-        throw new Error(err.message ?? "Submission failed.");
+        const err = await res.json().catch(() => ({ message: t("errSubmit") }));
+        throw new Error(err.message ?? t("errSubmit"));
       }
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Submission failed.");
+      setError(err instanceof Error ? err.message : t("errSubmit"));
     } finally {
       setSubmitting(false);
     }
@@ -98,34 +100,34 @@ export default function ApplyPage() {
 
   if (notFound) return (
     <div className="text-center py-20">
-      <p className="text-lg font-semibold mb-2" style={{ color: "#1E1E1E" }}>This role is no longer open</p>
-      <Link href="/careers" className="text-sm font-semibold" style={{ color: "#7A6020" }}>← See all open roles</Link>
+      <p className="text-lg font-semibold mb-2" style={{ color: "#1E1E1E" }}>{t("roleClosed")}</p>
+      <Link href="/careers" className="text-sm font-semibold" style={{ color: "#7A6020" }}>{t("seeAllRoles")}</Link>
     </div>
   );
-  if (!opening) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (!opening) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
 
   if (submitted) return (
     <div className="max-w-xl mx-auto text-center py-16">
       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style={{ background: "rgba(34,197,94,0.12)" }}>
         <Check className="w-8 h-8" style={{ color: "#16A34A" }} />
       </div>
-      <h1 className="mb-2" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "28px", fontWeight: 700, color: "#1E1E1E" }}>Application received</h1>
-      <p className="text-sm mb-6" style={{ color: "#666" }}>Thank you for applying for <strong>{opening.title}</strong>. Our team will be in touch if there&apos;s a fit.</p>
-      <Link href="/careers" className="text-sm font-semibold" style={{ color: "#7A6020" }}>← Back to all roles</Link>
+      <h1 className="mb-2" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "28px", fontWeight: 700, color: "#1E1E1E" }}>{t("appReceivedTitle")}</h1>
+      <p className="text-sm mb-6" style={{ color: "#666" }}>{t("appReceivedBody", { title: opening.title })}</p>
+      <Link href="/careers" className="text-sm font-semibold" style={{ color: "#7A6020" }}>{t("backToRoles")}</Link>
     </div>
   );
 
   return (
     <div className="max-w-2xl mx-auto">
       <Link href="/careers" className="inline-flex items-center gap-1.5 text-sm font-semibold mb-6" style={{ color: "#7A6020" }}>
-        <ArrowLeft className="w-4 h-4" />All roles
+        <ArrowLeft className="w-4 h-4" />{t("allRoles")}
       </Link>
 
       <h1 className="mb-3" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "32px", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }}>{opening.title}</h1>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs mb-6" style={{ color: "#999" }}>
         {opening.department && <span className="inline-flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" />{opening.department}</span>}
         {opening.location && <span className="inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{opening.location}</span>}
-        <span className="px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(197,178,122,0.16)", color: "#7A6020" }}>{TYPE_LABEL[opening.employment_type] ?? opening.employment_type}</span>
+        <span className="px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(197,178,122,0.16)", color: "#7A6020" }}>{typeLabel(opening.employment_type)}</span>
       </div>
 
       {opening.description && (
@@ -135,30 +137,30 @@ export default function ApplyPage() {
       )}
 
       <form onSubmit={submit} className="bg-white rounded-[24px] border border-black/[0.06] p-7">
-        <h2 className="text-sm font-bold uppercase tracking-[0.08em] mb-5" style={{ color: "#1E1E1E" }}>Apply</h2>
+        <h2 className="text-sm font-bold uppercase tracking-[0.08em] mb-5" style={{ color: "#1E1E1E" }}>{t("applyHeading")}</h2>
 
         {/* CV upload */}
-        <Field label="Your CV / resume" hint="PDF preferred — we'll read it to save you typing.">
+        <Field label={t("cvLabel")} hint={t("cvHint")}>
           <label className="flex items-center gap-3 rounded-xl px-4 py-3 border cursor-pointer" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#FAFAF8" }}>
             {uploading ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#C5B27A" }} /> : <Upload className="w-5 h-5" style={{ color: "#C5B27A" }} />}
-            <span className="text-sm" style={{ color: cvName ? "#1E1E1E" : "#999" }}>{uploading ? "Reading your CV…" : cvName || "Choose a file (PDF, DOC, DOCX)"}</span>
+            <span className="text-sm" style={{ color: cvName ? "#1E1E1E" : "#999" }}>{uploading ? t("cvReading") : cvName || t("cvChoose")}</span>
             <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => onCv(e.target.files?.[0] ?? null)} />
           </label>
           {autofilled && (
             <p className="mt-2 inline-flex items-center gap-1.5 text-xs" style={{ color: "#16A34A" }}>
-              <Sparkles className="w-3.5 h-3.5" />We pre-filled your details from your CV — please check them.
+              <Sparkles className="w-3.5 h-3.5" />{t("cvAutofilled")}
             </p>
           )}
         </Field>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-          <Field label="Full name"><input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} style={inputStyle} /></Field>
-          <Field label="Email"><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} style={inputStyle} /></Field>
-          <Field label="Phone"><input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} style={inputStyle} /></Field>
-          <Field label="Location"><input value={location} onChange={(e) => setLocation(e.target.value)} className={inputCls} style={inputStyle} /></Field>
+          <Field label={t("fieldName")}><input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} style={inputStyle} /></Field>
+          <Field label={t("fieldEmail")}><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} style={inputStyle} /></Field>
+          <Field label={t("fieldPhone")}><input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} style={inputStyle} /></Field>
+          <Field label={t("fieldLocation")}><input value={location} onChange={(e) => setLocation(e.target.value)} className={inputCls} style={inputStyle} /></Field>
         </div>
         <div className="mt-4">
-          <Field label="Anything you'd like us to know? (optional)">
+          <Field label={t("fieldNote")}>
             <textarea value={coverNote} onChange={(e) => setCoverNote(e.target.value)} rows={4} className="w-full rounded-xl px-3.5 py-2.5 text-sm border outline-none focus:border-[#C5B27A]" style={inputStyle} />
           </Field>
         </div>
@@ -169,7 +171,7 @@ export default function ApplyPage() {
         {error && <p className="text-sm mt-4" style={{ color: "#C0392B" }}>{error}</p>}
 
         <button type="submit" disabled={submitting || uploading} className="btn-primary mt-6 w-full" style={{ justifyContent: "center", opacity: submitting || uploading ? 0.6 : 1 }}>
-          {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting…</> : "Submit application"}
+          {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />{t("submitting")}</> : t("submit")}
         </button>
       </form>
     </div>

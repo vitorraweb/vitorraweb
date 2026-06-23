@@ -4,14 +4,18 @@ import { useTransition } from "react";
 import { useLocale } from "next-intl";
 import { Globe } from "lucide-react";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { locales, type AppLocale } from "@/i18n/routing";
+import { primaryLocales, type AppLocale } from "@/i18n/routing";
 import { SWAHILI_ENABLED } from "@/lib/config";
 
 /* EN / SW segmented toggle — mirrors CurrencyToggle. Switching navigates to the
    same page under the chosen locale (usePathname is already locale-stripped, so
    /about ↔ /sw/about round-trips). The active locale persists via next-intl's
-   NEXT_LOCALE cookie. Hidden entirely when SWAHILI_ENABLED is off.            */
-const LABELS: Record<AppLocale, string> = { en: "EN", sw: "SW" };
+   NEXT_LOCALE cookie. Hidden entirely when SWAHILI_ENABLED is off.
+
+   Offers only the primary locales (EN / SW). French is live on the careers
+   portal for now (its own switcher); add "fr" to primaryLocales when French is
+   expanded site-wide.                                                          */
+const LABELS: Record<AppLocale, string> = { en: "EN", sw: "SW", fr: "FR" };
 
 export default function LanguageSwitcher({ dark = false }: { dark?: boolean }) {
   const active = useLocale();
@@ -44,7 +48,7 @@ export default function LanguageSwitcher({ dark = false }: { dark?: boolean }) {
         style={{ color: dark ? "rgba(255,255,255,0.55)" : "#7A6020" }}
         aria-hidden="true"
       />
-      {locales.map((opt) => {
+      {primaryLocales.map((opt) => {
         const isActive = active === opt;
         return (
           <button
