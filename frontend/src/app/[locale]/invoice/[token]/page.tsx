@@ -1,0 +1,37 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import InvoicePay from "@/components/InvoicePay";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "invoice" });
+  // Private, token-gated invoice — never index.
+  return { title: t("notFoundTitle"), robots: { index: false, follow: false } };
+}
+
+export default async function InvoicePayPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ token: string }>;
+  searchParams: Promise<{ paid?: string }>;
+}) {
+  const { token } = await params;
+  const { paid } = await searchParams;
+
+  return (
+    <>
+      <Header />
+      <main className="flex-1 flex items-center justify-center px-6 py-28 md:py-32" style={{ backgroundColor: "#F2F2F2" }}>
+        <InvoicePay token={token} justPaid={paid === "1"} />
+      </main>
+      <Footer />
+    </>
+  );
+}

@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\MonthlyReportController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductAdminController;
 use App\Http\Controllers\Api\ProductController;
@@ -83,6 +84,11 @@ Route::get('/orders/{reference}',      [OrderController::class, 'show']);
 Route::post('/orders/{reference}/pay',           [PaymentController::class, 'pay']);
 Route::get('/orders/{reference}/payment-status', [PaymentController::class, 'status']);
 Route::post('/payments/webhook/{provider}',      [PaymentController::class, 'webhook']);
+
+// Public, token-gated "view & pay your invoice" (link lives in the invoice email)
+Route::get('/invoices/pay/{token}',         [InvoicePaymentController::class, 'show']);
+Route::post('/invoices/pay/{token}',        [InvoicePaymentController::class, 'pay']);
+Route::get('/invoices/pay/{token}/status',  [InvoicePaymentController::class, 'status']);
 
 // Live exchange rate (cached 1 hr; falls back to config if API key not set)
 Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);

@@ -29,7 +29,18 @@ class InvoiceMail extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.invoice', with: ['reminder' => $this->reminder]);
+        // Offer a pay-online link only when a live gateway is configured and the
+        // invoice can actually be paid online (UGX/USD, still owing).
+        $payUrl = null;
+        if (config('payments.driver') === 'pesapal' && $this->invoice->isOnlinePayable()) {
+            $origin = rtrim((string) config('services.pesapal.frontend_url'), '/');
+            $payUrl = $origin.'/invoice/'.$this->invoice->ensurePublicToken();
+        }
+
+        return new Content(view: 'emails.invoice', with: [
+            'reminder' => $this->reminder,
+            'payUrl'   => $payUrl,
+        ]);
     }
 
     public function attachments(): array

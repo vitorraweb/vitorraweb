@@ -20,7 +20,7 @@ class PesapalGatewayTest extends TestCase
         'consumer_secret' => 'cs',
         'env'             => 'sandbox',
         'ipn_id'          => 'IPN-EXISTING',
-        'callback_url'    => 'https://vitorra.org/pay/return',
+        'frontend_url'    => 'https://vitorra.org',
     ];
 
     protected function setUp(): void

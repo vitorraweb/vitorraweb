@@ -68,8 +68,10 @@ return [
         'consumer_secret' => env('PESAPAL_CONSUMER_SECRET'),
         'env'             => env('PESAPAL_ENV', 'sandbox'),   // sandbox | live
         'ipn_id'          => env('PESAPAL_IPN_ID'),
-        // Browser-return page; the gateway appends ?reference=… per order.
-        'callback_url'    => env('PESAPAL_CALLBACK_URL', rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/') . '/pay/return'),
+        // Public site origin only; the gateway appends each payable's own return
+        // path (/pay/return for orders, /invoice/{token} for invoices). Falls
+        // back to the existing FRONTEND_URL, so prod usually needs no extra var.
+        'frontend_url'    => env('PESAPAL_FRONTEND_URL', env('FRONTEND_URL', 'http://localhost:3000')),
     ],
 
     // Anthropic Claude — used to auto-extract applicant details from uploaded CVs.

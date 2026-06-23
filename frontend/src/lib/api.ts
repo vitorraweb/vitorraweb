@@ -195,6 +195,60 @@ export async function getPaymentStatus(
   return res.data;
 }
 
+/* ─── B2B invoice pay-online (public, token-gated) ─────────────────────────── */
+
+export interface PublicInvoiceItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  vat_rate: number;
+  line_subtotal: number;
+  vat_amount: number;
+  line_total: number;
+}
+
+export interface PublicInvoice {
+  number: string;
+  customer_name: string;
+  currency: "UGX" | "USD" | "EUR";
+  issue_date: string | null;
+  due_date: string | null;
+  subtotal: number;
+  vat_total: number;
+  total: number;
+  amount_paid: number;
+  balance: number;
+  status: "draft" | "sent" | "partial" | "paid" | "void";
+  is_overdue: boolean;
+  online_payable: boolean;
+  notes: string | null;
+  terms: string | null;
+  items: PublicInvoiceItem[];
+}
+
+export async function getPublicInvoice(token: string): Promise<PublicInvoice> {
+  const res = await request<ApiResponse<PublicInvoice>>(`/invoices/pay/${token}`);
+  return res.data;
+}
+
+/** Begin paying an invoice online. Send the customer to `redirect_url` when present. */
+export async function payInvoice(token: string): Promise<PaymentInitiation> {
+  const res = await request<ApiResponse<PaymentInitiation>>(`/invoices/pay/${token}`, {
+    method: "POST",
+  });
+  return res.data;
+}
+
+/** Reconcile an invoice's payment state with the provider (polled after return). */
+export async function getInvoicePaymentStatus(
+  token: string
+): Promise<{ number: string; status: PublicInvoice["status"]; payment_status: PaymentStatus; balance: number }> {
+  const res = await request<
+    ApiResponse<{ number: string; status: PublicInvoice["status"]; payment_status: PaymentStatus; balance: number }>
+  >(`/invoices/pay/${token}/status`);
+  return res.data;
+}
+
 /* ─── FET Reservations ("Reserve Now, Pay Cash") ───────────────────────── */
 
 export interface ReserveFetPayload {

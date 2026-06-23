@@ -15,6 +15,11 @@ Due date: {{ $invoice->due_date->format('j F Y') }}
 @endif
 
 The full invoice is attached as a PDF. If you've already paid, please disregard this message.
+@if(!empty($payUrl))
+
+Pay online securely by Mobile Money (MTN, Airtel) or card:
+{{ $payUrl }}
+@endif
 
 Thank you,
 Vitorra Holdings Limited

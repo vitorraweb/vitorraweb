@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use App\Contracts\Payable;
 use App\Contracts\PaymentGateway;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -22,15 +23,15 @@ class ManualGateway implements PaymentGateway
         return 'manual';
     }
 
-    public function initiate(Order $order): array
+    public function initiate(Payable $payable): array
     {
-        $order->update(['payment_method' => 'manual']);
+        $payable->attachPaymentInitiation('', 'manual');
 
         return [
             'status'       => 'pending',
             'redirect_url' => null,
-            'reference'    => $order->reference,
-            'message'      => 'Order placed. Our team will confirm payment and delivery with you shortly.',
+            'reference'    => $payable->payableReference(),
+            'message'      => 'Received. Our team will confirm payment with you shortly.',
         ];
     }
 

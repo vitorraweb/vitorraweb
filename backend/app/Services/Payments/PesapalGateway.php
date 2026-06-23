@@ -2,10 +2,10 @@
 
 namespace App\Services\Payments;
 
+use App\Contracts\Payable;
 use App\Contracts\PaymentGateway;
-use App\Models\Order;
 use App\Models\Setting;
-use App\Services\DocumentService;
+use App\Support\PayableResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -16,17 +16,16 @@ use Illuminate\Support\Str;
  * Pesapal (API 3.0) — Uganda's local card + MTN/Airtel mobile-money gateway.
  *
  * Pesapal is a hosted/redirect provider (like PayPal, not a direct charge API):
- *   1. initiate()      submits the order → we send the customer to a Pesapal page
+ *   1. initiate()      submits the payable → we send the customer to a Pesapal page
  *   2. customer pays   (picks MTN / Airtel / card on Pesapal's hosted page)
- *   3. handleWebhook()  Pesapal pings our IPN URL → we confirm + mark the order paid
+ *   3. handleWebhook()  Pesapal pings our IPN URL → we confirm + settle the payable
  *   4. verify()         the browser-return page polls this until the state settles
+ *
+ * Works for any {@see Payable} (Order or Invoice) — each one supplies its amount,
+ * billing and settlement, and is found again by {@see PayableResolver}.
  *
  * One-time setup: `php artisan pesapal:register-ipn` registers our webhook URL and
  * stores the resulting `ipn_id` in Settings. Credentials live in config/services.php.
- *
- * The charge is currency-agnostic: Pesapal is given `order->total` in `order->currency`
- * (UGX as whole shillings, USD as cents → major units). FET's EUR list prices are a
- * display concern only — orders are already stored in UGX/USD.
  */
 class PesapalGateway implements PaymentGateway
 {
@@ -36,7 +35,7 @@ class PesapalGateway implements PaymentGateway
         'live'    => 'https://pay.pesapal.com/v3/api',
     ];
 
-    /** @param array{consumer_key:?string, consumer_secret:?string, env:?string, callback_url:?string, ipn_id:?string} $config */
+    /** @param array{consumer_key:?string, consumer_secret:?string, env:?string, frontend_url:?string, ipn_id:?string} $config */
     public function __construct(private readonly array $config) {}
 
     public function name(): string
@@ -44,47 +43,41 @@ class PesapalGateway implements PaymentGateway
         return 'pesapal';
     }
 
-    public function initiate(Order $order): array
+    public function initiate(Payable $payable): array
     {
+        $billing = $payable->payableBilling();
+
         $payload = [
-            'id'              => $order->reference,
-            'currency'        => $order->currency,
-            'amount'          => $this->majorUnits($order),
-            'description'     => "Vitorra order {$order->reference}",
-            'callback_url'    => $this->callbackUrl($order),
+            'id'              => $payable->payableReference(),
+            'currency'        => $payable->payableCurrency(),
+            'amount'          => $payable->payableAmountMajor(),
+            'description'     => $payable->payableDescription(),
+            'callback_url'    => $this->callbackUrl($payable),
             'notification_id' => $this->ipnId(),
-            'billing_address' => [
-                'email_address' => $order->customer_email,
-                'phone_number'  => $order->customer_phone ?? '',
-                'first_name'    => Str::before($order->customer_name, ' ') ?: $order->customer_name,
-                'last_name'     => Str::contains($order->customer_name, ' ') ? Str::after($order->customer_name, ' ') : '',
-            ],
+            'billing_address' => $billing,
         ];
 
         $res = $this->request('POST', '/Transactions/SubmitOrderRequest', $payload);
 
         // Pesapal returns a top-level `error` object (not an HTTP error) on failure.
         if (! $res || ! empty($res['error']['code']) || empty($res['redirect_url'])) {
-            Log::error('Pesapal SubmitOrderRequest failed', ['reference' => $order->reference, 'response' => $res]);
+            Log::error('Pesapal SubmitOrderRequest failed', ['reference' => $payable->payableReference(), 'response' => $res]);
 
             return [
                 'status'       => 'pending',
                 'redirect_url' => null,
-                'reference'    => $order->reference,
+                'reference'    => $payable->payableReference(),
                 'message'      => 'We could not start the payment just now. Please try again, or contact us to pay another way.',
             ];
         }
 
-        // Store Pesapal's tracking id so verify()/webhook can look the order up.
-        $order->update([
-            'payment_method'    => 'pesapal',
-            'payment_reference' => $res['order_tracking_id'],
-        ]);
+        // Store Pesapal's tracking id so verify()/webhook can find the payable.
+        $payable->attachPaymentInitiation($res['order_tracking_id'], $this->name());
 
         return [
             'status'       => 'redirect',
             'redirect_url' => $res['redirect_url'],
-            'reference'    => $order->reference,
+            'reference'    => $payable->payableReference(),
             'message'      => 'Redirecting you to Pesapal to complete payment securely.',
         ];
     }
@@ -115,35 +108,33 @@ class PesapalGateway implements PaymentGateway
 
     public function verify(string $reference): array
     {
-        $order = Order::where('reference', $reference)->first();
+        $payable = app(PayableResolver::class)->byReference($reference);
 
-        if (! $order || ! $order->payment_reference) {
-            return ['payment_status' => $order?->payment_status ?? 'pending', 'reference' => $reference];
+        if (! $payable || ! $payable->payableTrackingId()) {
+            return ['payment_status' => $payable?->payableIsPaid() ? 'paid' : 'pending', 'reference' => $reference];
         }
 
-        $status = $this->fetchStatus($order->payment_reference);
-        $this->applyStatus($order, $status);
+        $this->applyStatus($payable, $this->fetchStatus($payable->payableTrackingId()));
 
-        return ['payment_status' => $order->fresh()->payment_status, 'reference' => $reference];
+        return ['payment_status' => $payable->payableIsPaid() ? 'paid' : 'pending', 'reference' => $reference];
     }
 
     public function handleWebhook(Request $request): array
     {
         // Pesapal sends OrderTrackingId + OrderMerchantReference (GET query or POST).
-        $trackingId = $request->input('OrderTrackingId', $request->query('OrderTrackingId'));
+        $trackingId  = $request->input('OrderTrackingId', $request->query('OrderTrackingId'));
         $merchantRef = $request->input('OrderMerchantReference', $request->query('OrderMerchantReference'));
-        $notifType  = $request->input('OrderNotificationType', $request->query('OrderNotificationType', 'IPNCHANGE'));
+        $notifType   = $request->input('OrderNotificationType', $request->query('OrderNotificationType', 'IPNCHANGE'));
 
         if ($trackingId) {
-            $order = Order::where('payment_reference', $trackingId)
-                ->orWhere('reference', $merchantRef)
-                ->first();
+            $resolver = app(PayableResolver::class);
+            $payable  = $resolver->byTrackingId($trackingId)
+                ?? ($merchantRef ? $resolver->byReference($merchantRef) : null);
 
-            if ($order) {
-                $status = $this->fetchStatus($trackingId);
-                $this->applyStatus($order, $status);
+            if ($payable) {
+                $this->applyStatus($payable, $this->fetchStatus($trackingId));
             } else {
-                Log::warning('Pesapal IPN for unknown order', ['tracking_id' => $trackingId, 'merchant_ref' => $merchantRef]);
+                Log::warning('Pesapal IPN for unknown payable', ['tracking_id' => $trackingId, 'merchant_ref' => $merchantRef]);
             }
         }
 
@@ -177,38 +168,23 @@ class PesapalGateway implements PaymentGateway
     }
 
     /**
-     * Move the order to the confirmed payment state. Idempotent: the paid
-     * transition (and its receipt) fires once even if Pesapal calls us twice.
+     * Settle the payable once Pesapal confirms. Idempotency lives in the payable's
+     * markPayablePaid(), so a webhook firing twice settles exactly once.
      *
      * @param array{state:string, raw:array} $status
      */
-    private function applyStatus(Order $order, array $status): void
+    private function applyStatus(Payable $payable, array $status): void
     {
-        if ($status['state'] === 'paid' && $order->payment_status !== 'paid') {
-            $order->update(['payment_status' => 'paid']);
-
-            try {
-                app(DocumentService::class)->generatePaymentReceipt($order->fresh());
-            } catch (\Throwable $e) {
-                Log::warning('Failed to generate payment receipt after Pesapal payment', [
-                    'order_id' => $order->id,
-                    'error'    => $e->getMessage(),
-                ]);
-            }
+        if ($status['state'] === 'paid' && ! $payable->payableIsPaid()) {
+            $payable->markPayablePaid();
         }
     }
 
-    /** Amount in the currency's major unit (UGX whole shillings; USD cents → dollars). */
-    private function majorUnits(Order $order): float
+    private function callbackUrl(Payable $payable): string
     {
-        return $order->currency === 'USD' ? round($order->total / 100, 2) : (float) $order->total;
-    }
+        $origin = rtrim((string) ($this->config['frontend_url'] ?? ''), '/');
 
-    private function callbackUrl(Order $order): string
-    {
-        $base = (string) ($this->config['callback_url'] ?? '');
-
-        return $base . (Str::contains($base, '?') ? '&' : '?') . 'reference=' . $order->reference;
+        return $origin.$payable->payableReturnPath();
     }
 
     /** The registered IPN id (Settings first — set by pesapal:register-ipn — then config). */
@@ -233,7 +209,7 @@ class PesapalGateway implements PaymentGateway
             $res = Http::acceptJson()
                 ->asJson()
                 ->timeout(20)
-                ->post($this->baseUrl() . '/Auth/RequestToken', [
+                ->post($this->baseUrl().'/Auth/RequestToken', [
                     'consumer_key'    => $this->config['consumer_key'] ?? null,
                     'consumer_secret' => $this->config['consumer_secret'] ?? null,
                 ]);
@@ -262,8 +238,8 @@ class PesapalGateway implements PaymentGateway
         $req = Http::withToken($token)->acceptJson()->asJson()->timeout(30);
 
         $res = $method === 'GET'
-            ? $req->get($this->baseUrl() . $path)
-            : $req->post($this->baseUrl() . $path, $body);
+            ? $req->get($this->baseUrl().$path)
+            : $req->post($this->baseUrl().$path, $body);
 
         if (! $res->successful()) {
             Log::error('Pesapal request failed', ['path' => $path, 'status' => $res->status(), 'body' => $res->json()]);
