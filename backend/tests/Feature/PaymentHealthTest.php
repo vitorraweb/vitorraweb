@@ -45,20 +45,42 @@ class PaymentHealthTest extends TestCase
             ->assertJsonPath('data.ipn_registered', true);
     }
 
-    public function test_connection_test_validates_credentials(): void
+    public function test_connection_test_passes_when_fully_configured(): void
     {
-        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox']);
-        Http::fake(['*/Auth/RequestToken' => Http::response(['token' => 'tok'])]);
+        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox', 'frontend_url' => 'https://vitorra.org', 'ipn_id' => 'IPN-1']);
+        Http::fake([
+            '*/Auth/RequestToken' => Http::response(['token' => 'tok']),
+            '*/Transactions/SubmitOrderRequest' => Http::response(['order_tracking_id' => 'T', 'redirect_url' => 'https://pay/T', 'status' => '200']),
+        ]);
 
         $this->withHeaders($this->adminHeaders())->postJson('/api/admin/payments/health/test')
             ->assertOk()
             ->assertJsonPath('data.ok', true);
     }
 
-    public function test_connection_test_reports_failure(): void
+    public function test_connection_test_flags_missing_return_url(): void
     {
-        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox']);
+        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox', 'frontend_url' => 'http://localhost:3000']);
+
+        $this->withHeaders($this->adminHeaders())->postJson('/api/admin/payments/health/test')
+            ->assertOk()
+            ->assertJsonPath('data.ok', false);
+    }
+
+    public function test_connection_test_reports_bad_keys(): void
+    {
+        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox', 'frontend_url' => 'https://vitorra.org', 'ipn_id' => 'IPN-1']);
         Http::fake(['*/Auth/RequestToken' => Http::response(['error' => ['message' => 'invalid_consumer_key']], 401)]);
+
+        $this->withHeaders($this->adminHeaders())->postJson('/api/admin/payments/health/test')
+            ->assertOk()
+            ->assertJsonPath('data.ok', false);
+    }
+
+    public function test_connection_test_flags_missing_ipn(): void
+    {
+        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox', 'frontend_url' => 'https://vitorra.org', 'ipn_id' => null]);
+        Http::fake(['*/Auth/RequestToken' => Http::response(['token' => 'tok'])]);
 
         $this->withHeaders($this->adminHeaders())->postJson('/api/admin/payments/health/test')
             ->assertOk()

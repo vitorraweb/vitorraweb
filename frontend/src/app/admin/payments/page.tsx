@@ -93,7 +93,7 @@ export default function PaymentsHealthPage() {
           <div>
             <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>Connection test</p>
             <p className="text-xs mt-0.5" style={{ color: "#777" }}>
-              Mode: <strong style={{ color: "#1E1E1E" }}>{health.environment === "live" ? "Live" : "Sandbox (testing)"}</strong> · checks the keys against Pesapal directly.
+              Mode: <strong style={{ color: "#1E1E1E" }}>{health.environment === "live" ? "Live" : "Sandbox (testing)"}</strong> · runs a real test payment request and reports exactly what Pesapal says (the test order is never charged).
             </p>
           </div>
           <button

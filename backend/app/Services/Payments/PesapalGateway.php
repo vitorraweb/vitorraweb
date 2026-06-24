@@ -107,32 +107,68 @@ class PesapalGateway implements PaymentGateway
     }
 
     /**
-     * Live credential/connectivity check for the admin "Payments" health page —
-     * a fresh (uncached) auth call, so it reflects the keys configured right now.
+     * End-to-end diagnostic for the admin "Payments" health page — runs the exact
+     * same steps a real payment does and reports precisely where it breaks:
+     * return-URL set → keys valid → IPN registered → a test order is accepted by
+     * Pesapal. The test order (tiny, never paid) just expires on Pesapal's side.
      *
      * @return array{ok:bool, message:string}
      */
     public function verifyConnection(): array
     {
+        // 1. Return URL must be an absolute, public URL (Pesapal rejects relative
+        //    or localhost callbacks — a common cause of "couldn't start payment").
+        $origin = rtrim((string) ($this->config['frontend_url'] ?? ''), '/');
+        if ($origin === '' || str_contains($origin, 'localhost') || ! str_starts_with($origin, 'http')) {
+            return ['ok' => false, 'message' => "Return URL isn't set to your live site (currently “{$origin}”). Set PESAPAL_FRONTEND_URL=https://vitorra.org in the backend .env, then run config:cache."];
+        }
+
+        // 2. Keys present + valid (fresh auth).
         if (empty($this->config['consumer_key']) || empty($this->config['consumer_secret'])) {
             return ['ok' => false, 'message' => 'Pesapal API keys are not set.'];
         }
-
         try {
-            $res = Http::acceptJson()->asJson()->timeout(20)->post($this->baseUrl().'/Auth/RequestToken', [
+            $auth = Http::acceptJson()->asJson()->timeout(20)->post($this->baseUrl().'/Auth/RequestToken', [
                 'consumer_key'    => $this->config['consumer_key'],
                 'consumer_secret' => $this->config['consumer_secret'],
             ]);
+            if (! $auth->successful() || ! $auth->json('token')) {
+                $err = $auth->json('error.message') ?? $auth->json('message') ?? ('HTTP '.$auth->status());
 
-            if ($res->successful() && $res->json('token')) {
-                return ['ok' => true, 'message' => 'Connected to Pesapal successfully.'];
+                return ['ok' => false, 'message' => 'Pesapal rejected the API keys: '.$err.' (check the keys match the '.($this->config['env'] ?? 'sandbox').' environment).'];
             }
-
-            $err = $res->json('error.message') ?? $res->json('message') ?? ('HTTP '.$res->status());
-
-            return ['ok' => false, 'message' => 'Pesapal rejected the credentials: '.$err];
+            $token = $auth->json('token');
         } catch (\Throwable $e) {
             return ['ok' => false, 'message' => 'Could not reach Pesapal: '.$e->getMessage()];
+        }
+
+        // 3. IPN registered.
+        if (empty($this->ipnId())) {
+            return ['ok' => false, 'message' => 'Payment notifications (IPN) are not registered. Run: php artisan pesapal:register-ipn'];
+        }
+
+        // 4. A real SubmitOrderRequest — the definitive test (mirrors live payment).
+        try {
+            $res = Http::withToken($token)->acceptJson()->asJson()->timeout(30)
+                ->post($this->baseUrl().'/Transactions/SubmitOrderRequest', [
+                    'id'              => 'HEALTHCHECK-'.time(),
+                    'currency'        => 'UGX',
+                    'amount'          => 100,
+                    'description'     => 'Vitorra payment health check',
+                    'callback_url'    => $origin.'/order/healthcheck',
+                    'notification_id' => $this->ipnId(),
+                    'billing_address' => ['email_address' => 'health@vitorra.org', 'first_name' => 'Health', 'last_name' => 'Check'],
+                ]);
+
+            if ($res->successful() && ! empty($res->json('redirect_url')) && empty($res->json('error.code'))) {
+                return ['ok' => true, 'message' => 'All good — keys valid, IPN registered, and a test payment was accepted. Online payments are working.'];
+            }
+
+            $err = $res->json('error.message') ?? $res->json('error.code') ?? $res->json('message') ?? ('HTTP '.$res->status());
+
+            return ['ok' => false, 'message' => 'Pesapal rejected a test payment: '.$err];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'message' => 'Test payment failed: '.$e->getMessage()];
         }
     }
 
