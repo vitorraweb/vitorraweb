@@ -1552,7 +1552,15 @@
     "tryAgain": "Try payment again",
     "refresh": "Refresh status",
     "contactUs": "Contact us",
-    "secured": "Secured by Pesapal"
+    "secured": "Secured by Pesapal",
+    "payTitle": "Complete your payment",
+    "orderSummary": "Your order",
+    "qty": "Qty",
+    "payNow": "Pay {amount} now",
+    "payNotice": "Secured by Pesapal — pay by Mobile Money (MTN, Airtel) or card.",
+    "redirecting": "Taking you to secure payment…",
+    "payFailedTitle": "We couldn't start the payment",
+    "payFailedBody": "Something went wrong starting your payment. Please try again, or contact us to pay another way."
   },
   "invoice": {
     "loading": "Loading your invoice…",

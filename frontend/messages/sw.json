@@ -1552,7 +1552,15 @@
     "tryAgain": "Jaribu malipo tena",
     "refresh": "Onyesha upya hali",
     "contactUs": "Wasiliana nasi",
-    "secured": "Imelindwa na Pesapal"
+    "secured": "Imelindwa na Pesapal",
+    "payTitle": "Kamilisha malipo yako",
+    "orderSummary": "Oda yako",
+    "qty": "Idadi",
+    "payNow": "Lipa {amount} sasa",
+    "payNotice": "Imelindwa na Pesapal — lipa kwa Mobile Money (MTN, Airtel) au kadi.",
+    "redirecting": "Tunakupeleka kwenye malipo salama…",
+    "payFailedTitle": "Hatukuweza kuanzisha malipo",
+    "payFailedBody": "Hitilafu imetokea wakati wa kuanzisha malipo yako. Tafadhali jaribu tena, au wasiliana nasi kulipa kwa njia nyingine."
   },
   "invoice": {
     "loading": "Inapakia ankara yako…",

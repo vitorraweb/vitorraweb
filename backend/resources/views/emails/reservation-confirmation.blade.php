@@ -27,6 +27,9 @@ Your reservation
 ──────────────────────────────────────
 @if (!empty($online))
 Total to pay:  {{ $order->money($order->total) }}
+
+▶ Pay securely online (card or Mobile Money):
+{{ $payUrl }}
 @else
 Total due (cash, before installation):  {{ $order->money($order->total) }}
 @endif

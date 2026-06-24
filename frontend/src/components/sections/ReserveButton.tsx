@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { ArrowRight, Check, Loader2, Mail, Minus, Phone, Plus, ShieldCheck, User, X } from "lucide-react";
-import { payOrder, reserveFet } from "@/lib/api";
+import { reserveFet } from "@/lib/api";
 import { ONLINE_PAYMENTS_ENABLED } from "@/lib/config";
 import { formatEur, type FetTier } from "@/lib/fet-pricing";
 import type { Order } from "@/types";
@@ -66,9 +66,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "redirecting" | "success" | "error">("idle");
   const [order, setOrder] = useState<Order | null>(null);
-  // True when the order was reserved but online payment couldn't be started —
-  // the reservation is safe; we just soften the success copy.
-  const [payFailed, setPayFailed] = useState(false);
+  const router = useRouter();
 
   // Whether to offer paying online (Pesapal). When off, this stays the original
   // "reserve, pay offline" flow, byte-for-byte.
@@ -93,7 +91,6 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
     setErrors({});
     setStatus("idle");
     setOrder(null);
-    setPayFailed(false);
   };
 
   const validate = () => {
@@ -108,14 +105,13 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
   };
 
   /**
-   * Reserve the unit, then (when paying online) start a Pesapal payment and hand
-   * the customer over to the hosted page. `payNow=false` is the offline path —
-   * the order is created and the team follows up, exactly as before.
-   * The reservation is always saved first, so a payment hiccup never loses it.
+   * Reserve the unit, then send the customer to the order's payment page (the
+   * single, durable place to pay — also linked from the confirmation email).
+   * `payNow=false` is the offline path — the order is created and the team
+   * follows up, exactly as before. The reservation is always saved first.
    */
   const submit = async (payNow: boolean) => {
     if (!validate()) return;
-    setPayFailed(false);
     setStatus("submitting");
     try {
       const { order } = await reserveFet({
@@ -130,21 +126,11 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
       setOrder(order);
 
       if (payNow && online) {
-        try {
-          const payment = await payOrder(order.reference);
-          const url = payment.redirect_url;
-          if (url) {
-            setStatus("redirecting");
-            window.location.assign(url);
-            return; // leaving the page — Pesapal takes over
-          }
-        } catch {
-          /* fall through */
-        }
-        // Online was intended but no checkout came back (gateway not live yet):
-        // show "saved, we'll be in touch to complete payment" — never the cash
-        // claim, which would contradict what the customer chose.
-        setPayFailed(true);
+        // Hand off to the order payment page, which shows the summary + a Pay
+        // button and handles the Pesapal redirect (with a clear retry if needed).
+        setStatus("redirecting");
+        router.push(`/order/${order.reference}`);
+        return;
       }
 
       setStatus("success");
@@ -219,7 +205,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
                       {tr("reserveSuccess", { reference: order.reference })}
                     </p>
                     <p className="text-sm leading-relaxed mt-3" style={{ color: "#777777" }}>
-                      {payFailed ? tr("reservePayFailed") : tr("reserveCashNotice")}
+                      {tr("reserveCashNotice")}
                     </p>
                     <Link
                       href="/account/orders"

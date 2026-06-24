@@ -86,8 +86,8 @@ export default function CheckoutView() {
       setReference(order.reference);
 
       // With a live gateway, hand off to Pesapal (cards + MTN/Airtel). The
-      // customer returns to /pay/return, which confirms payment. Falls back to
-      // the offline "order received" screen when online payment isn't available.
+      // customer returns to the order page (/order/{ref}), which confirms payment.
+      // Falls back to the offline "order received" screen when unavailable.
       if (ONLINE_PAYMENTS_ENABLED) {
         try {
           const payment = await payOrder(order.reference);

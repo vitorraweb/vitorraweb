@@ -27,7 +27,17 @@ class ReservationConfirmation extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.reservation-confirmation', with: ['online' => $this->online]);
+        // For online reservations, link straight to the order's payment page.
+        $payUrl = null;
+        if ($this->online) {
+            $origin = rtrim((string) config('services.pesapal.frontend_url'), '/');
+            $payUrl = $origin.'/order/'.$this->order->reference;
+        }
+
+        return new Content(view: 'emails.reservation-confirmation', with: [
+            'online' => $this->online,
+            'payUrl' => $payUrl,
+        ]);
     }
 
     public function attachments(): array

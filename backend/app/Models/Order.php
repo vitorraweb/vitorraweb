@@ -155,7 +155,7 @@ class Order extends Model implements Payable
 
     public function payableReturnPath(): string
     {
-        return '/pay/return?reference='.$this->reference;
+        return '/order/'.$this->reference.'?paid=1';
     }
 
     /**
