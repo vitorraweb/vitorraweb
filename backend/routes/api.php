@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PaymentHealthController;
 use App\Http\Controllers\Api\ProductAdminController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProspectController;
@@ -348,6 +349,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('role:admin')->group(function () {
             Route::get('/settings',  [SettingsController::class, 'index']);
             Route::put('/settings',  [SettingsController::class, 'update']);
+            // Online-payments (Pesapal) health: is the gateway live?
+            Route::get('/payments/health',       [PaymentHealthController::class, 'show']);
+            Route::post('/payments/health/test', [PaymentHealthController::class, 'test']);
             // Audit trail (read-only) — sensitive-action history.
             Route::get('/audit',     [AuditController::class, 'index']);
             Route::get('/users',                       [UserAdminController::class, 'index']);

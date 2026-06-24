@@ -106,6 +106,36 @@ class PesapalGateway implements PaymentGateway
         return ['ipn_id' => $res['ipn_id'], 'url' => $res['url'] ?? $url];
     }
 
+    /**
+     * Live credential/connectivity check for the admin "Payments" health page —
+     * a fresh (uncached) auth call, so it reflects the keys configured right now.
+     *
+     * @return array{ok:bool, message:string}
+     */
+    public function verifyConnection(): array
+    {
+        if (empty($this->config['consumer_key']) || empty($this->config['consumer_secret'])) {
+            return ['ok' => false, 'message' => 'Pesapal API keys are not set.'];
+        }
+
+        try {
+            $res = Http::acceptJson()->asJson()->timeout(20)->post($this->baseUrl().'/Auth/RequestToken', [
+                'consumer_key'    => $this->config['consumer_key'],
+                'consumer_secret' => $this->config['consumer_secret'],
+            ]);
+
+            if ($res->successful() && $res->json('token')) {
+                return ['ok' => true, 'message' => 'Connected to Pesapal successfully.'];
+            }
+
+            $err = $res->json('error.message') ?? $res->json('message') ?? ('HTTP '.$res->status());
+
+            return ['ok' => false, 'message' => 'Pesapal rejected the credentials: '.$err];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'message' => 'Could not reach Pesapal: '.$e->getMessage()];
+        }
+    }
+
     public function verify(string $reference): array
     {
         $payable = app(PayableResolver::class)->byReference($reference);
