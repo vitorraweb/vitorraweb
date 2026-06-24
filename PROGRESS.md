@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 18 June 2026
+**Last updated:** 24 June 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -20,13 +20,16 @@
 | Admin panel (dashboard, enquiries, customers, pipeline, prospects, blog, media, products, settings, users, orders, newsletter, tasks, templates) | ✅ Functional |
 | Customer portal (`/account/*`) | ✅ Built |
 | FET pricing + savings calculator + currency helper | ✅ Complete |
+| **FET proven-savings loop** (per-vehicle measured savings, fleet rollups, monthly digest) | ✅ **Built (Phases 1–2)** |
 | Transactional email (Resend) | ✅ Live in production |
 | **Account security — self-service password change + auto-expiring sessions** | ✅ **Done** |
 | **Security hardening** (2FA, audit log, login throttle, token scoping, encrypted files, cookie-auth option) | ✅ **Done** |
 | **Internal operations platform** (Staff/HR, CEO report, Suppliers, Installments) | ✅ **Built & deployed** |
 | **Accounting — "Vitorra Books"** (ledger, invoicing, VAT, AI receipts, recurring) | ✅ **Built & deployed** |
 | Coffee shop (storefront/cart/checkout) | ⏸ Built, gated until retail prices confirmed |
-| Live payment gateway | ⛔ Blocked on business account |
+| **Online payments — Pesapal** (cards + MTN/Airtel) across FET reserve, invoices, installments, coffee | ✅ **Built & tested** — needs activation (keys + IPN) |
+| **Multilingual careers portal** (EN / SW / **FR** pilot) | ✅ **Built** |
+| **Zero-cost upgrades** (keyless FX, auto holidays, phone validation) | ✅ **Built** |
 | Monitoring / backups / CI/CD | ⏳ Sentry DSNs configured; uptime/backups/CI still to verify |
 
 ---
@@ -83,6 +86,75 @@ A focused pass after a full audit of the staff/finance/ops modules, in business 
 
 ---
 
+## ✅ FET proven-savings loop (June 2026)
+
+Turns the priority product's headline — an independent German test measuring a **13.9% fuel cut** — into **measured, per-vehicle proof** for every customer. Built in phases; revenue work that needs none of the open blockers (no payment gateway, no coffee prices).
+
+### Phase 1 — record installs & prove savings
+- **Staff** record each device fitted to a customer's vehicle and log fuel readings (`/admin/fet`, new "FET savings" module — on by default for Leadership / Operations / Sales).
+- Savings are **measured, not estimated**: fuel use is worked out brim-to-brim from the readings (litres between odometer points ÷ distance) and compared to a baseline — a measured "before" period if available, otherwise a declared figure, otherwise the typical figure for the vehicle class. Shows fuel reduction %, litres, money and CO₂ saved, against the verified 13.9%.
+- **Customers** see their own measured savings, **log their own fill-ups**, and download a branded **"Proven Savings" certificate (PDF)** from a new bilingual **Fuel savings** tab in `/account`.
+- Number plates are **encrypted at rest** (PII); everything is attributed to the customer's own readings, never claimed as a Vitorra guarantee.
+
+### Phase 2 — make it active
+- **Fleet rollups** for B2B customers: a customer's vehicles roll into one headline (distance-weighted average reduction, total fuel + CO₂, money saved kept **separate per currency**). Shown to the customer (`/account/fet`) and book-wide to staff (`/admin/fet`).
+- **Monthly savings digest** (`fet:digest`, rides the existing cron): emails each customer their measured savings in business language, with a built-in **nudge to log overdue (45-day+) readings** — so the proof keeps building itself. Silent when there's nothing measured and nothing overdue.
+
+> Pending — **Phase 3** (later, once real install data accumulates): a public, consent-gated "Proven in Uganda" proof section (live counters) + referral / installment-upsell hooks. Capture method, baseline policy and per-install currency are flexible in the schema, so any later choice fits.
+
+---
+
+## ✅ Online payments — Pesapal (June 2026)
+
+A full, provider-agnostic online-payment integration (cards + MTN/Airtel mobile
+money) — the live-payment-gateway item that was previously blocked. Built and
+tested; **default-off** until activated, so nothing changed for customers on deploy.
+
+- **One gateway, every payable.** A `Payable` abstraction lets one Pesapal
+  integration + one webhook serve **four surfaces**: FET reserve-and-pay, B2B
+  invoice "pay online" links, customer installment part-payments, and the coffee
+  checkout (still gated on prices). Orders, Invoices and InstallmentPayments all
+  implement it; a `PayableResolver` finds the right one from a webhook.
+- **How it works:** hosted-redirect flow (like PayPal). Customer → Pesapal page →
+  back to a dedicated **order payment page** (`/order/{ref}`) that confirms the
+  payment, with a clear Pay button + retry instead of a silent redirect. Invoice
+  pay link is tokenised (`/invoice/{token}`); installments pay from `/account`.
+- **Books integration:** a paid invoice **auto-settles + auto-posts an approved
+  income entry** to Vitorra Books (gateway-verified money bypasses maker–checker
+  by design), audit-logged. Installments drive the order's status (partial→paid)
+  and generate the receipt on full pay.
+- **Admin "Payments" health page** (`/admin/payments`, admin-only) +
+  `php artisan pesapal:status`: a plain-language "are online payments live?"
+  checklist that runs a **real test payment** and reports exactly what's missing
+  (return URL / keys / IPN registration).
+- Tech: `App\Contracts\{Payable,PaymentGateway}`, `PesapalGateway`,
+  `pesapal:register-ipn`. Covered by feature tests (Pesapal, Invoice, Installment,
+  PaymentHealth).
+- **To activate:** backend `PAYMENT_DRIVER=pesapal` + Pesapal keys +
+  `pesapal:register-ipn`; Vercel `NEXT_PUBLIC_ONLINE_PAYMENTS=true`. ⚠ The IPN
+  must be registered or Pesapal rejects every payment — check `/admin/payments`.
+
+## ✅ Careers portal — now multilingual (EN / SW / FR)
+
+The public recruitment portal (`/careers`) gained a working language switcher and
+a **French pilot** (full EN + SW + FR translations of the job board + apply flow).
+It resolves its own language from a cookie (isolated from the marketing site).
+French is a real locale now — expanding it site-wide later is just translating
+each section + adding "fr" to the main switcher.
+
+## ✅ Zero-cost platform upgrades (free, no accounts)
+
+Three free, no-licence upgrades (see `planning/10-platform-upgrades-brief.md` for
+the business one-pager):
+- **Live exchange rates without a key** — falls back to a free keyless provider
+  (incl. UGX) so FX stays live even without an API key.
+- **Auto-synced public holidays** — `holidays:sync` pulls Uganda holidays from
+  Nager.Date yearly (idempotent, preserves manual/company entries) for the
+  leave/HR module.
+- **Phone validation + normalisation** (libphonenumber) — every number is
+  validated and stored as E.164 (`+256…`) across checkout, FET reserve, enquiry,
+  supplier, careers and profile. Critical for mobile-money + future SMS.
+
 ## ✅ Already in place (earlier in the rebuild)
 
 - Premium redesign + design system; all public pages; bilingual EN/SW.
@@ -97,8 +169,8 @@ A focused pass after a full audit of the staff/finance/ops modules, in business 
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**
-1. **Live payment gateway** — needs a business account (provider-agnostic skeleton ready; installments are admin-recorded until then).
-2. **Confirm coffee retail prices** → enter in `/admin/products`, then flip the coffee shop on (one flag).
+1. ~~**Live payment gateway**~~ ✅ **Built (Pesapal)** — now an **activation** task, not a build: set `PAYMENT_DRIVER=pesapal` + keys, run `pesapal:register-ipn`, set `NEXT_PUBLIC_ONLINE_PAYMENTS=true`. Verify with `/admin/payments`. Sandbox-test, then go live.
+2. **Confirm coffee retail prices** → enter in `/admin/products`, then flip the coffee shop on (one flag) — Pesapal checkout already wired.
 
 **Operations setup (not code)**
 3. Set **executive-report recipients** in `/admin/settings`.
@@ -108,11 +180,18 @@ A focused pass after a full audit of the staff/finance/ops modules, in business 
 7. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
 8. **Optional — switch login to HttpOnly cookies** (extra XSS hardening): set `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN=.vitorra.org`, `SESSION_SECURE_COOKIE=true` (backend) + `NEXT_PUBLIC_AUTH_MODE=cookie` (Vercel). Reversible by unsetting; default stays token-based.
 
+**Growth — next upgrades** (from `planning/10-platform-upgrades-brief.md`)
+9. **WhatsApp + SMS notifications** (order/payment/delivery updates) — needs Solomon's approval + a one-time business setup; small per-message cost.
+10. **Anti-spam on forms** (Cloudflare Turnstile) — free, ~10-min account setup, then wire in.
+11. **Wire up Sentry** (DSNs already configured) — catch errors before customers do.
+12. **Expand French site-wide** — translate the remaining sections into `fr.json` + add "fr" to the main switcher.
+13. Later (need a small server): on-site search, self-hosted newsletter, live chat, logistics maps.
+
 **Reliability**
-9. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
+14. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
 
 **Content / lower priority**
-9. Native-speaker review of the Swahili legal pages; blog posts; client testimonials; coffee photos; hero videos.
+15. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
 
 ---
 
@@ -132,4 +211,5 @@ cd backend
 
 > The server's default `php` is 8.2 but the app needs 8.3 — always run artisan with `/opt/alt/php83/usr/bin/php`.
 > ⚠ Never rotate `APP_KEY` in production — it would make encrypted files (`SecureFile`) and 2FA secrets unreadable.
-> Scheduled jobs (holiday reminders, executive report, application purge, backups, daily digest) ride the existing `php artisan schedule:run` cron.
+> Scheduled jobs (holiday reminders, **holidays:sync**, executive report, application purge, invoice reminders, recurring finance, backups, daily digest, **fet:digest**) ride the existing `php artisan schedule:run` cron.
+> **Next deploy adds a Composer dependency** (libphonenumber) — run `composer install` as above, then a one-off `php artisan holidays:sync` to backfill holidays.
