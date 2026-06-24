@@ -13,6 +13,7 @@ import { useCart, lineKey } from "@/lib/cart";
 import { formatPrice } from "@/lib/coffee-catalog";
 import { createOrder, payOrder } from "@/lib/api";
 import { ONLINE_PAYMENTS_ENABLED } from "@/lib/config";
+import { isValidPhone } from "@/lib/phone";
 
 interface Form {
   name: string;
@@ -52,6 +53,7 @@ export default function CheckoutView() {
     if (!form.line1.trim()) e.line1 = "Street address is required.";
     if (!form.city.trim()) e.city = "City is required.";
     if (!form.country.trim()) e.country = "Country is required.";
+    if (!isValidPhone(form.phone)) e.phone = "Enter a valid phone number (e.g. +256 772 123456).";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -188,8 +190,8 @@ export default function CheckoutView() {
           <Field label="Email" error={errors.email}>
             <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="jane@example.com" className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.email} />
           </Field>
-          <Field label="Phone" hint="Optional">
-            <Input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+256 …" className="h-11 rounded-xl px-3.5" />
+          <Field label="Phone" hint="Optional" error={errors.phone}>
+            <Input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+256 …" className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.phone} />
           </Field>
         </div>
 

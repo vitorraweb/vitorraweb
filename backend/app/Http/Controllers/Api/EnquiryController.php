@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\NewEnquiry;
 use App\Models\Enquiry;
+use App\Rules\PhoneNumber;
+use App\Support\Phone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -19,7 +21,7 @@ class EnquiryController extends Controller
             'name'                 => ['required', 'string', 'max:255'],
             'email'                => ['required', 'email', 'max:255'],
             'company'              => ['nullable', 'string', 'max:255'],
-            'phone'                => ['nullable', 'string', 'max:50'],
+            'phone'                => ['nullable', 'string', 'max:50', new PhoneNumber()],
             'country'              => ['required', 'string', 'max:100'],
             // Either a free-text message or structured requirements must be present.
             'message'              => ['nullable', 'string', 'max:5000', 'required_without:requirements'],
@@ -29,6 +31,8 @@ class EnquiryController extends Controller
             'requirements.*.label' => ['required_with:requirements', 'string', 'max:200'],
             'requirements.*.value' => ['required_with:requirements', 'string', 'max:2000'],
         ]);
+
+        $data['phone'] = Phone::e164($data['phone'] ?? null);
 
         // Auto-route by product: assign the owning team and pick its inbox.
         $route = config('enquiries.routing')[$data['product_category'] ?? ''] ?? null;

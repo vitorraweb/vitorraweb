@@ -576,6 +576,7 @@
     "reserveErrEmailRequired": "Tafadhali jaza barua pepe yako.",
     "reserveErrEmailInvalid": "Tafadhali jaza barua pepe sahihi.",
     "reserveErrQuantity": "Jaza idadi kati ya 1 na 50.",
+    "reserveErrPhone": "Tafadhali weka namba sahihi ya simu (mf. 0772 123456).",
     "reserveClose": "Funga",
     "reserveNowPay": "Hifadhi na ulipe kwa usalama",
     "reserveSubmitPay": "Endelea kwenye malipo salama",

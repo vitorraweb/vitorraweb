@@ -28,6 +28,10 @@ Schedule::command('digest:send')->dailyAt('07:00')
 Schedule::command('holidays:notify --days=3')->dailyAt('08:00')
     ->onFailure(fn () => logger()->error('Scheduled holidays:notify failed'));
 
+// Keep public holidays current (this year + next) from Nager.Date — free, no key.
+Schedule::command('holidays:sync')->monthlyOn(1, '03:00')
+    ->onFailure(fn () => logger()->error('Scheduled holidays:sync failed'));
+
 // Enforce the 6-month candidate-data retention policy for job applications.
 Schedule::command('applications:purge')->dailyAt('02:30')
     ->onFailure(fn () => logger()->error('Scheduled applications:purge failed'));

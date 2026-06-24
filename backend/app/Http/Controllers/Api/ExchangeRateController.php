@@ -39,29 +39,64 @@ class ExchangeRateController extends Controller
         return response()->json(['data' => $rates + ['source' => 'live']]);
     }
 
-    /** @return array{ugx_per_usd: float, eur_per_usd: float} */
+    /**
+     * Live rates, in order of preference:
+     *   1. Keyed provider (exchangerate-api.com) — higher limits, if a key is set.
+     *   2. Keyless provider (open.er-api.com) — free, no key, includes UGX. (ECB /
+     *      Frankfurter omit UGX, so we use this provider's open endpoint instead.)
+     *   3. Static config fallback — so the endpoint always returns usable numbers.
+     *
+     * @return array{ugx_per_usd: float, eur_per_usd: float}
+     */
     private function fetchLive(): array
     {
         $apiKey = config('services.exchange_rate.key');
 
-        if ($apiKey) {
-            try {
-                // One call returns every rate against USD (free tier: 1,500/month).
-                $res = Http::timeout(8)->get("https://v6.exchangerate-api.com/v6/{$apiKey}/latest/USD");
+        return ($apiKey ? $this->fromKeyed($apiKey) : null)
+            ?? $this->fromKeyless()
+            ?? ['ugx_per_usd' => $this->fallbackUgx(), 'eur_per_usd' => $this->fallbackEur()];
+    }
 
-                if ($res->successful() && isset($res['conversion_rates'])) {
-                    $r = $res['conversion_rates'];
-                    return [
-                        'ugx_per_usd' => (float) ($r['UGX'] ?? $this->fallbackUgx()),
-                        'eur_per_usd' => (float) ($r['EUR'] ?? $this->fallbackEur()),
-                    ];
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Exchange rate fetch failed: ' . $e->getMessage());
+    /** @return array{ugx_per_usd: float, eur_per_usd: float}|null */
+    private function fromKeyed(string $apiKey): ?array
+    {
+        try {
+            // One call returns every rate against USD (free tier: 1,500/month).
+            $res = Http::timeout(8)->get("https://v6.exchangerate-api.com/v6/{$apiKey}/latest/USD");
+
+            if ($res->successful() && isset($res['conversion_rates']['UGX'])) {
+                $r = $res['conversion_rates'];
+                return [
+                    'ugx_per_usd' => (float) $r['UGX'],
+                    'eur_per_usd' => (float) ($r['EUR'] ?? $this->fallbackEur()),
+                ];
             }
+        } catch (\Throwable $e) {
+            Log::warning('Exchange rate (keyed) fetch failed: ' . $e->getMessage());
         }
 
-        return ['ugx_per_usd' => $this->fallbackUgx(), 'eur_per_usd' => $this->fallbackEur()];
+        return null;
+    }
+
+    /** @return array{ugx_per_usd: float, eur_per_usd: float}|null */
+    private function fromKeyless(): ?array
+    {
+        try {
+            // Free, no API key required; daily ECB-sourced rates incl. UGX.
+            $res = Http::timeout(8)->get('https://open.er-api.com/v6/latest/USD');
+
+            if ($res->successful() && ($res['result'] ?? null) === 'success' && ! empty($res['rates']['UGX'])) {
+                $r = $res['rates'];
+                return [
+                    'ugx_per_usd' => (float) $r['UGX'],
+                    'eur_per_usd' => (float) ($r['EUR'] ?? $this->fallbackEur()),
+                ];
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Exchange rate (keyless) fetch failed: ' . $e->getMessage());
+        }
+
+        return null;
     }
 
     private function fallbackUgx(): float

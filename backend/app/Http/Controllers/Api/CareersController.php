@@ -7,7 +7,9 @@ use App\Mail\ApplicationReceived;
 use App\Models\JobApplication;
 use App\Models\JobOpening;
 use App\Models\Setting;
+use App\Rules\PhoneNumber;
 use App\Services\CvExtractionService;
+use App\Support\Phone;
 use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -88,7 +90,7 @@ class CareersController extends Controller
             'slug'       => ['nullable', 'string'],
             'name'       => ['required', 'string', 'max:255'],
             'email'      => ['required', 'email', 'max:255'],
-            'phone'      => ['nullable', 'string', 'max:50'],
+            'phone'      => ['nullable', 'string', 'max:50', new PhoneNumber()],
             'location'   => ['nullable', 'string', 'max:255'],
             'cover_note' => ['nullable', 'string', 'max:5000'],
         ]);
@@ -117,7 +119,7 @@ class CareersController extends Controller
             'job_opening_id' => $opening?->id,
             'name'           => $data['name'],
             'email'          => $data['email'],
-            'phone'          => $data['phone'] ?? null,
+            'phone'          => Phone::e164($data['phone'] ?? null),
             'location'       => $data['location'] ?? null,
             'cover_note'     => $data['cover_note'] ?? null,
             'extracted'      => $extracted,

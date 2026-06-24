@@ -9,7 +9,9 @@ use App\Models\Enquiry;
 use App\Models\FetInstallation;
 use App\Models\InstallmentPayment;
 use App\Models\Order;
+use App\Rules\PhoneNumber;
 use App\Services\FetSavingsService;
+use App\Support\Phone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -161,9 +163,13 @@ class AccountController extends Controller
         $data = $request->validate([
             'name'    => ['sometimes', 'required', 'string', 'max:255'],
             'company' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'phone'   => ['sometimes', 'nullable', 'string', 'max:50'],
+            'phone'   => ['sometimes', 'nullable', 'string', 'max:50', new PhoneNumber()],
             'country' => ['sometimes', 'nullable', 'string', 'max:100'],
         ]);
+
+        if (array_key_exists('phone', $data)) {
+            $data['phone'] = Phone::e164($data['phone']);
+        }
 
         $request->user()->update($data);
 

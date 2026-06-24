@@ -7,6 +7,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { ArrowRight, Check, Loader2, Mail, Minus, Phone, Plus, ShieldCheck, User, X } from "lucide-react";
 import { reserveFet } from "@/lib/api";
 import { ONLINE_PAYMENTS_ENABLED } from "@/lib/config";
+import { isValidPhone } from "@/lib/phone";
 import { formatEur, type FetTier } from "@/lib/fet-pricing";
 import type { Order } from "@/types";
 
@@ -98,6 +99,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
     if (!form.customer_name.trim()) e.customer_name = tr("reserveErrName");
     if (!form.customer_email.trim()) e.customer_email = tr("reserveErrEmailRequired");
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.customer_email)) e.customer_email = tr("reserveErrEmailInvalid");
+    if (!isValidPhone(form.customer_phone)) e.customer_phone = tr("reserveErrPhone");
     const qty = Number(form.quantity);
     if (!Number.isInteger(qty) || qty < 1 || qty > 50) e.quantity = tr("reserveErrQuantity");
     setErrors(e);
@@ -268,13 +270,13 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
                       </Field>
 
                       <div className="grid grid-cols-2 gap-3">
-                        <Field label={tr("reserveFieldPhone")} icon={Phone}>
+                        <Field label={tr("reserveFieldPhone")} error={errors.customer_phone} icon={Phone}>
                           <input
                             type="tel"
                             value={form.customer_phone}
                             onChange={(e) => set("customer_phone", e.target.value)}
                             className={fieldWithIconCls}
-                            style={{ borderColor: okBorder }}
+                            style={{ borderColor: errors.customer_phone ? errBorder : okBorder }}
                           />
                         </Field>
 

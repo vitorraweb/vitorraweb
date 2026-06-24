@@ -576,6 +576,7 @@
     "reserveErrEmailRequired": "Please enter your email.",
     "reserveErrEmailInvalid": "Please enter a valid email.",
     "reserveErrQuantity": "Enter a quantity between 1 and 50.",
+    "reserveErrPhone": "Please enter a valid phone number (e.g. 0772 123456).",
     "reserveClose": "Close",
     "reserveNowPay": "Reserve & pay securely",
     "reserveSubmitPay": "Continue to secure payment",

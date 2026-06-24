@@ -8,7 +8,9 @@ use App\Mail\OrderConfirmation;
 use App\Mail\ReservationConfirmation;
 use App\Models\Order;
 use App\Models\Product;
+use App\Rules\PhoneNumber;
 use App\Services\DocumentService;
+use App\Support\Phone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +34,7 @@ class OrderController extends Controller
         $data = $request->validate([
             'customer_name'           => ['required', 'string', 'max:255'],
             'customer_email'          => ['required', 'email', 'max:255'],
-            'customer_phone'          => ['nullable', 'string', 'max:50'],
+            'customer_phone'          => ['nullable', 'string', 'max:50', new PhoneNumber()],
             'currency'                => ['required', 'in:UGX,USD'],
             'notes'                   => ['nullable', 'string', 'max:2000'],
 
@@ -50,6 +52,7 @@ class OrderController extends Controller
             'items.*.weight'          => ['nullable', 'string', 'max:60'],
         ]);
 
+        $data['customer_phone'] = Phone::e164($data['customer_phone'] ?? null);
         $currency = $data['currency'];
 
         // Load every requested product in one query (published only).
@@ -156,13 +159,15 @@ class OrderController extends Controller
         $data = $request->validate([
             'customer_name'  => ['required', 'string', 'max:255'],
             'customer_email' => ['required', 'email', 'max:255'],
-            'customer_phone' => ['nullable', 'string', 'max:50'],
+            'customer_phone' => ['nullable', 'string', 'max:50', new PhoneNumber()],
             'tier'           => ['required', 'in:car,suv,lighttruck,heavytruck'],
             'quantity'       => ['nullable', 'integer', 'min:1', 'max:50'],
             'currency'       => ['nullable', 'in:UGX,USD'],
             'notes'          => ['nullable', 'string', 'max:2000'],
             'pay_online'     => ['nullable', 'boolean'],
         ]);
+
+        $data['customer_phone'] = Phone::e164($data['customer_phone'] ?? null);
 
         // The customer intends to pay online next (the client will start payment
         // right after). Only honour it when a live gateway is actually configured,

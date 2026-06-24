@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Mail\SupplierOnboarded;
 use App\Models\Setting;
 use App\Models\Supplier;
+use App\Rules\PhoneNumber;
+use App\Support\Phone;
 use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,7 +31,7 @@ class SupplierController extends Controller
             'company_name'        => ['required', 'string', 'max:255'],
             'contact_name'        => ['nullable', 'string', 'max:255'],
             'email'               => ['required', 'email', 'max:255'],
-            'phone'               => ['nullable', 'string', 'max:50'],
+            'phone'               => ['nullable', 'string', 'max:50', new PhoneNumber()],
             'country'             => ['nullable', 'string', 'max:100'],
             'address'             => ['nullable', 'string', 'max:500'],
             'category'            => ['nullable', 'string', 'max:255'],
@@ -42,6 +44,8 @@ class SupplierController extends Controller
             'documents'           => ['nullable', 'array', 'max:6'],
             'documents.*'         => ['file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:8192'],
         ]);
+
+        $data['phone'] = Phone::e164($data['phone'] ?? null);
 
         $supplier = Supplier::create(array_merge(
             collect($data)->except('documents')->all(),
