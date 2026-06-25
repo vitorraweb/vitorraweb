@@ -16,6 +16,8 @@ interface ParallaxImageProps {
   amount?: number;
   /** Enable cursor tilt/parallax (desktop, fine-pointer only). Default true. */
   interactive?: boolean;
+  /** Static overlay rendered above the image (e.g. gradient/vignette). Does not drift with the parallax layer. */
+  children?: React.ReactNode;
 }
 
 /**
@@ -34,6 +36,7 @@ export function ParallaxImage({
   sizes = "(max-width: 1024px) 100vw, 50vw",
   amount = 36,
   interactive = true,
+  children,
 }: ParallaxImageProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
@@ -145,6 +148,7 @@ export function ParallaxImage({
       >
         <Image src={src} alt={alt} fill priority={priority} sizes={sizes} className="object-cover" />
       </div>
+      {children}
     </div>
   );
 }

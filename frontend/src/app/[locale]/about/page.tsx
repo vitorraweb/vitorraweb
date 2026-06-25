@@ -205,10 +205,21 @@ export default function AboutPage() {
 
             <Reveal delay={120} direction="left">
               <ParallaxImage
-                src="/hero/overview.png"
-                alt="Vitorra, East Africa operations"
+                src="/hero/brand-wall.jpg"
+                alt="Vitorra Holdings head office — brand wall, Kampala"
                 className="aspect-[4/3] rounded-[40px] shadow-card"
-              />
+              >
+                {/* Premium brand treatment — warm gold halo on the crest + a
+                    soft cinematic vignette. */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{ background: "radial-gradient(46% 54% at 30% 40%, rgba(197,178,122,0.24) 0%, transparent 62%)" }}
+                />
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{ background: "radial-gradient(120% 100% at 50% 45%, transparent 52%, rgba(0,0,0,0.45) 100%)" }}
+                />
+              </ParallaxImage>
             </Reveal>
           </div>
         </section>
