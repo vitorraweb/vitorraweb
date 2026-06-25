@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/reveal";
@@ -105,12 +104,11 @@ export default function FuelEcoTechPage() {
           style={{ minHeight: "88vh", backgroundColor: "#111111" }}
         >
           <div className="absolute inset-0">
-            <Image
-              src="/products/fet/field-in-hand.jpg"
-              alt="Fuel Eco Tech"
-              fill priority sizes="100vw"
-              className="object-cover"
-              style={{ animation: "vitorra-ken-burns 16s ease-out both" }}
+            <video
+              src="/videos/fet-hero.mp4"
+              poster="/products/fet/field-in-hand.jpg"
+              autoPlay muted loop playsInline
+              className="absolute inset-0 w-full h-full object-cover"
             />
             <div
               className="absolute inset-0"
