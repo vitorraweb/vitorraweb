@@ -106,7 +106,7 @@ export default function FuelEcoTechPage() {
         >
           <div className="absolute inset-0">
             <Image
-              src="/products/fet/in-hand.png"
+              src="/products/fet/field-in-hand.jpg"
               alt="Fuel Eco Tech"
               fill priority sizes="100vw"
               className="object-cover"
@@ -311,7 +311,7 @@ export default function FuelEcoTechPage() {
           <div className="container-max grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <Reveal direction="right">
               <ParallaxImage
-                src="/products/fet/installed.png"
+                src="/products/fet/field-installed.jpg"
                 alt="Fuel Eco Tech installed"
                 className="aspect-[4/3] rounded-[40px] shadow-card"
               />

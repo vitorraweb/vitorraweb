@@ -408,7 +408,7 @@ export default function HomePage() {
                   }}
                 >
                   <ParallaxImage
-                    src="/products/fet/in-hand.png"
+                    src="/products/fet/field-in-hand.jpg"
                     alt="Fuel Eco Tech device, installed on a commercial engine"
                     className="aspect-[4/3]"
                   />

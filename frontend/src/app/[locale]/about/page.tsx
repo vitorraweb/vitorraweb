@@ -36,7 +36,7 @@ export default function AboutPage() {
   ];
 
   const portfolio = [
-    { label: tp("fet.name"),       desc: t("portfolio.fetDesc"),       href: "/products/fuel-eco-tech",   img: "/products/fet/in-hand.png",        badge: t("portfolio.fetBadge") },
+    { label: tp("fet.name"),       desc: t("portfolio.fetDesc"),       href: "/products/fuel-eco-tech",   img: "/products/fet/field-in-hand.jpg",  badge: t("portfolio.fetBadge") },
     { label: tp("seal.name"),      desc: t("portfolio.sealDesc"),      href: "/products/seal-wound-spray", img: "/products/seal/trauma-tray.png",   badge: t("portfolio.sealBadge") },
     { label: tp("coffee.name"),    desc: t("portfolio.coffeeDesc"),    href: "/products/coffee",           img: "/products/coffee/lifestyle.png",   badge: t("portfolio.coffeeBadge") },
     { label: tp("logistics.name"), desc: t("portfolio.logisticsDesc"), href: "/products/logistics",        img: "/products/logistics/truck-day.png", badge: t("portfolio.logisticsBadge") },
