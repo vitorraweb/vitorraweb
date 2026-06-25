@@ -404,11 +404,11 @@ function SectorBackground({
           <>
             <div
               className="absolute inset-0"
-              style={{ background: "radial-gradient(42% 50% at 27% 38%, rgba(197,178,122,0.26) 0%, transparent 62%)" }}
+              style={{ background: "radial-gradient(38% 46% at 50% 42%, rgba(197,178,122,0.18) 0%, transparent 60%)" }}
             />
             <div
               className="absolute inset-0"
-              style={{ background: "radial-gradient(125% 95% at 50% 42%, transparent 48%, rgba(0,0,0,0.62) 100%)" }}
+              style={{ background: "radial-gradient(125% 95% at 50% 44%, transparent 50%, rgba(0,0,0,0.62) 100%)" }}
             />
           </>
         )}
