@@ -25,7 +25,7 @@ import { PRODUCTS } from "@/lib/constants";
 
 type Media =
   | { type: "video"; src: string; poster: string }
-  | { type: "image"; src: string; priority?: boolean }
+  | { type: "image"; src: string; priority?: boolean; premium?: boolean }
   | { type: "gradient" };
 
 /* Structural config only — all display copy lives in the `hero` messages,
@@ -42,7 +42,7 @@ const SECTORS: Sector[] = [
     id: "overview",
     secondaryHref: "/about",
     watermark: "Vitorra",
-    media: { type: "image", src: "/hero/overview.png", priority: true },
+    media: { type: "image", src: "/hero/brand-wall.jpg", priority: true, premium: true },
   },
   {
     id: "fet",
@@ -398,6 +398,20 @@ function SectorBackground({
             className="object-cover"
           />
         </div>
+        {/* Premium treatment — warm gold halo on the brand mark + cinematic
+            vignette. Per-slide so other sectors' artwork is untouched. */}
+        {media.premium && (
+          <>
+            <div
+              className="absolute inset-0"
+              style={{ background: "radial-gradient(42% 50% at 27% 38%, rgba(197,178,122,0.26) 0%, transparent 62%)" }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: "radial-gradient(125% 95% at 50% 42%, transparent 48%, rgba(0,0,0,0.62) 100%)" }}
+            />
+          </>
+        )}
         <div className="absolute inset-0" style={{ background: MEDIA_OVERLAY }} />
       </div>
     );

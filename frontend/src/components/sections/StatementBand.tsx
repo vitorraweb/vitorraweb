@@ -78,6 +78,11 @@ export default function StatementBand({ image }: { image?: string }) {
             className="absolute inset-0 pointer-events-none"
             style={{ background: "radial-gradient(ellipse at center, transparent 32%, rgba(0,0,0,0.55) 100%)" }}
           />
+          {/* Warm gold brand glow — ties cool exterior photography to the palette */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(60% 52% at 50% 16%, rgba(197,178,122,0.18) 0%, transparent 62%)" }}
+          />
         </>
       ) : (
         <>
