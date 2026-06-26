@@ -22,6 +22,15 @@ export const COFFEE_SHOP_ENABLED = false;
    in tandem (this flag only controls what the customer is offered).            */
 export const ONLINE_PAYMENTS_ENABLED = process.env.NEXT_PUBLIC_ONLINE_PAYMENTS === "true";
 
+/* TURNSTILE_SITE_KEY — Cloudflare Turnstile site key for the public-form bot
+   check (enquiry, contact, newsletter, supplier, careers). Free, privacy-
+   friendly. Default-off: when this env var is unset the widget renders nothing
+   and the forms submit exactly as before (the backend skips verification too).
+   Set NEXT_PUBLIC_TURNSTILE_SITE_KEY on Vercel + TURNSTILE_SECRET_KEY on the
+   backend to switch it on.                                                    */
+export const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+export const TURNSTILE_ENABLED = TURNSTILE_SITE_KEY.length > 0;
+
 /* SWAHILI_ENABLED — shows the language switcher and exposes the Swahili (/sw)
    experience. Swahili copy falls back to English for any untranslated key, so
    the site never breaks; this flag simply controls whether visitors are

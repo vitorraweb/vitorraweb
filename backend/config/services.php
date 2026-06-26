@@ -74,6 +74,15 @@ return [
         'frontend_url'    => env('PESAPAL_FRONTEND_URL', env('FRONTEND_URL', 'http://localhost:3000')),
     ],
 
+    // Cloudflare Turnstile — free, privacy-friendly bot protection on the public
+    // forms (enquiry, contact, newsletter, supplier, careers). Default-off: leave
+    // the secret blank and verification is skipped (see VerifyTurnstile). The
+    // frontend uses the matching NEXT_PUBLIC_TURNSTILE_SITE_KEY.
+    'turnstile' => [
+        'secret'   => env('TURNSTILE_SECRET_KEY'),
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+    ],
+
     // Anthropic Claude — used to auto-extract applicant details from uploaded CVs.
     // When the key is unset, CV auto-fill is skipped gracefully (manual entry).
     'anthropic' => [

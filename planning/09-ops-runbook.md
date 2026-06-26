@@ -20,8 +20,8 @@ sends until you provision the projects.
 - **Action:** create a Sentry project (platform: *Laravel*), copy the DSN, and on
   the cPanel box set in `.env`:
   ```
-  SENTRY_LARAVEL_DSN=https://...ingest.sentry.io/...
-  SENTRY_TRACES_SAMPLE_RATE=0.0      # raise to 0.1 for some performance tracing
+  SENTRY_LARAVEL_DSN=https://8e3b4a52ea1ca56e92cf99e81ad7c2ce@o4511286441672704.ingest.us.sentry.io/4511575475683328
+  SENTRY_TRACES_SAMPLE_RATE=0.1     # raise to 0.1 for some performance tracing
   SENTRY_ENVIRONMENT=production
   ```
   Then `php artisan config:cache`.
@@ -35,7 +35,7 @@ sends until you provision the projects.
 - **Action:** create a second Sentry project (platform: *Next.js*) and set these
   in the **Vercel** project settings:
   ```
-  NEXT_PUBLIC_SENTRY_DSN=https://...ingest.sentry.io/...
+  NEXT_PUBLIC_SENTRY_DSN=https://c025ab79fb69e956689bd59a26b69d61@o4511286441672704.ingest.us.sentry.io/4511575466770432
   NEXT_PUBLIC_SENTRY_ENVIRONMENT=production
   ```
 - **Optional (readable stack traces):** add `SENTRY_ORG`, `SENTRY_PROJECT`, and a
@@ -61,6 +61,43 @@ Slack webhook). Optional: a 3rd monitor on `https://api.vitorra.org/api/exchange
 to catch API/DB failures specifically.
 
 > BetterStack/Better Uptime is a fine alternative if you want a status page too.
+
+---
+
+## 2b. Form anti-spam — Cloudflare Turnstile (free)
+
+Free, privacy-friendly bot protection on every public form (enquiry, contact,
+newsletter, supplier onboarding, careers apply). Built and wired; **no-op until
+the keys are set**, so forms behave exactly as before until you switch it on.
+
+**Action — create one free widget** at https://dash.cloudflare.com → **Turnstile**:
+1. Add a widget; under **Hostnames** list `vitorra.org` (and `www.vitorra.org`).
+   Widget mode **Managed** is recommended (invisible for most visitors).
+2. Copy the **Site Key** and **Secret Key**.
+3. Backend (cPanel `.env`):
+   ```
+   TURNSTILE_SITE_KEY=0x4AAAAAAA...      # informational only
+   TURNSTILE_SECRET_KEY=0x4AAAAAAA...    # this is what enables verification
+   ```
+   then `php artisan config:cache`.
+4. Frontend (Vercel env, then redeploy):
+   ```
+   NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4AAAAAAA...
+   ```
+
+**How it behaves:**
+- Keys unset → widget hidden, backend skips the check (current state).
+- Keys set → the widget appears on the forms; submissions carry a token the API
+  verifies with Cloudflare.
+- If Cloudflare is ever unreachable, the API **fails open** (lets the request
+  through) so a real customer is never blocked — the existing honeypot + rate
+  limiting stay as backstops.
+
+**Verify:** with keys set, load `/enquire` — the Turnstile widget should render
+above the submit button; a normal submission still succeeds.
+
+> Engineering: `App\Http\Middleware\VerifyTurnstile` (alias `turnstile` on the
+> 5 public form routes); `components/ui/turnstile.tsx`; `lib/config.ts`.
 
 ---
 
@@ -146,6 +183,7 @@ php artisan vitorra:set-password ops@vitorra.org --generate
 
 - [ ] Sentry: create Laravel + Next.js projects; set DSNs (cPanel `.env` + Vercel).
 - [ ] UptimeRobot: 2 monitors (`vitorra.org`, `api.vitorra.org/up`) + alert contact.
+- [ ] Turnstile: create a free widget; set `TURNSTILE_SECRET_KEY` (cPanel) + `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (Vercel).
 - [ ] cPanel cron: add the per-minute `schedule:run` line.
 - [ ] Prod `.env`: set `BACKUP_ARCHIVE_PASSWORD` + `BACKUP_NOTIFICATION_EMAIL`.
 - [ ] Run `php artisan backup:run` once and confirm an archive appears.

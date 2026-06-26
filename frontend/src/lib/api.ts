@@ -82,10 +82,13 @@ export async function getBlogPost(slug: string, locale?: string): Promise<BlogPo
 
 /* ─── Enquiries ─────────────────────────────────────────────────────────── */
 
-export async function submitEnquiry(data: EnquiryFormData): Promise<Enquiry> {
+export async function submitEnquiry(
+  data: EnquiryFormData,
+  turnstileToken?: string
+): Promise<Enquiry> {
   const res = await request<ApiResponse<Enquiry>>("/enquiries", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify({ ...data, turnstile_token: turnstileToken }),
   });
   return res.data;
 }
@@ -99,10 +102,13 @@ export interface ContactFormData {
   message: string;
 }
 
-export async function submitContact(data: ContactFormData): Promise<{ message: string }> {
+export async function submitContact(
+  data: ContactFormData,
+  turnstileToken?: string
+): Promise<{ message: string }> {
   return request<{ message: string }>("/contact", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify({ ...data, turnstile_token: turnstileToken }),
   });
 }
 
@@ -110,11 +116,12 @@ export async function submitContact(data: ContactFormData): Promise<{ message: s
 
 export async function subscribeNewsletter(
   email: string,
-  locale?: string
+  locale?: string,
+  turnstileToken?: string
 ): Promise<{ message: string }> {
   return request<{ message: string }>("/newsletter/subscribe", {
     method: "POST",
-    body: JSON.stringify({ email, locale, source: "footer" }),
+    body: JSON.stringify({ email, locale, source: "footer", turnstile_token: turnstileToken }),
   });
 }
 

@@ -27,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
             // Surface scoping by token ability (only constrains real bearer
             // tokens; '*' tokens pass all).
             'ability' => \App\Http\Middleware\RequireTokenAbility::class,
+            // Cloudflare Turnstile bot check on public forms (no-op until
+            // TURNSTILE_SECRET_KEY is set).
+            'turnstile' => \App\Http\Middleware\VerifyTurnstile::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

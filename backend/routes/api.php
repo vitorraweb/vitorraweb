@@ -57,23 +57,26 @@ Route::get('/coffee/products',   [ProductController::class, 'coffee']);
 Route::get('/blog/posts',         [BlogController::class, 'index']);
 Route::get('/blog/posts/{slug}',  [BlogController::class, 'show']);
 
-// Forms — submit enquiry or contact message
-Route::post('/enquiries', [EnquiryController::class, 'store']);
-Route::post('/contact',   [ContactController::class, 'store']);
+// Forms — submit enquiry or contact message ('turnstile' = Cloudflare bot check,
+// a no-op until TURNSTILE_SECRET_KEY is set).
+Route::post('/enquiries', [EnquiryController::class, 'store'])->middleware('turnstile');
+Route::post('/contact',   [ContactController::class, 'store'])->middleware('turnstile');
 
 // Careers — public job listings + two-step application (CV upload + AI prefill).
 // The upload/apply endpoints are throttled (they hit a paid AI API + write files).
 Route::get('/careers/openings',        [CareersController::class, 'index']);
 Route::get('/careers/openings/{slug}', [CareersController::class, 'show']);
 Route::middleware('throttle:15,1')->group(function () {
+    // 'extract' (AI prefill) runs before the widget is solved, so it is not
+    // gated; the final submissions are.
     Route::post('/careers/extract', [CareersController::class, 'extractCv']);
-    Route::post('/careers/apply',   [CareersController::class, 'apply']);
+    Route::post('/careers/apply',   [CareersController::class, 'apply'])->middleware('turnstile');
     // Supplier self-onboarding (public, throttled — accepts file uploads).
-    Route::post('/suppliers/onboard', [SupplierController::class, 'onboard']);
+    Route::post('/suppliers/onboard', [SupplierController::class, 'onboard'])->middleware('turnstile');
 });
 
 // Newsletter — public signup + token-based unsubscribe (GDPR)
-Route::post('/newsletter/subscribe',   [NewsletterController::class, 'subscribe']);
+Route::post('/newsletter/subscribe',   [NewsletterController::class, 'subscribe'])->middleware('turnstile');
 Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
 
 // Orders — guest checkout + confirmation lookup by reference

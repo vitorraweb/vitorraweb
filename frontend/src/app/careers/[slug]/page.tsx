@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Loader2, MapPin, Briefcase, Upload, Check, ArrowLeft, Sparkles } from "lucide-react";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 
 type Opening = {
   title: string; slug: string; department: string | null; location: string | null;
@@ -38,6 +39,8 @@ export default function ApplyPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   const typeLabel = (type: string) =>
     ({ full_time: t("typeFullTime"), part_time: t("typePartTime"), contract: t("typeContract"), internship: t("typeInternship") } as Record<string, string>)[type] ?? type;
@@ -84,7 +87,7 @@ export default function ApplyPage() {
       const res = await fetch(`${API}/careers/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ cv_token: cvToken, slug, name, email, phone, location, cover_note: coverNote, website }),
+        body: JSON.stringify({ cv_token: cvToken, slug, name, email, phone, location, cover_note: coverNote, website, turnstile_token: turnstileToken || undefined }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: t("errSubmit") }));
@@ -92,6 +95,9 @@ export default function ApplyPage() {
       }
       setSubmitted(true);
     } catch (err) {
+      // Token is single-use — refresh it for a retry.
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       setError(err instanceof Error ? err.message : t("errSubmit"));
     } finally {
       setSubmitting(false);
@@ -167,6 +173,10 @@ export default function ApplyPage() {
 
         {/* Honeypot — hidden from users */}
         <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+
+        <div className="mt-6">
+          <Turnstile ref={turnstileRef} action="careers" onVerify={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
+        </div>
 
         {error && <p className="text-sm mt-4" style={{ color: "#C0392B" }}>{error}</p>}
 

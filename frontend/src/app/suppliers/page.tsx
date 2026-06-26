@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Loader2, Check, Upload, Building2, Landmark } from "lucide-react";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
@@ -16,6 +17,8 @@ export default function SupplierOnboardPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   const set = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }));
 
@@ -28,6 +31,7 @@ export default function SupplierOnboardPage() {
       const form = new FormData();
       Object.entries(f).forEach(([k, v]) => form.append(k, v));
       if (files) Array.from(files).slice(0, 6).forEach((file) => form.append("documents[]", file));
+      if (turnstileToken) form.append("turnstile_token", turnstileToken);
       const res = await fetch(`${API}/suppliers/onboard`, { method: "POST", body: form });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: "Submission failed." }));
@@ -35,6 +39,9 @@ export default function SupplierOnboardPage() {
       }
       setSubmitted(true);
     } catch (err) {
+      // Token is single-use — refresh it for a retry.
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       setError(err instanceof Error ? err.message : "Submission failed.");
     } finally {
       setSubmitting(false);
@@ -98,6 +105,8 @@ export default function SupplierOnboardPage() {
 
         {/* Honeypot */}
         <input type="text" value={f.website} onChange={(e) => set("website", e.target.value)} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+
+        <Turnstile ref={turnstileRef} action="supplier" onVerify={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
 
         {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Check, Loader2, ArrowRight } from "lucide-react";
@@ -8,6 +8,7 @@ import { submitContact } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 
 type Form = { name: string; email: string; subject: string; message: string };
 const EMPTY: Form = { name: "", email: "", subject: "", message: "" };
@@ -17,6 +18,8 @@ export default function ContactForm() {
   const [form, setForm] = useState<Form>(EMPTY);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   const set = (k: keyof Form, v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
@@ -37,9 +40,12 @@ export default function ContactForm() {
     if (!validate()) return;
     setStatus("submitting");
     try {
-      await submitContact(form);
+      await submitContact(form, turnstileToken || undefined);
       setStatus("success");
     } catch {
+      // Token is single-use — refresh it for a retry.
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       setStatus("error");
     }
   };
@@ -90,6 +96,8 @@ export default function ContactForm() {
             <a href="mailto:support@vitorra.org" className="underline">support@vitorra.org</a>.
           </p>
         )}
+
+        <Turnstile ref={turnstileRef} action="contact" onVerify={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
 
         <button type="button" onClick={submit} disabled={status === "submitting"} className="btn-primary w-full sm:w-auto" style={{ opacity: status === "submitting" ? 0.7 : 1, justifyContent: "center" }}>
           {status === "submitting" ? <><Loader2 className="w-4 h-4 animate-spin" />{t("sending")}</> : <>{t("send")}<ArrowRight className="w-4 h-4" /></>}

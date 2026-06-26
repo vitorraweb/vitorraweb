@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Fuel, HeartPulse, Coffee, Truck, MessageCircle, Check, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -72,6 +73,8 @@ export default function EnquiryForm({
   const [answers, setAnswers] = useState<Answers>(initialAnswers);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   const set = (k: keyof Fields, v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
@@ -120,9 +123,12 @@ export default function EnquiryForm({
       ...(requirements.length ? { requirements } : {}),
     };
     try {
-      await submitEnquiry(payload);
+      await submitEnquiry(payload, turnstileToken || undefined);
       setStatus("success");
     } catch {
+      // Token is single-use — refresh it for a retry.
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       setStatus("error");
     }
   };
@@ -287,6 +293,7 @@ export default function EnquiryForm({
                 <Input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder={t("optional")} className="h-11 rounded-xl px-3.5" />
               </Field>
             </div>
+            <Turnstile ref={turnstileRef} action="enquiry" onVerify={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
             {status === "error" && (
               <p className="text-sm" style={{ color: "#C0392B" }}>{t("errorGeneric")} {""}
                 <a href="mailto:support@vitorra.org" className="underline">support@vitorra.org</a>.

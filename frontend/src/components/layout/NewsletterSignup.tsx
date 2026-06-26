@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { subscribeNewsletter } from "@/lib/api";
+import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 
 /* Footer newsletter signup (single opt-in). Posts to the API and swaps to a
    confirmation state on success. Errors render inline. Dark-surface styling. */
@@ -13,6 +14,8 @@ export default function NewsletterSignup() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -20,9 +23,12 @@ export default function NewsletterSignup() {
     setState("loading");
     setError("");
     try {
-      await subscribeNewsletter(email.trim(), locale);
+      await subscribeNewsletter(email.trim(), locale, turnstileToken || undefined);
       setState("done");
     } catch (err) {
+      // Token is single-use — refresh it for a retry.
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       setError(err instanceof Error ? err.message : t("error"));
       setState("error");
     }
@@ -74,6 +80,13 @@ export default function NewsletterSignup() {
           )}
         </button>
       </div>
+      <Turnstile
+        ref={turnstileRef}
+        action="newsletter"
+        onVerify={setTurnstileToken}
+        onExpire={() => setTurnstileToken("")}
+        className="mt-3"
+      />
       {state === "error" && (
         <p className="mt-2 px-2 text-xs" style={{ color: "#E5A3A3" }}>{error}</p>
       )}
