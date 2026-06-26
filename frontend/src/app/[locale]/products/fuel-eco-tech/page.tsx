@@ -106,8 +106,7 @@ export default function FuelEcoTechPage() {
           <div className="absolute inset-0">
             <video
               src="/videos/fet-hero.mp4"
-              poster="/products/fet/field-in-hand.jpg"
-              autoPlay muted loop playsInline
+              autoPlay muted loop playsInline preload="auto"
               className="absolute inset-0 w-full h-full object-cover"
             />
             <div
