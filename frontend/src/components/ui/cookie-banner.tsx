@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { X } from "lucide-react";
 
@@ -9,6 +10,7 @@ const KEY = "vitorra_cookie_consent";
 
 export function CookieBanner() {
   const t = useTranslations("cookieBanner");
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -16,6 +18,9 @@ export function CookieBanner() {
       if (!localStorage.getItem(KEY)) setVisible(true);
     } catch { /* private browsing */ }
   }, []);
+
+  // Unattended reception kiosk — nobody is present to dismiss a consent banner.
+  if (pathname?.startsWith("/display")) return null;
 
   const accept = () => {
     try { localStorage.setItem(KEY, "accepted"); } catch { /* */ }

@@ -107,7 +107,7 @@ export default async function RootLayout({
           <Script
             defer
             data-domain={PLAUSIBLE_DOMAIN}
-            data-exclude="/admin/**"
+            data-exclude="/admin/**,/display/**"
             src="https://plausible.io/js/script.outbound-links.file-downloads.js"
             strategy="afterInteractive"
           />
