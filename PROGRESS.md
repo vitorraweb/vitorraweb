@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 24 June 2026
+**Last updated:** 1 July 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -30,6 +30,7 @@
 | **Online payments — Pesapal** (cards + MTN/Airtel) across FET reserve, invoices, installments, coffee | ✅ **Built & tested** — needs activation (keys + IPN) |
 | **Multilingual careers portal** (EN / SW / **FR** pilot) | ✅ **Built** |
 | **Zero-cost upgrades** (keyless FX, auto holidays, phone validation) | ✅ **Built** |
+| **Reception lobby display** (`/display` — clock, weather, FET film, certifications, news ticker) | ✅ **Built** — point the front-desk TV's browser at it |
 | Monitoring / backups / CI/CD | ⏳ Sentry DSNs configured; uptime/backups/CI still to verify |
 
 ---
@@ -155,6 +156,33 @@ the business one-pager):
   validated and stored as E.164 (`+256…`) across checkout, FET reserve, enquiry,
   supplier, careers and profile. Critical for mobile-money + future SMS.
 
+## ✅ Reception lobby display (July 2026)
+
+A premium, always-on screen for the front desk — `vitorra.org/display` — so the
+first thing a visitor sees is the brand, not a blank TV.
+
+- **Live and self-updating:** the clock, Kampala weather (5-day forecast), and
+  indicative USD/EUR → UGX exchange rates all refresh on their own — nobody
+  has to touch the screen.
+- **The Fuel Eco Tech film on loop**, with a caption that rotates every few
+  seconds through all four business lines: the independently verified 13.9%
+  fuel-saving result, SEAL's FDA clearance, Vitorra Coffee, and Logistics.
+- **Trust, at a glance:** the real HQ building photo, the six independent
+  certifications on an auto-cycling list, and a headline stat (13.9% fuel
+  reduction, 6 certifications, SEAL's 36-month shelf life) that rotates with
+  a "resolving" number animation.
+- **A live news ticker** pulls the latest published blog headlines
+  automatically — publish a post and the reception screen updates itself.
+- Unattended and English-only by design (same treatment as `/admin`): left
+  out of translation, search indexing, analytics, and the cookie banner.
+
+> Technical detail (engineering): `frontend/src/app/display/page.tsx` +
+> `components/display/{KioskTopBar,KioskSpotlight,KioskSideRail,KioskTicker}.tsx`
+> + `lib/kiosk.ts` (keyless Open-Meteo weather, `/exchange-rate` and
+> `/blog/posts` polling hooks). Fixed-viewport kiosk layout — no scrolling.
+
+---
+
 ## ✅ Already in place (earlier in the rebuild)
 
 - Premium redesign + design system; all public pages; bilingual EN/SW.
@@ -179,19 +207,20 @@ the business one-pager):
 6. Optionally link **Careers** and **Suppliers** in the public site footer.
 7. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
 8. **Optional — switch login to HttpOnly cookies** (extra XSS hardening): set `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN=.vitorra.org`, `SESSION_SECURE_COOKIE=true` (backend) + `NEXT_PUBLIC_AUTH_MODE=cookie` (Vercel). Reversible by unsetting; default stays token-based.
+9. **Point the reception TV at `vitorra.org/display`** — open it full-screen (kiosk mode) in the front-desk browser; it self-refreshes and needs no further setup.
 
 **Growth — next upgrades** (from `planning/10-platform-upgrades-brief.md`)
-9. **WhatsApp + SMS notifications** (order/payment/delivery updates) — needs Solomon's approval + a one-time business setup; small per-message cost.
-10. **Anti-spam on forms** (Cloudflare Turnstile) — free, ~10-min account setup, then wire in.
-11. **Wire up Sentry** (DSNs already configured) — catch errors before customers do.
-12. **Expand French site-wide** — translate the remaining sections into `fr.json` + add "fr" to the main switcher.
-13. Later (need a small server): on-site search, self-hosted newsletter, live chat, logistics maps.
+10. **WhatsApp + SMS notifications** (order/payment/delivery updates) — needs Solomon's approval + a one-time business setup; small per-message cost.
+11. **Anti-spam on forms** (Cloudflare Turnstile) — free, ~10-min account setup, then wire in.
+12. **Wire up Sentry** (DSNs already configured) — catch errors before customers do.
+13. **Expand French site-wide** — translate the remaining sections into `fr.json` + add "fr" to the main switcher.
+14. Later (need a small server): on-site search, self-hosted newsletter, live chat, logistics maps.
 
 **Reliability**
-14. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
+15. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
 
 **Content / lower priority**
-15. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
+16. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
 
 ---
 
