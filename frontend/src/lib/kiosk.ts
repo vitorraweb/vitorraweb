@@ -75,12 +75,14 @@ const WEATHER_CODE_TABLE: Record<number, { label: string; icon: LucideIcon }> = 
   99: { label: "Thunderstorm, hail", icon: CloudLightning },
 };
 
-export function weatherIcon(code: number | null): LucideIcon {
-  return (code !== null && WEATHER_CODE_TABLE[code]?.icon) || CloudSun;
-}
+const DEFAULT_WEATHER_ENTRY = { label: "Kampala skies", icon: CloudSun };
 
-export function weatherLabel(code: number | null): string {
-  return (code !== null && WEATHER_CODE_TABLE[code]?.label) || "Kampala skies";
+/* Returns the {label, icon} entry as a plain object so callers read `.icon`
+   via member access rather than a component-returning function call — the
+   latter trips the "components created during render" lint rule, since it
+   can't tell the returned reference is one of a fixed, stable set. */
+export function weatherEntry(code: number | null): { label: string; icon: LucideIcon } {
+  return (code !== null && WEATHER_CODE_TABLE[code]) || DEFAULT_WEATHER_ENTRY;
 }
 
 export function useKioskWeather(): WeatherState {

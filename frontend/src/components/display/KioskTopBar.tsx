@@ -1,14 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { CloudSun } from "lucide-react";
 import {
   useKioskClock,
   useKioskFx,
   useKioskWeather,
   useRotation,
-  weatherIcon,
-  weatherLabel,
+  weatherEntry,
 } from "@/lib/kiosk";
 
 /* ─── Vision / mission rotator ────────────────────────────────────────────── */
@@ -57,7 +55,8 @@ export function KioskTopBar() {
   const { time, date } = useKioskClock();
   const weather = useKioskWeather();
   const fx = useKioskFx();
-  const NowIcon = weatherIcon(weather.code);
+  const now = weatherEntry(weather.code);
+  const NowIcon = now.icon;
 
   return (
     <header className="relative z-20 shrink-0 px-8 lg:px-12 pt-7 pb-5">
@@ -119,7 +118,7 @@ export function KioskTopBar() {
               {weather.tempNow !== null ? `${weather.tempNow}°C` : "—"}
             </div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-              Kampala · {weatherLabel(weather.code)}
+              Kampala · {now.label}
             </div>
           </div>
         </div>
@@ -127,7 +126,8 @@ export function KioskTopBar() {
         {/* 5-day forecast pills */}
         <div className="flex items-center gap-4 shrink-0">
           {(weather.days.length ? weather.days : Array<undefined>(5).fill(undefined)).map((d, i) => {
-            const Icon = d ? weatherIcon(d.code) : CloudSun;
+            const dayEntry = weatherEntry(d?.code ?? null);
+            const Icon = dayEntry.icon;
             return (
               <div key={i} className="flex flex-col items-center gap-1 shrink-0" style={{ minWidth: 46 }}>
                 <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: "rgba(255,255,255,0.45)" }}>

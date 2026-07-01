@@ -28,9 +28,13 @@ class ExecutiveReportTest extends TestCase
 
     public function test_summary_computes_period_over_period_revenue_delta(): void
     {
-        // Current month-to-date vs the same point last month.
-        $this->paidOrder(100000, now()->startOfMonth()->addDays(2)->toDateTimeString());
-        $this->paidOrder(50000, now()->subMonthNoOverflow()->startOfMonth()->addDays(2)->toDateTimeString());
+        // Current month-to-date vs the same point last month. Mirror the
+        // service's own "days elapsed this month" instead of a hardcoded +2 —
+        // hardcoding overshoots past now() (and out of the mtd window) when
+        // the suite runs on the 1st/2nd of a month.
+        $daysElapsed = now()->startOfMonth()->diffInDays(now());
+        $this->paidOrder(100000, now()->startOfMonth()->addDays($daysElapsed)->toDateTimeString());
+        $this->paidOrder(50000, now()->subMonthNoOverflow()->startOfMonth()->addDays($daysElapsed)->toDateTimeString());
 
         $summary = app(ExecutiveReportService::class)->summary('mtd');
 
