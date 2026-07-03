@@ -112,6 +112,20 @@ export default async function RootLayout({
             strategy="afterInteractive"
           />
         )}
+        {/* Google tag (gtag.js) — Google Ads conversion tracking */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=AW-18227983736"
+          strategy="afterInteractive"
+        />
+        <Script id="google-tag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-18227983736');
+          `}
+        </Script>
       </body>
     </html>
   );
