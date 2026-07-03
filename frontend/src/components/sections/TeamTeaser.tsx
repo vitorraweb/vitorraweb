@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils";
 /* Names are proper nouns (kept); role labels resolve from the shared team
    namespace via roleKey. */
 const avatars = [
-  { name: "Solomon Okello",    roleKey: "ceo",              file: "Solomon Okello - CEO.jpg" },
   { name: "Victor Lojum",      roleKey: "headOfOperations", file: "Victor Lojum - Head of Operations.jpg" },
   { name: "Joseph Rwabu",      roleKey: "seniorFinance",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
   { name: "Thurayya Nakayima", roleKey: "seniorMarketing",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },

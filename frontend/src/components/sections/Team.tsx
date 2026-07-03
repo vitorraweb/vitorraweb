@@ -19,12 +19,6 @@ import { cn } from "@/lib/utils";
 type Member = { name?: string; roleKey: string; file?: string; placeholder?: boolean };
 type Size = "ceo" | "lead" | "officer";
 
-const ceo: Member = {
-  name: "Solomon Okello",
-  roleKey: "ceo",
-  file: "Solomon Okello - CEO.jpg",
-};
-
 const leadership: Member[] = [
   { name: "Joseph Rwabu",      roleKey: "seniorFinance",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
   { name: "Victor Lojum",      roleKey: "headOfOperations", file: "Victor Lojum - Head of Operations.jpg" },
@@ -106,28 +100,7 @@ export default function Team() {
           </h2>
         </Reveal>
 
-        {/* ── Tier 1 — CEO ─────────────────────────────────────────────────── */}
-        <div className="flex justify-center">
-          <Reveal>
-            <TeamPortrait member={ceo} size="ceo" featured />
-          </Reveal>
-        </div>
-
-        {/* Connector line CEO → leadership */}
-        <div className="flex justify-center">
-          <span
-            className="hidden lg:block w-px my-6"
-            style={{
-              height: "48px",
-              background: "linear-gradient(#C5B27A, rgba(197,178,122,0))",
-              transformOrigin: "top",
-              transform: inView ? "scaleY(1)" : "scaleY(0)",
-              transition: "transform 0.8s cubic-bezier(0.22,1,0.36,1) 0.2s",
-            }}
-          />
-        </div>
-
-        {/* ── Tier 2 — Leadership (gold arc) ───────────────────────────────── */}
+        {/* ── Tier 1 — Leadership (gold arc) ───────────────────────────────── */}
         <div className="relative mt-10 lg:mt-0">
           <svg
             className="hidden lg:block absolute inset-0 w-full h-full z-0"
@@ -154,7 +127,7 @@ export default function Team() {
           </div>
         </div>
 
-        {/* ── Tier 3 — Officers ────────────────────────────────────────────── */}
+        {/* ── Tier 2 — Officers ────────────────────────────────────────────── */}
         <div className="mt-16 lg:mt-24 flex flex-wrap justify-center items-start gap-x-10 gap-y-12">
           {officers.map((m, i) => (
             <Reveal key={m.name ?? `officer-${i}`} delay={i * 70}>
