@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import StickyQuoteBar from "@/components/layout/StickyQuoteBar";
+import WhatsAppButton from "@/components/layout/WhatsAppButton";
 
 /* Pre-render both locales at build time (/, /sw). */
 export function generateStaticParams() {
@@ -27,6 +28,7 @@ export default async function LocaleLayout({
     <>
       {children}
       <StickyQuoteBar />
+      <WhatsAppButton />
     </>
   );
 }
