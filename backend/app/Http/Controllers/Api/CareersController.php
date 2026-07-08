@@ -25,8 +25,7 @@ class CareersController extends Controller
     /** Public list of open roles. */
     public function index(): JsonResponse
     {
-        $openings = JobOpening::where('status', 'open')
-            ->where(fn ($q) => $q->whereNull('closes_at')->orWhere('closes_at', '>=', now()->toDateString()))
+        $openings = JobOpening::openNow()
             ->latest()
             ->get(['title', 'slug', 'department', 'location', 'employment_type', 'closes_at']);
 
@@ -36,7 +35,7 @@ class CareersController extends Controller
     /** A single open role by slug. */
     public function show(string $slug): JsonResponse
     {
-        $opening = JobOpening::where('slug', $slug)->where('status', 'open')->first();
+        $opening = JobOpening::openNow()->where('slug', $slug)->first();
         if (! $opening) {
             return response()->json(['message' => 'This role is no longer open.'], 404);
         }
@@ -106,7 +105,7 @@ class CareersController extends Controller
         }
 
         $opening = ! empty($data['slug'])
-            ? JobOpening::where('slug', $data['slug'])->where('status', 'open')->first()
+            ? JobOpening::openNow()->where('slug', $data['slug'])->first()
             : null;
 
         $extracted = null;

@@ -35,6 +35,46 @@ class CareersTest extends TestCase
         $this->assertFalse($titles->contains('Closed Role'));
     }
 
+    public function test_public_list_excludes_roles_past_their_closing_date(): void
+    {
+        $this->opening(['title' => 'Expired Role', 'closes_at' => now()->subDay()->toDateString()]);
+        $this->opening(['title' => 'Still Open Role', 'closes_at' => now()->addWeek()->toDateString()]);
+
+        $res = $this->getJson('/api/careers/openings')->assertOk();
+        $titles = collect($res->json('data'))->pluck('title');
+        $this->assertFalse($titles->contains('Expired Role'));
+        $this->assertTrue($titles->contains('Still Open Role'));
+    }
+
+    public function test_single_role_page_404s_once_the_closing_date_has_passed(): void
+    {
+        // Bug this guards against: the role vanished from the public list but its
+        // direct link kept accepting applications forever, because show()/apply()
+        // never checked closes_at even though index() did.
+        $opening = $this->opening(['closes_at' => now()->subDay()->toDateString()]);
+
+        $this->getJson("/api/careers/openings/{$opening->slug}")->assertNotFound();
+    }
+
+    public function test_apply_does_not_link_the_application_to_an_expired_role(): void
+    {
+        Storage::fake('local');
+        $opening = $this->opening(['closes_at' => now()->subDay()->toDateString()]);
+
+        $upload = $this->post('/api/careers/extract', [
+            'cv' => UploadedFile::fake()->create('cv.pdf', 20, 'application/pdf'),
+        ])->assertOk();
+
+        $this->postJson('/api/careers/apply', [
+            'cv_token' => $upload->json('cv_token'), 'slug' => $opening->slug,
+            'name' => 'Jane Doe', 'email' => 'jane@example.com',
+        ])->assertCreated();
+
+        $app = JobApplication::first();
+        $this->assertNotNull($app);
+        $this->assertNull($app->job_opening_id);
+    }
+
     public function test_cv_upload_extracts_details_and_application_is_created(): void
     {
         Storage::fake('local');
