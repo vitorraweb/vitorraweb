@@ -50,11 +50,17 @@ class FlutterwaveGateway implements PaymentGateway
         $txRef = $payable->payableReference().'-'.time();
 
         $payload = [
-            'tx_ref'        => $txRef,
-            'amount'        => $payable->payableAmountMajor(),
-            'currency'      => $payable->payableCurrency(),
-            'redirect_url'  => $this->callbackUrl($payable),
-            'customer'      => [
+            'tx_ref'         => $txRef,
+            'amount'         => $payable->payableAmountMajor(),
+            'currency'       => $payable->payableCurrency(),
+            'redirect_url'   => $this->callbackUrl($payable),
+            // Without this, Flutterwave falls back to whatever single method the
+            // dashboard happens to default to for the currency — a customer could
+            // land straight on a mobile-money-number prompt with no way to pick
+            // card instead. Listing every method we support explicitly makes the
+            // provider always show a real choice screen.
+            'payment_options' => $this->paymentOptions($payable->payableCurrency()),
+            'customer'       => [
                 'email'       => $billing['email_address'],
                 'phonenumber' => $billing['phone_number'],
                 'name'        => trim($billing['first_name'].' '.$billing['last_name']),
@@ -62,6 +68,7 @@ class FlutterwaveGateway implements PaymentGateway
             'customizations' => [
                 'title'       => 'Vitorra Holdings',
                 'description' => $payable->payableDescription(),
+                'logo'        => $this->logoUrl(),
             ],
             // Carried through to the webhook so we can find the payable even if
             // the tx_ref suffix makes a direct reference match impossible.
@@ -247,6 +254,25 @@ class FlutterwaveGateway implements PaymentGateway
         $origin = rtrim((string) ($this->config['frontend_url'] ?? ''), '/');
 
         return $origin.$payable->payableReturnPath();
+    }
+
+    /**
+     * Which methods to present on the hosted checkout, so the customer always
+     * gets a real choice screen instead of Flutterwave's ambient default for the
+     * currency. Mobile money is Uganda-specific (MTN/Airtel), so it's only
+     * offered for UGX; USD is card-only.
+     */
+    private function paymentOptions(string $currency): string
+    {
+        return $currency === 'UGX' ? 'card,mobilemoneyuganda' : 'card';
+    }
+
+    /** Branded logo shown on the hosted checkout page. */
+    private function logoUrl(): string
+    {
+        $origin = rtrim((string) ($this->config['frontend_url'] ?? ''), '/');
+
+        return $origin.'/logo.png';
     }
 
     /** Test keys are prefixed FLWSECK_TEST- / FLWPUBK_TEST- — no separate env config needed. */

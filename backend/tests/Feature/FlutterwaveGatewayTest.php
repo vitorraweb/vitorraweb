@@ -89,6 +89,30 @@ class FlutterwaveGatewayTest extends TestCase
         });
     }
 
+    public function test_initiate_offers_card_and_mobile_money_for_ugx(): void
+    {
+        // Regression: without an explicit payment_options list, Flutterwave can
+        // default straight to a single method (e.g. a mobile-money-number prompt)
+        // with no way for the customer to choose card instead.
+        $this->fakeInitiateOk();
+        $order = $this->order('UGX');
+
+        $this->gateway()->initiate($order);
+
+        Http::assertSent(fn ($request) => str_contains($request['payment_options'] ?? '', 'card')
+            && str_contains($request['payment_options'] ?? '', 'mobilemoneyuganda'));
+    }
+
+    public function test_initiate_offers_card_only_for_usd(): void
+    {
+        $this->fakeInitiateOk();
+        $order = $this->order('USD', 69000);
+
+        $this->gateway()->initiate($order);
+
+        Http::assertSent(fn ($request) => $request['payment_options'] === 'card');
+    }
+
     public function test_initiate_handles_provider_error_gracefully(): void
     {
         Http::fake(['*/v3/payments' => Http::response(['status' => 'error', 'message' => 'Invalid amount'], 400)]);
