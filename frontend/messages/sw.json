@@ -584,9 +584,11 @@
     "reserveTitlePay": "Hifadhi na ulipie {model} yako",
     "reserveSubPay": "Hifadhi kifaa chako na ulipe mtandaoni kwa usalama kupitia Mobile Money au kadi. Kisha timu yetu itapanga usakinishaji wako.",
     "reserveRedirecting": "Tunakupeleka kwenye malipo salama…",
-    "reserveOnlineNotice": "Imelindwa na Pesapal — lipa kwa MTN, Airtel, Visa au Mastercard.",
+    "reserveOnlineNotice": "Imelindwa na Flutterwave — lipa kwa MTN, Airtel, Visa au Mastercard.",
     "reservePayOffline": "Unapendelea kulipa nje ya mtandao? Hifadhi nasi tutawasiliana nawe",
-    "reservePayFailed": "Hatukuweza kuanzisha malipo kwa sasa. Hifadhi yako imehifadhiwa — timu yetu itawasiliana nawe ili kukamilisha."
+    "reservePayFailed": "Hatukuweza kuanzisha malipo kwa sasa. Hifadhi yako imehifadhiwa — timu yetu itawasiliana nawe ili kukamilisha.",
+    "reserveCopyLink": "Nakili kiungo cha hifadhi",
+    "reserveLinkCopied": "Kiungo kimenakiliwa!"
   },
   "fetCalculator": {
     "eyebrow": "Kikokotoo cha uokoaji",
@@ -1583,12 +1585,12 @@
     "tryAgain": "Jaribu malipo tena",
     "refresh": "Onyesha upya hali",
     "contactUs": "Wasiliana nasi",
-    "secured": "Imelindwa na Pesapal",
+    "secured": "Imelindwa na Flutterwave",
     "payTitle": "Kamilisha malipo yako",
     "orderSummary": "Oda yako",
     "qty": "Idadi",
     "payNow": "Lipa {amount} sasa",
-    "payNotice": "Imelindwa na Pesapal — lipa kwa Mobile Money (MTN, Airtel) au kadi.",
+    "payNotice": "Imelindwa na Flutterwave — lipa kwa Mobile Money (MTN, Airtel) au kadi.",
     "redirecting": "Tunakupeleka kwenye malipo salama…",
     "payFailedTitle": "Hatukuweza kuanzisha malipo",
     "payFailedBody": "Hitilafu imetokea wakati wa kuanzisha malipo yako. Tafadhali jaribu tena, au wasiliana nasi kulipa kwa njia nyingine."
@@ -1611,7 +1613,7 @@
     "paid": "Imelipwa",
     "balanceDue": "Salio linalodaiwa",
     "payNow": "Lipa {amount} sasa",
-    "payNotice": "Imelindwa na Pesapal — Mobile Money (MTN, Airtel) au kadi.",
+    "payNotice": "Imelindwa na Flutterwave — Mobile Money (MTN, Airtel) au kadi.",
     "redirecting": "Tunakupeleka kwenye malipo salama…",
     "paidTitle": "Ankara hii imelipwa",
     "paidBody": "Asante — ankara {number} imelipwa kikamilifu. Risiti inakuja kwako.",
@@ -1627,7 +1629,7 @@
     "contactUs": "Wasiliana nasi",
     "errorTitle": "Hitilafu imetokea",
     "errorBody": "Hatukuweza kupakia au kushughulikia ankara hii. Tafadhali jaribu tena, au wasiliana nasi.",
-    "secured": "Imelindwa na Pesapal"
+    "secured": "Imelindwa na Flutterwave"
   },
   "careersPortal": {
     "metaTitle": "Nafasi za Kazi — Vitorra Holdings",

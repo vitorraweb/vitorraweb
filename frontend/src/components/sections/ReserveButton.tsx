@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
-import { ArrowRight, Check, Loader2, Mail, Minus, Phone, Plus, ShieldCheck, User, X } from "lucide-react";
+import { ArrowRight, Check, Copy, Loader2, Mail, Minus, Phone, Plus, ShieldCheck, User, X } from "lucide-react";
 import { reserveFet } from "@/lib/api";
 import { ONLINE_PAYMENTS_ENABLED } from "@/lib/config";
 import { isValidPhone } from "@/lib/phone";
@@ -15,7 +16,28 @@ import type { Order } from "@/types";
    Self-serve FET reservation, sitting alongside "Request a quote". Creates a
    real order (no online payment — cash is paid before installation or
    collection). On phones it opens as a bottom sheet; on desktop, a centered
-   dialog — keeps FetPricing a server component by living entirely here. */
+   dialog — keeps FetPricing a server component by living entirely here.
+
+   Shareable deep link: visiting this page with ?reserve=<tierId> (e.g.
+   ?reserve=suv) opens this dialog for that tier automatically — a rep can
+   send a customer straight to reserving, online or offline, without them
+   having to find the right pricing card themselves. "Copy reservation link"
+   below the button builds that URL for whichever tier is on screen. */
+
+/* Headless — reads the URL only to decide whether to auto-open, so the
+   useSearchParams dependency (which requires a Suspense boundary on a
+   statically-rendered page) doesn't touch the visible button markup at all. */
+function AutoOpenFromQuery({ tierId, onMatch }: { tierId: string; onMatch: () => void }) {
+  const searchParams = useSearchParams();
+  const matched = searchParams.get("reserve") === tierId;
+
+  useEffect(() => {
+    if (matched) onMatch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matched]);
+
+  return null;
+}
 
 type Form = { customer_name: string; customer_email: string; customer_phone: string; quantity: string; notes: string };
 const EMPTY: Form = { customer_name: "", customer_email: "", customer_phone: "", quantity: "1", notes: "" };
@@ -67,6 +89,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "redirecting" | "success" | "error">("idle");
   const [order, setOrder] = useState<Order | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const router = useRouter();
 
   // Whether to offer paying online (Flutterwave). When off, this stays the original
@@ -141,8 +164,25 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
     }
   };
 
+  const copyLink = async () => {
+    try {
+      const url = new URL(window.location.href);
+      url.hash = "";
+      url.search = `?reserve=${tier.id}`;
+      await navigator.clipboard.writeText(url.toString());
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      /* Clipboard unavailable (e.g. insecure context) — nothing to fall back to. */
+    }
+  };
+
   return (
     <>
+      <Suspense fallback={null}>
+        <AutoOpenFromQuery tierId={tier.id} onMatch={() => setOpen(true)} />
+      </Suspense>
+
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -150,6 +190,16 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
         style={{ background: "#C5B27A", color: "#1E1E1E" }}
       >
         {online ? tr("reserveNowPay") : tr("reserveNow")}
+      </button>
+
+      <button
+        type="button"
+        onClick={copyLink}
+        className="inline-flex items-center justify-center gap-1.5 mt-2 w-full text-xs font-semibold transition-opacity hover:opacity-80"
+        style={{ color: "rgba(255,255,255,0.55)" }}
+      >
+        <Copy className="w-3 h-3" />
+        {linkCopied ? tr("reserveLinkCopied") : tr("reserveCopyLink")}
       </button>
 
       {open && createPortal(

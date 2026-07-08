@@ -584,9 +584,11 @@
     "reserveTitlePay": "Reserve & pay for your {model}",
     "reserveSubPay": "Reserve your unit and pay securely online by Mobile Money or card. Our team will then arrange your installation.",
     "reserveRedirecting": "Taking you to secure payment…",
-    "reserveOnlineNotice": "Secured by Pesapal — pay by MTN, Airtel, Visa or Mastercard.",
+    "reserveOnlineNotice": "Secured by Flutterwave — pay by MTN, Airtel, Visa or Mastercard.",
     "reservePayOffline": "Prefer to pay offline? Reserve and we'll contact you",
-    "reservePayFailed": "We couldn't start the payment just now. Your reservation is saved — our team will contact you to complete it."
+    "reservePayFailed": "We couldn't start the payment just now. Your reservation is saved — our team will contact you to complete it.",
+    "reserveCopyLink": "Copy reservation link",
+    "reserveLinkCopied": "Link copied!"
   },
   "fetCalculator": {
     "eyebrow": "Savings calculator",
@@ -1583,12 +1585,12 @@
     "tryAgain": "Try payment again",
     "refresh": "Refresh status",
     "contactUs": "Contact us",
-    "secured": "Secured by Pesapal",
+    "secured": "Secured by Flutterwave",
     "payTitle": "Complete your payment",
     "orderSummary": "Your order",
     "qty": "Qty",
     "payNow": "Pay {amount} now",
-    "payNotice": "Secured by Pesapal — pay by Mobile Money (MTN, Airtel) or card.",
+    "payNotice": "Secured by Flutterwave — pay by Mobile Money (MTN, Airtel) or card.",
     "redirecting": "Taking you to secure payment…",
     "payFailedTitle": "We couldn't start the payment",
     "payFailedBody": "Something went wrong starting your payment. Please try again, or contact us to pay another way."
@@ -1611,7 +1613,7 @@
     "paid": "Paid",
     "balanceDue": "Balance due",
     "payNow": "Pay {amount} now",
-    "payNotice": "Secured by Pesapal — Mobile Money (MTN, Airtel) or card.",
+    "payNotice": "Secured by Flutterwave — Mobile Money (MTN, Airtel) or card.",
     "redirecting": "Taking you to secure payment…",
     "paidTitle": "This invoice is paid",
     "paidBody": "Thank you — invoice {number} is settled in full. A receipt is on its way to you.",
@@ -1627,7 +1629,7 @@
     "contactUs": "Contact us",
     "errorTitle": "Something went wrong",
     "errorBody": "We couldn't load or process this invoice. Please try again, or contact us.",
-    "secured": "Secured by Pesapal"
+    "secured": "Secured by Flutterwave"
   },
   "careersPortal": {
     "metaTitle": "Careers — Vitorra Holdings",
