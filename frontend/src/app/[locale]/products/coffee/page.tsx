@@ -9,7 +9,7 @@ import FinalCTA from "@/components/sections/FinalCTA";
 import { Reveal } from "@/components/ui/reveal";
 import { ParallaxImage } from "@/components/ui/parallax-image";
 import { Faq } from "@/components/ui/faq";
-import { Mountain, QrCode, Sprout, Flame, ShoppingBag, Store, Globe, ArrowRight, ArrowUpRight } from "lucide-react";
+import { Mountain, QrCode, Sprout, Flame, Coffee, Droplets, ShoppingBag, Store, Globe, ArrowRight, ArrowUpRight } from "lucide-react";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
 export async function generateMetadata({
@@ -46,6 +46,13 @@ export default function CoffeePage() {
     { n: "01", title: t("ftcStep1Title"), body: t("ftcStep1Body") },
     { n: "02", title: t("ftcStep2Title"), body: t("ftcStep2Body") },
     { n: "03", title: t("ftcStep3Title"), body: t("ftcStep3Body") },
+  ];
+
+  const proof = [
+    { icon: Coffee,   label: t("proof1Label"), body: t("proof1Body") },
+    { icon: QrCode,   label: t("proof2Label"), body: t("proof2Body") },
+    { icon: Droplets, label: t("proof3Label"), body: t("proof3Body") },
+    { icon: Flame,    label: t("proof4Label"), body: t("proof4Body") },
   ];
 
   /* Retail self-serve is gated until prices are confirmed. While off, the retail
@@ -350,6 +357,65 @@ export default function CoffeePage() {
               </div>
             </div>
           </Reveal>
+        </section>
+
+        {/* ══ PROOF ═══════════════════════════════════════════════════════════ */}
+        {/* Light-toned by design: the next section (Ways to Buy) is already dark,
+            and two dark sections back to back breaks the site's alternation rule. */}
+        <section
+          className="section-padding"
+          style={{ backgroundColor: "#FFFFFF", boxShadow: "inset 0 1px 0 rgba(0,0,0,0.06)" }}
+        >
+          <div className="container-max">
+            <Reveal className="mb-12 lg:mb-16">
+              <span className="eyebrow block mb-3">{t("proofEyebrow")}</span>
+              <h2
+                style={{
+                  fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                  fontSize:      "clamp(28px, 3.5vw, 48px)",
+                  fontWeight:    700,
+                  letterSpacing: "-0.025em",
+                  lineHeight:    1.1,
+                  color:         "#1E1E1E",
+                  maxWidth:      "560px",
+                }}
+              >
+                {t("proofTitleLead")}{" "}
+                <span style={{ color: "#7A6020" }}>{t("proofTitleAccent")}</span>
+              </h2>
+              <p className="mt-5 max-w-lg" style={{ fontSize: "16px", lineHeight: 1.75, color: "#666666" }}>
+                {t("proofBody")}
+              </p>
+            </Reveal>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {proof.map((c, i) => (
+                <Reveal key={c.label} delay={i * 70}>
+                  <div
+                    className="glow-card rounded-[24px] p-7 h-full"
+                    style={{
+                      background: "linear-gradient(145deg, #FFFFFF 0%, #FAF8F4 100%)",
+                      border: "1px solid rgba(197,178,122,0.14)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                    }}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <span
+                        className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0"
+                        style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}
+                      >
+                        <c.icon className="w-4 h-4" />
+                      </span>
+                      <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#7A6020" }}>
+                        {c.label}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed" style={{ color: "#555555" }}>{c.body}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* ══ WAYS TO BUY ═════════════════════════════════════════════════════ */}

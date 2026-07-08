@@ -11,6 +11,7 @@ import { Faq } from "@/components/ui/faq";
 import {
   Route, Globe, Activity, ShieldCheck,
   Ship, Factory, Store, Wheat, HeartHandshake,
+  Clock, Truck, FileCheck, Radar,
   ArrowRight, ArrowUpRight,
 } from "lucide-react";
 
@@ -41,6 +42,13 @@ export default function LogisticsPage() {
     { title: t("cap2Title"), body: t("cap2Body"), img: "/products/logistics/warehouse.png",    alt: t("cap2Alt") },
     { title: t("cap3Title"), body: t("cap3Body"), img: "/products/logistics/customs.png",      alt: t("cap3Alt") },
     { title: t("cap4Title"), body: t("cap4Body"), img: "/products/logistics/control-room.png", alt: t("cap4Alt") },
+  ];
+
+  const proof = [
+    { icon: Clock,      label: t("proof1Label"), body: t("proof1Body") },
+    { icon: Truck,      label: t("proof2Label"), body: t("proof2Body") },
+    { icon: FileCheck,  label: t("proof3Label"), body: t("proof3Body") },
+    { icon: Radar,      label: t("proof4Label"), body: t("proof4Body") },
   ];
 
   const audiences = [
@@ -269,6 +277,70 @@ export default function LogisticsPage() {
               </div>
             </div>
           </Reveal>
+        </section>
+
+        {/* ══ PROOF ═══════════════════════════════════════════════════════════ */}
+        <section
+          className="section-padding relative overflow-hidden"
+          style={{ backgroundColor: "#141414" }}
+        >
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse at 80% 20%, rgba(197,178,122,0.12) 0%, transparent 50%)," +
+                "radial-gradient(ellipse at 10% 80%, rgba(197,178,122,0.06) 0%, transparent 45%)",
+            }}
+          />
+          <div aria-hidden="true" className="hero-grain" style={{ opacity: 0.025 }} />
+
+          <div className="container-max relative z-10">
+            <Reveal className="mb-12 lg:mb-16">
+              <span className="eyebrow-light mb-3 inline-flex">{t("proofEyebrow")}</span>
+              <h2
+                style={{
+                  fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+                  fontSize:      "clamp(28px, 3.5vw, 48px)",
+                  fontWeight:    700,
+                  letterSpacing: "-0.025em",
+                  lineHeight:    1.1,
+                  color:         "#FFFFFF",
+                  maxWidth:      "560px",
+                }}
+              >
+                {t("proofTitleLead")}{" "}
+                <span style={{ color: "#C5B27A" }}>{t("proofTitleAccent")}</span>
+              </h2>
+              <p className="mt-5 max-w-lg" style={{ fontSize: "16px", lineHeight: 1.75, color: "rgba(255,255,255,0.42)" }}>
+                {t("proofBody")}
+              </p>
+            </Reveal>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {proof.map((c, i) => (
+                <Reveal key={c.label} delay={i * 70}>
+                  <div
+                    className="rounded-[24px] p-7 h-full"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <span
+                        className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0"
+                        style={{ background: "rgba(197,178,122,0.15)" }}
+                      >
+                        <c.icon className="w-4 h-4" style={{ color: "#C5B27A" }} />
+                      </span>
+                      <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#C5B27A" }}>
+                        {c.label}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{c.body}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* ══ WHO WE SERVE ════════════════════════════════════════════════════ */}
