@@ -620,6 +620,11 @@
     "paybackYears": "{years} years",
     "paybackNa": "n/a"
   },
+  "fetCalculatorWidget": {
+    "launcher": "Calculate your fuel savings",
+    "panelTitle": "FET savings calculator",
+    "minimize": "Minimize calculator"
+  },
   "sealPage": {
     "heroEyebrow": "SEAL Hemostatic Wound Spray · Medical · B2B",
     "heroTitleLead": "Stop bleeding fast.",

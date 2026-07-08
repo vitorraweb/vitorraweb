@@ -39,7 +39,11 @@ function formatKg(value: number): string {
 const VERIFIED_LEFT_PCT =
   ((SAVINGS.verified - SAVINGS.min) / (SAVINGS.max - SAVINGS.min)) * 100;
 
-export default function FetCalculator() {
+/* The interactive card itself, split out so it can be reused verbatim inside
+   the floating homepage widget (FetCalculatorWidget) — same state, same
+   pricing logic, same look, without the page-section framing (eyebrow/intro
+   column) around it. */
+export function FetCalculatorCard() {
   const tc = useTranslations("fetCalculator");
   const tt = useTranslations("fetTiers");
   const [tier, setTier] = useState<FetTier>(FET_TIERS[0]);
@@ -103,45 +107,10 @@ export default function FetCalculator() {
   }, [tier, fleet, annualKm, fuelPrice, savingsPct, result, tc, tt]);
 
   return (
-    <section className="section-padding" style={{ backgroundColor: "#F2F2F2" }}>
-      <div className="container-max grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-12 lg:gap-16 items-center">
-
-        {/* ── Left — intro ─────────────────────────────────────────────── */}
-        <Reveal>
-          <span className="eyebrow block mb-3">{tc("eyebrow")}</span>
-          <h2
-            className="mb-5"
-            style={{
-              fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-              fontSize: "clamp(28px, 3.5vw, 48px)",
-              fontWeight: 700,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.1,
-              color: "#1E1E1E",
-              maxWidth: "440px",
-            }}
-          >
-            {tc("title")}
-          </h2>
-          <p className="mb-7" style={{ fontSize: "16px", lineHeight: 1.78, color: "#555555", maxWidth: "420px" }}>
-            {tc("body")}
-          </p>
-          <a
-            href="#fet-pricing"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold"
-            style={{ color: "#7A6020" }}
-          >
-            {tc("seePricing")}
-            <ArrowRight className="w-3.5 h-3.5" />
-          </a>
-        </Reveal>
-
-        {/* ── Right — calculator card ──────────────────────────────────── */}
-        <Reveal delay={120}>
-          <div
-            className="rounded-[28px] p-6 md:p-8 shadow-card"
-            style={{ backgroundColor: "#FFFFFF", border: "1px solid rgba(0,0,0,0.06)" }}
-          >
+      <div
+        className="rounded-[28px] p-6 md:p-8 shadow-card"
+        style={{ backgroundColor: "#FFFFFF", border: "1px solid rgba(0,0,0,0.06)" }}
+      >
             {/* Vehicle type */}
             <Field label={tc("vehicleType")}>
               <div className="grid grid-cols-2 gap-2.5">
@@ -292,7 +261,52 @@ export default function FetCalculator() {
             <p className="mt-4 text-center text-[11px] leading-relaxed" style={{ color: "#9A9A9A" }}>
               {tc("disclaimer")}
             </p>
-          </div>
+      </div>
+  );
+}
+
+/* The full page section — used on the FET product page. Wraps the card above
+   with the intro column and section framing. */
+export default function FetCalculator() {
+  const tc = useTranslations("fetCalculator");
+
+  return (
+    <section className="section-padding" style={{ backgroundColor: "#F2F2F2" }}>
+      <div className="container-max grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-12 lg:gap-16 items-center">
+
+        {/* ── Left — intro ─────────────────────────────────────────────── */}
+        <Reveal>
+          <span className="eyebrow block mb-3">{tc("eyebrow")}</span>
+          <h2
+            className="mb-5"
+            style={{
+              fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+              fontSize: "clamp(28px, 3.5vw, 48px)",
+              fontWeight: 700,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.1,
+              color: "#1E1E1E",
+              maxWidth: "440px",
+            }}
+          >
+            {tc("title")}
+          </h2>
+          <p className="mb-7" style={{ fontSize: "16px", lineHeight: 1.78, color: "#555555", maxWidth: "420px" }}>
+            {tc("body")}
+          </p>
+          <a
+            href="#fet-pricing"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold"
+            style={{ color: "#7A6020" }}
+          >
+            {tc("seePricing")}
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+        </Reveal>
+
+        {/* ── Right — calculator card ──────────────────────────────────── */}
+        <Reveal delay={120}>
+          <FetCalculatorCard />
         </Reveal>
       </div>
     </section>

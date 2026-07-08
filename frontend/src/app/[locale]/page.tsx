@@ -15,6 +15,7 @@ import { ParallaxImage } from "@/components/ui/parallax-image";
 import TeamTeaser from "@/components/sections/TeamTeaser";
 import Certifications from "@/components/sections/Certifications";
 import FinalCTA from "@/components/sections/FinalCTA";
+import FetCalculatorWidget from "@/components/sections/FetCalculatorWidget";
 import {
   ArrowRight, ArrowUpRight, ShieldCheck,
   Truck, Tractor, Bus, Ship, Factory, Building2,
@@ -104,6 +105,11 @@ export default function HomePage() {
             1. HERO  —  dark · aurora · grain
         ══════════════════════════════════════════════════════════════════ */}
         <Hero />
+
+        {/* Floating, minimizable entry point to the FET calculator — see
+            FetCalculatorWidget.tsx. Fixed-position, so placement in the tree
+            doesn't matter; kept near the top for visibility in the source. */}
+        <FetCalculatorWidget />
 
         {/* ══════════════════════════════════════════════════════════════════
             2. TRUST MARQUEE  —  gold strip

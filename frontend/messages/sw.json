@@ -620,6 +620,11 @@
     "paybackYears": "miaka {years}",
     "paybackNa": "haipatikani"
   },
+  "fetCalculatorWidget": {
+    "launcher": "Kokotoa akiba yako ya mafuta",
+    "panelTitle": "Kikokotoo cha akiba ya FET",
+    "minimize": "Punguza kikokotoo"
+  },
   "sealPage": {
     "heroEyebrow": "SEAL Hemostatic Wound Spray · Matibabu · B2B",
     "heroTitleLead": "Zuia damu haraka.",
