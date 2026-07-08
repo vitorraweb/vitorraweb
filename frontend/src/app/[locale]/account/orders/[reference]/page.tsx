@@ -39,7 +39,7 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
     apiCustomer<{ data: Order }>(`/account/orders/${reference}`).then((r) => setOrder(r.data)).catch((e) => setError(e instanceof Error ? e.message : t("notFound")));
   }, [reference, t]);
 
-  // Returning from Pesapal: reconcile the just-paid instalment, refreshing the
+  // Returning from Flutterwave: reconcile the just-paid instalment, refreshing the
   // schedule until a payment lands (mobile money is async) or we give up polling.
   useEffect(() => {
     if (!justPaid) return;

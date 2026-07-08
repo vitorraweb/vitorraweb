@@ -7,10 +7,9 @@ use App\Models\FinanceAccount;
 use App\Models\FinanceCategory;
 use App\Models\FinanceTransaction;
 use App\Models\Invoice;
-use App\Services\Payments\PesapalGateway;
+use App\Services\Payments\FlutterwaveGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -19,22 +18,23 @@ class InvoicePaymentTest extends TestCase
     use RefreshDatabase;
 
     private array $config = [
-        'consumer_key'    => 'ck',
-        'consumer_secret' => 'cs',
-        'env'             => 'sandbox',
-        'ipn_id'          => 'IPN-EXISTING',
-        'frontend_url'    => 'https://vitorra.org',
+        'public_key'   => 'FLWPUBK_TEST-pk',
+        'secret_key'   => 'FLWSECK_TEST-sk',
+        'secret_hash'  => 'test-secret-hash',
+        'frontend_url' => 'https://vitorra.org',
     ];
 
-    protected function setUp(): void
+    private function gateway(): FlutterwaveGateway
     {
-        parent::setUp();
-        Cache::flush();
+        return new FlutterwaveGateway($this->config);
     }
 
-    private function gateway(): PesapalGateway
+    private function webhookRequest(array $data): Request
     {
-        return new PesapalGateway($this->config);
+        $request = Request::create('/api/payments/webhook/flutterwave', 'POST', ['event' => 'charge.completed', 'data' => $data]);
+        $request->headers->set('verif-hash', $this->config['secret_hash']);
+
+        return $request;
     }
 
     private function invoice(string $currency = 'UGX', int $unitPrice = 500000, string $status = 'sent'): Invoice
@@ -79,13 +79,10 @@ class InvoicePaymentTest extends TestCase
             ->assertJsonPath('data.balance', 500000);
     }
 
-    public function test_pay_initiates_pesapal_redirect(): void
+    public function test_pay_initiates_flutterwave_redirect(): void
     {
         Http::fake([
-            '*/Auth/RequestToken' => Http::response(['token' => 'tok']),
-            '*/Transactions/SubmitOrderRequest' => Http::response([
-                'order_tracking_id' => 'TRK-INV', 'redirect_url' => 'https://cybqa.pesapal.com/pay/TRK-INV', 'status' => '200',
-            ]),
+            '*/v3/payments' => Http::response(['status' => 'success', 'data' => ['link' => 'https://checkout.flutterwave.com/pay/TRK-INV']]),
         ]);
         $this->app->singleton(PaymentGateway::class, fn () => $this->gateway());
         $invoice = $this->invoice();
@@ -94,7 +91,7 @@ class InvoicePaymentTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', 'redirect');
 
-        $this->assertSame('TRK-INV', $invoice->fresh()->payment_reference);
+        $this->assertStringStartsWith($invoice->number.'-', $invoice->fresh()->payment_reference);
     }
 
     public function test_pay_rejects_eur_invoice(): void
@@ -119,17 +116,16 @@ class InvoicePaymentTest extends TestCase
     public function test_webhook_auto_settles_and_approves_invoice(): void
     {
         Http::fake([
-            '*/Auth/RequestToken' => Http::response(['token' => 'tok']),
-            '*/Transactions/GetTransactionStatus*' => Http::response(['status_code' => 1, 'payment_status_description' => 'Completed']),
+            '*/transactions/verify_by_reference*' => Http::response([
+                'status' => 'success',
+                'data'   => ['status' => 'successful', 'amount' => 500000, 'currency' => 'UGX'],
+            ]),
         ]);
         $this->seedBooks('UGX');
         $invoice = $this->invoice();
         $invoice->update(['payment_reference' => 'TRK-INV']);
 
-        $request = Request::create('/api/payments/webhook/pesapal', 'GET', [
-            'OrderTrackingId'        => 'TRK-INV',
-            'OrderMerchantReference' => $invoice->number,
-        ]);
+        $request = $this->webhookRequest(['tx_ref' => 'TRK-INV', 'meta' => ['payable_reference' => $invoice->number]]);
         $this->gateway()->handleWebhook($request);
 
         $invoice->refresh();
@@ -148,18 +144,18 @@ class InvoicePaymentTest extends TestCase
     public function test_settlement_is_idempotent(): void
     {
         Http::fake([
-            '*/Auth/RequestToken' => Http::response(['token' => 'tok']),
-            '*/Transactions/GetTransactionStatus*' => Http::response(['status_code' => 1]),
+            '*/transactions/verify_by_reference*' => Http::response([
+                'status' => 'success',
+                'data'   => ['status' => 'successful', 'amount' => 500000, 'currency' => 'UGX'],
+            ]),
         ]);
         $this->seedBooks('UGX');
         $invoice = $this->invoice();
         $invoice->update(['payment_reference' => 'TRK-INV']);
 
-        $request = Request::create('/api/payments/webhook/pesapal', 'GET', [
-            'OrderTrackingId' => 'TRK-INV', 'OrderMerchantReference' => $invoice->number,
-        ]);
+        $request = $this->webhookRequest(['tx_ref' => 'TRK-INV', 'meta' => ['payable_reference' => $invoice->number]]);
         $this->gateway()->handleWebhook($request);
-        $this->gateway()->handleWebhook($request); // duplicate IPN
+        $this->gateway()->handleWebhook($request); // duplicate delivery
 
         $this->assertSame(1, FinanceTransaction::where('source', 'invoice')->where('source_id', $invoice->id)->count());
         $this->assertSame('paid', $invoice->fresh()->status);
@@ -168,8 +164,10 @@ class InvoicePaymentTest extends TestCase
     public function test_status_endpoint_reconciles_invoice(): void
     {
         Http::fake([
-            '*/Auth/RequestToken' => Http::response(['token' => 'tok']),
-            '*/Transactions/GetTransactionStatus*' => Http::response(['status_code' => 1]),
+            '*/transactions/verify_by_reference*' => Http::response([
+                'status' => 'success',
+                'data'   => ['status' => 'successful', 'amount' => 500000, 'currency' => 'UGX'],
+            ]),
         ]);
         $this->seedBooks('UGX');
         $this->app->singleton(PaymentGateway::class, fn () => $this->gateway());

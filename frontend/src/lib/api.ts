@@ -173,7 +173,7 @@ export async function getOrder(reference: string): Promise<Order> {
 }
 
 /* ─── Payments (gateway-agnostic) ──────────────────────────────────────────
-   The backend's active PAYMENT_DRIVER decides the behaviour. With Pesapal live,
+   The backend's active PAYMENT_DRIVER decides the behaviour. With Flutterwave live,
    `initiate` returns status "redirect" + a hosted-checkout URL to send the
    customer to; with the manual driver it returns "pending" (pay offline).      */
 

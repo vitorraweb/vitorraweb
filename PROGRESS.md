@@ -27,7 +27,7 @@
 | **Internal operations platform** (Staff/HR, CEO report, Suppliers, Installments) | ✅ **Built & deployed** |
 | **Accounting — "Vitorra Books"** (ledger, invoicing, VAT, AI receipts, recurring) | ✅ **Built & deployed** |
 | Coffee shop (storefront/cart/checkout) | ⏸ Built, gated until retail prices confirmed |
-| **Online payments — Pesapal** (cards + MTN/Airtel) across FET reserve, invoices, installments, coffee | ✅ **Built & tested** — needs activation (keys + IPN) |
+| **Online payments — Flutterwave** (cards + MTN/Airtel) across FET reserve, invoices, installments, coffee | ✅ **Built & tested** — needs activation (keys + webhook secret) |
 | **Multilingual careers portal** (EN / SW / **FR** pilot) | ✅ **Built** |
 | **Zero-cost upgrades** (keyless FX, auto holidays, phone validation) | ✅ **Built** |
 | **Reception lobby display** (`/display` — clock, weather, FET film, certifications, news ticker) | ✅ **Built** — point the front-desk TV's browser at it |
@@ -105,35 +105,45 @@ Turns the priority product's headline — an independent German test measuring a
 
 ---
 
-## ✅ Online payments — Pesapal (June 2026)
+## ✅ Online payments — Flutterwave (June–July 2026)
 
 A full, provider-agnostic online-payment integration (cards + MTN/Airtel mobile
 money) — the live-payment-gateway item that was previously blocked. Built and
 tested; **default-off** until activated, so nothing changed for customers on deploy.
 
-- **One gateway, every payable.** A `Payable` abstraction lets one Pesapal
+> Originally built against Pesapal (June 2026); switched to **Flutterwave** in
+> July 2026 once Vitorra's Flutterwave business account was approved. The
+> `Payable`/`PaymentGateway` abstraction made this a same-shaped swap — one new
+> gateway class, no changes to checkout, invoicing, or installment code.
+
+- **One gateway, every payable.** A `Payable` abstraction lets one Flutterwave
   integration + one webhook serve **four surfaces**: FET reserve-and-pay, B2B
   invoice "pay online" links, customer installment part-payments, and the coffee
   checkout (still gated on prices). Orders, Invoices and InstallmentPayments all
   implement it; a `PayableResolver` finds the right one from a webhook.
-- **How it works:** hosted-redirect flow (like PayPal). Customer → Pesapal page →
-  back to a dedicated **order payment page** (`/order/{ref}`) that confirms the
-  payment, with a clear Pay button + retry instead of a silent redirect. Invoice
-  pay link is tokenised (`/invoice/{token}`); installments pay from `/account`.
+- **How it works:** hosted-redirect flow (like PayPal). Customer → Flutterwave
+  page → back to a dedicated **order payment page** (`/order/{ref}`) that
+  confirms the payment, with a clear Pay button + retry instead of a silent
+  redirect. Invoice pay link is tokenised (`/invoice/{token}`); installments pay
+  from `/account`.
 - **Books integration:** a paid invoice **auto-settles + auto-posts an approved
   income entry** to Vitorra Books (gateway-verified money bypasses maker–checker
   by design), audit-logged. Installments drive the order's status (partial→paid)
   and generate the receipt on full pay.
 - **Admin "Payments" health page** (`/admin/payments`, admin-only) +
-  `php artisan pesapal:status`: a plain-language "are online payments live?"
+  `php artisan flutterwave:status`: a plain-language "are online payments live?"
   checklist that runs a **real test payment** and reports exactly what's missing
-  (return URL / keys / IPN registration).
-- Tech: `App\Contracts\{Payable,PaymentGateway}`, `PesapalGateway`,
-  `pesapal:register-ipn`. Covered by feature tests (Pesapal, Invoice, Installment,
+  (return URL / keys / webhook secret).
+- Tech: `App\Contracts\{Payable,PaymentGateway}`, `FlutterwaveGateway`. Webhook
+  requests are verified against a dashboard-issued secret hash, and a webhook is
+  never trusted for amount/currency without re-checking with Flutterwave
+  directly. Covered by feature tests (Flutterwave, Invoice, Installment,
   PaymentHealth).
-- **To activate:** backend `PAYMENT_DRIVER=pesapal` + Pesapal keys +
-  `pesapal:register-ipn`; Vercel `NEXT_PUBLIC_ONLINE_PAYMENTS=true`. ⚠ The IPN
-  must be registered or Pesapal rejects every payment — check `/admin/payments`.
+- **To activate:** backend `PAYMENT_DRIVER=flutterwave` + Flutterwave keys +
+  a webhook secret hash generated in the Flutterwave dashboard (Settings →
+  Webhooks) set as `FLUTTERWAVE_SECRET_HASH`; Vercel
+  `NEXT_PUBLIC_ONLINE_PAYMENTS=true`. ⚠ Without the webhook secret, completed
+  payments won't confirm automatically — check `/admin/payments`.
 
 ## ✅ Careers portal — now multilingual (EN / SW / FR)
 
@@ -197,8 +207,8 @@ first thing a visitor sees is the brand, not a blank TV.
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**
-1. ~~**Live payment gateway**~~ ✅ **Built (Pesapal)** — now an **activation** task, not a build: set `PAYMENT_DRIVER=pesapal` + keys, run `pesapal:register-ipn`, set `NEXT_PUBLIC_ONLINE_PAYMENTS=true`. Verify with `/admin/payments`. Sandbox-test, then go live.
-2. **Confirm coffee retail prices** → enter in `/admin/products`, then flip the coffee shop on (one flag) — Pesapal checkout already wired.
+1. ~~**Live payment gateway**~~ ✅ **Built (Flutterwave)** — now an **activation** task, not a build: set `PAYMENT_DRIVER=flutterwave` + keys, generate a webhook secret hash in the Flutterwave dashboard and set `FLUTTERWAVE_SECRET_HASH`, set `NEXT_PUBLIC_ONLINE_PAYMENTS=true`. Verify with `/admin/payments` or `php artisan flutterwave:status`. Sandbox-test, then go live.
+2. **Confirm coffee retail prices** → enter in `/admin/products`, then flip the coffee shop on (one flag) — Flutterwave checkout already wired.
 
 **Operations setup (not code)**
 3. Set **executive-report recipients** in `/admin/settings`.

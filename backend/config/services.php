@@ -47,31 +47,27 @@ return [
         'fallback_eur_per_usd' => env('EXCHANGE_RATE_FALLBACK_EUR', 0.92),
     ],
 
+    // Flutterwave — Uganda cards + MTN/Airtel mobile money, and USD cards. Set
+    // PAYMENT_DRIVER=flutterwave (config/payments.php) to make it the live gateway.
+    // Sandbox vs live is determined by which keys you were issued (test keys are
+    // prefixed FLWSECK_TEST-/FLWPUBK_TEST-), not a separate env setting.
+    // The webhook secret hash is generated in the Flutterwave dashboard
+    // (Settings → Webhooks) — there is no registration API call to run.
     'flutterwave' => [
-        'public_key'      => env('FLUTTERWAVE_PUBLIC_KEY'),
-        'secret_key'      => env('FLUTTERWAVE_SECRET_KEY'),
-        'encryption_key'  => env('FLUTTERWAVE_ENCRYPTION_KEY'),
+        'public_key'     => env('FLUTTERWAVE_PUBLIC_KEY'),
+        'secret_key'     => env('FLUTTERWAVE_SECRET_KEY'),
+        'encryption_key' => env('FLUTTERWAVE_ENCRYPTION_KEY'),
+        'secret_hash'    => env('FLUTTERWAVE_SECRET_HASH'),
+        // Public site origin only; the gateway appends each payable's own return
+        // path (/order/{ref}, /invoice/{token}, …). Falls back to the existing
+        // FRONTEND_URL, so prod usually needs no extra var.
+        'frontend_url'   => env('FLUTTERWAVE_FRONTEND_URL', env('FRONTEND_URL', 'http://localhost:3000')),
     ],
 
     'paypal' => [
         'client_id'     => env('PAYPAL_CLIENT_ID'),
         'client_secret' => env('PAYPAL_CLIENT_SECRET'),
         'mode'          => env('PAYPAL_MODE', 'sandbox'),
-    ],
-
-    // Pesapal (API 3.0) — Uganda local cards + MTN/Airtel mobile money. Set
-    // PAYMENT_DRIVER=pesapal (config/payments.php) to make it the live gateway.
-    // After deploying, run `php artisan pesapal:register-ipn` once — it stores the
-    // IPN id in Settings, so PESAPAL_IPN_ID below is an optional fallback only.
-    'pesapal' => [
-        'consumer_key'    => env('PESAPAL_CONSUMER_KEY'),
-        'consumer_secret' => env('PESAPAL_CONSUMER_SECRET'),
-        'env'             => env('PESAPAL_ENV', 'sandbox'),   // sandbox | live
-        'ipn_id'          => env('PESAPAL_IPN_ID'),
-        // Public site origin only; the gateway appends each payable's own return
-        // path (/pay/return for orders, /invoice/{token} for invoices). Falls
-        // back to the existing FRONTEND_URL, so prod usually needs no extra var.
-        'frontend_url'    => env('PESAPAL_FRONTEND_URL', env('FRONTEND_URL', 'http://localhost:3000')),
     ],
 
     // Cloudflare Turnstile — free, privacy-friendly bot protection on the public

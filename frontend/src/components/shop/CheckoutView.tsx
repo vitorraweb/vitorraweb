@@ -87,7 +87,7 @@ export default function CheckoutView() {
       });
       setReference(order.reference);
 
-      // With a live gateway, hand off to Pesapal (cards + MTN/Airtel). The
+      // With a live gateway, hand off to Flutterwave (cards + MTN/Airtel). The
       // customer returns to the order page (/order/{ref}), which confirms payment.
       // Falls back to the offline "order received" screen when unavailable.
       if (ONLINE_PAYMENTS_ENABLED) {

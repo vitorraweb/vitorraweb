@@ -7,9 +7,9 @@ import { ArrowRight, Check, Clock, Loader2, ShieldCheck, XCircle } from "lucide-
 import { getPaymentStatus, payOrder } from "@/lib/api";
 
 /* ─── Payment return / confirmation ───────────────────────────────────────────
-   Where Pesapal sends the customer back after the hosted checkout. Mobile-money
-   approvals are async, so we actively poll the backend (which reconciles with
-   Pesapal) for a short window rather than trusting the redirect alone:
+   Where Flutterwave sends the customer back after the hosted checkout. Mobile-
+   money approvals are async, so we actively poll the backend (which reconciles
+   with Flutterwave) for a short window rather than trusting the redirect alone:
      • checking → spinner while we confirm
      • paid     → receipt + what-happens-next
      • pending  → not confirmed yet (still processing, or abandoned) → retry / refresh
@@ -63,7 +63,7 @@ export default function PaymentReturn({ reference }: { reference: string | null 
     };
   }, [poll]);
 
-  /** Re-open the Pesapal hosted page for the same order. */
+  /** Re-open the Flutterwave hosted page for the same order. */
   const tryAgain = async () => {
     if (!reference || retrying) return;
     setRetrying(true);

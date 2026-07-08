@@ -105,8 +105,8 @@ class AccountController extends Controller
         $paid = (int) $plan->payments->whereNotNull('paid_at')->sum('amount');
 
         // Customers can pay a part online only when a live gateway is configured
-        // and the plan currency is one Pesapal settles (UGX/USD).
-        $onlineEnabled = config('payments.driver') === 'pesapal'
+        // and the plan currency is one Flutterwave settles (UGX/USD).
+        $onlineEnabled = config('payments.driver') === 'flutterwave'
             && in_array($order->currency, ['UGX', 'USD'], true);
 
         return [
@@ -208,7 +208,7 @@ class AccountController extends Controller
 
     /* ── Pay an installment online (B2B pay-in-parts) ──────────────────────── */
 
-    /** Start a Pesapal payment for one due installment of the customer's order. */
+    /** Start a Flutterwave payment for one due installment of the customer's order. */
     public function payInstallmentOnline(Request $request, PaymentGateway $gateway, InstallmentPayment $installment): JsonResponse
     {
         $this->authorizeInstallment($request, $installment);
@@ -218,7 +218,7 @@ class AccountController extends Controller
         }
 
         $order = $installment->plan->order;
-        if (config('payments.driver') !== 'pesapal' || ! in_array($order->currency, ['UGX', 'USD'], true)) {
+        if (config('payments.driver') !== 'flutterwave' || ! in_array($order->currency, ['UGX', 'USD'], true)) {
             return response()->json(['message' => 'Online payment isn’t available for this plan. Please pay another way.'], 422);
         }
 

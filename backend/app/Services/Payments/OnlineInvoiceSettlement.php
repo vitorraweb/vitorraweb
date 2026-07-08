@@ -78,7 +78,7 @@ class OnlineInvoiceSettlement
             $invoice->update([
                 'amount_paid'    => $paid,
                 'status'         => $paid >= $invoice->total ? 'paid' : 'partial',
-                'payment_method' => 'pesapal',
+                'payment_method' => 'flutterwave',
             ]);
 
             Audit::log(

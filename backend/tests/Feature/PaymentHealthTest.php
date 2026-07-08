@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -22,35 +21,43 @@ class PaymentHealthTest extends TestCase
     public function test_health_reports_not_live_by_default(): void
     {
         config()->set('payments.driver', 'manual');
-        config()->set('services.pesapal', ['consumer_key' => null, 'consumer_secret' => null, 'env' => 'sandbox', 'ipn_id' => null]);
+        config()->set('services.flutterwave', ['public_key' => null, 'secret_key' => null, 'secret_hash' => null]);
 
         $this->withHeaders($this->adminHeaders())->getJson('/api/admin/payments/health')
             ->assertOk()
             ->assertJsonPath('data.online_enabled', false)
             ->assertJsonPath('data.keys_present', false)
-            ->assertJsonPath('data.ipn_registered', false);
+            ->assertJsonPath('data.webhook_secret_set', false);
     }
 
     public function test_health_reports_live_when_configured(): void
     {
-        config()->set('payments.driver', 'pesapal');
-        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'live', 'ipn_id' => null]);
-        Setting::put(['pesapal_ipn_id' => 'IPN-1']);
+        config()->set('payments.driver', 'flutterwave');
+        config()->set('services.flutterwave', ['public_key' => 'FLWPUBK-pk', 'secret_key' => 'FLWSECK-sk', 'secret_hash' => 'hash123']);
 
         $this->withHeaders($this->adminHeaders())->getJson('/api/admin/payments/health')
             ->assertOk()
             ->assertJsonPath('data.online_enabled', true)
             ->assertJsonPath('data.keys_present', true)
             ->assertJsonPath('data.environment', 'live')
-            ->assertJsonPath('data.ipn_registered', true);
+            ->assertJsonPath('data.webhook_secret_set', true);
+    }
+
+    public function test_health_reports_sandbox_for_test_keys(): void
+    {
+        config()->set('payments.driver', 'flutterwave');
+        config()->set('services.flutterwave', ['public_key' => 'FLWPUBK_TEST-pk', 'secret_key' => 'FLWSECK_TEST-sk', 'secret_hash' => 'hash123']);
+
+        $this->withHeaders($this->adminHeaders())->getJson('/api/admin/payments/health')
+            ->assertOk()
+            ->assertJsonPath('data.environment', 'sandbox');
     }
 
     public function test_connection_test_passes_when_fully_configured(): void
     {
-        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox', 'frontend_url' => 'https://vitorra.org', 'ipn_id' => 'IPN-1']);
+        config()->set('services.flutterwave', ['secret_key' => 'FLWSECK-sk', 'secret_hash' => 'hash123', 'frontend_url' => 'https://vitorra.org']);
         Http::fake([
-            '*/Auth/RequestToken' => Http::response(['token' => 'tok']),
-            '*/Transactions/SubmitOrderRequest' => Http::response(['order_tracking_id' => 'T', 'redirect_url' => 'https://pay/T', 'status' => '200']),
+            '*/v3/payments' => Http::response(['status' => 'success', 'data' => ['link' => 'https://checkout.flutterwave.com/pay/T']]),
         ]);
 
         $this->withHeaders($this->adminHeaders())->postJson('/api/admin/payments/health/test')
@@ -60,7 +67,16 @@ class PaymentHealthTest extends TestCase
 
     public function test_connection_test_flags_missing_return_url(): void
     {
-        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox', 'frontend_url' => 'http://localhost:3000']);
+        config()->set('services.flutterwave', ['secret_key' => 'FLWSECK-sk', 'secret_hash' => 'hash123', 'frontend_url' => 'http://localhost:3000']);
+
+        $this->withHeaders($this->adminHeaders())->postJson('/api/admin/payments/health/test')
+            ->assertOk()
+            ->assertJsonPath('data.ok', false);
+    }
+
+    public function test_connection_test_flags_missing_webhook_secret(): void
+    {
+        config()->set('services.flutterwave', ['secret_key' => 'FLWSECK-sk', 'secret_hash' => null, 'frontend_url' => 'https://vitorra.org']);
 
         $this->withHeaders($this->adminHeaders())->postJson('/api/admin/payments/health/test')
             ->assertOk()
@@ -69,18 +85,8 @@ class PaymentHealthTest extends TestCase
 
     public function test_connection_test_reports_bad_keys(): void
     {
-        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox', 'frontend_url' => 'https://vitorra.org', 'ipn_id' => 'IPN-1']);
-        Http::fake(['*/Auth/RequestToken' => Http::response(['error' => ['message' => 'invalid_consumer_key']], 401)]);
-
-        $this->withHeaders($this->adminHeaders())->postJson('/api/admin/payments/health/test')
-            ->assertOk()
-            ->assertJsonPath('data.ok', false);
-    }
-
-    public function test_connection_test_flags_missing_ipn(): void
-    {
-        config()->set('services.pesapal', ['consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox', 'frontend_url' => 'https://vitorra.org', 'ipn_id' => null]);
-        Http::fake(['*/Auth/RequestToken' => Http::response(['token' => 'tok'])]);
+        config()->set('services.flutterwave', ['secret_key' => 'FLWSECK-bad', 'secret_hash' => 'hash123', 'frontend_url' => 'https://vitorra.org']);
+        Http::fake(['*/v3/payments' => Http::response(['message' => 'Invalid authorization key'], 401)]);
 
         $this->withHeaders($this->adminHeaders())->postJson('/api/admin/payments/health/test')
             ->assertOk()

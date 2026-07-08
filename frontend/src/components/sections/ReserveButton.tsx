@@ -69,7 +69,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
   const [order, setOrder] = useState<Order | null>(null);
   const router = useRouter();
 
-  // Whether to offer paying online (Pesapal). When off, this stays the original
+  // Whether to offer paying online (Flutterwave). When off, this stays the original
   // "reserve, pay offline" flow, byte-for-byte.
   const online = ONLINE_PAYMENTS_ENABLED;
 
@@ -129,7 +129,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
 
       if (payNow && online) {
         // Hand off to the order payment page, which shows the summary + a Pay
-        // button and handles the Pesapal redirect (with a clear retry if needed).
+        // button and handles the Flutterwave redirect (with a clear retry if needed).
         setStatus("redirecting");
         router.push(`/order/${order.reference}`);
         return;

@@ -30,7 +30,7 @@ class ReservationConfirmation extends Mailable
         // For online reservations, link straight to the order's payment page.
         $payUrl = null;
         if ($this->online) {
-            $origin = rtrim((string) config('services.pesapal.frontend_url'), '/');
+            $origin = rtrim((string) config('services.flutterwave.frontend_url'), '/');
             $payUrl = $origin.'/order/'.$this->order->reference;
         }
 

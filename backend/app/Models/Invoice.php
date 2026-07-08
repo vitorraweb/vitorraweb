@@ -13,7 +13,7 @@ class Invoice extends Model implements Payable
 {
     public const STATUSES = ['draft', 'sent', 'partial', 'paid', 'void'];
 
-    /** Pesapal settles UGX/USD for a Ugandan merchant — EUR invoices stay offline. */
+    /** Flutterwave settles UGX/USD for a Ugandan merchant — EUR invoices stay offline. */
     public const ONLINE_PAYABLE_CURRENCIES = ['UGX', 'USD'];
 
     protected $fillable = [

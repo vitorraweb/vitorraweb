@@ -132,7 +132,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders',                          [AccountController::class, 'orders']);
         Route::get('/orders/{reference}',              [AccountController::class, 'order']);
         Route::patch('/orders/{reference}/installation', [AccountController::class, 'updateInstallation']);
-        // Pay a due installment online (Pesapal) + reconcile after returning.
+        // Pay a due installment online (Flutterwave) + reconcile after returning.
         Route::post('/installments/{installment}/pay-online',  [AccountController::class, 'payInstallmentOnline']);
         Route::get('/orders/{reference}/installment-status',   [AccountController::class, 'installmentStatus']);
         Route::get('/enquiries',                       [AccountController::class, 'enquiries']);
@@ -352,7 +352,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('role:admin')->group(function () {
             Route::get('/settings',  [SettingsController::class, 'index']);
             Route::put('/settings',  [SettingsController::class, 'update']);
-            // Online-payments (Pesapal) health: is the gateway live?
+            // Online-payments (Flutterwave) health: is the gateway live?
             Route::get('/payments/health',       [PaymentHealthController::class, 'show']);
             Route::post('/payments/health/test', [PaymentHealthController::class, 'test']);
             // Audit trail (read-only) — sensitive-action history.

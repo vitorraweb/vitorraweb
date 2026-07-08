@@ -7,10 +7,9 @@ use App\Models\InstallmentPayment;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\DocumentService;
-use App\Services\Payments\PesapalGateway;
+use App\Services\Payments\FlutterwaveGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -19,19 +18,21 @@ class InstallmentPayOnlineTest extends TestCase
     use RefreshDatabase;
 
     private array $config = [
-        'consumer_key' => 'ck', 'consumer_secret' => 'cs', 'env' => 'sandbox',
-        'ipn_id' => 'IPN-EXISTING', 'frontend_url' => 'https://vitorra.org',
+        'public_key' => 'FLWPUBK_TEST-pk', 'secret_key' => 'FLWSECK_TEST-sk',
+        'secret_hash' => 'test-secret-hash', 'frontend_url' => 'https://vitorra.org',
     ];
 
-    protected function setUp(): void
+    private function gateway(): FlutterwaveGateway
     {
-        parent::setUp();
-        Cache::flush();
+        return new FlutterwaveGateway($this->config);
     }
 
-    private function gateway(): PesapalGateway
+    private function webhookRequest(array $data): Request
     {
-        return new PesapalGateway($this->config);
+        $request = Request::create('/api/payments/webhook/flutterwave', 'POST', ['event' => 'charge.completed', 'data' => $data]);
+        $request->headers->set('verif-hash', $this->config['secret_hash']);
+
+        return $request;
     }
 
     /** @return array{0:Order, 1:InstallmentPayment[]} order with a 3×30,000 plan */
@@ -53,15 +54,15 @@ class InstallmentPayOnlineTest extends TestCase
     public function test_webhook_settles_one_installment_and_marks_order_partial(): void
     {
         Http::fake([
-            '*/Auth/RequestToken' => Http::response(['token' => 'tok']),
-            '*/Transactions/GetTransactionStatus*' => Http::response(['status_code' => 1]),
+            '*/transactions/verify_by_reference*' => Http::response([
+                'status' => 'success',
+                'data'   => ['status' => 'successful', 'amount' => 30000, 'currency' => 'UGX'],
+            ]),
         ]);
         [$order, $payments] = $this->scenario();
         $payments[0]->update(['payment_reference' => 'TRK-1']);
 
-        $request = Request::create('/api/payments/webhook/pesapal', 'GET', [
-            'OrderTrackingId' => 'TRK-1', 'OrderMerchantReference' => $payments[0]->payableReference(),
-        ]);
+        $request = $this->webhookRequest(['tx_ref' => 'TRK-1', 'meta' => ['payable_reference' => $payments[0]->payableReference()]]);
         $this->gateway()->handleWebhook($request);
 
         $this->assertNotNull($payments[0]->fresh()->paid_at);
@@ -84,15 +85,15 @@ class InstallmentPayOnlineTest extends TestCase
     public function test_settlement_is_idempotent(): void
     {
         Http::fake([
-            '*/Auth/RequestToken' => Http::response(['token' => 'tok']),
-            '*/Transactions/GetTransactionStatus*' => Http::response(['status_code' => 1]),
+            '*/transactions/verify_by_reference*' => Http::response([
+                'status' => 'success',
+                'data'   => ['status' => 'successful', 'amount' => 30000, 'currency' => 'UGX'],
+            ]),
         ]);
         [$order, $payments] = $this->scenario();
         $payments[0]->update(['payment_reference' => 'TRK-1']);
 
-        $request = Request::create('/api/payments/webhook/pesapal', 'GET', [
-            'OrderTrackingId' => 'TRK-1', 'OrderMerchantReference' => $payments[0]->payableReference(),
-        ]);
+        $request = $this->webhookRequest(['tx_ref' => 'TRK-1', 'meta' => ['payable_reference' => $payments[0]->payableReference()]]);
         $this->gateway()->handleWebhook($request);
         $paidAt = $payments[0]->fresh()->paid_at;
         $this->gateway()->handleWebhook($request); // duplicate
@@ -103,12 +104,9 @@ class InstallmentPayOnlineTest extends TestCase
 
     public function test_customer_can_initiate_online_installment_payment(): void
     {
-        config()->set('payments.driver', 'pesapal');
+        config()->set('payments.driver', 'flutterwave');
         Http::fake([
-            '*/Auth/RequestToken' => Http::response(['token' => 'tok']),
-            '*/Transactions/SubmitOrderRequest' => Http::response([
-                'order_tracking_id' => 'TRK-INST', 'redirect_url' => 'https://cybqa.pesapal.com/pay/TRK-INST', 'status' => '200',
-            ]),
+            '*/v3/payments' => Http::response(['status' => 'success', 'data' => ['link' => 'https://checkout.flutterwave.com/pay/TRK-INST']]),
         ]);
         $this->app->singleton(PaymentGateway::class, fn () => $this->gateway());
 
@@ -121,12 +119,12 @@ class InstallmentPayOnlineTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', 'redirect');
 
-        $this->assertSame('TRK-INST', $payments[0]->fresh()->payment_reference);
+        $this->assertStringStartsWith($payments[0]->payableReference().'-', $payments[0]->fresh()->payment_reference);
     }
 
     public function test_customer_cannot_pay_another_customers_installment(): void
     {
-        config()->set('payments.driver', 'pesapal');
+        config()->set('payments.driver', 'flutterwave');
         $this->app->singleton(PaymentGateway::class, fn () => $this->gateway());
 
         [, $payments] = $this->scenario('owner@v.org');

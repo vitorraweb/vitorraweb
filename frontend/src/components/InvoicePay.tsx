@@ -13,8 +13,8 @@ import {
 
 /* ─── B2B invoice — view & pay online ─────────────────────────────────────────
    Reached from the tokenized link in the invoice email. Shows the invoice and,
-   when it's payable online (UGX/USD, still owing), a Pesapal "Pay now" button.
-   After returning from Pesapal (?paid=1) it polls the backend (which reconciles
+   when it's payable online (UGX/USD, still owing), a Flutterwave "Pay now" button.
+   After returning from Flutterwave (?paid=1) it polls the backend (which reconciles
    with the provider) until the payment confirms.                              */
 
 function formatMoney(amount: number, currency: string): string {
@@ -41,7 +41,7 @@ export default function InvoicePay({ token, justPaid }: { token: string; justPai
     else setPhase("view");
   }, []);
 
-  /** Poll the backend (which reconciles with Pesapal) after a return. */
+  /** Poll the backend (which reconciles with Flutterwave) after a return. */
   const poll = useCallback(async () => {
     cancelled.current = false;
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -67,7 +67,7 @@ export default function InvoicePay({ token, justPaid }: { token: string; justPai
     getPublicInvoice(token)
       .then((inv) => {
         if (cancelled.current) return;
-        // Returning from Pesapal but not yet marked paid → confirm in the background.
+        // Returning from Flutterwave but not yet marked paid → confirm in the background.
         if (justPaid && inv.status !== "paid" && inv.status !== "void") {
           setInvoice(inv);
           setPhase("confirming");

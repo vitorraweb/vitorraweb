@@ -18,8 +18,8 @@ export async function generateMetadata({
 export default async function PaymentReturnPage({
   searchParams,
 }: {
-  // Pesapal appends OrderTrackingId/OrderMerchantReference; we drive off `reference`
-  // (added to the callback URL by the gateway).
+  // We drive off `reference` (added to the callback URL by the gateway) —
+  // gateway-agnostic, so this page doesn't need to know which provider sent us here.
   searchParams: Promise<{ reference?: string }>;
 }) {
   const { reference } = await searchParams;

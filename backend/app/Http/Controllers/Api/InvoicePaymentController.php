@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 /**
  * Public, token-gated "view & pay your invoice" flow. The link lives in the
  * invoice email; no login needed. Online payment is offered only for UGX/USD
- * invoices that are still owing (Pesapal can't settle EUR).
+ * invoices that are still owing (Flutterwave can't settle EUR).
  */
 class InvoicePaymentController extends Controller
 {
@@ -24,7 +24,7 @@ class InvoicePaymentController extends Controller
         return response()->json(['data' => $this->shape($invoice)]);
     }
 
-    /** Start an online payment for this invoice → returns a Pesapal redirect URL. */
+    /** Start an online payment for this invoice → returns a Flutterwave redirect URL. */
     public function pay(string $token): JsonResponse
     {
         $invoice = Invoice::where('public_token', $token)->firstOrFail();
@@ -41,7 +41,7 @@ class InvoicePaymentController extends Controller
 
         $result = $this->gateway->initiate($invoice);
 
-        // Only a redirect means online payment actually started (e.g. driver=pesapal);
+        // Only a redirect means online payment actually started (e.g. driver=flutterwave);
         // the manual driver returns "pending" — treat that as unavailable here.
         if (($result['status'] ?? null) !== 'redirect') {
             return response()->json([

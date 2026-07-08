@@ -9,10 +9,11 @@ return [
     |
     | The gateway used to take payment. Until a provider account is live this
     | stays "manual" — orders are placed and the team confirms payment offline.
-    | Supported: manual | pesapal (live). Scaffolded: flutterwave | paypal | stripe.
+    | Supported: manual | flutterwave (live). Scaffolded: paypal | stripe.
     |
-    | "pesapal" is the live Uganda gateway (cards + MTN/Airtel mobile money) —
-    | set its keys in config/services.php and run `php artisan pesapal:register-ipn`.
+    | "flutterwave" is the live gateway (UGX cards + MTN/Airtel mobile money,
+    | plus USD cards) — set its keys in config/services.php, generate a webhook
+    | secret hash in the Flutterwave dashboard, and set FLUTTERWAVE_SECRET_HASH.
     |
     */
 
@@ -23,8 +24,9 @@ return [
     | Currencies
     |--------------------------------------------------------------------------
     |
-    | UGX is settled by Flutterwave (cards + MTN/Airtel mobile money); USD by
-    | PayPal. Provider credentials live in config/services.php.
+    | Flutterwave settles both UGX (cards + MTN/Airtel mobile money) and USD
+    | (cards). EUR invoices/orders stay offline. Credentials live in
+    | config/services.php.
     |
     */
 

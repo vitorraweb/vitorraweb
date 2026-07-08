@@ -32,8 +32,8 @@ class InvoiceMail extends Mailable
         // Offer a pay-online link only when a live gateway is configured and the
         // invoice can actually be paid online (UGX/USD, still owing).
         $payUrl = null;
-        if (config('payments.driver') === 'pesapal' && $this->invoice->isOnlinePayable()) {
-            $origin = rtrim((string) config('services.pesapal.frontend_url'), '/');
+        if (config('payments.driver') === 'flutterwave' && $this->invoice->isOnlinePayable()) {
+            $origin = rtrim((string) config('services.flutterwave.frontend_url'), '/');
             $payUrl = $origin.'/invoice/'.$this->invoice->ensurePublicToken();
         }
 

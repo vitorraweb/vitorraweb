@@ -15,11 +15,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Resolve the active payment gateway from config. Add real providers
-        // (Flutterwave / PayPal / Stripe) as new match arms once accounts exist.
+        // (PayPal / Stripe) as new match arms once accounts exist.
         $this->app->singleton(PaymentGateway::class, function () {
             return match (config('payments.driver')) {
-                'pesapal'     => new \App\Services\Payments\PesapalGateway(config('services.pesapal')),
-                // 'flutterwave' => new \App\Services\Payments\FlutterwaveGateway(config('services.flutterwave')),
+                'flutterwave' => new \App\Services\Payments\FlutterwaveGateway(config('services.flutterwave')),
                 // 'paypal'      => new \App\Services\Payments\PaypalGateway(config('services.paypal')),
                 default => new ManualGateway(),
             };

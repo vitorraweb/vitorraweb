@@ -12,7 +12,7 @@ type Health = {
   online_enabled: boolean;
   keys_present: boolean;
   environment: string;
-  ipn_registered: boolean;
+  webhook_secret_set: boolean;
 };
 
 export default function PaymentsHealthPage() {
@@ -44,16 +44,16 @@ export default function PaymentsHealthPage() {
 
   // Everything that must be true for customers to actually pay online.
   const checks = [
-    { ok: health.online_enabled, label: "Online payments switched on", detail: health.online_enabled ? "The gateway is set to Pesapal." : `Currently “${health.driver}” — orders are confirmed offline. Set PAYMENT_DRIVER=pesapal.` },
-    { ok: health.keys_present, label: "Pesapal account connected", detail: health.keys_present ? "API keys are configured." : "Add PESAPAL_CONSUMER_KEY and PESAPAL_CONSUMER_SECRET." },
-    { ok: health.ipn_registered, label: "Payment notifications registered", detail: health.ipn_registered ? "Pesapal can notify us when a payment completes." : "Run: php artisan pesapal:register-ipn" },
+    { ok: health.online_enabled, label: "Online payments switched on", detail: health.online_enabled ? "The gateway is set to Flutterwave." : `Currently “${health.driver}” — orders are confirmed offline. Set PAYMENT_DRIVER=flutterwave.` },
+    { ok: health.keys_present, label: "Flutterwave account connected", detail: health.keys_present ? "API keys are configured." : "Add FLUTTERWAVE_PUBLIC_KEY and FLUTTERWAVE_SECRET_KEY." },
+    { ok: health.webhook_secret_set, label: "Payment notifications configured", detail: health.webhook_secret_set ? "Flutterwave can notify us when a payment completes." : "Generate a webhook secret hash in the Flutterwave dashboard (Settings → Webhooks) and set FLUTTERWAVE_SECRET_HASH." },
     { ok: ONLINE_PAYMENTS_ENABLED, label: "Pay buttons shown to customers", detail: ONLINE_PAYMENTS_ENABLED ? "The website is offering online payment." : "Set NEXT_PUBLIC_ONLINE_PAYMENTS=true on the website." },
   ];
   const live = checks.every((c) => c.ok);
 
   return (
     <div className="max-w-2xl">
-      <PageHeader title="Payments" subtitle="Whether customers can pay online (card + MTN/Airtel mobile money via Pesapal)." />
+      <PageHeader title="Payments" subtitle="Whether customers can pay online (card + MTN/Airtel mobile money via Flutterwave)." />
 
       {/* Headline verdict */}
       <div className="rounded-2xl p-5 mb-6 flex items-start gap-3" style={live
@@ -93,7 +93,7 @@ export default function PaymentsHealthPage() {
           <div>
             <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>Connection test</p>
             <p className="text-xs mt-0.5" style={{ color: "#777" }}>
-              Mode: <strong style={{ color: "#1E1E1E" }}>{health.environment === "live" ? "Live" : "Sandbox (testing)"}</strong> · runs a real test payment request and reports exactly what Pesapal says (the test order is never charged).
+              Mode: <strong style={{ color: "#1E1E1E" }}>{health.environment === "live" ? "Live" : "Sandbox (testing)"}</strong> · runs a real test payment request and reports exactly what Flutterwave says (the test link is never charged).
             </p>
           </div>
           <button

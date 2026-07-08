@@ -12,14 +12,14 @@
    left intact, nothing is deleted.                                          */
 export const COFFEE_SHOP_ENABLED = false;
 
-/* ONLINE_PAYMENTS_ENABLED — whether to offer "pay online" (Pesapal: cards +
+/* ONLINE_PAYMENTS_ENABLED — whether to offer "pay online" (Flutterwave: cards +
    MTN/Airtel mobile money) anywhere a customer can be charged (FET reservations
    now; coffee checkout / invoices / installments as they come online).
-   Driven by an env var so it can be switched the day the live Pesapal account is
-   ready, without a code change — set NEXT_PUBLIC_ONLINE_PAYMENTS=true on Vercel.
+   Driven by an env var so it can be switched the day the live Flutterwave account
+   is ready, without a code change — set NEXT_PUBLIC_ONLINE_PAYMENTS=true on Vercel.
    While off: FET reservations stay "reserve, pay offline" exactly as before, and
-   no payment buttons appear. The backend PAYMENT_DRIVER must be set to "pesapal"
-   in tandem (this flag only controls what the customer is offered).            */
+   no payment buttons appear. The backend PAYMENT_DRIVER must be set to
+   "flutterwave" in tandem (this flag only controls what the customer is offered). */
 export const ONLINE_PAYMENTS_ENABLED = process.env.NEXT_PUBLIC_ONLINE_PAYMENTS === "true";
 
 /* TURNSTILE_SITE_KEY — Cloudflare Turnstile site key for the public-form bot
