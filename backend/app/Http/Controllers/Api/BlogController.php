@@ -34,9 +34,15 @@ class BlogController extends Controller
 
         // Overlay the requested locale (with English fallback) and keep the list
         // response shape clean (no raw content / translation rows leaking out).
+        // `author` is flattened from the loaded relation to a plain name string —
+        // the public site (unlike /admin) only ever shows a byline, and renders
+        // it directly as text, which crashes if it receives the {id, name} object.
         $posts->getCollection()->transform(function (BlogPost $post) use ($locale) {
-            return $post->applyLocale($locale)
-                ->makeHidden(['content', 'translations']);
+            $post->applyLocale($locale)->makeHidden(['content', 'translations']);
+
+            $authorName = $post->author?->name;
+
+            return $post->unsetRelation('author')->setAttribute('author', $authorName);
         });
 
         return response()->json([
@@ -67,6 +73,10 @@ class BlogController extends Controller
         $post->applyLocale($locale);
         $post->append('content_html');
         $post->makeHidden(['content', 'translations']);
+
+        // Flatten author to a plain name string — see index() for why.
+        $authorName = $post->author?->name;
+        $post->unsetRelation('author')->setAttribute('author', $authorName);
 
         return response()->json(['data' => $post]);
     }
