@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
+use App\Support\FrontendRevalidator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -44,6 +45,7 @@ class BlogAdminController extends Controller
 
         $post = BlogPost::create($data);
         $this->syncTranslations($post, $translations);
+        FrontendRevalidator::blogPosts([$post->slug]);
 
         return response()->json(['data' => $post->load('translations')], 201);
     }
@@ -53,6 +55,8 @@ class BlogAdminController extends Controller
         $data = $this->validateData($request);
         $translations = $data['translations'] ?? null;
         unset($data['translations']);
+
+        $oldSlug = $post->slug;
 
         if (! empty($data['slug'])) {
             $data['slug'] = $this->uniqueSlug($data['slug'], $post->id);
@@ -67,12 +71,19 @@ class BlogAdminController extends Controller
             $this->syncTranslations($post, $translations);
         }
 
+        // Both slugs matter if it changed — the old URL needs to stop serving
+        // stale content too, not just the new one start serving fresh content.
+        FrontendRevalidator::blogPosts([$oldSlug, $post->slug]);
+
         return response()->json(['data' => $post->fresh()->load('translations')]);
     }
 
     public function destroy(BlogPost $post): JsonResponse
     {
+        $slug = $post->slug;
         $post->delete();
+        FrontendRevalidator::blogPosts([$slug]);
+
         return response()->json(['message' => 'Post deleted.']);
     }
 

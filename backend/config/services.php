@@ -18,6 +18,16 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
+    // On-demand cache busting on the Next.js frontend — tells it to drop its
+    // cached copy of a blog page immediately after publish/edit/delete, instead
+    // of waiting up to 30 minutes for the ISR revalidate window to expire.
+    // See App\Support\FrontendRevalidator. Unconfigured (no secret) = no-op;
+    // the frontend cache still self-heals on its own schedule either way.
+    'frontend' => [
+        'revalidate_url'    => env('FRONTEND_REVALIDATE_URL', rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/').'/api/revalidate'),
+        'revalidate_secret' => env('FRONTEND_REVALIDATE_SECRET'),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
