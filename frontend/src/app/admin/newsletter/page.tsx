@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Send, Users, Clock, ChevronLeft, ChevronRight, Mail } from "lucide-react";
+import { Loader2, Send, Users, Clock, ChevronLeft, ChevronRight, ChevronDown, Mail } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { PageHeader, Empty, formatDate } from "@/components/admin/admin-ui";
+
+type Template = { id: number; name: string; subject: string; body: string; category: string | null };
 
 type Subscriber = {
   id: number; email: string; status: string; source: string | null;
@@ -149,11 +151,22 @@ function ComposeBroadcast({ onSent }: { onSent: () => void }) {
   const [sending, setSending] = useState(false);
   const [error, setError]     = useState("");
   const [preview, setPreview] = useState(false);
+  const [templates, setTemplates]         = useState<Template[]>([]);
+  const [templateOpen, setTemplateOpen]   = useState(false);
 
   useEffect(() => {
     apiAdmin<{ data: unknown[]; total: number }>("/admin/newsletter/subscribers?status=subscribed&per_page=1")
       .then((r) => setCount(r.total ?? null)).catch(() => {});
+    // Same reply-templates library used on the Customers page — one set of
+    // templates, reusable wherever staff compose an email.
+    apiAdmin<Template[]>("/admin/templates").then((r) => setTemplates(Array.isArray(r) ? r : [])).catch(() => {});
   }, []);
+
+  const applyTemplate = (t: Template) => {
+    setSubject(t.subject);
+    setBody(t.body);
+    setTemplateOpen(false);
+  };
 
   const send = async () => {
     if (!subject.trim() || !body.trim()) { setError("Subject and body are required."); return; }
@@ -188,6 +201,30 @@ function ComposeBroadcast({ onSent }: { onSent: () => void }) {
       )}
 
       <div className="space-y-4">
+        {/* Template picker — same library as the Customers reply composer */}
+        {templates.length > 0 && (
+          <div className="relative w-fit">
+            <button onClick={() => setTemplateOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
+              style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", color: "#555" }}>
+              Use template <ChevronDown className={`w-3 h-3 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
+            </button>
+            {templateOpen && (
+              <div className="absolute left-0 top-full mt-1 z-20 rounded-xl border shadow-lg overflow-hidden w-72"
+                style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
+                {templates.map((t) => (
+                  <button key={t.id} onClick={() => applyTemplate(t)}
+                    className="w-full text-left px-3.5 py-2.5 hover:bg-black/[0.03] transition-colors border-b last:border-0"
+                    style={{ borderColor: "rgba(0,0,0,0.05)" }}>
+                    <p className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>{t.name}</p>
+                    <p className="text-[11px] truncate" style={{ color: "#999" }}>{t.subject}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <div>
           <label className="text-xs font-bold uppercase tracking-[0.08em] mb-1.5 block" style={{ color: "#999" }}>Subject line</label>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. New update from Vitorra Holdings"
