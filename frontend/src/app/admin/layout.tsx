@@ -8,6 +8,7 @@ import { LayoutDashboard, MessageSquare, ShoppingCart, Mail, Users, Contact, Fil
 import { auth, apiAdmin, canAccess } from "@/lib/auth";
 import type { AdminUser } from "@/lib/auth";
 import { UserMenu } from "@/components/admin/admin-ui";
+import { NotificationBell } from "@/components/admin/NotificationBell";
 
 type NavItem = { label: string; href: string; icon: typeof LayoutDashboard; module?: string; adminOnly?: boolean };
 type NavGroup = { label: string; items: NavItem[] };
@@ -319,7 +320,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </h1>
             </div>
           </div>
-          <UserMenu user={user} onLogout={logout} />
+          <div className="flex items-center gap-1.5">
+            <NotificationBell />
+            <UserMenu user={user} onLogout={logout} />
+          </div>
         </header>
         <main className="p-6 md:p-8">{children}</main>
       </div>

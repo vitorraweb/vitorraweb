@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\ExecutiveController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\MonthlyReportController;
 use App\Http\Controllers\Api\NewsletterController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\PaymentController;
@@ -131,6 +132,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/auth/sessions/{id}',          [AuthController::class, 'revokeSession']);
     Route::post('/auth/sessions/revoke-others',   [AuthController::class, 'revokeOtherSessions']);
 
+    // In-portal notification bar — works the same from admin or staff, since
+    // both authenticate the same underlying user account.
+    Route::get('/notifications',              [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read',   [NotificationController::class, 'markRead']);
+    Route::post('/notifications/read-all',    [NotificationController::class, 'markAllRead']);
+
     /*
     |----------------------------------------------------------------------
     | Customer self-service portal (any authenticated user)
@@ -196,6 +203,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Operational modules — each gated by the staff member's permissions.
         Route::middleware('perm:enquiries')->group(function () {
             Route::get('/enquiries',                    [AdminController::class, 'enquiries']);
+            Route::get('/enquiries/assignable-users',   [AdminController::class, 'assignableUsers']);
             Route::get('/enquiries/export',             [AdminController::class, 'exportEnquiries']);
             Route::patch('/enquiries/{enquiry}',        [AdminController::class, 'updateEnquiry']);
             Route::post('/enquiries/{enquiry}/convert', [AdminController::class, 'convertEnquiryToOrder']);

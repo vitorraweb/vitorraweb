@@ -12,9 +12,11 @@ type Requirement = { key: string; label: string; value: string };
 type Enquiry = {
   id: number; product_category: string | null; name: string; email: string;
   company: string | null; phone: string | null; country: string; message: string;
-  requirements: Requirement[] | null; assigned_to: string | null;
+  requirements: Requirement[] | null; assigned_to: string | null; assigned_user_id: number | null;
   status: string; created_at: string;
 };
+
+type AssignableUser = { id: number; name: string };
 
 const STATUSES = ["new", "in_progress", "quoted", "converted", "closed"];
 const CATEGORIES = ["FET", "SEAL", "COFFEE", "LOGISTICS"];
@@ -45,18 +47,24 @@ function defaultConvertForm(e: Enquiry): ConvertForm {
   };
 }
 
-/* Reassignment targets. Teams mirror the auto-routing in backend/config/enquiries.php;
-   people are the staff who handle enquiries day-to-day. `assigned_to` is a free
-   string, so this list can grow without any schema change. */
+/* Reassignment targets. Teams mirror the auto-routing in backend/config/enquiries.php
+   — `assigned_to` stays a free string for these, so this list can grow without a
+   schema change. People are fetched live from real staff accounts (not a
+   hardcoded list) so assigning one actually notifies a real, current account. */
 const TEAMS = ["Sales & Operations", "Medical Sales", "Marketing", "Operations", "General Enquiries"];
-const PEOPLE = ["Victor Lojum", "Thurayya Nakayima", "Joseph Rwabu", "Sarah Nuwamanya", "Nagawa Shakirah", "Daniel Tuke", "John Oluwaseyi"];
 
 export default function EnquiriesPage() {
   const [list, setList]       = useState<Enquiry[]>([]);
+  const [people, setPeople]   = useState<AssignableUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter]   = useState("");
   const [cat, setCat]         = useState("");
   const [open, setOpen]       = useState<number | null>(null);
+
+  useEffect(() => {
+    apiAdmin<{ data: AssignableUser[] }>("/admin/enquiries/assignable-users")
+      .then((r) => setPeople(r.data)).catch(() => {});
+  }, []);
 
   const [exporting, setExporting] = useState(false);
   const handleExport = async () => {
@@ -95,10 +103,15 @@ export default function EnquiriesPage() {
     catch { load(); }
   };
 
+  // A numeric value means a specific person (their user id); anything else is
+  // a team label (or empty = unassigned). Only the person path sets
+  // assigned_user_id, which is what actually triggers their notification.
   const assign = async (id: number, value: string) => {
-    const assigned_to = value || null;
-    setList((l) => l.map((e) => (e.id === id ? { ...e, assigned_to } : e)));
-    try { await apiAdmin(`/admin/enquiries/${id}`, { method: "PATCH", body: JSON.stringify({ assigned_to }) }); }
+    const person = /^\d+$/.test(value) ? people.find((p) => String(p.id) === value) : undefined;
+    const assigned_to = person ? person.name : (value || null);
+    const assigned_user_id = person ? person.id : null;
+    setList((l) => l.map((e) => (e.id === id ? { ...e, assigned_to, assigned_user_id } : e)));
+    try { await apiAdmin(`/admin/enquiries/${id}`, { method: "PATCH", body: JSON.stringify({ assigned_to, assigned_user_id }) }); }
     catch { load(); }
   };
 
@@ -225,20 +238,20 @@ export default function EnquiriesPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-xs font-semibold" style={{ color: "#777" }}>Assigned to:</span>
                     <select
-                      value={e.assigned_to ?? ""}
+                      value={e.assigned_user_id ? String(e.assigned_user_id) : (e.assigned_to ?? "")}
                       onChange={(ev) => assign(e.id, ev.target.value)}
                       className="text-xs rounded-full px-3 py-1.5 border outline-none cursor-pointer"
                       style={{ borderColor: "rgba(0,0,0,0.12)", background: "#FFFFFF", color: "#1E1E1E" }}
                     >
                       <option value="">— Unassigned —</option>
-                      {e.assigned_to && ![...TEAMS, ...PEOPLE].includes(e.assigned_to) && (
+                      {e.assigned_to && !e.assigned_user_id && !TEAMS.includes(e.assigned_to) && (
                         <option value={e.assigned_to}>{e.assigned_to}</option>
                       )}
                       <optgroup label="Teams">
                         {TEAMS.map((t) => <option key={t} value={t}>{t}</option>)}
                       </optgroup>
                       <optgroup label="People">
-                        {PEOPLE.map((p) => <option key={p} value={p}>{p}</option>)}
+                        {people.map((p) => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
                       </optgroup>
                     </select>
                   </div>

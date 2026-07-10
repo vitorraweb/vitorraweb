@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Enquiry extends Model
@@ -18,6 +19,7 @@ class Enquiry extends Model
         'requirements',
         'status',
         'assigned_to',
+        'assigned_user_id',
         'replied_at',
     ];
 
@@ -34,6 +36,12 @@ class Enquiry extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /** The specific staff member this enquiry is assigned to, if any (vs. just a team). */
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
     }
 
     public function documents(): HasMany

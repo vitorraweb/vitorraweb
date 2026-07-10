@@ -8,6 +8,8 @@ use App\Models\Enquiry;
 use App\Models\Order;
 use App\Models\Prospect;
 use App\Models\Task;
+use App\Models\User;
+use App\Notifications\EnquiryAssigned;
 use App\Services\DocumentService;
 use App\Services\PlausibleService;
 use Illuminate\Http\JsonResponse;
@@ -256,8 +258,9 @@ class AdminController extends Controller
     {
         // PATCH semantics — each field is updatable on its own (status OR assignee).
         $data = $request->validate([
-            'status'      => ['sometimes', 'required', 'in:new,in_progress,quoted,converted,closed'],
-            'assigned_to' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'status'           => ['sometimes', 'required', 'in:new,in_progress,quoted,converted,closed'],
+            'assigned_to'      => ['sometimes', 'nullable', 'string', 'max:255'],
+            'assigned_user_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
         ]);
 
         // Record first-response time the first time an enquiry moves off "new".
@@ -265,9 +268,28 @@ class AdminController extends Controller
             $data['replied_at'] = now();
         }
 
+        $previousAssignee = $enquiry->assigned_user_id;
         $enquiry->update($data);
 
+        // Notify only when newly assigned (or reassigned) to a specific person —
+        // not on every unrelated field update, and not when unassigning.
+        if (
+            array_key_exists('assigned_user_id', $data)
+            && $data['assigned_user_id']
+            && $data['assigned_user_id'] !== $previousAssignee
+        ) {
+            User::find($data['assigned_user_id'])?->notify(new EnquiryAssigned($enquiry));
+        }
+
         return response()->json(['data' => $enquiry]);
+    }
+
+    /** Staff who can be assigned an enquiry — for the reassignment dropdown. */
+    public function assignableUsers(): JsonResponse
+    {
+        return response()->json(['data' => User::whereIn('role', ['admin', 'ops'])
+            ->orderBy('name')
+            ->get(['id', 'name'])]);
     }
 
     /**
