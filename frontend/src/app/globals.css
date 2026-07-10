@@ -481,6 +481,16 @@
   .admin-nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 9999px; }
   .admin-nav-scroll:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.24); }
 
+  /* ── Always-visible horizontal scrollbar for light admin panels (e.g. the
+       Pipeline board) — macOS hides inactive scrollbars by default, so a wide
+       board can look "stuck" even though it's perfectly scrollable. A
+       permanently visible gold-tinted bar makes the affordance obvious. ──── */
+  .board-scroll-x { scrollbar-width: auto; scrollbar-color: rgba(197,178,122,0.45) #EDEBE6; padding-bottom: 6px; }
+  .board-scroll-x::-webkit-scrollbar { height: 10px; }
+  .board-scroll-x::-webkit-scrollbar-track { background: #EDEBE6; border-radius: 9999px; }
+  .board-scroll-x::-webkit-scrollbar-thumb { background: rgba(197,178,122,0.55); border-radius: 9999px; }
+  .board-scroll-x::-webkit-scrollbar-thumb:hover { background: rgba(197,178,122,0.8); }
+
   /* ── Team constellation ───────────────────────────────────────────────── */
   /* Alternating vertical offset (desktop only) to sit along the gold arc.   */
   @media (min-width: 1024px) {

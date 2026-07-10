@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\Prospect;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\PipelineContactAssigned;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -247,6 +248,7 @@ class CustomerController extends Controller
         ]);
 
         $email = mb_strtolower(trim($data['email']));
+        $previousOwnerId = CustomerNote::where('email', $email)->value('owner_id');
 
         CustomerNote::updateOrCreate(
             ['email' => $email],
@@ -256,6 +258,19 @@ class CustomerController extends Controller
                 'updated_by'     => $request->user()->name ?? null,
             ]
         );
+
+        // Notify only on an actual new assignment to someone — not a no-op
+        // reassignment to the same owner, and not on unassigning.
+        if (
+            ! empty($data['owner_id'])
+            && $data['owner_id'] !== $previousOwnerId
+        ) {
+            User::find($data['owner_id'])?->notify(new PipelineContactAssigned(
+                $data['name'] ?? $email,
+                $email,
+                $data['pipeline_stage'] ?? null,
+            ));
+        }
 
         // Moving a contact into a "follow-up" stage with an owner assigned
         // auto-creates a reminder task for that owner (deduped per contact).

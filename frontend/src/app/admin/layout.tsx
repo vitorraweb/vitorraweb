@@ -297,7 +297,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {open && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setOpen(false)} />}
 
       {/* Main */}
-      <div className="flex-1 lg:pl-64">
+      {/* min-w-0 overrides the flex default of min-width:auto — without it, a
+          wide child (e.g. the Pipeline board) stretches this whole container
+          past the viewport instead of being clipped/scrolled by its own
+          overflow-x-auto, which pushes the scrollbar to the page body. */}
+      <div className="flex-1 min-w-0 lg:pl-64">
         <header
           className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-6 h-16 border-b bg-white/80"
           style={{ backdropFilter: "blur(8px)", borderColor: "rgba(0,0,0,0.07)" }}

@@ -130,7 +130,7 @@ export default function PipelinePage() {
         <Empty label="No contacts yet." />
       ) : (
         <>
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          <div className="flex gap-4 overflow-x-auto pb-4 board-scroll-x">
             {activeStages.map((stage) => {
               const items = filtered.filter((c) => c.stage === stage);
               return (
@@ -184,7 +184,7 @@ export default function PipelinePage() {
             </button>
 
             {showLost && (
-              <div className="mt-3 flex gap-4 overflow-x-auto pb-2">
+              <div className="mt-3 flex gap-4 overflow-x-auto pb-2 board-scroll-x">
                 <div className="shrink-0 w-72 rounded-[18px] p-3" style={{ background: "#F8F7F5" }}>
                   <div className="space-y-2.5">
                     {lostContacts.map((c) => (

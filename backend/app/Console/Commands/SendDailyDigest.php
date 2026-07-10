@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Mail\DailyDigest;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\PipelineContactsGoingCold;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -39,6 +40,13 @@ class SendDailyDigest extends Command
             }
 
             Mail::to($user->email)->send(new DailyDigest($user, $overdue, $dueToday, $stale));
+
+            // Bar-only — the email above already covers this same list; a
+            // second "mail" channel here would double-send it.
+            if (! empty($stale)) {
+                $user->notify(new PipelineContactsGoingCold($stale));
+            }
+
             $sent++;
         }
 
