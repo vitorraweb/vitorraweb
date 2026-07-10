@@ -108,6 +108,14 @@ Route::middleware('throttle:8,1')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register']);
 });
 
+// Forgot/reset password — for someone locked out entirely (doesn't know their
+// current password, so /auth/password below isn't reachable). Throttled
+// separately and more tightly: each request triggers an email send.
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password',  [AuthController::class, 'resetPassword']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout',   [AuthController::class, 'logout']);
     Route::get('/auth/me',        [AuthController::class, 'me']);

@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Mail\PasswordResetMail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -61,6 +63,25 @@ class User extends Authenticatable
     public function hasTwoFactorEnabled(): bool
     {
         return ! is_null($this->two_factor_secret) && ! is_null($this->two_factor_confirmed_at);
+    }
+
+    /**
+     * Overrides Laravel's default (which links to a Blade route that doesn't
+     * exist in this API-only app) to email a link into the right frontend
+     * portal for this user's role, via the project's normal Mailable pattern.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $origin = rtrim((string) config('services.frontend.url'), '/');
+        $role   = strtolower((string) $this->role);
+        $path   = match (true) {
+            in_array($role, ['admin', 'ops'], true) => '/admin/reset-password',
+            $role === 'employee'                    => '/staff/reset-password',
+            default                                 => '/account/reset-password',
+        };
+        $url = $origin.$path.'?token='.$token.'&email='.urlencode($this->email);
+
+        Mail::to($this)->send(new PasswordResetMail($this, $url));
     }
 
     public function isAdmin(): bool { return $this->role === 'admin'; }

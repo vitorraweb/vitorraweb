@@ -10,6 +10,9 @@ import type { StaffUser } from "@/lib/staff-auth";
 
 type NavItem = { label: string; href: string; icon: typeof LayoutDashboard; supervisorOnly?: boolean };
 
+/* Routes reachable without a session — the guard below skips them entirely. */
+const PUBLIC_PATHS = ["/staff/login", "/staff/forgot-password", "/staff/reset-password"];
+
 const nav: NavItem[] = [
   { label: "Dashboard",          href: "/staff",           icon: LayoutDashboard },
   { label: "Leave",              href: "/staff/leave",     icon: CalendarDays },
@@ -29,7 +32,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     setMounted(true);
-    if (pathname === "/staff/login") return;
+    if (PUBLIC_PATHS.includes(pathname)) return;
     const u = staffAuth.getUser();
     if (!u) { router.push("/staff/login"); return; }
     if (!STAFF_ROLES.includes(u.role)) { staffAuth.clear(); router.push("/staff/login"); return; }
@@ -42,7 +45,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   }, [pathname, router]);
 
   useEffect(() => {
-    if (pathname === "/staff/login") return;
+    if (PUBLIC_PATHS.includes(pathname)) return;
     const id = setInterval(() => {
       if (staffAuth.isExpired()) { staffAuth.clear(); router.push("/staff/login?expired=1"); }
     }, 60_000);
@@ -56,7 +59,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   };
 
   if (!mounted) return null;
-  if (pathname === "/staff/login") return <>{children}</>;
+  if (PUBLIC_PATHS.includes(pathname)) return <>{children}</>;
   if (!user) return null;
 
   const visible = nav.filter((n) => !n.supervisorOnly || isSupervisor);

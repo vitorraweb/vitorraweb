@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
 import { auth, apiAdmin } from "@/lib/auth";
 import { authFetch } from "@/lib/http";
 
@@ -85,7 +86,10 @@ export default function AdminLoginPage() {
             <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@vitorra.org" className="h-11 rounded-xl px-3.5 focus-visible:ring-[#C5B27A]/30 focus-visible:border-[#C5B27A]" required />
           </div>
           <div>
-            <Label className="mb-2" style={{ color: "#1E1E1E" }}>Password</Label>
+            <div className="flex items-center justify-between mb-2">
+              <Label style={{ color: "#1E1E1E" }}>Password</Label>
+              <Link href="/admin/forgot-password" className="text-xs font-semibold" style={{ color: "#7A6020" }}>Forgot password?</Link>
+            </div>
             <div className="relative">
               <Input type={show ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="h-11 rounded-xl px-3.5 pr-10 focus-visible:ring-[#C5B27A]/30 focus-visible:border-[#C5B27A]" required />
               <button type="button" onClick={() => setShow(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">

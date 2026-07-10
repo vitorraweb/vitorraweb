@@ -12,6 +12,9 @@ import { UserMenu } from "@/components/admin/admin-ui";
 type NavItem = { label: string; href: string; icon: typeof LayoutDashboard; module?: string; adminOnly?: boolean };
 type NavGroup = { label: string; items: NavItem[] };
 
+/* Routes reachable without a session — the guard below skips them entirely. */
+const PUBLIC_PATHS = ["/admin/login", "/admin/forgot-password", "/admin/reset-password"];
+
 /* Navigation is grouped into business areas so a 24-item panel reads as a few
    short, scannable sections rather than one long list. Each item keeps its
    module/adminOnly access rule — groups with nothing visible to the current
@@ -103,7 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
-    if (pathname === "/admin/login") return;
+    if (PUBLIC_PATHS.includes(pathname)) return;
     const u = auth.getUser();
     if (!u) { router.push("/admin/login"); return; }
     // Session timeout (anti-hijacking): if the stored expiry has passed, sign
@@ -129,7 +132,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // While a tab is left open, watch the clock and sign out the moment the
   // session expires — don't wait for the next click or API call.
   useEffect(() => {
-    if (pathname === "/admin/login") return;
+    if (PUBLIC_PATHS.includes(pathname)) return;
     const id = setInterval(() => {
       if (auth.isExpired()) { auth.clear(); router.push("/admin/login?expired=1"); }
     }, 60_000);
@@ -161,7 +164,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   if (!mounted) return null;
-  if (pathname === "/admin/login") return <>{children}</>;
+  if (PUBLIC_PATHS.includes(pathname)) return <>{children}</>;
   if (!user) return null;
 
   const isActive = (href: string) =>

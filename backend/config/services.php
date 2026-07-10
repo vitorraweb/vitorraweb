@@ -24,6 +24,7 @@ return [
     // See App\Support\FrontendRevalidator. Unconfigured (no secret) = no-op;
     // the frontend cache still self-heals on its own schedule either way.
     'frontend' => [
+        'url'               => env('FRONTEND_URL', 'http://localhost:3000'),
         'revalidate_url'    => env('FRONTEND_REVALIDATE_URL', rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/').'/api/revalidate'),
         'revalidate_secret' => env('FRONTEND_REVALIDATE_SECRET'),
     ],

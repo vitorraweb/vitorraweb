@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password as PasswordBroker;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
@@ -190,6 +191,58 @@ class AuthController extends Controller
             ->delete();
 
         return response()->json(['message' => 'Password updated. Other sessions have been signed out.']);
+    }
+
+    /**
+     * Request a password reset link for someone locked out (doesn't know their
+     * current password, so changePassword() above isn't reachable). Always
+     * responds the same way whether or not the email matches an account, so
+     * this can't be used to discover which emails have accounts.
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate(['email' => ['required', 'email']]);
+
+        PasswordBroker::sendResetLink(['email' => $data['email']]);
+
+        return response()->json([
+            'message' => "If an account exists for that email, we've sent a password reset link.",
+        ]);
+    }
+
+    /**
+     * Complete a reset from the emailed link. Signs out every existing
+     * session on the account — same rationale as changePassword(): a reset
+     * usually means "I don't trust this password anymore," so nothing that
+     * signed in with the old one should stay signed in.
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email'    => ['required', 'email'],
+            'token'    => ['required', 'string'],
+            'password' => ['required', Password::defaults(), 'confirmed'],
+        ]);
+
+        $status = PasswordBroker::reset(
+            $data,
+            function (User $user, string $password) {
+                $user->forceFill(['password' => $password])->save();
+                $user->tokens()->delete();
+            }
+        );
+
+        if ($status !== PasswordBroker::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'email' => [match ($status) {
+                    PasswordBroker::INVALID_TOKEN    => 'This reset link is invalid or has already been used.',
+                    PasswordBroker::RESET_THROTTLED  => 'Please wait a moment before trying again.',
+                    default                          => 'This reset link has expired. Please request a new one.',
+                }],
+            ]);
+        }
+
+        return response()->json(['message' => 'Your password has been reset. You can now sign in.']);
     }
 
     /**
