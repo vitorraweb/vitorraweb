@@ -476,9 +476,14 @@ export default function CustomersPage() {
                               style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
 
                             {me?.email_signature && (
-                              <p className="text-[11px] italic whitespace-pre-line mt-1.5 px-1" style={{ color: "#aaa" }}>
-                                Signature: {me.email_signature}
-                              </p>
+                              <div className="mt-1.5 px-1">
+                                <p className="text-[10px] uppercase tracking-wide font-semibold mb-0.5" style={{ color: "#bbb" }}>Signature (appended automatically)</p>
+                                <div
+                                  className="text-[11px] [&_img]:max-w-[160px] [&_img]:h-auto"
+                                  style={{ color: "#999" }}
+                                  dangerouslySetInnerHTML={{ __html: me.email_signature }}
+                                />
+                              </div>
                             )}
 
                             {attachFiles.length > 0 && (

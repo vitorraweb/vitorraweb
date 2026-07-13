@@ -125,15 +125,22 @@ class AuthController extends Controller
      */
     public function updateSignature(Request $request): JsonResponse
     {
-        abort_unless($request->user()->isStaff(), 403);
+        $user = $request->user();
+        abort_unless($user->isStaff(), 403);
 
+        // Generous ceiling: pasted-from-Outlook HTML (with one inline logo,
+        // before image extraction shrinks it) can run well past a plain-text
+        // signature's length. 200KB of raw pasted markup is already a lot.
         $data = $request->validate([
-            'signature' => ['nullable', 'string', 'max:500'],
+            'signature' => ['nullable', 'string', 'max:200000'],
         ]);
 
-        $request->user()->update(['email_signature' => $data['signature'] ?? null]);
+        $signature = trim($data['signature'] ?? '');
+        $clean = $signature === '' ? null : \App\Support\SignatureHtml::process($signature, $user->id);
 
-        return response()->json(['data' => ['email_signature' => $request->user()->email_signature]]);
+        $user->update(['email_signature' => $clean]);
+
+        return response()->json(['data' => ['email_signature' => $user->email_signature]]);
     }
 
     /** List this account's active sessions (signed-in devices). */

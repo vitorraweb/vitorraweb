@@ -3,7 +3,7 @@ Hi {{ $toName }},
 {{ $body }}
 
 @if(!empty($signature))
-{{ $signature }}
+{!! $signature !!}
 @else
 — {{ $sender->name }}
 Vitorra Holdings

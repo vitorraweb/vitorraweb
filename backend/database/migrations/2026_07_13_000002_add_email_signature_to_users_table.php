@@ -9,7 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->text('email_signature')->nullable()->after('job_description');
+            // longText, not text: a pasted-from-Outlook signature can carry an
+            // embedded logo — MySQL's plain TEXT tops out at 64KB, which a
+            // signature with even one small inline image can exceed before
+            // App\Support\SignatureHtml extracts it out to a real file.
+            $table->longText('email_signature')->nullable()->after('job_description');
         });
     }
 
