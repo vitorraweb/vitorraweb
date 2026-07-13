@@ -18,6 +18,8 @@ export type AdminUser = {
   staff_status?: string | null;
   /** Operational modules this user may access (admins get all). */
   permissions?: string[];
+  /** Plain-text signature appended to outgoing replies sent from /admin/customers. */
+  email_signature?: string | null;
 };
 
 /** Whether a user may access a nav entry / module. Admins see everything. */

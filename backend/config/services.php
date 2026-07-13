@@ -29,8 +29,14 @@ return [
         'revalidate_secret' => env('FRONTEND_REVALIDATE_SECRET'),
     ],
 
+    // Inbound-email capture (Phase B of the shared inbox): lets a customer's
+    // reply to their own email client land back in the system instead of
+    // dead-ending in a staff member's personal mailbox. Default-off — set
+    // MAIL_INBOUND_CAPTURE_ENABLED=true (config/mail.php) once the reply
+    // subdomain's MX + this webhook secret are set up in the Resend dashboard.
     'resend' => [
-        'key' => env('RESEND_API_KEY'),
+        'key'                    => env('RESEND_API_KEY'),
+        'inbound_webhook_secret' => env('RESEND_INBOUND_WEBHOOK_SECRET'),
     ],
 
     'ses' => [

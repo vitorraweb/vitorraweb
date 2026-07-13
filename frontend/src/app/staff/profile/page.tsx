@@ -6,6 +6,7 @@ import { staffAuth, apiStaff } from "@/lib/staff-auth";
 import type { StaffUser } from "@/lib/staff-auth";
 import { TwoFactorPanel } from "@/components/TwoFactorPanel";
 import { SessionsPanel } from "@/components/SessionsPanel";
+import { EmailSignaturePanel } from "@/components/EmailSignaturePanel";
 
 export default function StaffProfilePage() {
   const [user, setUser]     = useState<StaffUser | null>(null);
@@ -108,6 +109,9 @@ export default function StaffProfilePage() {
           </div>
         </div>
       </form>
+
+      {/* Email signature */}
+      <EmailSignaturePanel api={apiStaff} />
 
       {/* Two-factor authentication */}
       <TwoFactorPanel api={apiStaff} />

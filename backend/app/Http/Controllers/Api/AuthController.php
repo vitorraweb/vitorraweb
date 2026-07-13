@@ -119,6 +119,23 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Self-service email signature (staff only — appended to outgoing replies
+     * sent from /admin/customers). Plain text, kept short and simple.
+     */
+    public function updateSignature(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->isStaff(), 403);
+
+        $data = $request->validate([
+            'signature' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $request->user()->update(['email_signature' => $data['signature'] ?? null]);
+
+        return response()->json(['data' => ['email_signature' => $request->user()->email_signature]]);
+    }
+
     /** List this account's active sessions (signed-in devices). */
     public function sessions(Request $request): JsonResponse
     {

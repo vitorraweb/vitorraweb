@@ -5,6 +5,7 @@ namespace App\Support;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -26,6 +27,16 @@ class SecureFile
         $plain = (string) file_get_contents($file->getRealPath());
 
         Storage::disk($disk)->put($path, self::MARKER.Crypt::encryptString($plain));
+
+        return $path;
+    }
+
+    /** Encrypt raw bytes (e.g. an inbound-email attachment) and store under $dir; returns the stored path. */
+    public static function storeContent(string $content, string $filename, string $dir, string $disk = 'local'): string
+    {
+        $path = trim($dir, '/').'/'.Str::random(32).'_'.$filename;
+
+        Storage::disk($disk)->put($path, self::MARKER.Crypt::encryptString($content));
 
         return $path;
     }

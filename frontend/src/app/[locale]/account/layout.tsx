@@ -5,14 +5,15 @@ import { useTranslations } from "next-intl";
 import { usePathname, useRouter, Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { customerAuth, type CustomerUser } from "@/lib/customer-auth";
-import { LayoutDashboard, ShoppingBag, MessageSquare, FileText, User, LogOut, Gauge } from "lucide-react";
+import { apiCustomer, customerAuth, type CustomerUser } from "@/lib/customer-auth";
+import { LayoutDashboard, ShoppingBag, MessageSquare, Inbox, FileText, User, LogOut, Gauge } from "lucide-react";
 
 const TAB_META = [
   { labelKey: "tabDashboard", href: "/account/dashboard", icon: LayoutDashboard },
   { labelKey: "tabOrders",    href: "/account/orders",    icon: ShoppingBag },
   { labelKey: "tabFet",       href: "/account/fet",       icon: Gauge },
   { labelKey: "tabEnquiries", href: "/account/enquiries", icon: MessageSquare },
+  { labelKey: "tabMessages",  href: "/account/messages",  icon: Inbox },
   { labelKey: "tabDocuments", href: "/account/documents", icon: FileText },
   { labelKey: "tabProfile",   href: "/account/profile",   icon: User },
 ];
@@ -24,6 +25,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const isAuthPage = pathname === "/account/login" || pathname === "/account/register";
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<CustomerUser | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     if (isAuthPage) { setReady(true); return; }
@@ -31,6 +33,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     if (!u) { router.push("/account/login"); return; }
     setUser(u);
     setReady(true);
+    apiCustomer<{ unread_count: number }>("/account/communications")
+      .then((r) => setUnreadMessages(r.unread_count))
+      .catch(() => {});
   }, [pathname, isAuthPage, router]);
 
   const logout = () => { customerAuth.clear(); router.push("/account/login"); };
@@ -69,12 +74,15 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                   <Link
                     key={tab.href}
                     href={tab.href}
-                    className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full transition-colors whitespace-nowrap"
+                    className="relative inline-flex shrink-0 items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full transition-colors whitespace-nowrap"
                     style={active
                       ? { background: "#C5B27A", color: "#1E1E1E" }
                       : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.1)" }}
                   >
                     <tab.icon className="w-4 h-4" />{t(tab.labelKey)}
+                    {tab.href === "/account/messages" && unreadMessages > 0 && (
+                      <span className="w-2 h-2 rounded-full" style={{ background: active ? "#1E1E1E" : "#C5B27A" }} />
+                    )}
                   </Link>
                 );
               })}

@@ -118,4 +118,13 @@ return [
     // Inbox that receives new enquiries and contact messages
     'team_address' => env('MAIL_TEAM_ADDRESS', 'support@vitorra.org'),
 
+    // Shared inbox, Phase B — capturing customer replies sent from their own
+    // email client (not the portal). Default-off: until this is true, staff
+    // replies keep reply-to = the sending staff member's own mailbox (today's
+    // behaviour), so nothing changes until DNS + the Resend webhook are set up.
+    // See RESEND_INBOUND_WEBHOOK_SECRET (config/services.php) and
+    // `php artisan inbound-email:status`.
+    'inbound_capture_enabled' => env('MAIL_INBOUND_CAPTURE_ENABLED', false),
+    'inbound_address'         => env('MAIL_INBOUND_ADDRESS', 'reply@reply.vitorra.org'),
+
 ];

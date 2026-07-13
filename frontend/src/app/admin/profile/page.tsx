@@ -7,6 +7,7 @@ import type { AdminUser } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/admin-ui";
 import { TwoFactorPanel } from "@/components/TwoFactorPanel";
 import { SessionsPanel } from "@/components/SessionsPanel";
+import { EmailSignaturePanel } from "@/components/EmailSignaturePanel";
 
 export default function AdminProfilePage() {
   const [user, setUser] = useState<AdminUser | null>(null);
@@ -132,6 +133,9 @@ export default function AdminProfilePage() {
           </div>
         </div>
       </form>
+
+      {/* Email signature */}
+      <EmailSignaturePanel api={apiAdmin} />
 
       {/* Two-factor authentication */}
       <TwoFactorPanel api={apiAdmin} />

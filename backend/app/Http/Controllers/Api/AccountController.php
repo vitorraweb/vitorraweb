@@ -4,16 +4,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Contracts\PaymentGateway;
 use App\Http\Controllers\Controller;
+use App\Models\Communication;
 use App\Models\Document;
 use App\Models\Enquiry;
 use App\Models\FetInstallation;
 use App\Models\InstallmentPayment;
 use App\Models\Order;
+use App\Notifications\CustomerReplied;
 use App\Rules\PhoneNumber;
 use App\Services\FetSavingsService;
+use App\Support\ContactOwner;
 use App\Support\Phone;
+use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Symfony\Component\HttpFoundation\Response;
 
 class AccountController extends Controller
@@ -151,6 +156,101 @@ class AccountController extends Controller
         return response()->json(['data' => Enquiry::whereRaw('lower(email) = ?', [$this->email($request)])
             ->latest()
             ->get(['id', 'product_category', 'message', 'requirements', 'status', 'created_at'])]);
+    }
+
+    /* ── Messages — the customer's reply thread with Vitorra staff ─────────── */
+
+    /** Every communication (staff reply or the customer's own reply) on this account's email. */
+    public function communications(Request $request): JsonResponse
+    {
+        $email = $this->email($request);
+
+        $items = Communication::whereRaw('lower(email) = ?', [$email])->orderBy('created_at')->get()
+            ->map(fn (Communication $c) => $this->shapeCommunication($c));
+
+        return response()->json([
+            'data'          => $items,
+            'unread_count'  => Communication::whereRaw('lower(email) = ?', [$email])
+                ->where('direction', 'outbound')->whereNull('customer_read_at')->count(),
+        ]);
+    }
+
+    /** The customer replies from their own account — no email infrastructure needed for this. */
+    public function sendCommunication(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'body'            => ['required', 'string', 'max:5000'],
+            'attachments.*'   => ['file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:8192'],
+        ]);
+
+        $email = $this->email($request);
+
+        $communication = Communication::create([
+            'email'     => $email,
+            'direction' => 'inbound',
+            'channel'   => 'portal',
+            'body'      => $data['body'],
+            'sent_by'   => null,
+        ]);
+
+        $communication->update(['attachments' => $this->storeAttachments($request, $email)]);
+
+        NotificationFacade::send(ContactOwner::resolve($email), new CustomerReplied($communication));
+
+        return response()->json(['data' => $this->shapeCommunication($communication)], 201);
+    }
+
+    /** Marks every staff reply on this account as read (clears the Messages tab's unread badge). */
+    public function markCommunicationsRead(Request $request): JsonResponse
+    {
+        Communication::whereRaw('lower(email) = ?', [$this->email($request)])
+            ->where('direction', 'outbound')->whereNull('customer_read_at')
+            ->update(['customer_read_at' => now()]);
+
+        return response()->json(['message' => 'Marked as read.']);
+    }
+
+    public function downloadCommunicationAttachment(Request $request, Communication $communication, int $index): Response
+    {
+        abort_unless(mb_strtolower(trim($communication->email)) === $this->email($request), 403);
+
+        $attachment = ($communication->attachments ?? [])[$index] ?? null;
+        abort_if($attachment === null, 404);
+
+        return SecureFile::download($attachment['path'], $attachment['name']);
+    }
+
+    /** @return array<int, array{name:string,size:int,mime:string}> */
+    private function storeAttachments(Request $request, string $email): array
+    {
+        $files = $request->file('attachments', []);
+        if (empty($files)) {
+            return [];
+        }
+
+        $dir = 'communications/'.sha1($email);
+
+        return collect($files)->map(fn ($file) => [
+            'name' => $file->getClientOriginalName(),
+            'path' => SecureFile::storeUpload($file, $dir),
+            'size' => $file->getSize(),
+            'mime' => $file->getClientMimeType(),
+        ])->values()->all();
+    }
+
+    private function shapeCommunication(Communication $c): array
+    {
+        return [
+            'id'         => $c->id,
+            'direction'  => $c->direction,
+            'channel'    => $c->channel,
+            'subject'    => $c->subject,
+            'body'       => $c->body,
+            'attachments' => collect($c->attachments ?? [])->map(fn ($a, $i) => [
+                'index' => $i, 'name' => $a['name'], 'size' => $a['size'],
+            ])->values()->all(),
+            'created_at' => $c->created_at,
+        ];
     }
 
     public function profile(Request $request): JsonResponse

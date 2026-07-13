@@ -43,6 +43,17 @@ export async function apiCustomer<T>(path: string, options?: RequestInit): Promi
   return res.json();
 }
 
+/* Multipart upload (e.g. a message attachment) — lets the browser set the Content-Type boundary. */
+export async function uploadCustomer<T>(path: string, form: FormData): Promise<T> {
+  const res = await authFetch(base(), path, customerAuth.getToken(), { method: "POST", body: form }, false);
+  if (res.status === 401) { customerAuth.clear(); window.location.href = "/account/login"; }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Upload failed" }));
+    throw new Error(err.message ?? "Upload failed");
+  }
+  return res.json();
+}
+
 /** Download a protected file (e.g. the FET savings certificate) as a browser download. */
 export async function downloadCustomerFile(path: string, filename: string): Promise<void> {
   const res = await authFetch(base(), path, customerAuth.getToken(), {}, false);

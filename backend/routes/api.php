@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\EnquiryController;
 use App\Http\Controllers\Api\FetInstallationController;
 use App\Http\Controllers\Api\HolidayController;
+use App\Http\Controllers\Api\InboundEmailController;
 use App\Http\Controllers\Api\InstallmentController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\JobAdminController;
@@ -90,6 +91,9 @@ Route::post('/orders/{reference}/pay',           [PaymentController::class, 'pay
 Route::get('/orders/{reference}/payment-status', [PaymentController::class, 'status']);
 Route::post('/payments/webhook/{provider}',      [PaymentController::class, 'webhook']);
 
+// Shared inbox, Phase B — inbound email capture (default-off; see config/mail.php).
+Route::post('/webhooks/email/inbound', [InboundEmailController::class, 'handle']);
+
 // Public, token-gated "view & pay your invoice" (link lives in the invoice email)
 Route::get('/invoices/pay/{token}',         [InvoicePaymentController::class, 'show']);
 Route::post('/invoices/pay/{token}',        [InvoicePaymentController::class, 'pay']);
@@ -121,6 +125,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout',   [AuthController::class, 'logout']);
     Route::get('/auth/me',        [AuthController::class, 'me']);
     Route::post('/auth/password', [AuthController::class, 'changePassword']);
+    Route::put('/auth/signature', [AuthController::class, 'updateSignature']);
 
     // Self-service app-based two-factor (enrol / confirm / disable).
     Route::post('/auth/2fa/setup',   [TwoFactorController::class, 'setup']);
@@ -151,6 +156,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/installments/{installment}/pay-online',  [AccountController::class, 'payInstallmentOnline']);
         Route::get('/orders/{reference}/installment-status',   [AccountController::class, 'installmentStatus']);
         Route::get('/enquiries',                       [AccountController::class, 'enquiries']);
+        // Messages — the customer's own reply thread with Vitorra staff.
+        Route::get('/communications',                  [AccountController::class, 'communications']);
+        Route::post('/communications',                 [AccountController::class, 'sendCommunication']);
+        Route::post('/communications/read-all',        [AccountController::class, 'markCommunicationsRead']);
+        Route::get('/communications/{communication}/attachments/{index}', [AccountController::class, 'downloadCommunicationAttachment']);
         // FET proven-savings: see your installations, log fill-ups, get a certificate.
         Route::get('/fet',                             [AccountController::class, 'fetInstallations']);
         Route::get('/fet/{reference}',                 [AccountController::class, 'fetInstallation']);
@@ -257,6 +267,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/customers/tags',               [CustomerController::class, 'updateTags']);
             Route::put('/customers/pipeline',           [CustomerController::class, 'updatePipeline']);
             Route::post('/communications',              [CustomerController::class, 'sendReply']);
+            Route::get('/communications/{communication}/attachments/{index}', [CustomerController::class, 'downloadCommunicationAttachment']);
             // Reply templates
             Route::get('/templates',                    [ReplyTemplateController::class, 'index']);
             Route::post('/templates',                   [ReplyTemplateController::class, 'store']);

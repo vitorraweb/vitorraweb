@@ -35,6 +35,7 @@ class User extends Authenticatable
         'permissions',
         'documents',
         'notes',
+        'email_signature',
     ];
 
     protected $hidden = [
@@ -155,7 +156,7 @@ class User extends Authenticatable
     public function toAuthArray(): array
     {
         return array_merge(
-            $this->only(['id', 'name', 'email', 'role', 'department', 'job_title', 'staff_status']),
+            $this->only(['id', 'name', 'email', 'role', 'department', 'job_title', 'staff_status', 'email_signature']),
             [
                 'permissions'        => $this->effectivePermissions(),
                 'two_factor_enabled' => $this->hasTwoFactorEnabled(),

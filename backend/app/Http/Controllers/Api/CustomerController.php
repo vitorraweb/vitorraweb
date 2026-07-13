@@ -13,11 +13,13 @@ use App\Models\Prospect;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\PipelineContactAssigned;
+use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class CustomerController extends Controller
 {
@@ -60,7 +62,7 @@ class CustomerController extends Controller
             'last_page'    => max(1, (int) ceil($total / $per)),
             'per_page'     => $per,
             'total'        => $total,
-            'assignees'    => User::whereIn('role', ['admin', 'ops'])->orderBy('name')->get(['id', 'name', 'department']),
+            'assignees'    => User::whereIn('role', ['admin', 'ops'])->orderBy('name')->get(['id', 'name', 'email', 'department']),
             'stages'       => CustomerNote::STAGES,
             'stage_labels' => CustomerNote::STAGE_LABELS,
         ]);
@@ -77,6 +79,11 @@ class CustomerController extends Controller
 
         $note = CustomerNote::with('owner:id,name')->where('email', $key)->first();
 
+        // Opening a contact's thread clears its "unread reply" indicator.
+        Communication::whereRaw('lower(email) = ?', [$key])
+            ->where('direction', 'inbound')->whereNull('staff_read_at')
+            ->update(['staff_read_at' => now()]);
+
         return response()->json(['data' => [
             'email'     => $email,
             'prospects' => Prospect::whereRaw('lower(email) = ?', [$key])->latest()
@@ -88,7 +95,13 @@ class CustomerController extends Controller
             'messages'  => ContactMessage::whereRaw('lower(email) = ?', [$key])->latest()
                 ->get(['id', 'subject', 'message', 'status', 'created_at']),
             'communications' => Communication::with('sender:id,name')->whereRaw('lower(email) = ?', [$key])->latest()
-                ->get(['id', 'email', 'subject', 'body', 'sent_by', 'created_at']),
+                ->get(['id', 'email', 'direction', 'channel', 'subject', 'body', 'cc', 'attachments', 'sent_by', 'created_at'])
+                ->map(fn (Communication $c) => [
+                    'id' => $c->id, 'email' => $c->email, 'direction' => $c->direction, 'channel' => $c->channel,
+                    'subject' => $c->subject, 'body' => $c->body, 'cc' => $c->cc, 'sender' => $c->sender,
+                    'attachments' => collect($c->attachments ?? [])->map(fn ($a, $i) => ['index' => $i, 'name' => $a['name'], 'size' => $a['size']])->values(),
+                    'created_at' => $c->created_at,
+                ]),
             'note'             => optional($note)->note,
             'pipeline_stage'   => optional($note)->pipeline_stage,
             'owner'            => optional($note)->owner,
@@ -207,34 +220,60 @@ class CustomerController extends Controller
     public function sendReply(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'email'        => ['required', 'email'],
-            'name'         => ['nullable', 'string', 'max:255'],
-            'subject'      => ['nullable', 'string', 'max:255'],
-            'body'         => ['required', 'string', 'max:5000'],
-            'related_type' => ['nullable', 'in:enquiry,message'],
-            'related_id'   => ['nullable', 'integer'],
+            'email'          => ['required', 'email'],
+            'name'           => ['nullable', 'string', 'max:255'],
+            'subject'        => ['nullable', 'string', 'max:255'],
+            'body'           => ['required', 'string', 'max:5000'],
+            'related_type'   => ['nullable', 'in:enquiry,message'],
+            'related_id'     => ['nullable', 'integer'],
+            'cc'             => ['nullable', 'array', 'max:5'],
+            'cc.*'           => ['email'],
+            'attachments.*'  => ['file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:8192'],
         ]);
 
         $email   = mb_strtolower(trim($data['email']));
         $subject = $data['subject'] ?? 'Re: your message to Vitorra';
         $toName  = $data['name'] ?? $email;
+        $cc      = array_values(array_unique(array_map('mb_strtolower', $data['cc'] ?? [])));
+
+        $files = $request->file('attachments', []);
+        $dir   = 'communications/'.sha1($email);
+        $attachments = collect($files)->map(fn ($file) => [
+            'name' => $file->getClientOriginalName(),
+            'path' => SecureFile::storeUpload($file, $dir),
+            'size' => $file->getSize(),
+            'mime' => $file->getClientMimeType(),
+        ])->values()->all();
 
         $communication = Communication::create([
             'email'        => $email,
+            'direction'    => 'outbound',
+            'channel'      => 'email',
             'subject'      => $subject,
             'body'         => $data['body'],
+            'cc'           => $cc ?: null,
+            'attachments'  => $attachments ?: null,
             'sent_by'      => $request->user()->id,
             'related_type' => $data['related_type'] ?? null,
             'related_id'   => $data['related_id'] ?? null,
         ]);
 
-        Mail::to($email)->send(new StaffReply($toName, $subject, $data['body'], $request->user()));
+        Mail::to($email)->send(new StaffReply($toName, $subject, $data['body'], $request->user(), $cc, $attachments));
 
         if (($data['related_type'] ?? null) === 'enquiry' && ! empty($data['related_id'])) {
             Enquiry::where('id', $data['related_id'])->whereNull('replied_at')->update(['replied_at' => now()]);
         }
 
         return response()->json(['data' => $communication->load('sender:id,name')]);
+    }
+
+    /** Download an attachment on a reply (admin/ops only, no per-contact ownership check needed). */
+    public function downloadCommunicationAttachment(Communication $communication, int $index): HttpResponse
+    {
+        $attachment = ($communication->attachments ?? [])[$index] ?? null;
+        abort_if($attachment === null, 404);
+
+        return SecureFile::download($attachment['path'], $attachment['name']);
     }
 
     /** Set the pipeline owner and/or stage override for a contact. */
@@ -381,7 +420,11 @@ class CustomerController extends Controller
 
         $notes = CustomerNote::with('owner:id,name')->get()->keyBy('email');
 
+        $unreadEmails = Communication::where('direction', 'inbound')->whereNull('staff_read_at')
+            ->pluck('email')->map(fn ($e) => mb_strtolower(trim($e)))->unique();
+
         foreach ($map as $key => &$contact) {
+            $contact['has_unread'] = $unreadEmails->contains($key);
             // Staff overrides win over any source-record values.
             $note = $notes->get($key);
             if ($note) {

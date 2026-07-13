@@ -1,22 +1,27 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Loader2, ChevronDown, Mail, Phone, Building2, MapPin, StickyNote,
   MessageSquare, ShoppingCart, FileText, ChevronLeft, ChevronRight,
-  Save, Send, Pencil, X, Download, Plus, Tag,
+  Save, Send, Pencil, X, Download, Plus, Tag, Paperclip, Users, Circle,
 } from "lucide-react";
-import { apiAdmin, downloadCsv } from "@/lib/auth";
+import { apiAdmin, downloadCsv, downloadFile, uploadAdmin, auth } from "@/lib/auth";
 import { PageHeader, Empty, formatDate } from "@/components/admin/admin-ui";
 
 type Contact = {
   email: string; name: string; company: string | null; phone: string | null; country: string | null;
   enquiries: number; orders: number; messages: number; first_seen: string; last_activity: string; has_note: boolean;
+  has_unread: boolean;
   tags: string[];
 };
+type Attachment = { index: number; name: string; size: number };
 type Communication = {
-  id: number; subject: string | null; body: string; sender: { id: number; name: string } | null; created_at: string;
+  id: number; direction: "inbound" | "outbound"; channel: "email" | "portal";
+  subject: string | null; body: string; cc: string[] | null; attachments: Attachment[];
+  sender: { id: number; name: string } | null; created_at: string;
 };
+type Assignee = { id: number; name: string; email: string; department: string | null };
 type Detail = {
   email: string;
   enquiries: { id: number; product_category: string | null; message: string; status: string; assigned_to: string | null; created_at: string }[];
@@ -31,7 +36,10 @@ type Detail = {
   tags: string[];
 };
 type Template = { id: number; name: string; subject: string; body: string; category: string | null };
-type ThreadItem = { key: string; direction: "in" | "out"; label: string; text: string; date: string; sender?: string };
+type ThreadItem = {
+  key: string; direction: "in" | "out"; label: string; text: string; date: string; sender?: string;
+  channel?: "email" | "portal"; communicationId?: number; attachments?: Attachment[];
+};
 
 const money = (currency: string, total: number) =>
   currency === "USD"
@@ -49,6 +57,8 @@ export default function CustomersPage() {
   const [detail, setDetail]   = useState<Detail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [assignees, setAssignees] = useState<Assignee[]>([]);
+  const me = auth.getUser();
 
   // Note
   const [note, setNote]           = useState("");
@@ -59,6 +69,10 @@ export default function CustomersPage() {
   const [replyBody, setReplyBody]       = useState("");
   const [sendingReply, setSendingReply] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [ccList, setCcList]             = useState<string[]>([]);
+  const [ccPickerOpen, setCcPickerOpen] = useState(false);
+  const [attachFiles, setAttachFiles]   = useState<File[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   // Edit info
   const [editingInfo, setEditingInfo]   = useState(false);
@@ -76,11 +90,12 @@ export default function CustomersPage() {
       const params = new URLSearchParams();
       if (appliedQ) params.set("q", appliedQ);
       params.set("page", String(page));
-      const res = await apiAdmin<{ data: Contact[]; current_page: number; last_page: number; total: number }>(
+      const res = await apiAdmin<{ data: Contact[]; current_page: number; last_page: number; total: number; assignees: Assignee[] }>(
         `/admin/customers?${params.toString()}`
       );
       setList(res.data);
       setMeta({ current_page: res.current_page, last_page: res.last_page, total: res.total });
+      setAssignees(res.assignees ?? []);
     } catch { setList([]); }
     finally { setLoading(false); }
   }, [appliedQ, page]);
@@ -98,6 +113,8 @@ export default function CustomersPage() {
     if (open === email) { setOpen(null); return; }
     setOpen(email); setDetail(null); setDetailLoading(true);
     setReplySubject(""); setReplyBody(""); setEditingInfo(false); setTagInput("");
+    setCcList([]); setAttachFiles([]); setCcPickerOpen(false);
+    setList((l) => l.map((c) => (c.email.toLowerCase() === email.toLowerCase() ? { ...c, has_unread: false } : c)));
     try {
       const res = await apiAdmin<{ data: Detail }>(`/admin/customers/detail?email=${encodeURIComponent(email)}`);
       setDetail(res.data);
@@ -190,14 +207,24 @@ export default function CustomersPage() {
     if (!replyBody.trim()) return;
     setSendingReply(true);
     try {
-      const res = await apiAdmin<{ data: Communication }>("/admin/communications", {
-        method: "POST",
-        body: JSON.stringify({ email, name, subject: replySubject.trim() || undefined, body: replyBody.trim() }),
-      });
+      const form = new FormData();
+      form.append("email", email);
+      if (name) form.append("name", name);
+      if (replySubject.trim()) form.append("subject", replySubject.trim());
+      form.append("body", replyBody.trim());
+      ccList.forEach((c) => form.append("cc[]", c));
+      attachFiles.forEach((f) => form.append("attachments[]", f));
+
+      const res = await uploadAdmin<{ data: Communication }>("/admin/communications", form);
       setDetail((d) => (d ? { ...d, communications: [res.data, ...d.communications] } : d));
-      setReplySubject(""); setReplyBody("");
+      setReplySubject(""); setReplyBody(""); setCcList([]); setAttachFiles([]);
+      if (fileRef.current) fileRef.current.value = "";
     } catch { /* ignore */ }
     finally { setSendingReply(false); }
+  };
+
+  const toggleCc = (email: string) => {
+    setCcList((l) => (l.includes(email) ? l.filter((e) => e !== email) : [...l, email]));
   };
 
   return (
@@ -232,6 +259,7 @@ export default function CustomersPage() {
                 <button onClick={() => expand(c.email)} className="w-full flex items-center gap-3 p-4 text-left">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      {c.has_unread && <Circle className="w-2 h-2 shrink-0" style={{ fill: "#C5B27A", color: "#C5B27A" }} />}
                       <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{c.name || c.email}</span>
                       {c.company && <span className="text-[11px]" style={{ color: "#999" }}>· {c.company}</span>}
                       {c.has_note && <StickyNote className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />}
@@ -340,7 +368,13 @@ export default function CustomersPage() {
                             const thread: ThreadItem[] = [
                               ...detail.enquiries.map((e) => ({ key: `e${e.id}`, direction: "in" as const, label: e.product_category ?? "Enquiry", text: e.message, date: e.created_at })),
                               ...detail.messages.map((m)  => ({ key: `m${m.id}`, direction: "in" as const, label: m.subject || "Message",  text: m.message, date: m.created_at })),
-                              ...detail.communications.map((cm) => ({ key: `c${cm.id}`, direction: "out" as const, label: cm.subject || "Reply", text: cm.body, date: cm.created_at, sender: cm.sender?.name })),
+                              ...detail.communications.map((cm) => ({
+                                key: `c${cm.id}`,
+                                direction: cm.direction === "outbound" ? "out" as const : "in" as const,
+                                label: cm.subject || (cm.direction === "outbound" ? "Reply" : "Customer reply"),
+                                text: cm.body, date: cm.created_at, sender: cm.sender?.name,
+                                channel: cm.channel, communicationId: cm.id, attachments: cm.attachments,
+                              })),
                             ].sort((a, b) => a.date.localeCompare(b.date));
 
                             return thread.length > 0 ? (
@@ -354,29 +388,84 @@ export default function CustomersPage() {
 
                           {/* Reply composer */}
                           <div className="rounded-xl border p-3" style={{ borderColor: "rgba(0,0,0,0.08)", background: "#F8F7F5" }}>
-                            {/* Template picker */}
-                            {templates.length > 0 && (
-                              <div className="relative mb-2">
-                                <button onClick={() => setTemplateOpen((o) => !o)}
+                            {/* Sending-as identity strip */}
+                            {me && (
+                              <div className="flex items-center gap-2 mb-2.5">
+                                <span className="flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold shrink-0"
+                                  style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                                  {me.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}
+                                </span>
+                                <span className="text-[11px]" style={{ color: "#999" }}>Sending as <strong style={{ color: "#555" }}>{me.name}</strong></span>
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                              {/* Template picker */}
+                              {templates.length > 0 && (
+                                <div className="relative">
+                                  <button onClick={() => setTemplateOpen((o) => !o)}
+                                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
+                                    style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", color: "#555" }}>
+                                    Use template <ChevronDown className={`w-3 h-3 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
+                                  </button>
+                                  {templateOpen && (
+                                    <div className="absolute left-0 top-full mt-1 z-20 rounded-xl border shadow-lg overflow-hidden w-72"
+                                      style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
+                                      {templates.map((t) => (
+                                        <button key={t.id} onClick={() => applyTemplate(t)}
+                                          className="w-full text-left px-3.5 py-2.5 hover:bg-black/[0.03] transition-colors border-b last:border-0"
+                                          style={{ borderColor: "rgba(0,0,0,0.05)" }}>
+                                          <p className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>{t.name}</p>
+                                          <p className="text-[11px] truncate" style={{ color: "#999" }}>{t.subject}</p>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* CC picker */}
+                              <div className="relative">
+                                <button onClick={() => setCcPickerOpen((o) => !o)}
                                   className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                                   style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", color: "#555" }}>
-                                  Use template <ChevronDown className={`w-3 h-3 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
+                                  <Users className="w-3 h-3" />CC{ccList.length > 0 ? ` (${ccList.length})` : ""}
+                                  <ChevronDown className={`w-3 h-3 transition-transform ${ccPickerOpen ? "rotate-180" : ""}`} />
                                 </button>
-                                {templateOpen && (
-                                  <div className="absolute left-0 top-full mt-1 z-20 rounded-xl border shadow-lg overflow-hidden w-72"
+                                {ccPickerOpen && (
+                                  <div className="absolute left-0 top-full mt-1 z-20 rounded-xl border shadow-lg overflow-hidden w-64"
                                     style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
-                                    {templates.map((t) => (
-                                      <button key={t.id} onClick={() => applyTemplate(t)}
-                                        className="w-full text-left px-3.5 py-2.5 hover:bg-black/[0.03] transition-colors border-b last:border-0"
+                                    <button onClick={() => toggleCc("support@vitorra.org")}
+                                      className="w-full flex items-center justify-between text-left px-3.5 py-2 hover:bg-black/[0.03] transition-colors border-b"
+                                      style={{ borderColor: "rgba(0,0,0,0.05)" }}>
+                                      <span className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>Support inbox</span>
+                                      {ccList.includes("support@vitorra.org") && <span style={{ color: "#C5B27A" }}>✓</span>}
+                                    </button>
+                                    {assignees.filter((a) => a.email).map((a) => (
+                                      <button key={a.id} onClick={() => toggleCc(a.email)}
+                                        className="w-full flex items-center justify-between text-left px-3.5 py-2 hover:bg-black/[0.03] transition-colors border-b last:border-0"
                                         style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-                                        <p className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>{t.name}</p>
-                                        <p className="text-[11px] truncate" style={{ color: "#999" }}>{t.subject}</p>
+                                        <span className="text-xs" style={{ color: "#1E1E1E" }}>{a.name}</span>
+                                        {ccList.includes(a.email) && <span style={{ color: "#C5B27A" }}>✓</span>}
                                       </button>
                                     ))}
                                   </div>
                                 )}
                               </div>
+                            </div>
+
+                            {ccList.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mb-2">
+                                {ccList.map((cc) => (
+                                  <span key={cc} className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
+                                    style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
+                                    {cc}
+                                    <button onClick={() => toggleCc(cc)}><X className="w-2.5 h-2.5" /></button>
+                                  </span>
+                                ))}
+                              </div>
                             )}
+
                             <input value={replySubject} onChange={(e) => setReplySubject(e.target.value)}
                               placeholder="Subject (optional)"
                               className="w-full text-sm rounded-lg px-3 py-1.5 border mb-2 outline-none"
@@ -385,11 +474,39 @@ export default function CustomersPage() {
                               placeholder={`Reply to ${c.name || c.email}…`}
                               className="w-full text-sm rounded-lg px-3 py-2 border min-h-20 outline-none"
                               style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
-                            <button onClick={() => sendReply(c.email, c.name)} disabled={sendingReply || !replyBody.trim()}
-                              className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold px-3.5 py-1.5 rounded-full disabled:opacity-50"
-                              style={{ background: "#C5B27A", color: "#1E1E1E" }}>
-                              {sendingReply ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}Send reply
-                            </button>
+
+                            {me?.email_signature && (
+                              <p className="text-[11px] italic whitespace-pre-line mt-1.5 px-1" style={{ color: "#aaa" }}>
+                                Signature: {me.email_signature}
+                              </p>
+                            )}
+
+                            {attachFiles.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {attachFiles.map((f, i) => (
+                                  <span key={i} className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
+                                    style={{ background: "rgba(0,0,0,0.04)", color: "#555" }}>
+                                    <Paperclip className="w-2.5 h-2.5" />{f.name}
+                                    <button onClick={() => setAttachFiles((fs) => fs.filter((_, idx) => idx !== i))}><X className="w-2.5 h-2.5" /></button>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between mt-2">
+                              <input ref={fileRef} type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="hidden"
+                                onChange={(e) => setAttachFiles((fs) => [...fs, ...Array.from(e.target.files ?? [])])} />
+                              <button onClick={() => fileRef.current?.click()}
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
+                                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", color: "#555" }}>
+                                <Paperclip className="w-3.5 h-3.5" />Attach
+                              </button>
+                              <button onClick={() => sendReply(c.email, c.name)} disabled={sendingReply || !replyBody.trim()}
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full disabled:opacity-50"
+                                style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                                {sendingReply ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}Send reply
+                              </button>
+                            </div>
                           </div>
                         </div>
 
@@ -461,8 +578,25 @@ function ThreadBubble({ item }: { item: ThreadItem }) {
         <span className="text-[11px]" style={{ color: "#999" }}>
           {isOut ? `Reply${item.sender ? ` · ${item.sender}` : ""}` : "Received"} · {formatDate(item.date)}
         </span>
+        {item.channel && (
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.05)", color: "#999" }}>
+            {item.channel === "portal" ? "via portal" : "via email"}
+          </span>
+        )}
       </div>
       {item.text && <p className="text-xs whitespace-pre-line" style={{ color: "#555" }}>{item.text}</p>}
+      {item.attachments && item.attachments.length > 0 && item.communicationId && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {item.attachments.map((a) => (
+            <button key={a.index}
+              onClick={() => downloadFile(`/admin/communications/${item.communicationId}/attachments/${a.index}`, a.name)}
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
+              style={{ background: "#fff", color: "#7A6020", border: "1px solid rgba(197,178,122,0.3)" }}>
+              <Paperclip className="w-2.5 h-2.5" />{a.name}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
