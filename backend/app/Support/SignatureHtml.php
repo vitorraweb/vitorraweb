@@ -6,18 +6,20 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Turns a signature pasted from Outlook (or anywhere) into something safe to
- * store and safe to re-embed, unmodified, into every future outgoing email.
+ * Turns HTML pasted from Outlook (or anywhere) into something safe to store
+ * and safe to re-embed, unmodified, into an outgoing email or the admin UI.
+ * Used both for staff email signatures and for rich message bodies (e.g. a
+ * customer pasting formatted content into a portal reply).
  *
  * Two jobs:
  *   1. Sanitize — strip anything that could execute (script/style tags,
- *      on* handlers, javascript: URLs) while keeping the formatting that
- *      actually makes a signature look right (inline styles, tables, fonts).
- *   2. Extract embedded images — a pasted logo normally arrives as a
- *      data:image/...;base64,... URI. Left inline, that full image gets
- *      duplicated into the database row AND into every single email sent
- *      from then on. Pulled out to a real file on the public disk instead,
- *      the signature just carries a small <img src="https://...">.
+ *      on* handlers, javascript: URLs) while keeping ordinary formatting
+ *      (inline styles, tables, fonts, links).
+ *   2. Extract embedded images — a pasted logo/screenshot normally arrives
+ *      as a data:image/...;base64,... URI. Left inline, that full image gets
+ *      duplicated into the database row AND (for a signature) into every
+ *      single email sent from then on. Pulled out to a real file on the
+ *      public disk instead, the HTML just carries a small <img src="https://...">.
  */
 class SignatureHtml
 {
@@ -39,11 +41,19 @@ class SignatureHtml
         'input', 'button', 'textarea', 'link', 'meta',
     ];
 
-    public static function process(string $html, int $userId): string
+    /**
+     * @param  int|string  $ownerKey  Distinguishes whose images these are on
+     *                                disk — a user id for a signature, a
+     *                                communication/customer id for a message.
+     * @param  string  $storageFolder Top-level folder under the public disk
+     *                                the extracted images are written to
+     *                                (e.g. "signatures", "communications").
+     */
+    public static function process(string $html, int|string $ownerKey, string $storageFolder = 'signatures'): string
     {
         $clean = self::sanitize($html);
 
-        return $clean === '' ? '' : self::extractImages($clean, $userId);
+        return $clean === '' ? '' : self::extractImages($clean, $ownerKey, $storageFolder);
     }
 
     private static function sanitize(string $html): string
@@ -150,11 +160,11 @@ class SignatureHtml
     }
 
     /** Replace inline base64 image data with a real file on the public disk. */
-    private static function extractImages(string $html, int $userId): string
+    private static function extractImages(string $html, int|string $ownerKey, string $storageFolder): string
     {
         return (string) preg_replace_callback(
             '/<img([^>]*)\ssrc=["\']data:(image\/(?:png|jpe?g|gif|webp));base64,([^"\']*)["\']([^>]*)>/i',
-            function (array $m) use ($userId) {
+            function (array $m) use ($ownerKey, $storageFolder) {
                 [, $before, $mime, $data, $after] = $m;
 
                 $bytes = base64_decode($data, true);
@@ -168,7 +178,7 @@ class SignatureHtml
                     'image/webp' => 'webp',
                     default      => 'jpg',
                 };
-                $path = "signatures/{$userId}/".Str::random(24).'.'.$ext;
+                $path = "{$storageFolder}/{$ownerKey}/".Str::random(24).'.'.$ext;
                 Storage::disk('public')->put($path, $bytes);
 
                 return '<img'.$before.' src="'.Storage::disk('public')->url($path).'"'.$after.'>';

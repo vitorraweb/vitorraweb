@@ -39,7 +39,10 @@ class CustomerRepliedMail extends Mailable
                 'firstName'      => trim(explode(' ', (string) $this->recipient->name)[0]) ?: $this->recipient->name,
                 'contactEmail'   => $this->communication->email,
                 'channel'        => $this->communication->channel,
-                'excerpt'        => Str::limit($this->communication->body, 280),
+                // A portal reply's body may now be rich HTML (see
+                // SignatureHtml) — this notification snippet is plain text,
+                // so strip tags rather than truncate mid-markup.
+                'excerpt'        => Str::limit(trim(strip_tags($this->communication->body)), 280),
                 'customersUrl'   => $origin.'/admin/customers?open='.urlencode($this->communication->email),
             ],
         );

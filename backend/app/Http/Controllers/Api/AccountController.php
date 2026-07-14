@@ -16,6 +16,7 @@ use App\Services\FetSavingsService;
 use App\Support\ContactOwner;
 use App\Support\Phone;
 use App\Support\SecureFile;
+use App\Support\SignatureHtml;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
@@ -179,17 +180,25 @@ class AccountController extends Controller
     public function sendCommunication(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'body'            => ['required', 'string', 'max:5000'],
+            // Generous ceiling: the reply box accepts rich pasted content
+            // (formatting, an inline image), which runs well past a plain
+            // paragraph before SignatureHtml::process() sanitizes it below.
+            'body'            => ['required', 'string', 'max:50000'],
             'attachments.*'   => ['file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:8192'],
         ]);
 
         $email = $this->email($request);
+        $user  = $request->user();
+
+        $body = trim($data['body']);
+        $clean = SignatureHtml::process($body, $user->id, 'communications');
+        abort_if($clean === '', 422, 'Message cannot be empty.');
 
         $communication = Communication::create([
             'email'     => $email,
             'direction' => 'inbound',
             'channel'   => 'portal',
-            'body'      => $data['body'],
+            'body'      => $clean,
             'sent_by'   => null,
         ]);
 

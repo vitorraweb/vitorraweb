@@ -113,4 +113,43 @@ class CustomerMessagesTest extends TestCase
             ->get("/api/account/communications/{$communication->id}/attachments/0")
             ->assertForbidden();
     }
+
+    public function test_customer_reply_keeps_safe_formatting_from_a_paste(): void
+    {
+        Notification::fake();
+        User::create(['name' => 'Ops', 'email' => 'ops@vitorra.org', 'password' => 'changeme123changeme', 'role' => 'ops']);
+        $token = $this->customerToken('jane@example.com');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/account/communications', ['body' => '<p>Thanks — <b>please confirm</b> the date.</p>'])
+            ->assertCreated()
+            ->assertJsonFragment(['direction' => 'inbound', 'channel' => 'portal']);
+
+        $stored = Communication::where('direction', 'inbound')->firstOrFail();
+        $this->assertStringContainsString('<b>please confirm</b>', $stored->body);
+    }
+
+    public function test_customer_reply_strips_a_pasted_script_tag(): void
+    {
+        Notification::fake();
+        User::create(['name' => 'Ops', 'email' => 'ops@vitorra.org', 'password' => 'changeme123changeme', 'role' => 'ops']);
+        $token = $this->customerToken('jane@example.com');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/account/communications', ['body' => 'Hi<script>alert(1)</script> there'])
+            ->assertCreated();
+
+        $stored = Communication::where('direction', 'inbound')->firstOrFail();
+        $this->assertStringNotContainsString('<script', $stored->body);
+        $this->assertStringContainsString('Hi', $stored->body);
+    }
+
+    public function test_a_reply_that_sanitizes_to_nothing_is_rejected(): void
+    {
+        $token = $this->customerToken('jane@example.com');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/account/communications', ['body' => '<script>alert(1)</script>'])
+            ->assertStatus(422);
+    }
 }

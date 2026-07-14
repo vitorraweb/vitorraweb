@@ -589,7 +589,16 @@ function ThreadBubble({ item }: { item: ThreadItem }) {
           </span>
         )}
       </div>
-      {item.text && <p className="text-xs whitespace-pre-line" style={{ color: "#555" }}>{item.text}</p>}
+      {item.text && (
+        item.direction === "in" && item.channel === "portal" ? (
+          // Customer portal replies are sanitized HTML (rich paste) — see
+          // App\Support\SignatureHtml — safe to render raw.
+          <div className="text-xs [&_img]:max-w-[220px] [&_img]:h-auto [&_p]:my-1" style={{ color: "#555" }}
+            dangerouslySetInnerHTML={{ __html: item.text }} />
+        ) : (
+          <p className="text-xs whitespace-pre-line" style={{ color: "#555" }}>{item.text}</p>
+        )
+      )}
       {item.attachments && item.attachments.length > 0 && item.communicationId && (
         <div className="flex flex-wrap gap-1.5 mt-2">
           {item.attachments.map((a) => (
