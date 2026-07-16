@@ -49,6 +49,7 @@ const navLinks: NavLink[] = [
   { key: "products", href: "#", hasDropdown: true },
   // Coffee Shop hidden until retail prices are confirmed (see lib/config).
   ...(COFFEE_SHOP_ENABLED ? [{ key: "coffeeShop", href: "/shop" }] : []),
+  { key: "careers", href: "/careers" },
   { key: "blog", href: "/blog" },
   { key: "contact", href: "/contact" },
 ];
