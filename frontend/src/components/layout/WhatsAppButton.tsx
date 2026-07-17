@@ -12,7 +12,9 @@ const HREF = `https://wa.me/${NUMBER}?text=${encodeURIComponent(OPENER)}`;
    of how Marketing already sells door-to-door. Kept in Vitorra's own charcoal
    + gold rather than WhatsApp's brand green, so it reads as part of the same
    premium system as everything else, not a third-party widget bolted on.
-   Positioned above StickyQuoteBar's mobile strip so the two never collide. */
+   Positioned above StickyQuoteBar's mobile strip so the two never collide.
+   whatsapp-launcher (globals.css) keeps it periodically popping + rippling
+   so it stays noticeable without a continuous, cheap-looking bounce. */
 export default function WhatsAppButton() {
   const t = useTranslations("common");
 
@@ -22,7 +24,7 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t("chatOnWhatsapp")}
-      className="group fixed z-40 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 right-4 bottom-[calc(env(safe-area-inset-bottom)+96px)] lg:right-6 lg:bottom-6"
+      className="whatsapp-launcher group fixed z-40 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 right-4 bottom-[calc(env(safe-area-inset-bottom)+96px)] lg:right-6 lg:bottom-6"
       style={{
         width: "52px",
         height: "52px",
