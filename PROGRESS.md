@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 1 July 2026
+**Last updated:** 30 July 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -18,6 +18,8 @@
 | Swahili language (whole customer site) | ✅ Complete & live |
 | Blog — pages, bilingual CMS, content storage | ✅ Complete |
 | Admin panel (dashboard, enquiries, customers, pipeline, prospects, blog, media, products, settings, users, orders, newsletter, tasks, templates) | ✅ Functional |
+| **Prospects segmented by product (FET + SEAL)** — SEAL list loaded, 124 organisations | ✅ **Built** |
+| **Email campaigns with attachments, sent from support@vitorra.org** | ✅ **Built** |
 | Customer portal (`/account/*`) | ✅ Built |
 | FET pricing + savings calculator + currency helper | ✅ Complete |
 | **FET proven-savings loop** (per-vehicle measured savings, fleet rollups, monthly digest) | ✅ **Built (Phases 1–2)** |
@@ -193,6 +195,77 @@ first thing a visitor sees is the brand, not a blank TV.
 
 ---
 
+## ✅ Prospects split by product + one-click email campaigns (July 2026)
+
+Until now the prospect database held one list — the 163 FET leads. Sales is now
+working **two products separately**, so the database was split by product line and
+given a proper campaign tool.
+
+### The SEAL prospect list is in the system
+The marketing team's SEAL workbook is loaded: **124 organisations across 9 industries**
+— hospitals (29), pharmacies (21), manufacturing (17), travel companies (16),
+sports associations (13), mines & quarries (10), first responders (10),
+boda bodas (6) and biker associations (2). 107 have an email address, 117 a phone.
+
+- **FET and SEAL are now separate lists.** A product switcher at the top of
+  `/admin/prospects` shows one product at a time, and the industries shown change
+  with it — hospitals and pharmacies for SEAL, cargo and schools for FET.
+- **A company can now sit on both lists.** 17 manufacturers appear on the FET *and*
+  SEAL sheets; previously the system would have silently kept only the first and
+  quietly dropped the other 17 from SEAL. Each is now tracked separately, because
+  a fuel-saving conversation and a wound-spray conversation are different sales.
+- **Messy source data was cleaned, not guessed at.** Phone numbers were
+  standardised to international format (+256…), "not publicaly listed" placeholders
+  became blanks, and duplicated sheets were merged. Rows the system could not read
+  with confidence are **flagged in the list rather than invented** — see below.
+
+### Campaigns: one email, the whole list, documents attached
+Select any set of prospects and send them all one email:
+
+- **Attach documents** — the SEAL product deck, a price list, a datasheet (up to 5
+  files, 8 MB each). Attachments are **encrypted on our server**, so a stolen backup
+  reveals nothing.
+- **Sent from `support@vitorra.org`, not from whoever wrote it.** Replies come back
+  to the shared inbox where any of the team can pick them up — a prospect answering
+  months later still reaches someone, even if that staff member has moved on.
+- **Subject line and personalisation** — write `{name}` anywhere in the subject or
+  message and each recipient sees their own organisation's name.
+- **Save as template** — keep a good subject + message for reuse straight from the
+  compose box, filed under the product it belongs to.
+- **Honest reporting.** The progress bar shows how many were genuinely delivered,
+  how many failed, how many had **no email on file**, and how many **shared an inbox
+  with another prospect** (we email that address once, never twice). Selecting 25
+  rows no longer implies 25 emails went out.
+- **A large send can't break.** Emails go out in small batches in the background, so
+  a 160-recipient campaign never times out and never half-sends with no record.
+  Closing the screen doesn't stop it — it finishes on its own. Prospects move from
+  "not contacted" to "contacted" automatically as their email goes out.
+
+> Tested end-to-end (11 new automated checks, 262 passing in total): sender address,
+> attachments, personalisation, batching, duplicate suppression, and a failed
+> address being recorded without stopping the rest of the campaign.
+
+### ⚠ Needs a human look — 7 SEAL rows
+The importer flagged these rather than guessing. They're in the system and visible
+in `/admin/prospects`; the marketing team can fix them in place:
+
+| Organisation | Problem |
+|---|---|
+| Union boda | Email has no domain ending (`support@bodabodaunion`) |
+| Bethesda Medical Centre | Email incomplete (`bethesdamedicalcenter54@gmail`) |
+| C&A pharmacy | Email has two @ signs — real address unclear |
+| Delights Automart Kakiri Stone Quarry | Email is `delightskakiriquarry@.` |
+| Atim Ki Kuma Quarry Mine (Gulu) | No email and no phone |
+| Nangwa Quarry Services Ltd | No email and no phone |
+| King travel company limited | Phone has one digit too many |
+
+Also: one row in the sports-associations sheet (Lugogo Indoor Stadium,
+`info.fubauganda@gmail.com`) has **no organisation name** and was left out rather
+than guessed — it looks like the Federation of Uganda Basketball Associations, and
+needs 10 seconds from marketing to confirm and add.
+
+---
+
 ## ✅ Already in place (earlier in the rebuild)
 
 - Premium redesign + design system; all public pages; bilingual EN/SW.
@@ -211,26 +284,34 @@ first thing a visitor sees is the brand, not a blank TV.
 2. **Confirm coffee retail prices** → enter in `/admin/products`, then flip the coffee shop on (one flag) — Flutterwave checkout already wired.
 
 **Operations setup (not code)**
-3. Set **executive-report recipients** in `/admin/settings`.
-4. Grant the new **People / Executive / Suppliers / Accounting** modules to existing ops accounts in `/admin/staff` — and **"Accounting — approve"** to the **Senior Finance Officer** (admins already have everything).
-5. Set `ANTHROPIC_API_KEY` on prod to enable **CV + receipt auto-read** (both work manually without it).
-6. Optionally link **Careers** and **Suppliers** in the public site footer.
-7. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
-8. **Optional — switch login to HttpOnly cookies** (extra XSS hardening): set `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN=.vitorra.org`, `SESSION_SECURE_COOKIE=true` (backend) + `NEXT_PUBLIC_AUTH_MODE=cookie` (Vercel). Reversible by unsetting; default stays token-based.
-9. **Point the reception TV at `vitorra.org/display`** — open it full-screen (kiosk mode) in the front-desk browser; it self-refreshes and needs no further setup.
+3. **Fix the 7 flagged SEAL rows** (above) in `/admin/prospects`, and confirm the
+   unnamed sports-association row — 10 minutes of marketing's time before the first
+   SEAL campaign goes out.
+4. **Before the first real campaign:** confirm `support@vitorra.org` is an accepted
+   sender in Resend (it's on the already-verified `vitorra.org` domain, so this
+   should just work — worth one test send to a team address first). Optionally set
+   `MAIL_CAMPAIGN_ADDRESS` to send campaigns from a different shared mailbox.
+5. Set **executive-report recipients** in `/admin/settings`.
+6. Grant the new **People / Executive / Suppliers / Accounting** modules to existing ops accounts in `/admin/staff` — and **"Accounting — approve"** to the **Senior Finance Officer** (admins already have everything).
+7. Set `ANTHROPIC_API_KEY` on prod to enable **CV + receipt auto-read** (both work manually without it).
+8. Optionally link **Careers** and **Suppliers** in the public site footer.
+9. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
+10. **Optional — switch login to HttpOnly cookies** (extra XSS hardening): set `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN=.vitorra.org`, `SESSION_SECURE_COOKIE=true` (backend) + `NEXT_PUBLIC_AUTH_MODE=cookie` (Vercel). Reversible by unsetting; default stays token-based.
+11. **Point the reception TV at `vitorra.org/display`** — open it full-screen (kiosk mode) in the front-desk browser; it self-refreshes and needs no further setup.
 
 **Growth — next upgrades** (from `planning/10-platform-upgrades-brief.md`)
-10. **WhatsApp + SMS notifications** (order/payment/delivery updates) — needs Solomon's approval + a one-time business setup; small per-message cost.
-11. **Anti-spam on forms** (Cloudflare Turnstile) — free, ~10-min account setup, then wire in.
-12. **Wire up Sentry** (DSNs already configured) — catch errors before customers do.
-13. **Expand French site-wide** — translate the remaining sections into `fr.json` + add "fr" to the main switcher.
-14. Later (need a small server): on-site search, self-hosted newsletter, live chat, logistics maps.
+12. **WhatsApp + SMS notifications** (order/payment/delivery updates) — needs Solomon's approval + a one-time business setup; small per-message cost.
+13. **Anti-spam on forms** (Cloudflare Turnstile) — free, ~10-min account setup, then wire in.
+14. **Wire up Sentry** (DSNs already configured) — catch errors before customers do.
+15. **Expand French site-wide** — translate the remaining sections into `fr.json` + add "fr" to the main switcher.
+16. **One-click unsubscribe for prospect campaigns** — cold outreach currently asks recipients to reply with "unsubscribe" (handled by the shared inbox). A proper one-click link, like the newsletter already has, would improve deliverability once campaign volume grows.
+17. Later (need a small server): on-site search, self-hosted newsletter, live chat, logistics maps.
 
 **Reliability**
-15. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
+18. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
 
 **Content / lower priority**
-16. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
+19. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
 
 ---
 
@@ -250,5 +331,6 @@ cd backend
 
 > The server's default `php` is 8.2 but the app needs 8.3 — always run artisan with `/opt/alt/php83/usr/bin/php`.
 > ⚠ Never rotate `APP_KEY` in production — it would make encrypted files (`SecureFile`) and 2FA secrets unreadable.
-> Scheduled jobs (holiday reminders, **holidays:sync**, executive report, application purge, invoice reminders, recurring finance, backups, daily digest, **fet:digest**) ride the existing `php artisan schedule:run` cron.
+> Scheduled jobs (holiday reminders, **holidays:sync**, executive report, application purge, invoice reminders, recurring finance, backups, daily digest, **fet:digest**, **campaigns:send**) ride the existing `php artisan schedule:run` cron.
+> **Next deploy — one-off to load the SEAL list:** `php artisan prospects:import --product=SEAL` (idempotent; safe to re-run, never overwrites edits).
 > **Next deploy adds a Composer dependency** (libphonenumber) — run `composer install` as above, then a one-off `php artisan holidays:sync` to backfill holidays.

@@ -53,3 +53,8 @@ Schedule::command('executive:report --period=week')->weeklyOn(1, '07:30')
 // FET customers' monthly measured-savings digest (+ nudge to log overdue readings).
 Schedule::command('fet:digest')->monthlyOn(1, '08:30')
     ->onFailure(fn () => logger()->error('Scheduled fet:digest failed'));
+
+// Prospect outreach campaigns go out in batches so a large list never times out
+// a request or trips the mail provider's rate limit. No-op when nothing is queued.
+Schedule::command('campaigns:send')->everyMinute()->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Scheduled campaigns:send failed'));

@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\ProspectOutreach;
 use App\Models\Enquiry;
 use App\Models\Prospect;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class ProspectController extends Controller
@@ -18,6 +16,11 @@ class ProspectController extends Controller
     {
         $query = Prospect::query()->orderBy('name');
 
+        // Lists are segmented per product line (FET, SEAL) — the team works one
+        // at a time, so an unscoped view would mix two unrelated sales motions.
+        if ($request->filled('product')) {
+            $query->where('product', strtoupper($request->product));
+        }
         if ($request->filled('category')) {
             $query->where('category', strtoupper($request->category));
         }
@@ -61,13 +64,15 @@ class ProspectController extends Controller
      */
     public function convert(Request $request, Prospect $prospect): JsonResponse
     {
+        $product = $prospect->product ?: 'FET';
+
         $enquiry = Enquiry::create([
-            'product_category' => 'FET',
+            'product_category' => $product,
             'name'             => $prospect->name,
             'email'            => $prospect->email ?? '',
             'phone'            => $prospect->phone,
             'message'          => trim(implode("\n", array_filter([
-                "Converted from FET prospect database.",
+                "Converted from the {$product} prospect database.",
                 "Industry: {$prospect->category}",
                 $prospect->feedback ? "Notes: {$prospect->feedback}" : null,
                 $prospect->follow_up ? "Follow-up: {$prospect->follow_up}" : null,
@@ -84,48 +89,11 @@ class ProspectController extends Controller
         ]);
     }
 
-    /**
-     * Send a bulk outreach email to a set of selected prospects.
-     * Skips any prospect with no email address and reports the count.
-     * Marks not_contacted prospects as contacted after a successful send.
-     */
-    public function bulkEmail(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'ids'     => ['required', 'array', 'min:1'],
-            'ids.*'   => ['integer'],
-            'subject' => ['required', 'string', 'max:255'],
-            'body'    => ['required', 'string', 'max:10000'],
-        ]);
-
-        $prospects = Prospect::whereIn('id', $data['ids'])->get();
-        $withEmail = $prospects->filter(fn ($p) => ! empty($p->email));
-        $sent = 0;
-
-        foreach ($withEmail as $prospect) {
-            Mail::to($prospect->email)->send(
-                new ProspectOutreach($prospect->name, $data['subject'], $data['body'], $request->user())
-            );
-            $sent++;
-
-            if ($prospect->outreach_status === 'not_contacted') {
-                $prospect->update(['outreach_status' => 'contacted']);
-            }
-        }
-
-        $skipped = $prospects->count() - $sent;
-
-        return response()->json([
-            'sent'    => $sent,
-            'skipped' => $skipped,
-            'message' => "Sent to {$sent} prospect(s)" . ($skipped > 0 ? ", skipped {$skipped} with no email." : "."),
-        ]);
-    }
-
     /** Stream all prospects as a CSV download. */
     public function export(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        $query = Prospect::query()->orderBy('category')->orderBy('name');
+        $query = Prospect::query()->orderBy('product')->orderBy('category')->orderBy('name');
+        if ($request->filled('product'))  $query->where('product', strtoupper($request->product));
         if ($request->filled('category')) $query->where('category', strtoupper($request->category));
         if ($request->filled('status'))   $query->where('outreach_status', $request->status);
 
@@ -133,10 +101,10 @@ class ProspectController extends Controller
 
         return response()->stream(function () use ($prospects) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Name', 'Industry', 'Email', 'Phone', 'Location', 'Status', 'Assigned To', 'Feedback', 'Follow-up']);
+            fputcsv($out, ['Product', 'Name', 'Industry', 'Email', 'Phone', 'Location', 'Status', 'Assigned To', 'Feedback', 'Follow-up']);
             foreach ($prospects as $p) {
                 fputcsv($out, [
-                    $p->name, $p->category, $p->email ?? '', $p->phone ?? '',
+                    $p->product, $p->name, $p->category, $p->email ?? '', $p->phone ?? '',
                     $p->location ?? '', $p->outreach_status, $p->assigned_to ?? '',
                     $p->feedback ?? '', $p->follow_up ?? '',
                 ]);
@@ -162,10 +130,20 @@ class ProspectController extends Controller
     {
         $request->validate([
             'file'     => ['required', 'file', 'mimes:csv,txt', 'max:4096'],
+            'product'  => ['required', Rule::in(Prospect::PRODUCTS)],
             'category' => ['required', Rule::in(Prospect::CATEGORIES)],
         ]);
 
+        $product  = $request->input('product');
         $category = $request->input('category');
+
+        // Guard against a SEAL list being filed under an FET vertical (or the
+        // reverse) — the two lists only share MANUFACTURING.
+        if (! in_array($category, Prospect::categoriesFor($product), true)) {
+            return response()->json([
+                'message' => "{$category} is not an industry on the {$product} list.",
+            ], 422);
+        }
         $lines = file($request->file('file')->getRealPath(), FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         if (empty($lines)) {
             return response()->json(['imported' => 0, 'skipped' => 0, 'message' => 'The file was empty.']);
@@ -256,9 +234,8 @@ class ProspectController extends Controller
                 : (in_array($statusRaw, ['sent', 'delivered', 'contacted'], true) ? 'contacted' : 'not_contacted');
 
             $prospect = Prospect::firstOrCreate(
-                ['name' => $name, 'category' => $category],
+                ['name' => $name, 'category' => $category, 'product' => $product],
                 [
-                    'product'         => 'FET',
                     'location'        => $location,
                     'phone'           => $phone,
                     'email'           => $email,

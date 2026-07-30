@@ -48,7 +48,7 @@ The priority revenue product (FET) now has a **public full-line pricing guide an
 
 ## Rebuild Progress Log
 
-The full week-by-week build history now lives in `planning/08-rebuild-progress-log.md` (moved out to keep this file under its 40k-char limit). The current state, what's built, and what's pending are captured in the sections below; git history holds the rest.
+Week-by-week history: `planning/08-rebuild-progress-log.md` (moved out to keep this file under 40k chars). Current state and what's pending are below.
 
 ---
 
@@ -91,7 +91,7 @@ A multi-currency cash-ledger bookkeeping tool with **maker–checker** approvals
 - All amounts per currency (never summed across currencies). Tables: `finance_accounts`, `finance_categories`, `finance_transactions` (+`vat_rate`/`vat_amount`), `supplier_bills`, `finance_budgets`, `invoices`, `invoice_items`, `recurring_entries`. Default categories via `FinanceCategoriesSeeder`.
 
 ### Scheduled commands (ride the existing cPanel `schedule:run` cron)
-`holidays:notify`, `digest:send`, `executive:report` (monthly+weekly), `applications:purge` (6-month), `invoices:remind`, `finance:recurring`, plus the spatie backups.
+`holidays:notify`, `digest:send`, `executive:report` (monthly+weekly), `applications:purge` (6-month), `invoices:remind`, `finance:recurring`, **`campaigns:send`** (every minute — drains prospect outreach campaigns; no-op when idle), plus the spatie backups.
 
 ### Pending (operations setup, not code)
 - Set executive-report recipients in `/admin/settings`; grant new modules to existing ops accounts (incl. **"Accounting — approve"** for the Senior Finance Officer); optionally link **Careers** + **Suppliers** in the public footer; set `ANTHROPIC_API_KEY` on prod to enable CV/receipt auto-read (both work manually without it).
@@ -303,6 +303,8 @@ All 9 members now have real photos. No placeholder slots remain.
 - **Auth:** login, **register** (customer accounts), logout, me
 - **Customer portal:** `GET /account/orders`, `/account/orders/{reference}`, `/account/enquiries`, `/account/documents`, `/account/profile` (GET+PUT) — scoped to the user's email
 - **Admin:** stats, enquiries, messages, orders (line-item aware), **prospects** (list/filter/search, inline update, CSV import)
+- **Prospects — segmented per product** (`?product=FET|SEAL`): each product line has its own list + industry verticals (`Prospect::CATEGORIES_BY_PRODUCT`). Natural key is **name + category + product**, so one company can be a prospect for two products. Import: `POST /admin/prospects/import` (product + category), or `php artisan prospects:import --product=SEAL`.
+- **Outreach campaigns:** `GET/POST /admin/prospect-campaigns`, `GET .../{c}`, `POST .../{c}/run`, `POST .../{c}/cancel` — bulk email with **attachments**, sent **from `support@vitorra.org`** (not the staff member) in background batches. See Prospect Outreach Campaigns below.
 
 ### Pending
 
@@ -369,7 +371,12 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 | `frontend/src/lib/enquiry-schema.ts` | Product-aware enquiry question sets (edit here to add/change questions) |
 | `scripts/generate_fet_pdfs.py` | Regenerates the FET download PDFs (reportlab) — no RRP/PII |
 | `frontend/public/downloads/*` | Public FET PDFs — application guide + datasheet |
-| `scripts/import_prospects.py` | Cleans the prospects xlsx → `backend/database/data/fet-prospects.json` |
+| `scripts/import_prospects.py` | Cleans the FET prospects xlsx → `backend/database/data/fet-prospects.json` |
+| `scripts/import_seal_prospects.py` | Cleans `SEAL PROSPECTS SEAL.xlsx` → `seal-prospects.json` (124 rows, 9 verticals); prints rows needing a human look |
+| `backend/app/Http/Controllers/Api/ProspectCampaignController.php` | Campaign create/progress/run/cancel (attachments encrypted via `SecureFile`) |
+| `backend/app/Services/CampaignSender.php` | Batched campaign drain (per-campaign lock, resumable, marks prospects contacted) |
+| `backend/app/Mail/ProspectOutreach.php` | Campaign email — from support, `{name}` personalisation, decrypts attachments in memory |
+| `backend/config/campaigns.php` | Batch size, send throttle, attachment limits |
 | `backend/app/Console/Commands/ImportProspects.php` | `php artisan prospects:import` — idempotent prospect loader |
 | `backend/app/Http/Controllers/Api/ProspectController.php` | Admin prospects list / inline edit / CSV upload importer |
 | `frontend/src/app/admin/prospects/page.tsx` | Prospects CRM UI (filters, search, inline edits, CSV import) |
@@ -415,18 +422,17 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 ### High Priority (Revenue-blocking)
 
 1. **Live payment gateway** — pick Flutterwave/PayPal (or Stripe via foreign entity) once the business account exists; provider-agnostic skeleton already in place
-2. ~~**Real transactional email provider**~~ ✅ done (2026-06-15) — Resend live in production
+2. ~~**Real transactional email provider**~~ ✅ Resend live in production (2026-06-15)
 3. **Confirm coffee retail prices** — ⚠ **now gating the live shop.** Coffee retail is switched off (`COFFEE_SHOP_ENABLED = false`) until the team confirms real prices; current placeholders (UGX 38k/135k/82k) are not trusted. Once prices land: edit them in **`/admin/products`** (no code change), then flip the flag back on.
 4. **WhatsApp Business** — enquiry/order notifications to Marketing team
-5. ~~**Blog admin CRUD**~~ ✅ done (2026-06-04) — `/admin/blog` Markdown CMS (create/edit/publish, sanitised). Team still needs to *write* the posts (content task below).
+5. ~~**Blog admin CRUD**~~ ✅ `/admin/blog` Markdown CMS. Team still needs to *write* the posts (below).
 
-> Done since last revision: FET full-line pricing guide + savings calculator (EUR), Coffee Shop gated behind a feature flag pending real prices.
-> Earlier: Coffee Shop + checkout, orders/order-items API, product/blog/enquiry/contact APIs, order emails, live exchange-rate API.
+> Build history lives in `PROGRESS.md` + `planning/08-rebuild-progress-log.md`.
 
 ### Medium Priority
 
-6. ~~**Contact page**~~ ✅ done (2026-06-08) — premium redesign matching homepage, bilingual EN/SW
-7. ~~**Customer portal**~~ ✅ done (2026-06-04) — `/account/*` register/login, orders + tracking, enquiry status, documents, profile (invoice download wired to `invoice_url` when present)
+6. ~~**Contact page**~~ ✅ premium redesign, bilingual EN/SW (2026-06-08)
+7. ~~**Customer portal**~~ ✅ `/account/*` — login, orders, enquiries, documents, profile (2026-06-04)
 8. **Blog content** — team needs to write and publish posts
 9. **Testimonials** — written client consent needed before publishing real quotes
 10. **Coffee photos** — product photography pending
@@ -438,9 +444,9 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 13. **UptimeRobot / BetterStack** uptime alerts
 14. **Automated daily DB backups**
 15. **CI/CD pipeline** (GitHub Actions)
-16. ~~**Sitemap + robots.txt**~~ ✅ done (2026-06-04) — `app/sitemap.ts` (pages + live blog posts, graceful fallback) + `app/robots.ts` (blocks /admin, /account, checkout)
-17. ~~**Social sharing metadata** (Open Graph)~~ ✅ done (2026-06-04) — generated branded OG/Twitter card (`app/opengraph-image.tsx`, dark + gold) applies site-wide
-18. ~~Push `rebuild` branch to GitHub for remote backup~~ ✅ done — branch is on GitHub
+16. ~~**Sitemap + robots.txt**~~ ✅ `app/sitemap.ts` + `app/robots.ts` (blocks /admin, /account, checkout)
+17. ~~**Open Graph metadata**~~ ✅ branded OG/Twitter card site-wide (`app/opengraph-image.tsx`)
+18. ~~Push `rebuild` branch to GitHub~~ ✅ done
 
 ### Lower Priority
 
@@ -454,18 +460,16 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 
 ## Known Issues (Active — From Original Audit)
 
-### Critical
-1. ~~**Security gap in blog content rendering**~~ ✅ **RESOLVED (2026-06-04)** — blog content is authored as Markdown and rendered to sanitised HTML server-side (`Str::markdown` html-strip); public API serves `content_html` only, never raw HTML.
-2. ~~**File storage open to all logged-in users**~~ ✅ **RESOLVED (2026-06-04)** — the only upload path (`/admin/media`) is behind admin auth + `role:admin,ops`; type/size-validated.
+### Resolved (2026-06-04)
+1. ~~Blog XSS~~ ✅ Markdown authored, sanitised server-side; API serves `content_html` only.
+2. ~~File storage open to all logged-in users~~ ✅ `/admin/media` behind admin auth + `role:admin,ops`, type/size-validated.
+3. ~~No sitemap or robots.txt~~ ✅ `app/sitemap.ts` + `app/robots.ts` + OG/Twitter image.
+4. Exchange rate: live API + config fallback + admin manual override (`/admin/settings`) — ✅ improved
 
-### High Priority
-3. No error or uptime monitoring
-4. No automated data backups
-5. No CI/CD pipeline
-
-### Medium
-6. Exchange rate: live API (set `EXCHANGE_RATE_API_KEY`) with config fallback **and an admin manual override** (`/admin/settings`) — ✅ improved
-7. ~~No sitemap or robots.txt~~ ✅ **RESOLVED (2026-06-04)** — `app/sitemap.ts` + `app/robots.ts` + generated OG/Twitter image.
+### Still open
+5. No error or uptime monitoring
+6. No automated data backups
+7. No CI/CD pipeline
 
 ---
 

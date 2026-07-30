@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PaymentHealthController;
 use App\Http\Controllers\Api\ProductAdminController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProspectCampaignController;
 use App\Http\Controllers\Api\ProspectController;
 use App\Http\Controllers\Api\ReplyTemplateController;
 use App\Http\Controllers\Api\SettingsController;
@@ -246,10 +247,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('perm:prospects')->group(function () {
             Route::get('/prospects',                        [ProspectController::class, 'index']);
             Route::get('/prospects/export',                 [ProspectController::class, 'export']);
-            Route::post('/prospects/bulk-email',            [ProspectController::class, 'bulkEmail']);
             Route::post('/prospects/import',                [ProspectController::class, 'import']);
             Route::post('/prospects/{prospect}/convert',    [ProspectController::class, 'convert']);
             Route::patch('/prospects/{prospect}',           [ProspectController::class, 'update']);
+
+            // Bulk outreach campaigns (sent in batches from the support address)
+            Route::get('/prospect-campaigns',                    [ProspectCampaignController::class, 'index']);
+            Route::post('/prospect-campaigns',                   [ProspectCampaignController::class, 'store']);
+            Route::get('/prospect-campaigns/{campaign}',         [ProspectCampaignController::class, 'show']);
+            Route::post('/prospect-campaigns/{campaign}/run',    [ProspectCampaignController::class, 'run']);
+            Route::post('/prospect-campaigns/{campaign}/cancel', [ProspectCampaignController::class, 'cancel']);
         });
         Route::middleware('perm:products')->group(function () {
             Route::get('/products',                     [ProductAdminController::class, 'index']);

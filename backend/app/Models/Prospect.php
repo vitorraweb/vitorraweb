@@ -25,10 +25,31 @@ class Prospect extends Model
         'flags' => 'array',
     ];
 
-    /** Industry verticals (sheet → canonical category). */
+    /**
+     * Industry verticals per product line. Each product's outreach list is
+     * segmented differently — FET sells to fuel-burning fleets, SEAL to medical
+     * and high-injury-risk settings — so the two share only MANUFACTURING.
+     */
+    public const CATEGORIES_BY_PRODUCT = [
+        'FET' => [
+            'CARGO', 'DISTRIBUTOR', 'CONSTRUCTION', 'MANUFACTURING', 'PUBLIC_TRANSPORT',
+            'SCHOOL', 'FARMER', 'SPARE_PARTS', 'CAR_BOND', 'FUNERAL',
+        ],
+        'SEAL' => [
+            'HOSPITAL', 'PHARMACY', 'FIRST_RESPONDER', 'MANUFACTURING', 'MINING_QUARRY',
+            'SPORTS_ASSOCIATION', 'BODA_BODA', 'BIKER_ASSOCIATION', 'TRAVEL_COMPANY',
+        ],
+    ];
+
+    /** Product lines with a prospect list. */
+    public const PRODUCTS = ['FET', 'SEAL'];
+
+    /** Every vertical across all products (validation / legacy callers). */
     public const CATEGORIES = [
         'CARGO', 'DISTRIBUTOR', 'CONSTRUCTION', 'MANUFACTURING', 'PUBLIC_TRANSPORT',
         'SCHOOL', 'FARMER', 'SPARE_PARTS', 'CAR_BOND', 'FUNERAL',
+        'HOSPITAL', 'PHARMACY', 'FIRST_RESPONDER', 'MINING_QUARRY',
+        'SPORTS_ASSOCIATION', 'BODA_BODA', 'BIKER_ASSOCIATION', 'TRAVEL_COMPANY',
     ];
 
     /** Outreach pipeline stages. */
@@ -36,4 +57,10 @@ class Prospect extends Model
         'not_contacted', 'contacted', 'delivered', 'bounced',
         'responded', 'qualified', 'converted', 'not_interested',
     ];
+
+    /** Verticals valid for a product (falls back to the full list). */
+    public static function categoriesFor(?string $product): array
+    {
+        return self::CATEGORIES_BY_PRODUCT[$product] ?? self::CATEGORIES;
+    }
 }

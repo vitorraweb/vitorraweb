@@ -4,25 +4,50 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Loader2, ChevronDown, Mail, Phone, MapPin, AlertTriangle, Upload,
   ChevronLeft, ChevronRight, UserCheck, Download, Send, X, ArrowRightCircle,
+  Paperclip, Save, CheckCircle2,
 } from "lucide-react";
 import { apiAdmin, uploadAdmin, downloadCsv } from "@/lib/auth";
 import { PageHeader, Empty, type Paginated } from "@/components/admin/admin-ui";
 
 type Prospect = {
-  id: number; name: string; category: string; location: string | null;
+  id: number; name: string; category: string; product: string; location: string | null;
   phone: string | null; email: string | null; outreach_status: string;
   feedback: string | null; follow_up: string | null; assigned_to: string | null;
   flags: string[] | null; source: string | null;
 };
 type Template = { id: number; name: string; subject: string; body: string; category: string | null };
+type Campaign = {
+  id: number; subject: string; status: string; product: string | null;
+  total: number; sent_count: number; failed_count: number;
+  pending: number; skipped: number; duplicate: number;
+  attachments: { name: string; size: number | null }[];
+};
 
-const CATEGORIES: [string, string][] = [
-  ["CARGO", "Cargo"], ["DISTRIBUTOR", "Distributors"], ["CONSTRUCTION", "Construction"],
-  ["MANUFACTURING", "Manufacturing"], ["PUBLIC_TRANSPORT", "Public transport"], ["SCHOOL", "Schools"],
-  ["FARMER", "Farmers"], ["SPARE_PARTS", "Spare parts & garages"], ["CAR_BOND", "Car bonds"],
-  ["FUNERAL", "Funeral services"],
-];
-const CAT_LABEL = Object.fromEntries(CATEGORIES);
+/** Product lines with their own prospect list. Mirrors Prospect::PRODUCTS. */
+const PRODUCTS: [string, string][] = [["FET", "Fuel Eco Tech"], ["SEAL", "SEAL Wound Spray"]];
+
+/** Industry verticals per product. Mirrors Prospect::CATEGORIES_BY_PRODUCT. */
+const CATEGORIES_BY_PRODUCT: Record<string, [string, string][]> = {
+  FET: [
+    ["CARGO", "Cargo"], ["DISTRIBUTOR", "Distributors"], ["CONSTRUCTION", "Construction"],
+    ["MANUFACTURING", "Manufacturing"], ["PUBLIC_TRANSPORT", "Public transport"], ["SCHOOL", "Schools"],
+    ["FARMER", "Farmers"], ["SPARE_PARTS", "Spare parts & garages"], ["CAR_BOND", "Car bonds"],
+    ["FUNERAL", "Funeral services"],
+  ],
+  SEAL: [
+    ["HOSPITAL", "Hospitals"], ["PHARMACY", "Pharmacies"], ["FIRST_RESPONDER", "First responders"],
+    ["MANUFACTURING", "Manufacturing"], ["MINING_QUARRY", "Mines & quarries"],
+    ["SPORTS_ASSOCIATION", "Sports associations"], ["BODA_BODA", "Boda bodas"],
+    ["BIKER_ASSOCIATION", "Biker associations"], ["TRAVEL_COMPANY", "Travel companies"],
+  ],
+};
+
+/** De-duplicated union, for the "all products" view. */
+const ALL_CATEGORIES: [string, string][] = Object.values(CATEGORIES_BY_PRODUCT)
+  .flat()
+  .filter((c, i, a) => a.findIndex((x) => x[0] === c[0]) === i);
+
+const CAT_LABEL = Object.fromEntries(ALL_CATEGORIES);
 
 const STATUSES: [string, string][] = [
   ["not_contacted", "Not contacted"], ["contacted", "Contacted"], ["delivered", "Delivered"],
@@ -41,10 +66,17 @@ const STATUS_COLOR: Record<string, { bg: string; fg: string }> = {
 };
 const ASSIGNEES = ["Thurayya Nakayima", "Sarah Nuwamanya", "Nagawa Shakirah", "John Oluwaseyi"];
 
+const MAX_FILES = 5;
+const MAX_FILE_MB = 8;
+
+const fmtSize = (bytes: number) =>
+  bytes >= 1_048_576 ? `${(bytes / 1_048_576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+
 export default function ProspectsPage() {
   const [list, setList]       = useState<Prospect[]>([]);
   const [meta, setMeta]       = useState({ current_page: 1, last_page: 1, total: 0 });
   const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState("");
   const [cat, setCat]         = useState("");
   const [status, setStatus]   = useState("");
   const [q, setQ]             = useState("");
@@ -55,14 +87,21 @@ export default function ProspectsPage() {
   // Selection for bulk actions
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
-  // Bulk email modal
-  const [bulkEmailOpen, setBulkEmailOpen] = useState(false);
-  const [bulkSubject, setBulkSubject]     = useState("");
-  const [bulkBody, setBulkBody]           = useState("");
-  const [bulkSending, setBulkSending]     = useState(false);
-  const [bulkResult, setBulkResult]       = useState<{ sent: number; skipped: number } | null>(null);
-  const [templates, setTemplates]         = useState<Template[]>([]);
-  const [templateOpen, setTemplateOpen]   = useState(false);
+  // Campaign composer
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [subject, setSubject]           = useState("");
+  const [body, setBody]                 = useState("");
+  const [files, setFiles]               = useState<File[]>([]);
+  const [fileError, setFileError]       = useState("");
+  const [sending, setSending]           = useState(false);
+  const [sendError, setSendError]       = useState("");
+  const [campaign, setCampaign]         = useState<Campaign | null>(null);
+  const [templates, setTemplates]       = useState<Template[]>([]);
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [tplName, setTplName]           = useState("");
+  const [tplSaving, setTplSaving]       = useState(false);
+  const [tplSaved, setTplSaved]         = useState(false);
+  const attachRef = useRef<HTMLInputElement>(null);
 
   // Per-prospect convert state
   const [converting, setConverting] = useState<number | null>(null);
@@ -71,15 +110,20 @@ export default function ProspectsPage() {
   const [exporting, setExporting] = useState(false);
 
   // Import panel
-  const [importOpen, setImportOpen] = useState(false);
-  const [importCat, setImportCat]   = useState("CARGO");
-  const [importing, setImporting]   = useState(false);
-  const [importMsg, setImportMsg]   = useState("");
+  const [importOpen, setImportOpen]       = useState(false);
+  const [importProduct, setImportProduct] = useState("FET");
+  const [importCat, setImportCat]         = useState("CARGO");
+  const [importing, setImporting]         = useState(false);
+  const [importMsg, setImportMsg]         = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const categories = product ? CATEGORIES_BY_PRODUCT[product] : ALL_CATEGORIES;
+  const importCategories = CATEGORIES_BY_PRODUCT[importProduct] ?? ALL_CATEGORIES;
 
   const load = useCallback(async () => {
     try {
       const params = new URLSearchParams();
+      if (product) params.set("product", product);
       if (cat) params.set("category", cat);
       if (status) params.set("status", status);
       if (appliedQ) params.set("q", appliedQ);
@@ -89,7 +133,7 @@ export default function ProspectsPage() {
       setMeta({ current_page: res.current_page, last_page: res.last_page, total: res.total });
     } catch { setList([]); }
     finally { setLoading(false); }
-  }, [cat, status, appliedQ, page]);
+  }, [product, cat, status, appliedQ, page]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -97,10 +141,24 @@ export default function ProspectsPage() {
     apiAdmin<Template[]>("/admin/templates").then((r) => setTemplates(Array.isArray(r) ? r : [])).catch(() => {});
   }, []);
 
-  const selCat    = (c: string) => { setLoading(true); setPage(1); setCat(c); setSelected(new Set()); };
-  const selStatus = (s: string) => { setLoading(true); setPage(1); setStatus(s); setSelected(new Set()); };
-  const search    = () => { setLoading(true); setPage(1); setAppliedQ(q.trim()); setSelected(new Set()); };
+  const reset = () => { setLoading(true); setPage(1); setSelected(new Set()); };
+
+  /** Switching product clears a vertical that doesn't exist on the new list. */
+  const selProduct = (p: string) => {
+    reset();
+    setProduct(p);
+    const valid = (p ? CATEGORIES_BY_PRODUCT[p] : ALL_CATEGORIES).some(([v]) => v === cat);
+    if (!valid) setCat("");
+  };
+  const selCat    = (c: string) => { reset(); setCat(c); };
+  const selStatus = (s: string) => { reset(); setStatus(s); };
+  const search    = () => { reset(); setAppliedQ(q.trim()); };
   const goPage    = (p: number) => { setLoading(true); setPage(p); setSelected(new Set()); };
+
+  const selImportProduct = (p: string) => {
+    setImportProduct(p);
+    setImportCat((CATEGORIES_BY_PRODUCT[p] ?? ALL_CATEGORIES)[0][0]);
+  };
 
   const patch = async (id: number, body: Record<string, unknown>) => {
     setList((l) => l.map((p) => (p.id === id ? { ...p, ...body } : p)));
@@ -116,6 +174,11 @@ export default function ProspectsPage() {
     });
   };
 
+  const selectAllOnPage = () => {
+    const allSelected = list.every((p) => selected.has(p.id));
+    setSelected(allSelected ? new Set() : new Set(list.map((p) => p.id)));
+  };
+
   const clearSelection = () => setSelected(new Set());
 
   const convertToEnquiry = async (id: number) => {
@@ -127,28 +190,111 @@ export default function ProspectsPage() {
     finally { setConverting(null); }
   };
 
-  const sendBulkEmail = async () => {
-    if (!bulkSubject.trim() || !bulkBody.trim()) return;
-    setBulkSending(true); setBulkResult(null);
-    try {
-      const res = await apiAdmin<{ sent: number; skipped: number }>("/admin/prospects/bulk-email", {
-        method: "POST",
-        body: JSON.stringify({ ids: [...selected], subject: bulkSubject.trim(), body: bulkBody.trim() }),
-      });
-      setBulkResult(res);
-      setList((l) => l.map((p) => selected.has(p.id) && p.outreach_status === "not_contacted" ? { ...p, outreach_status: "contacted" } : p));
-    } catch { /* ignore */ }
-    finally { setBulkSending(false); }
+  const addFiles = (picked: FileList | null) => {
+    if (!picked?.length) return;
+    setFileError("");
+    const next = [...files];
+    for (const f of Array.from(picked)) {
+      if (next.length >= MAX_FILES) { setFileError(`You can attach at most ${MAX_FILES} files.`); break; }
+      if (f.size > MAX_FILE_MB * 1_048_576) { setFileError(`"${f.name}" is over ${MAX_FILE_MB} MB.`); continue; }
+      if (next.some((x) => x.name === f.name && x.size === f.size)) continue;
+      next.push(f);
+    }
+    setFiles(next);
+    if (attachRef.current) attachRef.current.value = "";
   };
 
-  const closeBulkModal = () => {
-    setBulkEmailOpen(false); setBulkSubject(""); setBulkBody(""); setBulkResult(null); setTemplateOpen(false);
+  const removeFile = (name: string, size: number) => {
+    setFiles((f) => f.filter((x) => !(x.name === name && x.size === size)));
+    setFileError("");
+  };
+
+  /**
+   * Create the campaign, then keep asking the server to send the next batch
+   * until it's done. The scheduler does the same job every minute, so closing
+   * this screen mid-send doesn't stop the campaign — it just slows it down.
+   */
+  const startCampaign = async () => {
+    if (!subject.trim() || !body.trim()) return;
+    setSending(true); setSendError("");
+    try {
+      const form = new FormData();
+      [...selected].forEach((id) => form.append("ids[]", String(id)));
+      form.append("subject", subject.trim());
+      form.append("body", body.trim());
+      files.forEach((f) => form.append("attachments[]", f));
+
+      const res = await uploadAdmin<{ data: Campaign }>("/admin/prospect-campaigns", form);
+      setCampaign(res.data);
+      drive(res.data);
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : "Could not start the campaign.");
+    } finally { setSending(false); }
+  };
+
+  const driving = useRef(false);
+  const drive = useCallback(async (start: Campaign) => {
+    if (driving.current) return;
+    driving.current = true;
+    let current = start;
+    try {
+      while (current.status === "sending") {
+        const res = await apiAdmin<{ data: Campaign }>(
+          `/admin/prospect-campaigns/${current.id}/run`,
+          { method: "POST", body: JSON.stringify({ limit: 8 }) },
+        );
+        current = res.data;
+        setCampaign(current);
+      }
+      // Reflect the pipeline moves the send just made.
+      setSelected(new Set());
+      load();
+    } catch {
+      // The scheduler will finish it; surface the last known state.
+      setCampaign((c) => c && { ...c, status: c.status });
+    } finally { driving.current = false; }
+  }, [load]);
+
+  const saveAsTemplate = async () => {
+    if (!tplName.trim() || !subject.trim() || !body.trim()) return;
+    setTplSaving(true);
+    try {
+      const res = await apiAdmin<{ data: Template }>("/admin/templates", {
+        method: "POST",
+        body: JSON.stringify({
+          name: tplName.trim(),
+          subject: subject.trim(),
+          body: body.trim(),
+          category: product || "General",
+        }),
+      });
+      setTemplates((t) => [...t, res.data]);
+      setTplSaved(true); setTplName("");
+      setTimeout(() => setTplSaved(false), 2500);
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : "Could not save the template.");
+    } finally { setTplSaving(false); }
+  };
+
+  const closeComposer = () => {
+    setComposerOpen(false); setSubject(""); setBody(""); setFiles([]);
+    setCampaign(null); setTemplateOpen(false); setSendError(""); setFileError("");
+    setTplName(""); setTplSaved(false);
   };
 
   const handleExport = async () => {
     setExporting(true);
-    try { await downloadCsv("/admin/prospects/export", `prospects-${new Date().toISOString().slice(0, 10)}.csv`); }
-    catch { /* ignore */ }
+    try {
+      const params = new URLSearchParams();
+      if (product) params.set("product", product);
+      if (cat) params.set("category", cat);
+      if (status) params.set("status", status);
+      const suffix = product ? `-${product.toLowerCase()}` : "";
+      await downloadCsv(
+        `/admin/prospects/export?${params.toString()}`,
+        `prospects${suffix}-${new Date().toISOString().slice(0, 10)}.csv`,
+      );
+    } catch { /* ignore */ }
     finally { setExporting(false); }
   };
 
@@ -159,6 +305,7 @@ export default function ProspectsPage() {
     try {
       const form = new FormData();
       form.append("file", file);
+      form.append("product", importProduct);
       form.append("category", importCat);
       const res = await uploadAdmin<{ message: string }>("/admin/prospects/import", form);
       setImportMsg(res.message);
@@ -168,12 +315,14 @@ export default function ProspectsPage() {
     finally { setImporting(false); }
   };
 
-  const selectedWithEmail = list.filter((p) => selected.has(p.id) && p.email).length;
+  const selectedRows = list.filter((p) => selected.has(p.id));
+  const selectedWithEmail = selectedRows.filter((p) => p.email).length;
+  const productLabel = product ? Object.fromEntries(PRODUCTS)[product] : "all products";
 
   return (
     <div className="pb-24">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <PageHeader title="Prospects" subtitle="FET outreach database — segmented by industry." />
+        <PageHeader title="Prospects" subtitle="Outreach database — segmented by product, then by industry." />
         <div className="flex items-center gap-2 shrink-0">
           <button onClick={handleExport} disabled={exporting}
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-sm font-semibold disabled:opacity-50"
@@ -193,12 +342,16 @@ export default function ProspectsPage() {
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">
           <p className="text-sm font-semibold mb-1" style={{ color: "#1E1E1E" }}>Import a prospect list (CSV)</p>
           <p className="text-xs mb-4" style={{ color: "#888" }}>
-            Columns matched by header: name, location, phone, email (status &amp; feedback optional). Duplicates are skipped.
+            Pick the product this list sells, then its industry. Columns matched by header: name, location, phone, email
+            (status &amp; feedback optional). Duplicates are skipped.
             Tip: in Excel use <strong>Save As → CSV</strong>.
           </p>
           <div className="flex flex-wrap items-center gap-3">
+            <select value={importProduct} onChange={(e) => selImportProduct(e.target.value)} className="text-sm rounded-xl px-3 py-2 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }}>
+              {PRODUCTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
             <select value={importCat} onChange={(e) => setImportCat(e.target.value)} className="text-sm rounded-xl px-3 py-2 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }}>
-              {CATEGORIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              {importCategories.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
             <input ref={fileRef} type="file" accept=".csv,text/csv" className="text-sm" />
             <button onClick={doImport} disabled={importing} className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: importing ? 0.7 : 1 }}>
@@ -209,10 +362,17 @@ export default function ProspectsPage() {
         </div>
       )}
 
+      {/* Product segmentation — the primary filter */}
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <span className="text-[10px] font-bold uppercase tracking-[0.1em] mr-1" style={{ color: "#bbb" }}>Product</span>
+        <Chip active={product === ""} onClick={() => selProduct("")}>All products</Chip>
+        {PRODUCTS.map(([v, l]) => <Chip key={v} active={product === v} onClick={() => selProduct(v)}>{l}</Chip>)}
+      </div>
+
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-3">
         <Chip active={cat === ""} onClick={() => selCat("")}>All industries</Chip>
-        {CATEGORIES.map(([v, l]) => <Chip key={v} active={cat === v} onClick={() => selCat(v)}>{l}</Chip>)}
+        {categories.map(([v, l]) => <Chip key={v} active={cat === v} onClick={() => selCat(v)}>{l}</Chip>)}
       </div>
       <div className="flex flex-wrap items-center gap-2 mb-5">
         <Chip active={status === ""} onClick={() => selStatus("")}>All statuses</Chip>
@@ -236,7 +396,12 @@ export default function ProspectsPage() {
         <Empty label="No prospects match these filters." />
       ) : (
         <>
-          <p className="text-xs mb-3" style={{ color: "#999" }}>{meta.total} prospect{meta.total === 1 ? "" : "s"}</p>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <p className="text-xs" style={{ color: "#999" }}>{meta.total} prospect{meta.total === 1 ? "" : "s"}</p>
+            <button onClick={selectAllOnPage} className="text-xs font-semibold" style={{ color: "#7A6020" }}>
+              {list.every((p) => selected.has(p.id)) ? "Clear this page" : "Select all on this page"}
+            </button>
+          </div>
           <div className="space-y-2.5">
             {list.map((p) => {
               const sc = STATUS_COLOR[p.outreach_status] ?? STATUS_COLOR.not_contacted;
@@ -254,6 +419,10 @@ export default function ProspectsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                           <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{p.name}</span>
+                          {p.product && (
+                            <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
+                              style={{ background: "rgba(197,178,122,0.18)", color: "#7A6020" }}>{p.product}</span>
+                          )}
                           <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>{CAT_LABEL[p.category] ?? p.category}</span>
                           {p.flags && p.flags.length > 0 && (
                             <span title={p.flags.join(", ")} className="inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: "#C0392B" }}>
@@ -342,11 +511,11 @@ export default function ProspectsPage() {
           style={{ background: "#1E1E1E", boxShadow: "0 -4px 24px rgba(0,0,0,0.18)" }}>
           <span className="text-sm font-semibold" style={{ color: "#fff" }}>{selected.size} selected</span>
           <div className="flex items-center gap-2">
-            <button onClick={() => setBulkEmailOpen(true)}
+            <button onClick={() => setComposerOpen(true)}
               className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full"
               style={{ background: "#C5B27A", color: "#1E1E1E" }}>
               <Send className="w-3.5 h-3.5" />
-              Bulk email ({selectedWithEmail} with email)
+              Email campaign ({selectedWithEmail} with email)
             </button>
             <button onClick={clearSelection}
               className="inline-flex items-center gap-1.5 text-sm px-3.5 py-2 rounded-full"
@@ -357,85 +526,212 @@ export default function ProspectsPage() {
         </div>
       )}
 
-      {/* Bulk email modal */}
-      {bulkEmailOpen && (
+      {/* Campaign composer */}
+      {composerOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.55)" }}>
-          <div className="bg-white rounded-[24px] w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
+          <div className="bg-white rounded-[24px] w-full max-w-xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b shrink-0" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
               <div>
-                <p className="font-semibold text-base" style={{ color: "#1E1E1E" }}>Bulk email</p>
+                <p className="font-semibold text-base" style={{ color: "#1E1E1E" }}>Email campaign</p>
                 <p className="text-xs mt-0.5" style={{ color: "#999" }}>
-                  Sending to {selectedWithEmail} prospect{selectedWithEmail === 1 ? "" : "s"} with an email address
+                  {campaign
+                    ? `Sending to ${campaign.total} recipient${campaign.total === 1 ? "" : "s"}`
+                    : `${selectedWithEmail} of ${selected.size} selected have an email address · ${productLabel}`}
                 </p>
               </div>
-              <button onClick={closeBulkModal} className="p-1.5 rounded-full" style={{ background: "#F2F2F2" }}>
+              <button onClick={closeComposer} className="p-1.5 rounded-full" style={{ background: "#F2F2F2" }}>
                 <X className="w-4 h-4" style={{ color: "#777" }} />
               </button>
             </div>
 
-            <div className="px-6 py-5 space-y-3">
-              {/* Template picker */}
-              {templates.length > 0 && (
-                <div className="relative">
-                  <button onClick={() => setTemplateOpen((o) => !o)}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
-                    style={{ background: "#F2F2F2", color: "#555" }}>
-                    Use template <ChevronDown className={`w-3 h-3 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {templateOpen && (
-                    <div className="absolute left-0 top-full mt-1 z-10 rounded-xl border shadow-lg overflow-hidden w-72"
-                      style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
-                      {templates.map((t) => (
-                        <button key={t.id} onClick={() => { setBulkSubject(t.subject); setBulkBody(t.body); setTemplateOpen(false); }}
-                          className="w-full text-left px-3.5 py-2.5 hover:bg-black/[0.03] transition-colors border-b last:border-0"
-                          style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-                          <p className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>{t.name}</p>
-                          <p className="text-[11px] truncate" style={{ color: "#999" }}>{t.subject}</p>
-                        </button>
-                      ))}
+            <div className="px-6 py-5 space-y-3 overflow-y-auto">
+              {campaign ? (
+                <CampaignProgress campaign={campaign} />
+              ) : (
+                <>
+                  <p className="text-xs rounded-xl px-3.5 py-2.5" style={{ background: "#FAFAF8", color: "#777" }}>
+                    Sent from <strong style={{ color: "#7A6020" }}>support@vitorra.org</strong> — replies come back to the
+                    shared inbox, not a personal mailbox. Use <code>{"{name}"}</code> to drop in each company&apos;s name.
+                  </p>
+
+                  {/* Template picker */}
+                  {templates.length > 0 && (
+                    <div className="relative">
+                      <button onClick={() => setTemplateOpen((o) => !o)}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
+                        style={{ background: "#F2F2F2", color: "#555" }}>
+                        Use template <ChevronDown className={`w-3 h-3 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
+                      </button>
+                      {templateOpen && (
+                        <div className="absolute left-0 top-full mt-1 z-10 rounded-xl border shadow-lg overflow-hidden w-72 max-h-64 overflow-y-auto"
+                          style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
+                          {templates.map((t) => (
+                            <button key={t.id} onClick={() => { setSubject(t.subject); setBody(t.body); setTemplateOpen(false); }}
+                              className="w-full text-left px-3.5 py-2.5 hover:bg-black/[0.03] transition-colors border-b last:border-0"
+                              style={{ borderColor: "rgba(0,0,0,0.05)" }}>
+                              <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: "#1E1E1E" }}>
+                                {t.name}
+                                {t.category && (
+                                  <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full"
+                                    style={{ background: "#F2F2F2", color: "#999" }}>{t.category}</span>
+                                )}
+                              </p>
+                              <p className="text-[11px] truncate" style={{ color: "#999" }}>{t.subject}</p>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1" style={{ color: "#bbb" }}>Subject</label>
+                    <input value={subject} onChange={(e) => setSubject(e.target.value)}
+                      placeholder="Email subject…"
+                      className="w-full text-sm rounded-xl px-3 py-2 border outline-none"
+                      style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1" style={{ color: "#bbb" }}>Message</label>
+                    <textarea value={body} onChange={(e) => setBody(e.target.value)}
+                      placeholder="Hi {name}, …"
+                      className="w-full text-sm rounded-xl px-3 py-2 border min-h-32 outline-none"
+                      style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                  </div>
+
+                  {/* Attachments */}
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1.5" style={{ color: "#bbb" }}>
+                      Attachments <span style={{ textTransform: "none", letterSpacing: 0 }}>· up to {MAX_FILES} files, {MAX_FILE_MB} MB each</span>
+                    </label>
+                    <input ref={attachRef} type="file" multiple hidden
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.csv,.txt"
+                      onChange={(e) => addFiles(e.target.files)} />
+                    <button onClick={() => attachRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-full"
+                      style={{ background: "#F2F2F2", color: "#555" }}>
+                      <Paperclip className="w-3.5 h-3.5" />Attach a file
+                    </button>
+                    {files.length > 0 && (
+                      <ul className="mt-2 space-y-1.5">
+                        {files.map((f) => (
+                          <li key={`${f.name}-${f.size}`} className="flex items-center gap-2 text-xs rounded-xl px-3 py-2" style={{ background: "#FAFAF8", color: "#555" }}>
+                            <Paperclip className="w-3 h-3 shrink-0" style={{ color: "#C5B27A" }} />
+                            <span className="flex-1 truncate">{f.name}</span>
+                            <span style={{ color: "#aaa" }}>{fmtSize(f.size)}</span>
+                            <button onClick={() => removeFile(f.name, f.size)} className="p-0.5 rounded-full hover:bg-black/[0.06]">
+                              <X className="w-3 h-3" style={{ color: "#999" }} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {fileError && <p className="text-xs mt-2" style={{ color: "#C0392B" }}>{fileError}</p>}
+                  </div>
+
+                  {/* Save as a reusable template */}
+                  <div className="pt-1">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1.5" style={{ color: "#bbb" }}>Save as template</label>
+                    <div className="flex items-center gap-2">
+                      <input value={tplName} onChange={(e) => setTplName(e.target.value)}
+                        placeholder="Template name, e.g. SEAL intro — hospitals"
+                        className="flex-1 text-sm rounded-xl px-3 py-2 border outline-none"
+                        style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                      <button onClick={saveAsTemplate}
+                        disabled={tplSaving || !tplName.trim() || !subject.trim() || !body.trim()}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full disabled:opacity-40 shrink-0"
+                        style={{ background: "#F2F2F2", color: "#555" }}>
+                        {tplSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}Save
+                      </button>
+                    </div>
+                    <p className="text-[11px] mt-1.5" style={{ color: tplSaved ? "#16A34A" : "#aaa" }}>
+                      {tplSaved
+                        ? "Saved — it's now in the template list above."
+                        : `Keeps this subject and message for reuse${product ? ` under ${product}` : ""}. Attachments aren't saved.`}
+                    </p>
+                  </div>
+                </>
               )}
 
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1" style={{ color: "#bbb" }}>Subject</label>
-                <input value={bulkSubject} onChange={(e) => setBulkSubject(e.target.value)}
-                  placeholder="Email subject…"
-                  className="w-full text-sm rounded-xl px-3 py-2 border outline-none"
-                  style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1" style={{ color: "#bbb" }}>Message</label>
-                <textarea value={bulkBody} onChange={(e) => setBulkBody(e.target.value)}
-                  placeholder="Hi {name}, …"
-                  className="w-full text-sm rounded-xl px-3 py-2 border min-h-32 outline-none"
-                  style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-              </div>
-
-              {bulkResult && (
-                <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(34,197,94,0.1)", color: "#16A34A" }}>
-                  Sent to {bulkResult.sent} prospect{bulkResult.sent === 1 ? "" : "s"}.
-                  {bulkResult.skipped > 0 && ` ${bulkResult.skipped} skipped (no email).`}
+              {sendError && (
+                <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}>
+                  {sendError}
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 px-6 pb-5">
-              <button onClick={closeBulkModal} className="text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>
-                {bulkResult ? "Close" : "Cancel"}
+            <div className="flex items-center justify-end gap-2 px-6 pb-5 pt-2 border-t shrink-0" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+              <button onClick={closeComposer} className="text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>
+                {campaign ? "Close" : "Cancel"}
               </button>
-              {!bulkResult && (
-                <button onClick={sendBulkEmail} disabled={bulkSending || !bulkSubject.trim() || !bulkBody.trim()}
+              {!campaign && (
+                <button onClick={startCampaign} disabled={sending || !subject.trim() || !body.trim() || selectedWithEmail === 0}
                   className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50"
                   style={{ background: "#C5B27A", color: "#1E1E1E" }}>
-                  {bulkSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}Send emails
+                  {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  Send to {selectedWithEmail}
                 </button>
               )}
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Live send progress. The bar keeps moving because the screen drives each batch. */
+function CampaignProgress({ campaign }: { campaign: Campaign }) {
+  const done = campaign.sent_count + campaign.failed_count;
+  const pct = campaign.total > 0 ? Math.round((done / campaign.total) * 100) : 100;
+  const finished = campaign.status !== "sending";
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        {finished
+          ? <CheckCircle2 className="w-5 h-5" style={{ color: "#16A34A" }} />
+          : <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#C5B27A" }} />}
+        <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>
+          {finished
+            ? campaign.status === "cancelled" ? "Campaign cancelled" : "Campaign sent"
+            : `Sending… ${done} of ${campaign.total}`}
+        </p>
+      </div>
+
+      <div className="h-2 rounded-full overflow-hidden" style={{ background: "#F2F2F2" }}>
+        <div className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, background: "#C5B27A" }} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <Stat label="Delivered to inbox" value={campaign.sent_count} tone="#16A34A" />
+        {campaign.failed_count > 0 && <Stat label="Failed" value={campaign.failed_count} tone="#C0392B" />}
+        {campaign.duplicate > 0 && <Stat label="Shared an inbox" value={campaign.duplicate} tone="#777" />}
+        {campaign.skipped > 0 && <Stat label="No email on file" value={campaign.skipped} tone="#777" />}
+      </div>
+
+      {campaign.attachments.length > 0 && (
+        <p className="text-xs flex items-center gap-1.5" style={{ color: "#888" }}>
+          <Paperclip className="w-3 h-3" style={{ color: "#C5B27A" }} />
+          {campaign.attachments.map((a) => a.name).join(", ")}
+        </p>
+      )}
+
+      {!finished && (
+        <p className="text-[11px]" style={{ color: "#aaa" }}>
+          You can close this — sending carries on in the background and finishes on its own.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value, tone }: { label: string; value: number; tone: string }) {
+  return (
+    <div className="rounded-xl px-3 py-2" style={{ background: "#FAFAF8" }}>
+      <p className="font-bold text-base" style={{ color: tone }}>{value}</p>
+      <p style={{ color: "#999" }}>{label}</p>
     </div>
   );
 }

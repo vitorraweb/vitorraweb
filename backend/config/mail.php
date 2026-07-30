@@ -118,6 +118,11 @@ return [
     // Inbox that receives new enquiries and contact messages
     'team_address' => env('MAIL_TEAM_ADDRESS', 'support@vitorra.org'),
 
+    // Prospect outreach campaigns send *from* (and reply to) this shared
+    // address rather than the staff member who composed them, so replies stay
+    // with the company. Defaults to the team inbox.
+    'campaign_from' => env('MAIL_CAMPAIGN_ADDRESS', env('MAIL_TEAM_ADDRESS', 'support@vitorra.org')),
+
     // Shared inbox, Phase B — capturing customer replies sent from their own
     // email client (not the portal). Default-off: until this is true, staff
     // replies keep reply-to = the sending staff member's own mailbox (today's
