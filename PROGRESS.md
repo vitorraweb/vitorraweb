@@ -21,6 +21,8 @@
 | **Prospects segmented by product (FET + SEAL)** — SEAL list loaded, 124 organisations | ✅ **Built** |
 | **Email campaigns with attachments, sent from support@vitorra.org** | ✅ **Built** |
 | Customer portal (`/account/*`) | ✅ Built |
+| **Shared inbox** — customer email replies captured into the system | ✅ **Built** — needs activation (reply subdomain + webhook) |
+| **Staff email signatures** — paste your Outlook signature, images included | ✅ **Built** |
 | FET pricing + savings calculator + currency helper | ✅ Complete |
 | **FET proven-savings loop** (per-vehicle measured savings, fleet rollups, monthly digest) | ✅ **Built (Phases 1–2)** |
 | Transactional email (Resend) | ✅ Live in production |
@@ -195,6 +197,57 @@ first thing a visitor sees is the brand, not a blank TV.
 
 ---
 
+## ✅ Shared inbox + staff email signatures (July 2026)
+
+Until now, a customer who simply **replied to one of our emails** disappeared into
+a personal mailbox. Nobody else could see the conversation, and it was invisible to
+the business the moment that staff member was away. This closes that hole.
+
+### One conversation, visible to the team
+- Staff reply to customers from **`/admin/customers`**, and the whole back-and-forth
+  is kept against that customer — not buried in one person's Outlook.
+- Customers see and answer the same thread in their own portal
+  (**`/account/messages`**), so they don't have to dig through email.
+- When a customer replies **from their own email client**, that reply is captured
+  into the system automatically and attached to the right customer.
+
+### Replies that look like they came from a person
+- Every staff member can paste their **Outlook signature exactly as they copied it**
+  — logo, photo, formatting and all — from `/admin/profile` or `/staff/profile`, and
+  it appears on their replies. Embedded images are handled properly rather than
+  arriving as broken boxes.
+- Rich pasted content (bold, links, tables) is accepted in **customer portal replies**
+  too, not just staff signatures — a customer pasting a spec or a quote gets it
+  through intact.
+- Pasted content is sanitised on the way in, so a stray script in someone's email
+  can't ride into our system.
+
+### ⏳ Needs a one-time setup before it goes live
+Capture of inbound replies is **built and switched off by default** — nothing changed
+for customers on deploy. To turn it on:
+1. Add an **MX record for a reply subdomain** (`reply.vitorra.org`) pointing at
+   Resend's inbound mail server. ⚠ This is a *new subdomain* — it does **not** touch
+   the Microsoft 365 records on `vitorra.org`.
+2. Verify that subdomain in the Resend dashboard.
+3. Create an inbound webhook to `https://api.vitorra.org/api/webhooks/email/inbound`
+   and put its signing secret in `RESEND_INBOUND_WEBHOOK_SECRET`.
+4. Set `MAIL_INBOUND_CAPTURE_ENABLED=true`.
+
+Check progress at any point with `php artisan inbound-email:status` — it lists
+exactly what's still outstanding. Until it's live, staff replies still work; only the
+automatic capture of customer replies is dormant.
+
+---
+
+## ✅ Smaller improvements (July 2026)
+
+- **Careers is now in the main navigation**, not just the footer — job seekers can
+  find it without scrolling to the bottom of the page (EN + SW).
+- **The WhatsApp button keeps gently pulsing** so visitors actually notice it,
+  instead of sitting still and being missed.
+
+---
+
 ## ✅ Prospects split by product + one-click email campaigns (July 2026)
 
 Until now the prospect database held one list — the 163 FET leads. Sales is now
@@ -296,27 +349,31 @@ needs 10 seconds from marketing to confirm and add.
    > puts your address on the list under the **Internal test** industry — kept out of
    > the real verticals, so it never inflates a count or gets swept into a live send.
    > Filter to it in `/admin/prospects`, tick it, and send a campaign to yourself.
-5. Set **executive-report recipients** in `/admin/settings`.
-6. Grant the new **People / Executive / Suppliers / Accounting** modules to existing ops accounts in `/admin/staff` — and **"Accounting — approve"** to the **Senior Finance Officer** (admins already have everything).
-7. Set `ANTHROPIC_API_KEY` on prod to enable **CV + receipt auto-read** (both work manually without it).
-8. Optionally link **Careers** and **Suppliers** in the public site footer.
-9. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
-10. **Optional — switch login to HttpOnly cookies** (extra XSS hardening): set `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN=.vitorra.org`, `SESSION_SECURE_COOKIE=true` (backend) + `NEXT_PUBLIC_AUTH_MODE=cookie` (Vercel). Reversible by unsetting; default stays token-based.
-11. **Point the reception TV at `vitorra.org/display`** — open it full-screen (kiosk mode) in the front-desk browser; it self-refreshes and needs no further setup.
+5. **Switch on the shared inbox** — add the `reply.vitorra.org` MX record, verify it in
+   Resend, set `RESEND_INBOUND_WEBHOOK_SECRET` + `MAIL_INBOUND_CAPTURE_ENABLED=true`.
+   Track it with `php artisan inbound-email:status`. ⚠ New subdomain only — never touch
+   the Microsoft 365 records on `vitorra.org`.
+6. Set **executive-report recipients** in `/admin/settings`.
+7. Grant the new **People / Executive / Suppliers / Accounting** modules to existing ops accounts in `/admin/staff` — and **"Accounting — approve"** to the **Senior Finance Officer** (admins already have everything).
+8. Set `ANTHROPIC_API_KEY` on prod to enable **CV + receipt auto-read** (both work manually without it).
+9. Optionally link **Suppliers** in the public site footer (Careers is now in the main nav).
+10. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
+11. **Optional — switch login to HttpOnly cookies** (extra XSS hardening): set `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN=.vitorra.org`, `SESSION_SECURE_COOKIE=true` (backend) + `NEXT_PUBLIC_AUTH_MODE=cookie` (Vercel). Reversible by unsetting; default stays token-based.
+12. **Point the reception TV at `vitorra.org/display`** — open it full-screen (kiosk mode) in the front-desk browser; it self-refreshes and needs no further setup.
 
 **Growth — next upgrades** (from `planning/10-platform-upgrades-brief.md`)
-12. **WhatsApp + SMS notifications** (order/payment/delivery updates) — needs Solomon's approval + a one-time business setup; small per-message cost.
-13. **Anti-spam on forms** (Cloudflare Turnstile) — free, ~10-min account setup, then wire in.
-14. **Wire up Sentry** (DSNs already configured) — catch errors before customers do.
-15. **Expand French site-wide** — translate the remaining sections into `fr.json` + add "fr" to the main switcher.
-16. **One-click unsubscribe for prospect campaigns** — cold outreach currently asks recipients to reply with "unsubscribe" (handled by the shared inbox). A proper one-click link, like the newsletter already has, would improve deliverability once campaign volume grows.
-17. Later (need a small server): on-site search, self-hosted newsletter, live chat, logistics maps.
+13. **WhatsApp + SMS notifications** (order/payment/delivery updates) — needs Solomon's approval + a one-time business setup; small per-message cost.
+14. **Anti-spam on forms** (Cloudflare Turnstile) — free, ~10-min account setup, then wire in.
+15. **Wire up Sentry** (DSNs already configured) — catch errors before customers do.
+16. **Expand French site-wide** — translate the remaining sections into `fr.json` + add "fr" to the main switcher.
+17. **One-click unsubscribe for prospect campaigns** — cold outreach currently asks recipients to reply with "unsubscribe" (which the shared inbox catches once item 5 is live). A proper one-click link, like the newsletter already has, would improve deliverability once campaign volume grows.
+18. Later (need a small server): on-site search, self-hosted newsletter, live chat, logistics maps.
 
 **Reliability**
-18. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
+19. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
 
 **Content / lower priority**
-19. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
+20. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
 
 ---
 
