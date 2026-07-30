@@ -33,11 +33,12 @@ class Prospect extends Model
     public const CATEGORIES_BY_PRODUCT = [
         'FET' => [
             'CARGO', 'DISTRIBUTOR', 'CONSTRUCTION', 'MANUFACTURING', 'PUBLIC_TRANSPORT',
-            'SCHOOL', 'FARMER', 'SPARE_PARTS', 'CAR_BOND', 'FUNERAL',
+            'SCHOOL', 'FARMER', 'SPARE_PARTS', 'CAR_BOND', 'FUNERAL', 'INTERNAL_TEST',
         ],
         'SEAL' => [
             'HOSPITAL', 'PHARMACY', 'FIRST_RESPONDER', 'MANUFACTURING', 'MINING_QUARRY',
             'SPORTS_ASSOCIATION', 'BODA_BODA', 'BIKER_ASSOCIATION', 'TRAVEL_COMPANY',
+            'INTERNAL_TEST',
         ],
     ];
 
@@ -50,6 +51,10 @@ class Prospect extends Model
         'SCHOOL', 'FARMER', 'SPARE_PARTS', 'CAR_BOND', 'FUNERAL',
         'HOSPITAL', 'PHARMACY', 'FIRST_RESPONDER', 'MINING_QUARRY',
         'SPORTS_ASSOCIATION', 'BODA_BODA', 'BIKER_ASSOCIATION', 'TRAVEL_COMPANY',
+        // Our own addresses, for previewing a campaign before it goes to real
+        // prospects. Kept out of the real verticals so test rows never inflate
+        // an industry's count or get swept into a live send.
+        'INTERNAL_TEST',
     ];
 
     /** Outreach pipeline stages. */

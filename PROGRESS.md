@@ -291,6 +291,11 @@ needs 10 seconds from marketing to confirm and add.
    sender in Resend (it's on the already-verified `vitorra.org` domain, so this
    should just work — worth one test send to a team address first). Optionally set
    `MAIL_CAMPAIGN_ADDRESS` to send campaigns from a different shared mailbox.
+
+   > To test on yourself: `php artisan prospects:add-tester john@vitorra.org --name="Vitorra Holdings (John)"`
+   > puts your address on the list under the **Internal test** industry — kept out of
+   > the real verticals, so it never inflates a count or gets swept into a live send.
+   > Filter to it in `/admin/prospects`, tick it, and send a campaign to yourself.
 5. Set **executive-report recipients** in `/admin/settings`.
 6. Grant the new **People / Executive / Suppliers / Accounting** modules to existing ops accounts in `/admin/staff` — and **"Accounting — approve"** to the **Senior Finance Officer** (admins already have everything).
 7. Set `ANTHROPIC_API_KEY` on prod to enable **CV + receipt auto-read** (both work manually without it).

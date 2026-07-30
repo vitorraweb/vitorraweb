@@ -32,13 +32,14 @@ const CATEGORIES_BY_PRODUCT: Record<string, [string, string][]> = {
     ["CARGO", "Cargo"], ["DISTRIBUTOR", "Distributors"], ["CONSTRUCTION", "Construction"],
     ["MANUFACTURING", "Manufacturing"], ["PUBLIC_TRANSPORT", "Public transport"], ["SCHOOL", "Schools"],
     ["FARMER", "Farmers"], ["SPARE_PARTS", "Spare parts & garages"], ["CAR_BOND", "Car bonds"],
-    ["FUNERAL", "Funeral services"],
+    ["FUNERAL", "Funeral services"], ["INTERNAL_TEST", "Internal test"],
   ],
   SEAL: [
     ["HOSPITAL", "Hospitals"], ["PHARMACY", "Pharmacies"], ["FIRST_RESPONDER", "First responders"],
     ["MANUFACTURING", "Manufacturing"], ["MINING_QUARRY", "Mines & quarries"],
     ["SPORTS_ASSOCIATION", "Sports associations"], ["BODA_BODA", "Boda bodas"],
     ["BIKER_ASSOCIATION", "Biker associations"], ["TRAVEL_COMPANY", "Travel companies"],
+    ["INTERNAL_TEST", "Internal test"],
   ],
 };
 
