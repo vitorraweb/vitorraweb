@@ -137,4 +137,62 @@ class LeaveTest extends TestCase
         $this->assertSame('approved', $leave->fresh()->status);
         Mail::assertSent(\App\Mail\LeaveDecided::class);
     }
+
+    public function test_nobody_can_approve_their_own_leave_not_even_an_admin(): void
+    {
+        foreach (['admin', 'ops', 'employee'] as $role) {
+            // The auth guard caches the resolved user for the lifetime of the
+            // test app, so without this every request after the first would run
+            // as the previous role rather than the new applicant.
+            $this->app['auth']->forgetGuards();
+
+            $applicant = $this->staff(['role' => $role]);
+            $leave = LeaveRequest::create([
+                'user_id' => $applicant->id, 'type' => 'annual',
+                'start_date' => '2026-01-05', 'end_date' => '2026-01-06', 'working_days' => 2, 'status' => 'pending',
+            ]);
+
+            $this->actingApi($applicant)
+                ->postJson("/api/staff/leave/{$leave->id}/decision", ['status' => 'approved'])
+                ->assertForbidden();
+
+            $this->assertSame('pending', $leave->fresh()->status, "{$role} approved their own leave");
+        }
+    }
+
+    public function test_admin_cannot_approve_their_own_leave_from_the_hr_screen(): void
+    {
+        $admin = $this->staff(['role' => 'admin']);
+        $leave = LeaveRequest::create([
+            'user_id' => $admin->id, 'type' => 'annual',
+            'start_date' => '2026-01-05', 'end_date' => '2026-01-06', 'working_days' => 2, 'status' => 'pending',
+        ]);
+
+        $this->actingApi($admin)
+            ->postJson("/api/admin/leave/{$leave->id}/decision", ['status' => 'approved'])
+            ->assertForbidden();
+
+        $this->assertSame('pending', $leave->fresh()->status);
+    }
+
+    public function test_own_request_is_not_listed_in_the_review_queue(): void
+    {
+        $admin     = $this->staff(['role' => 'admin']);
+        $applicant = $this->staff();
+
+        $own = LeaveRequest::create([
+            'user_id' => $admin->id, 'type' => 'annual',
+            'start_date' => '2026-01-05', 'end_date' => '2026-01-06', 'working_days' => 2, 'status' => 'pending',
+        ]);
+        $theirs = LeaveRequest::create([
+            'user_id' => $applicant->id, 'type' => 'annual',
+            'start_date' => '2026-02-05', 'end_date' => '2026-02-06', 'working_days' => 2, 'status' => 'pending',
+        ]);
+
+        $res = $this->actingApi($admin)->getJson('/api/staff/leave/pending')->assertOk();
+
+        $ids = array_column($res->json('data'), 'id');
+        $this->assertNotContains($own->id, $ids, 'reviewer saw their own request in the queue');
+        $this->assertContains($theirs->id, $ids);
+    }
 }

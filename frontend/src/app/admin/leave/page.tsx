@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Loader2, Check, X, Download } from "lucide-react";
-import { apiAdmin, downloadFile } from "@/lib/auth";
+import { apiAdmin, auth, downloadFile } from "@/lib/auth";
 import { PageHeader, Empty } from "@/components/admin/admin-ui";
 
 type Leave = {
@@ -23,6 +23,10 @@ const STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
 };
 
 export default function AdminLeavePage() {
+  /* This screen lists everyone's leave, including the signed-in reviewer's own.
+     Nobody may decide their own request (the API refuses it), so the buttons are
+     hidden on that row rather than shown and then failing. */
+  const meId = auth.getUser()?.id;
   const [list, setList] = useState<Leave[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
   const [status, setStatus] = useState("pending");
@@ -83,11 +87,14 @@ export default function AdminLeavePage() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {l.has_document && <button onClick={() => note(l)} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Download className="w-3.5 h-3.5" />Note</button>}
-                    {l.status === "pending" && (
+                    {l.status === "pending" && l.user?.id !== meId && (
                       <>
                         <button onClick={() => decide(l.id, "approved")} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}><Check className="w-3.5 h-3.5" />Approve</button>
                         <button onClick={() => decide(l.id, "declined")} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><X className="w-3.5 h-3.5" />Decline</button>
                       </>
+                    )}
+                    {l.status === "pending" && l.user?.id === meId && (
+                      <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>Your request — another reviewer decides</span>
                     )}
                   </div>
                 </div>

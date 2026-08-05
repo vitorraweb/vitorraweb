@@ -54,6 +54,9 @@ class User extends Authenticatable
             'permissions'            => 'array',
             'documents'              => 'array',
             'leave_entitlement_days' => 'integer',
+            // Compared with `===` against another user's id when deciding who
+            // may review a report/leave request — must not arrive as a string.
+            'supervisor_id'          => 'integer',
             'two_factor_secret'         => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at'   => 'datetime',

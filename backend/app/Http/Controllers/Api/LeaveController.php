@@ -160,7 +160,12 @@ class LeaveController extends Controller
     {
         $user = $request->user();
 
-        $query = LeaveRequest::where('status', 'pending')->with('user:id,name,department,supervisor_id');
+        // Never list the reviewer's own request. Admin/ops otherwise see every
+        // pending request, which put their own leave in their review queue with
+        // working Approve/Decline buttons — canReview now refuses it anyway.
+        $query = LeaveRequest::where('status', 'pending')
+            ->where('user_id', '!=', $user->id)
+            ->with('user:id,name,department,supervisor_id');
         if (! in_array($user->role, ['admin', 'ops'], true)) {
             // Supervisors see only their direct reports.
             $query->whereHas('user', fn ($q) => $q->where('supervisor_id', $user->id));
@@ -252,8 +257,19 @@ class LeaveController extends Controller
 
     /* ── helpers ─────────────────────────────────────────────────────────── */
 
+    /**
+     * Who may decide a request: HR (admin/ops) or the requester's own supervisor.
+     *
+     * Nobody may decide their own request — not even an admin or the Head of
+     * Operations. Signing off your own leave defeats the point of the review
+     * step, so the applicant is excluded before role is even considered.
+     */
     private function canReview(User $actor, LeaveRequest $leave): bool
     {
+        if ($leave->user_id === $actor->id) {
+            return false;
+        }
+
         return in_array($actor->role, ['admin', 'ops'], true)
             || $leave->loadMissing('user')->user?->supervisor_id === $actor->id;
     }

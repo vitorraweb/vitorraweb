@@ -32,6 +32,11 @@ class LeaveRequest extends Model
         'end_date'     => 'date',
         'working_days' => 'integer',
         'reviewed_at'  => 'datetime',
+        // Cast the keys: permission checks compare these with `===` against
+        // User::$id, and an un-cast column can arrive as a string from the
+        // driver, silently failing the comparison.
+        'user_id'      => 'integer',
+        'reviewed_by'  => 'integer',
     ];
 
     public function user(): BelongsTo
