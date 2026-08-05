@@ -10,6 +10,12 @@ type Leave = {
   reason: string | null; status: string; has_document: boolean; review_comment: string | null;
   reviewed_at: string | null; created_at: string;
   user?: { id: number; name: string; department: string | null };
+  /* Leave needs two signatures — Operations and Finance. `approvals` is what has
+     been collected, `awaiting` who is still owed, `can_decide` whether the
+     signed-in reviewer may act (the API decides; this only hides the buttons). */
+  approvals: { stage: string; label: string; by: string | null; decision: string; at: string | null }[];
+  awaiting: string[];
+  can_decide: boolean;
 };
 
 const TYPE_LABEL: Record<string, string> = {
@@ -84,17 +90,26 @@ export default function AdminLeavePage() {
                     <p className="text-xs mt-1" style={{ color: "#999" }}>{TYPE_LABEL[l.type] ?? l.type} · {fmt(l.start_date)} → {fmt(l.end_date)} · {l.working_days} day{l.working_days === 1 ? "" : "s"}</p>
                     {l.reason && <p className="text-xs mt-1" style={{ color: "#777" }}>{l.reason}</p>}
                     {l.review_comment && <p className="text-xs mt-1" style={{ color: "#777" }}>Note: {l.review_comment}</p>}
+                    {l.approvals?.length > 0 && (
+                      <p className="text-xs mt-1" style={{ color: "#777" }}>
+                        {l.approvals.map((a) => `${a.label} ${a.decision}${a.by ? ` — ${a.by}` : ""}`).join(" · ")}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {l.has_document && <button onClick={() => note(l)} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Download className="w-3.5 h-3.5" />Note</button>}
-                    {l.status === "pending" && l.user?.id !== meId && (
+                    {l.status === "pending" && l.can_decide && (
                       <>
                         <button onClick={() => decide(l.id, "approved")} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}><Check className="w-3.5 h-3.5" />Approve</button>
                         <button onClick={() => decide(l.id, "declined")} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><X className="w-3.5 h-3.5" />Decline</button>
                       </>
                     )}
-                    {l.status === "pending" && l.user?.id === meId && (
-                      <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>Your request — another reviewer decides</span>
+                    {l.status === "pending" && !l.can_decide && (
+                      <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>
+                        {l.user?.id === meId
+                          ? "Your request — others decide"
+                          : `Awaiting ${(l.awaiting ?? []).join(" + ") || "review"}`}
+                      </span>
                     )}
                   </div>
                 </div>

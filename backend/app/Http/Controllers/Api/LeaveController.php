@@ -35,7 +35,7 @@ class LeaveController extends Controller
         $used = $this->leave->annualUsed($user, $year);
 
         return response()->json([
-            'data'    => $user->leaveRequests()->latest()->get()->map(fn ($l) => $this->shape($l)),
+            'data'    => $user->leaveRequests()->with('approvals.user:id,name')->latest()->get()->map(fn ($l) => $this->shape($l)),
             'balance' => [
                 'entitlement' => $user->leave_entitlement_days,
                 'used'        => $used,
@@ -117,7 +117,7 @@ class LeaveController extends Controller
             'document_path' => $path,
         ]);
 
-        $this->notifyReviewers($leave, $user);
+        $this->notifyOutstanding($leave);
 
         return response()->json(['data' => $this->shape($leave)], 201);
     }
@@ -140,7 +140,7 @@ class LeaveController extends Controller
     /** HR overview — all leave requests, optionally filtered by status/type. */
     public function all(Request $request): JsonResponse
     {
-        $query = LeaveRequest::with('user:id,name,department')->latest('start_date');
+        $query = LeaveRequest::with('user:id,name,department', 'approvals.user:id,name')->latest('start_date');
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));
         }
@@ -149,36 +149,42 @@ class LeaveController extends Controller
         }
 
         return response()->json([
-            'data'     => $query->limit(500)->get()->map(fn ($l) => $this->shape($l, withUser: true)),
+            'data'     => $query->limit(500)->get()->map(fn ($l) => $this->shape($l, withUser: true, viewer: $request->user())),
             'statuses' => LeaveRequest::STATUSES,
             'types'    => LeaveRequest::TYPES,
         ]);
     }
 
-    /** Requests awaiting the signed-in reviewer (their reports, or all if HR). */
+    /** Requests still waiting on this person's signature (Operations or Finance). */
     public function pending(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        // Never list the reviewer's own request. Admin/ops otherwise see every
-        // pending request, which put their own leave in their review queue with
-        // working Approve/Decline buttons — canReview now refuses it anyway.
-        $query = LeaveRequest::where('status', 'pending')
+        // Only requests this person can actually sign right now: never their
+        // own, never one they have already signed, and only where their stage
+        // (Operations or Finance) is still outstanding.
+        $queue = LeaveRequest::where('status', 'pending')
             ->where('user_id', '!=', $user->id)
-            ->with('user:id,name,department,supervisor_id');
-        if (! in_array($user->role, ['admin', 'ops'], true)) {
-            // Supervisors see only their direct reports.
-            $query->whereHas('user', fn ($q) => $q->where('supervisor_id', $user->id));
-        }
+            ->with('user:id,name,department', 'approvals.user:id,name')
+            ->orderBy('start_date')
+            ->get()
+            ->filter(fn ($l) => $this->assignableStage($user, $l) !== null)
+            ->values();
 
-        return response()->json(['data' => $query->orderBy('start_date')->get()->map(fn ($l) => $this->shape($l, withUser: true))]);
+        return response()->json(['data' => $queue->map(fn ($l) => $this->shape($l, withUser: true, viewer: $user))]);
     }
 
-    /** Approve or decline a request (supervisor of the requester, or HR). */
+    /**
+     * Add one signature to a request. Leave is granted only once both
+     * Operations and Finance have approved; either of them may decline, which
+     * ends the request immediately.
+     */
     public function decision(Request $request, LeaveRequest $leave): JsonResponse
     {
         $actor = $request->user();
-        if (! $this->canReview($actor, $leave)) {
+        $stage = $this->assignableStage($actor, $leave);
+
+        if (! $stage) {
             return response()->json(['message' => 'You are not allowed to review this request.'], 403);
         }
         if ($leave->status !== 'pending') {
@@ -190,16 +196,31 @@ class LeaveController extends Controller
             'comment' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $leave->update([
-            'status'         => $data['status'],
-            'review_comment' => $data['comment'] ?? null,
-            'reviewed_by'    => $actor->id,
-            'reviewed_at'    => now(),
+        $leave->approvals()->create([
+            'user_id'  => $actor->id,
+            'stage'    => $stage,
+            'decision' => $data['status'],
+            'comment'  => $data['comment'] ?? null,
         ]);
+        $leave->load('approvals.user:id,name');
 
-        Mail::to($leave->user->email)->send(new LeaveDecided($leave->fresh()->load('user:id,name,email', 'reviewer:id,name')));
+        $declined = $data['status'] === 'declined';
+        $complete = $declined || $leave->outstandingStages() === [];
 
-        return response()->json(['data' => $this->shape($leave, withUser: true)]);
+        if ($complete) {
+            $leave->update([
+                'status'         => $declined ? 'declined' : 'approved',
+                'review_comment' => $data['comment'] ?? null,
+                'reviewed_by'    => $actor->id,
+                'reviewed_at'    => now(),
+            ]);
+            Mail::to($leave->user->email)->send(new LeaveDecided($leave->fresh()->load('user:id,name,email', 'reviewer:id,name')));
+        } else {
+            // Still pending — tell whoever owes the remaining signature.
+            $this->notifyOutstanding($leave);
+        }
+
+        return response()->json(['data' => $this->shape($leave->fresh()->load('user:id,name,department', 'approvals.user:id,name'), withUser: true, viewer: $actor)]);
     }
 
     /** Upcoming public holidays + active leave blackouts (for the portal). */
@@ -258,20 +279,54 @@ class LeaveController extends Controller
     /* ── helpers ─────────────────────────────────────────────────────────── */
 
     /**
-     * Who may decide a request: HR (admin/ops) or the requester's own supervisor.
+     * Which signature, if any, this person may add to this request right now —
+     * null means they cannot act on it.
      *
-     * Nobody may decide their own request — not even an admin or the Head of
-     * Operations. Signing off your own leave defeats the point of the review
-     * step, so the applicant is excluded before role is even considered.
+     * Leave needs two signatures, Operations and Finance, and they must come
+     * from two different people. Guards, in order:
+     *   - never your own request, whatever your role;
+     *   - never a second signature from someone who already signed;
+     *   - Finance is offered first, because the Senior Finance Officer is the
+     *     only person who can give it — spending them on the Operations
+     *     signature would leave the request unable to complete.
      */
-    private function canReview(User $actor, LeaveRequest $leave): bool
+    private function assignableStage(User $actor, LeaveRequest $leave): ?string
     {
         if ($leave->user_id === $actor->id) {
-            return false;
+            return null;
         }
 
-        return in_array($actor->role, ['admin', 'ops'], true)
-            || $leave->loadMissing('user')->user?->supervisor_id === $actor->id;
+        $leave->loadMissing('approvals');
+        if ($leave->approvals->contains('user_id', $actor->id)) {
+            return null;
+        }
+
+        $signed = $leave->approvedStages();
+
+        if (! in_array('finance', $signed, true) && $this->isFinanceApprover($actor)) {
+            return 'finance';
+        }
+        if (! in_array('operations', $signed, true) && $actor->isOps()) {
+            return 'operations';
+        }
+
+        return null;
+    }
+
+    /**
+     * Holders of the "Accounting — approve" grant (the Senior Finance Officer).
+     *
+     * Deliberately not User::canModule() — that returns true for an admin on
+     * every module, which would let one admin supply both signatures alone and
+     * make the two-person rule meaningless. Only a real grant counts here.
+     */
+    private function isFinanceApprover(User $user): bool
+    {
+        $perms = is_array($user->permissions)
+            ? $user->permissions
+            : (config('admin_modules.departments.'.$user->department) ?? []);
+
+        return in_array('accounting_approve', $perms, true);
     }
 
     private function warnings(User $user, string $type, Carbon $start, Carbon $end, int $days): array
@@ -295,18 +350,43 @@ class LeaveController extends Controller
         return $w;
     }
 
-    private function notifyReviewers(LeaveRequest $leave, User $user): void
+    /**
+     * Email whoever still owes a signature — on submission, and again after the
+     * first of the two approvals lands so the second is actually chased.
+     */
+    private function notifyOutstanding(LeaveRequest $leave): void
     {
+        $leave->loadMissing('approvals', 'user:id,name,email');
         $sent = [];
-        $user->loadMissing('supervisor:id,name,email');
-        if ($user->supervisor?->email) {
-            Mail::to($user->supervisor->email)->send(new LeaveSubmitted($leave, $user->supervisor->name));
-            $sent[] = $user->supervisor->email;
+
+        foreach ($leave->outstandingStages() as $stage) {
+            foreach ($this->approversFor($stage) as $approver) {
+                // Never ask the applicant to sign their own request.
+                if ($approver->id === $leave->user_id || in_array($approver->email, $sent, true)) {
+                    continue;
+                }
+                Mail::to($approver->email)->send(new LeaveSubmitted($leave, $approver->name));
+                $sent[] = $approver->email;
+            }
         }
+
+        // The shared HR inbox too, so nothing goes unseen while someone is away.
         $hr = Setting::get('notify_email');
         if ($hr && ! in_array($hr, $sent, true)) {
             Mail::to($hr)->send(new LeaveSubmitted($leave, 'HR team'));
         }
+    }
+
+    /** Staff who can give a given stage's signature. @return list<User> */
+    private function approversFor(string $stage): array
+    {
+        $staff = User::whereIn('role', ['admin', 'ops', 'employee'])->get();
+
+        $matches = $stage === 'finance'
+            ? $staff->filter(fn (User $u) => $this->isFinanceApprover($u))
+            : $staff->filter(fn (User $u) => $u->isOps());
+
+        return $matches->filter(fn (User $u) => filled($u->email))->values()->all();
     }
 
     private function nextOccurrence(Carbon $recurringDate, Carbon $from): Carbon
@@ -315,9 +395,26 @@ class LeaveController extends Controller
         return $candidate->lt($from) ? $candidate->addYear() : $candidate;
     }
 
-    private function shape(LeaveRequest $l, bool $withUser = false): array
+    private function shape(LeaveRequest $l, bool $withUser = false, ?User $viewer = null): array
     {
+        $l->loadMissing('approvals.user:id,name');
+
         $out = [
+            /* Both signatures, so every screen can show how far a request has got
+               rather than just "pending". `can_decide` tells the client whether to
+               offer the buttons at all — the API is still the one enforcing it. */
+            'approvals'   => $l->approvals->map(fn ($a) => [
+                'stage'    => $a->stage,
+                'label'    => \App\Models\LeaveApproval::STAGE_LABELS[$a->stage] ?? $a->stage,
+                'by'       => $a->user?->name,
+                'decision' => $a->decision,
+                'at'       => $a->created_at?->toIso8601String(),
+            ])->values()->all(),
+            'awaiting'    => array_map(
+                fn ($s) => \App\Models\LeaveApproval::STAGE_LABELS[$s] ?? $s,
+                $l->status === 'pending' ? $l->outstandingStages() : []
+            ),
+            'can_decide'  => $viewer ? $this->assignableStage($viewer, $l) !== null : false,
             'id'             => $l->id,
             'type'           => $l->type,
             'start_date'     => $l->start_date->format('Y-m-d'),

@@ -31,6 +31,18 @@ class LeaveTest extends TestCase
         return $this->withHeader('Authorization', 'Bearer '.$user->createToken('t')->plainTextToken);
     }
 
+    private function request(User $user): LeaveRequest
+    {
+        return LeaveRequest::create([
+            'user_id'      => $user->id,
+            'type'         => 'annual',
+            'start_date'   => '2026-01-05',
+            'end_date'     => '2026-01-06',
+            'working_days' => 2,
+            'status'       => 'pending',
+        ]);
+    }
+
     public function test_working_days_exclude_weekends_and_holidays(): void
     {
         Mail::fake();
@@ -119,23 +131,112 @@ class LeaveTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_supervisor_can_approve_and_employee_is_emailed(): void
+    /** The Senior Finance Officer — the only holder of the finance signature. */
+    private function finance(): User
     {
-        Mail::fake();
-        $supervisor = $this->staff(['role' => 'ops']);
+        return $this->staff(['role' => 'employee', 'permissions' => ['accounting', 'accounting_approve']]);
+    }
+
+    public function test_a_supervisor_alone_can_no_longer_approve(): void
+    {
+        $supervisor = $this->staff(['role' => 'employee']);
         $applicant  = $this->staff(['supervisor_id' => $supervisor->id]);
-        $leave = LeaveRequest::create([
-            'user_id' => $applicant->id, 'type' => 'annual',
-            'start_date' => '2026-01-05', 'end_date' => '2026-01-06', 'working_days' => 2, 'status' => 'pending',
-        ]);
+        $leave = $this->request($applicant);
 
         $this->actingApi($supervisor)
+            ->postJson("/api/staff/leave/{$leave->id}/decision", ['status' => 'approved'])
+            ->assertForbidden();
+
+        $this->assertSame('pending', $leave->fresh()->status);
+    }
+
+    public function test_operations_alone_does_not_grant_leave(): void
+    {
+        Mail::fake();
+        $ops   = $this->staff(['role' => 'ops']);
+        $leave = $this->request($this->staff());
+
+        $this->actingApi($ops)
+            ->postJson("/api/staff/leave/{$leave->id}/decision", ['status' => 'approved'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'pending')
+            ->assertJsonPath('data.awaiting', ['Finance']);
+
+        $this->assertSame('pending', $leave->fresh()->status);
+        Mail::assertNotSent(\App\Mail\LeaveDecided::class);
+    }
+
+    public function test_both_signatures_grant_leave_and_the_employee_is_emailed(): void
+    {
+        Mail::fake();
+        $ops       = $this->staff(['role' => 'ops']);
+        $finance   = $this->finance();
+        $applicant = $this->staff();
+        $leave     = $this->request($applicant);
+
+        $this->actingApi($ops)
+            ->postJson("/api/staff/leave/{$leave->id}/decision", ['status' => 'approved'])
+            ->assertOk();
+        $this->assertSame('pending', $leave->fresh()->status);
+
+        $this->app['auth']->forgetGuards();
+        $this->actingApi($finance)
             ->postJson("/api/staff/leave/{$leave->id}/decision", ['status' => 'approved'])
             ->assertOk()
             ->assertJsonPath('data.status', 'approved');
 
         $this->assertSame('approved', $leave->fresh()->status);
         Mail::assertSent(\App\Mail\LeaveDecided::class);
+    }
+
+    public function test_one_person_cannot_provide_both_signatures(): void
+    {
+        // An admin implicitly "has" every module, so without an explicit guard
+        // this account could sign as Operations and then again as Finance.
+        $admin = $this->staff(['role' => 'admin']);
+        $leave = $this->request($this->staff());
+
+        $this->actingApi($admin)
+            ->postJson("/api/staff/leave/{$leave->id}/decision", ['status' => 'approved'])
+            ->assertOk();
+
+        $this->app['auth']->forgetGuards();
+        $this->actingApi($admin)
+            ->postJson("/api/staff/leave/{$leave->id}/decision", ['status' => 'approved'])
+            ->assertForbidden();
+
+        $this->assertSame('pending', $leave->fresh()->status);
+    }
+
+    public function test_either_approver_can_decline_outright(): void
+    {
+        Mail::fake();
+        $finance = $this->finance();
+        $leave   = $this->request($this->staff());
+
+        $this->actingApi($finance)
+            ->postJson("/api/staff/leave/{$leave->id}/decision", ['status' => 'declined', 'comment' => 'Wrong attachment'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'declined');
+
+        $this->assertSame('declined', $leave->fresh()->status);
+        Mail::assertSent(\App\Mail\LeaveDecided::class);
+    }
+
+    public function test_a_request_leaves_the_queue_once_you_have_signed_it(): void
+    {
+        $ops   = $this->staff(['role' => 'ops']);
+        $leave = $this->request($this->staff());
+
+        $before = $this->actingApi($ops)->getJson('/api/staff/leave/pending')->assertOk();
+        $this->assertContains($leave->id, array_column($before->json('data'), 'id'));
+
+        $this->app['auth']->forgetGuards();
+        $this->actingApi($ops)->postJson("/api/staff/leave/{$leave->id}/decision", ['status' => 'approved'])->assertOk();
+
+        $this->app['auth']->forgetGuards();
+        $after = $this->actingApi($ops)->getJson('/api/staff/leave/pending')->assertOk();
+        $this->assertNotContains($leave->id, array_column($after->json('data'), 'id'));
     }
 
     public function test_nobody_can_approve_their_own_leave_not_even_an_admin(): void

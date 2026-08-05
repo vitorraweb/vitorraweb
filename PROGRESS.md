@@ -47,7 +47,7 @@ Built from the Head of Finance's brief — a full internal suite on top of the m
 Every employee gets a login (new `employee` role). They can:
 - Change their own password; see their **contract & HR documents** (stored privately).
 - See their **supervisor**; supervisors see **their team**.
-- **Apply for leave** — the system counts working days (excludes weekends + Uganda public holidays), stops two teammates in the same department booking the same dates, respects company-event blackouts, and tracks the annual balance. Sick leave needs a medical document. Supervisors/HR approve; everyone's emailed.
+- **Apply for leave** — the system counts working days (excludes weekends + Uganda public holidays), stops two teammates in the same department booking the same dates, respects company-event blackouts, and tracks the annual balance. Sick leave needs a medical document. **Two people must approve — Operations and Finance** — and they must be two different people, neither of them the applicant; either can decline outright. Everyone's emailed as it moves.
 - File a **monthly work report** (checklist + summary); supervisors rate and comment.
 
 **Admin side:** Leave approvals, a **Holidays & events** manager (Uganda 2026 seeded), and a **Probation watch** (who's in their first 3 months, days left, whether they're reporting). Staff get **automatic holiday reminders** ~3 days ahead.

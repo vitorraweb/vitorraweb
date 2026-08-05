@@ -67,7 +67,7 @@ Added `people` (HR — ops/finance/leadership), `executive` (CEO report — lead
 
 ### Phase 1 — Staff/HR portal (`/staff`)
 - **Profile & security** (own password change), **My documents** (private contract/HR files), **My supervisor**, **My team** (supervisors only).
-- **Leave:** apply (live working-day count excl. weekends + Uganda public holidays), rules — same-department clash, company-event blackout, annual-balance; sick leave requires a private medical doc; supervisor/HR approve; emails both ways. Admin: **Leave** (review), **Holidays** (Uganda 2026 seeded + company events). `holidays:notify` cron reminds staff ~3 days out.
+- **Leave:** apply (live working-day count excl. weekends + Uganda public holidays), rules — same-department clash, company-event blackout, annual-balance; sick leave requires a private medical doc; **two signatures required — Operations (admin/ops) + Finance (`accounting_approve` grant only)**, from two different people, neither of whom may be the applicant; either may decline outright; emails both ways. Admin: **Leave** (review), **Holidays** (Uganda 2026 seeded + company events). `holidays:notify` cron reminds staff ~3 days out.
 - **Monthly reports:** employees submit a checklist + summary; supervisors rate (1–5) + comment; reviewed reports lock. Admin **Probation** watch: staff in first 3 months, days remaining, report status.
 - **Recruitment:** public **`/careers`** (job board + apply with **AI CV extraction** via Claude Haiku → auto-fill), admin **Careers** (openings + applicant pipeline, CV download). CVs on private disk; `applications:purge` enforces 6-month retention.
 

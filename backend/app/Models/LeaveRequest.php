@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LeaveRequest extends Model
 {
@@ -47,5 +48,26 @@ class LeaveRequest extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    /** The signatures collected so far — leave is granted once both stages sign. */
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(LeaveApproval::class);
+    }
+
+    /** Stages that have approved (a decline ends the request outright). */
+    public function approvedStages(): array
+    {
+        return $this->approvals
+            ->where('decision', 'approved')
+            ->pluck('stage')
+            ->all();
+    }
+
+    /** Stages still to sign, in the order they are shown to staff. */
+    public function outstandingStages(): array
+    {
+        return array_values(array_diff(LeaveApproval::STAGES, $this->approvedStages()));
     }
 }
