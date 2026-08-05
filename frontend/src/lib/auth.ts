@@ -3,6 +3,7 @@
    HttpOnly session). Switch with NEXT_PUBLIC_AUTH_MODE=cookie. */
 
 import { authFetch } from "./http";
+import { API_BASE_URL } from "./constants";
 
 const TOKEN_KEY  = "vitorra_admin_token";
 const USER_KEY   = "vitorra_admin_user";
@@ -70,7 +71,7 @@ export const auth = {
 };
 
 export async function apiAdmin<T>(path: string, options?: RequestInit): Promise<T> {
-  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const base = API_BASE_URL;
   const res  = await authFetch(base, path, auth.getToken(), options ?? {});
   if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
   if (!res.ok) {
@@ -104,7 +105,7 @@ async function saveBlob(res: Response, fallback: string): Promise<void> {
 
 /** Fetch a CSV from an admin endpoint and trigger a browser file download. */
 export async function downloadCsv(path: string, filename: string): Promise<void> {
-  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const base = API_BASE_URL;
   const res  = await authFetch(base, path, auth.getToken(), { headers: { Accept: "text/csv" } }, false);
   if (!res.ok) throw new Error("Export failed");
   await saveBlob(res, filename);
@@ -112,7 +113,7 @@ export async function downloadCsv(path: string, filename: string): Promise<void>
 
 /** Download a file from an authorized admin endpoint as a browser download. */
 export async function downloadFile(path: string, filename: string): Promise<void> {
-  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const base = API_BASE_URL;
   const res  = await authFetch(base, path, auth.getToken(), {}, false);
   if (!res.ok) throw new Error("Download failed");
   await saveBlob(res, filename);
@@ -120,7 +121,7 @@ export async function downloadFile(path: string, filename: string): Promise<void
 
 /* Multipart upload — lets the browser set the Content-Type boundary (don't set it). */
 export async function uploadAdmin<T>(path: string, form: FormData): Promise<T> {
-  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+  const base = API_BASE_URL;
   const res  = await authFetch(base, path, auth.getToken(), { method: "POST", body: form }, false);
   if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
   if (!res.ok) {

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { auth, apiAdmin } from "@/lib/auth";
 import { authFetch } from "@/lib/http";
+import { API_BASE_URL } from "@/lib/constants";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -45,8 +46,7 @@ export default function AdminLoginPage() {
       const role = res.data.user.role?.toLowerCase();
       if (role !== "admin" && role !== "ops") {
         // Revoke the session/token we just issued — no admin-panel access.
-        const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
-        authFetch(base, "/auth/logout", res.data.token, { method: "POST" }).catch(() => { /* best-effort */ });
+        authFetch(API_BASE_URL, "/auth/logout", res.data.token, { method: "POST" }).catch(() => { /* best-effort */ });
         setError("This account doesn't have admin panel access.");
         return;
       }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Loader2, MapPin, Briefcase, Upload, Check, ArrowLeft, Sparkles } from "lucide-react";
 import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
+import { API_BASE_URL as API } from "@/lib/constants";
 
 type Opening = {
   title: string; slug: string; department: string | null; location: string | null;
@@ -15,8 +16,6 @@ type Extracted = {
   name: string; email: string; phone: string; location: string;
   years_experience: number; skills: string[]; education: string[]; last_role: string;
 };
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
 export default function ApplyPage() {
   const t = useTranslations("careersPortal");

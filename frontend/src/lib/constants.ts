@@ -8,8 +8,19 @@ export const CONTACT_PHONE_ALT = "+256 740 026 118";
 export const CONTACT_ADDRESS = ["Padre Pio House, Plot 32", "Lumumba Avenue", "Kampala, Uganda"];
 export const COMPANY_REG_NO = "80034340923220";
 
-export const API_BASE_URL =
+/* Absolute URL of the Laravel API. Used by server-rendered code (Node's fetch
+   needs an absolute URL) and as the destination of the /api rewrite in
+   next.config.ts. Keep this env var absolute — never set it to "/api". */
+export const API_ORIGIN =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+
+/* Browser requests go same-origin through the /api rewrite instead of straight
+   to api.vitorra.org, so they never trigger a CORS preflight. The API host sits
+   behind a security proxy that answers OPTIONS with 415, which killed every
+   cross-origin call from the browser (login, forms, portals). Same-origin
+   requests need no preflight, so the proxy never sees an OPTIONS.
+   Server-side there is no origin and no CORS, so we call the API directly. */
+export const API_BASE_URL = typeof window === "undefined" ? API_ORIGIN : "/api";
 
 /* Plausible Analytics — cookieless, so no cookie-consent gating needed.
    Set NEXT_PUBLIC_ENABLE_ANALYTICS=true on the production Vercel env only,

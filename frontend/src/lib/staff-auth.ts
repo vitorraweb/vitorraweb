@@ -4,6 +4,7 @@
    model (including auto-expiry). Supports cookie mode (see lib/http.ts). */
 
 import { authFetch } from "./http";
+import { API_BASE_URL } from "./constants";
 
 const TOKEN_KEY  = "vitorra_staff_token";
 const USER_KEY   = "vitorra_staff_user";
@@ -19,7 +20,7 @@ export type StaffUser = {
 /** Roles allowed into the staff portal (everyone on the team, not customers). */
 export const STAFF_ROLES = ["admin", "ops", "employee"];
 
-const base = () => process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const base = () => API_BASE_URL;
 
 export const staffAuth = {
   getToken: (): string | null => {

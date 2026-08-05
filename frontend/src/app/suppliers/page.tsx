@@ -3,8 +3,7 @@
 import { useRef, useState } from "react";
 import { Loader2, Check, Upload, Building2, Landmark } from "lucide-react";
 import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+import { API_BASE_URL as API } from "@/lib/constants";
 
 export default function SupplierOnboardPage() {
   const [f, setF] = useState({

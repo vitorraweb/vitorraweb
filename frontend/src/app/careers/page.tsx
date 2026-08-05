@@ -4,13 +4,12 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Loader2, MapPin, Briefcase, ArrowRight } from "lucide-react";
+import { API_BASE_URL as API } from "@/lib/constants";
 
 type Opening = {
   title: string; slug: string; department: string | null; location: string | null;
   employment_type: string; closes_at: string | null;
 };
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
 export default function CareersPage() {
   const t = useTranslations("careersPortal");

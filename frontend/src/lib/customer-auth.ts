@@ -3,6 +3,7 @@
    cookie mode (see lib/http.ts). */
 
 import { authFetch } from "./http";
+import { API_BASE_URL } from "./constants";
 
 const TOKEN_KEY  = "vitorra_customer_token";
 const USER_KEY   = "vitorra_customer_user";
@@ -10,7 +11,7 @@ const EXPIRY_KEY = "vitorra_customer_expiry";
 
 export type CustomerUser = { id: number; name: string; email: string; role: string };
 
-const base = () => process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const base = () => API_BASE_URL;
 
 export const customerAuth = {
   getToken: (): string | null => {
