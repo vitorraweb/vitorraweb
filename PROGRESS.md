@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 30 July 2026
+**Last updated:** 7 August 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -35,6 +35,9 @@
 | **Multilingual careers portal** (EN / SW / **FR** pilot) | ✅ **Built** |
 | **Zero-cost upgrades** (keyless FX, auto holidays, phone validation) | ✅ **Built** |
 | **Reception lobby display** (`/display` — clock, weather, FET film, certifications, news ticker) | ✅ **Built** — point the front-desk TV's browser at it |
+| **Site could not reach the API** (blocked sign-in + all forms) | ✅ **Fixed & live** — API now served through the site itself |
+| **Leave approval — two people required** (Operations + Finance), nobody signs their own | ✅ **Built** — needs backend deploy |
+| **Staff offboarding** (`staff:offboard`) + departed accounts can no longer sign in | ✅ **Built** — needs backend deploy |
 | Monitoring / backups / CI/CD | ⏳ Sentry DSNs configured; uptime/backups/CI still to verify |
 
 ---
@@ -319,6 +322,105 @@ needs 10 seconds from marketing to confirm and add.
 
 ---
 
+## ✅ The site could not talk to the API — fixed (5 August 2026)
+
+Staff could not sign in to the admin panel, and every form on the public site
+had stopped working — enquiries, contact, the customer portal and the staff
+portal all failed silently.
+
+**What happened.** Nothing in our code changed. The hosting company switched on a
+security layer (Imunify360) in front of `api.vitorra.org`. Browsers send a small
+permission check before any real request; that layer rejected the check outright,
+so the browser gave up before the request ever reached us. The public marketing
+pages kept working, which is why it looked like only the admin panel was broken —
+those pages are rendered on our side, not by the visitor's browser.
+
+**The fix.** The site now serves the API from its own address, so the browser
+never makes a cross-site request and the permission check never happens. Live and
+verified: sign-in reaches the system again, and product data loads through the new
+route. Nothing to configure — it deployed with the site.
+
+> Worth still asking Namecheap to switch that layer off for `api.vitorra.org`.
+> Everything now reaches the API from a handful of the site's own addresses,
+> which is exactly the traffic pattern that layer reacts to. The fix stands on
+> its own, but the underlying block is theirs to remove.
+> ⚠ One thing to test before the first big campaign: attachments now travel
+> through the site, which caps how large an upload can be. Send yourself a
+> campaign with the SEAL deck attached first.
+
+---
+
+## ✅ Leave approval now needs two people (5 August 2026)
+
+Raised after a staff member saw **Approve/Decline on their own leave request**.
+
+**It was worse than it looked.** Anyone with an admin or operations login saw
+every pending request in their queue — including one they had just filed
+themselves — and the system accepted the decision. Leave could be self-approved
+with no second pair of eyes. Since most of the team holds an operations login,
+this affected a lot of people.
+
+**Now:**
+- **Nobody approves their own leave**, whatever their role. Their request no
+  longer appears in their own queue, and the HR screen shows "your request —
+  others decide" instead of the buttons.
+- **Two signatures are required — Operations and Finance** — and they must come
+  from **two different people**. One approval leaves the request pending and
+  emails whoever still owes the second; either can decline outright, which ends
+  it there and then.
+- Finance means the holder of **"Accounting — approve"** (the Senior Finance
+  Officer). Checked against the permission actually granted, not implied by being
+  an admin — otherwise one admin could have signed both halves alone and the
+  two-person rule would have been decoration.
+- **Supervisors no longer approve** their reports' leave; it goes to Operations
+  and Finance regardless of who someone reports to.
+- Staff and admin screens now show progress — "Operations approved · awaiting
+  Finance" — rather than a bare "pending".
+
+> ⚠ **Before this can work in practice:** tick **"Accounting — approve"** for the
+> Senior Finance Officer in `/admin/staff`. Until someone holds it, no leave can
+> reach approved. Tick it for a second person too, or leave stalls whenever that
+> one person is away.
+>
+> To undo a leave request approved in error, the applicant opens `/staff/leave`
+> and presses **Cancel**, then applies again. The original stays in the record as
+> cancelled rather than disappearing.
+
+---
+
+## ✅ Staff offboarding (7 August 2026)
+
+Nagawa Shakirah left the company. She is off the **team section**, the homepage
+team strip, and the prospect-owner list, and out of the staff-onboarding script so
+her account cannot be recreated by accident.
+
+**A new `staff:offboard` command** closes a departing person's account properly:
+it ends every signed-in session, makes the old password useless, switches off
+two-factor and all system permissions, marks them as left, and flags anyone who
+reported to them for a new supervisor.
+
+**It closes the account rather than deleting the person.** Deleting the record
+would take their **leave history, performance reports and HR documents** with it,
+and strip their name out of the activity log — employment records the company may
+need to produce for a labour dispute, a tax query or an audit. Access goes; the
+record stays.
+
+> ⚠ **A gap this uncovered:** marking someone as "left" in `/admin/staff` never
+> actually stopped them signing in — it was only a label. Anyone marked as left in
+> the past has had a working login until now. Fixed for everyone, not just this
+> case.
+>
+> Their **Microsoft 365 mailbox** (at GoDaddy) and any shared-inbox access are
+> separate systems and must be closed there too.
+
+> All three items above are covered by automated checks — **276 passing**, up from
+> 262 in July. New this round: self-approval refused for every role, two different
+> people required, one person cannot sign twice, either approver can decline,
+> access revoked on offboarding, employment records kept, and a departed account
+> refused at sign-in.
+
+---
+
 ## ✅ Already in place (earlier in the rebuild)
 
 - Premium redesign + design system; all public pages; bilingual EN/SW.
@@ -336,11 +438,17 @@ needs 10 seconds from marketing to confirm and add.
 1. ~~**Live payment gateway**~~ ✅ **Built (Flutterwave)** — now an **activation** task, not a build: set `PAYMENT_DRIVER=flutterwave` + keys, generate a webhook secret hash in the Flutterwave dashboard and set `FLUTTERWAVE_SECRET_HASH`, set `NEXT_PUBLIC_ONLINE_PAYMENTS=true`. Verify with `/admin/payments` or `php artisan flutterwave:status`. Sandbox-test, then go live.
 2. **Confirm coffee retail prices** → enter in `/admin/products`, then flip the coffee shop on (one flag) — Flutterwave checkout already wired.
 
+**Deploy first (built, not yet on the server)**
+3. **Run the standard backend deploy** — the two-signature leave approval
+   carries a database change, and `staff:offboard` plus the departed-staff
+   login block ship with it. See the runbook at the bottom. The frontend half
+   is already live (it deploys itself).
+
 **Operations setup (not code)**
-3. **Fix the 7 flagged SEAL rows** (above) in `/admin/prospects`, and confirm the
+4. **Fix the 7 flagged SEAL rows** (above) in `/admin/prospects`, and confirm the
    unnamed sports-association row — 10 minutes of marketing's time before the first
    SEAL campaign goes out.
-4. **Before the first real campaign:** confirm `support@vitorra.org` is an accepted
+5. **Before the first real campaign:** confirm `support@vitorra.org` is an accepted
    sender in Resend (it's on the already-verified `vitorra.org` domain, so this
    should just work — worth one test send to a team address first). Optionally set
    `MAIL_CAMPAIGN_ADDRESS` to send campaigns from a different shared mailbox.
@@ -349,31 +457,35 @@ needs 10 seconds from marketing to confirm and add.
    > puts your address on the list under the **Internal test** industry — kept out of
    > the real verticals, so it never inflates a count or gets swept into a live send.
    > Filter to it in `/admin/prospects`, tick it, and send a campaign to yourself.
-5. **Switch on the shared inbox** — add the `reply.vitorra.org` MX record, verify it in
+6. **Switch on the shared inbox** — add the `reply.vitorra.org` MX record, verify it in
    Resend, set `RESEND_INBOUND_WEBHOOK_SECRET` + `MAIL_INBOUND_CAPTURE_ENABLED=true`.
    Track it with `php artisan inbound-email:status`. ⚠ New subdomain only — never touch
    the Microsoft 365 records on `vitorra.org`.
-6. Set **executive-report recipients** in `/admin/settings`.
-7. Grant the new **People / Executive / Suppliers / Accounting** modules to existing ops accounts in `/admin/staff` — and **"Accounting — approve"** to the **Senior Finance Officer** (admins already have everything).
-8. Set `ANTHROPIC_API_KEY` on prod to enable **CV + receipt auto-read** (both work manually without it).
-9. Optionally link **Suppliers** in the public site footer (Careers is now in the main nav).
-10. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
-11. **Optional — switch login to HttpOnly cookies** (extra XSS hardening): set `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN=.vitorra.org`, `SESSION_SECURE_COOKIE=true` (backend) + `NEXT_PUBLIC_AUTH_MODE=cookie` (Vercel). Reversible by unsetting; default stays token-based.
-12. **Point the reception TV at `vitorra.org/display`** — open it full-screen (kiosk mode) in the front-desk browser; it self-refreshes and needs no further setup.
+7. Set **executive-report recipients** in `/admin/settings`.
+8. ⚠ **Now blocking leave approvals** — grant **"Accounting — approve"** to the
+   **Senior Finance Officer** in `/admin/staff` (and to a second person, so leave
+   does not stall when they are away). Until someone holds it, no leave request
+   can reach approved. Same screen: grant the **People / Executive / Suppliers /
+   Accounting** modules to existing ops accounts (admins already have everything).
+9. Set `ANTHROPIC_API_KEY` on prod to enable **CV + receipt auto-read** (both work manually without it).
+10. Optionally link **Suppliers** in the public site footer (Careers is now in the main nav).
+11. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
+12. **Optional — switch login to HttpOnly cookies** (extra XSS hardening): set `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN=.vitorra.org`, `SESSION_SECURE_COOKIE=true` (backend) + `NEXT_PUBLIC_AUTH_MODE=cookie` (Vercel). Reversible by unsetting; default stays token-based.
+13. **Point the reception TV at `vitorra.org/display`** — open it full-screen (kiosk mode) in the front-desk browser; it self-refreshes and needs no further setup.
 
 **Growth — next upgrades** (from `planning/10-platform-upgrades-brief.md`)
-13. **WhatsApp + SMS notifications** (order/payment/delivery updates) — needs Solomon's approval + a one-time business setup; small per-message cost.
-14. **Anti-spam on forms** (Cloudflare Turnstile) — free, ~10-min account setup, then wire in.
-15. **Wire up Sentry** (DSNs already configured) — catch errors before customers do.
-16. **Expand French site-wide** — translate the remaining sections into `fr.json` + add "fr" to the main switcher.
-17. **One-click unsubscribe for prospect campaigns** — cold outreach currently asks recipients to reply with "unsubscribe" (which the shared inbox catches once item 5 is live). A proper one-click link, like the newsletter already has, would improve deliverability once campaign volume grows.
-18. Later (need a small server): on-site search, self-hosted newsletter, live chat, logistics maps.
+14. **WhatsApp + SMS notifications** (order/payment/delivery updates) — needs Solomon's approval + a one-time business setup; small per-message cost.
+15. **Anti-spam on forms** (Cloudflare Turnstile) — free, ~10-min account setup, then wire in.
+16. **Wire up Sentry** (DSNs already configured) — catch errors before customers do.
+17. **Expand French site-wide** — translate the remaining sections into `fr.json` + add "fr" to the main switcher.
+18. **One-click unsubscribe for prospect campaigns** — cold outreach currently asks recipients to reply with "unsubscribe" (which the shared inbox catches once item 5 is live). A proper one-click link, like the newsletter already has, would improve deliverability once campaign volume grows.
+19. Later (need a small server): on-site search, self-hosted newsletter, live chat, logistics maps.
 
 **Reliability**
-19. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
+20. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
 
 **Content / lower priority**
-20. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
+21. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
 
 ---
 
@@ -394,5 +506,26 @@ cd backend
 > The server's default `php` is 8.2 but the app needs 8.3 — always run artisan with `/opt/alt/php83/usr/bin/php`.
 > ⚠ Never rotate `APP_KEY` in production — it would make encrypted files (`SecureFile`) and 2FA secrets unreadable.
 > Scheduled jobs (holiday reminders, **holidays:sync**, executive report, application purge, invoice reminders, recurring finance, backups, daily digest, **fet:digest**, **campaigns:send**) ride the existing `php artisan schedule:run` cron.
-> **Next deploy — one-off to load the SEAL list:** `php artisan prospects:import --product=SEAL` (idempotent; safe to re-run, never overwrites edits).
-> **Next deploy adds a Composer dependency** (libphonenumber) — run `composer install` as above, then a one-off `php artisan holidays:sync` to backfill holidays.
+### Outstanding on the next deploy (7 August 2026)
+
+The **two-signature leave approval carries a database change** (`leave_approvals`),
+so `migrate --force` is required. `staff:offboard` and the departed-staff login
+block ship in the same pull and need no migration. Everything below is idempotent —
+safe to run even if it has already been done:
+
+```bash
+# Only if not already run since 30 July — adds libphonenumber:
+/opt/alt/php83/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader
+/opt/alt/php83/usr/bin/php artisan holidays:sync                     # backfill Uganda holidays
+/opt/alt/php83/usr/bin/php artisan prospects:import --product=SEAL   # load the 124 SEAL leads
+```
+
+Then close the departed staff account (prompts for confirmation):
+
+```bash
+/opt/alt/php83/usr/bin/php artisan staff:offboard shakirah@vitorra.org
+```
+
+> ⚠ After deploying, tick **"Accounting — approve"** in `/admin/staff` for the
+> Senior Finance Officer — until someone holds it, no leave request can be
+> approved (see item 8).
