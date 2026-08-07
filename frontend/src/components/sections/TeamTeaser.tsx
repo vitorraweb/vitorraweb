@@ -21,7 +21,6 @@ const avatars = [
   { name: "Sarah Nuwamanya",   roleKey: "marketingOfficer", file: "Sarah Nuwamanya - Marketing Officer.jpg" },
   { name: "Olivia Sandra",     roleKey: "brandDesigner",    file: "Olivia Sandra - Brand Designer.jpeg" },
   { name: "Daniel Tuke",       roleKey: "financeOfficer",   file: "Daniel Tuke - Finance Officer.jpeg" },
-  { name: "Nagawa Shakirah",   roleKey: "marketingOfficer", file: "Nagawa Shakirah - Marketing Officer.jpeg" },
 ];
 
 export default function TeamTeaser() {

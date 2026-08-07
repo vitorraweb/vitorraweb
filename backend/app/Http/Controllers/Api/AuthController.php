@@ -63,6 +63,22 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
+        /* Someone who has left keeps their record — HR documents, leave history
+           and the audit trail all have to survive their departure — but the
+           account must not open. Checked after the password so the response
+           never tells an outsider which accounts exist, and before the 2FA
+           prompt so a closed account is not asked for a code. */
+        if ($user->staff_status === 'left') {
+            if ($request->hasSession()) {
+                Auth::logout();
+                $request->session()->invalidate();
+            }
+
+            throw ValidationException::withMessages([
+                'email' => ['This account is no longer active. Please contact your administrator.'],
+            ]);
+        }
+
         // Second factor: password was right, but this account requires a code.
         if ($user->hasTwoFactorEnabled()) {
             if (empty($data['code'])) {
