@@ -209,6 +209,23 @@ class FetTrialAnalysisTest extends TestCase
         $this->assertStringContainsString('3', $shortfall, 'should say how many more trips are needed');
     }
 
+    public function test_the_shortfall_counts_affected_trips_not_findings(): void
+    {
+        // Kitgum raises two errors on its own (no date AND no distance). Saying
+        // "4 trips have problems" when three are involved overstates the work
+        // and reads as though the data is worse than it is.
+        $analysis = $this->analysis($this->harissTrial());
+
+        $errors = collect($analysis['blocking_flags']);
+        $this->assertCount(4, $errors, 'the real file raises four blocking findings');
+        $this->assertSame(3, $errors->pluck('trip_id')->unique()->count(), 'across three trips');
+
+        $this->assertStringContainsString(
+            '3 trips have unresolved problems',
+            implode(' ', $analysis['confidence']['shortfall'])
+        );
+    }
+
     public function test_route_variance_dwarfs_the_effect_being_measured(): void
     {
         // The empirical justification for route-stratification. If this ever

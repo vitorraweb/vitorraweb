@@ -283,9 +283,15 @@ class FetTrialAnalysisService
         $shortfall = [];
 
         if ($blocking !== []) {
-            $shortfall[] = count($blocking) === 1
+            // Count the TRIPS affected, not the findings — one trip can raise
+            // several (a journey with no date and no distance raises both), and
+            // saying "4 trips" when three are involved overstates the work.
+            $affected = collect($blocking)->pluck('trip_id')->filter()->unique()->count();
+            $n = $affected ?: count($blocking);
+
+            $shortfall[] = $n === 1
                 ? 'One trip has an unresolved problem that has to be settled first.'
-                : count($blocking).' trips have unresolved problems that have to be settled first.';
+                : "{$n} trips have unresolved problems that have to be settled first.";
         }
 
         if ($matched === []) {
