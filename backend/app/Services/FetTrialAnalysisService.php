@@ -75,13 +75,29 @@ class FetTrialAnalysisService
     {
         $all = $trial->trips()->get();
 
-        // Only valid trips with a real distance and fuel figure reach the maths.
-        // Anything in review or excluded is reported separately, never silently used.
-        $measurable = $all->filter(fn (FetTrialTrip $t) => $t->isMeasurable());
+        /*
+         * Two different questions, and conflating them was a mistake.
+         *
+         *   COUNTED  — valid trips, which are what the headline is built from.
+         *   SHOWN    — every trip with a usable distance and fuel figure,
+         *              including ones held for review.
+         *
+         * A trip held over an open question is still a real journey that really
+         * happened. Hiding it entirely made a trial with three post-installation
+         * trips look as though nothing had been driven since the device went on,
+         * which is both wrong and alarming. It is reported throughout, always
+         * marked as not counted, and never allowed into the maths.
+         */
+        $withFigures = $all->filter(fn (FetTrialTrip $t) => $t->litresPer100Km() !== null);
+        $measurable = $withFigures->filter(fn (FetTrialTrip $t) => $t->status === 'valid');
+        $held = $withFigures->filter(fn (FetTrialTrip $t) => $t->status !== 'valid');
+
         $baseline = $measurable->filter(fn (FetTrialTrip $t) => $t->effectivePhase() === 'baseline');
         $trialTrips = $measurable->filter(fn (FetTrialTrip $t) => $t->effectivePhase() === 'trial');
+        $heldBaseline = $held->filter(fn (FetTrialTrip $t) => $t->effectivePhase() === 'baseline');
+        $heldTrial = $held->filter(fn (FetTrialTrip $t) => $t->effectivePhase() === 'trial');
 
-        $routes = $this->routeBreakdown($trial, $baseline, $trialTrips);
+        $routes = $this->routeBreakdown($trial, $baseline, $trialTrips, $heldBaseline, $heldTrial);
         $matched = array_values(array_filter($routes, fn ($r) => $r['matched']));
 
         $headline = $this->headline($trial, $matched);
@@ -106,7 +122,7 @@ class FetTrialAnalysisService
             ->pluck('id')->all();
         $warnings = $this->outstandingWarnings($trial, $countedTripIds);
 
-        $confidence = $this->confidence($trial, $matched, $ready, $headline, $blocking, $warnings);
+        $confidence = $this->confidence($trial, $matched, $ready, $headline, $blocking, $warnings, $heldTrial->count());
 
         return [
             'currency' => $trial->currency,
@@ -117,6 +133,10 @@ class FetTrialAnalysisService
                 'trips_total' => $all->count(),
                 'baseline_measurable' => $baseline->count(),
                 'trial_measurable' => $trialTrips->count(),
+                // Post-installation trips that happened and have figures,
+                // whether or not they can be counted yet.
+                'trial_recorded' => $trialTrips->count() + $heldTrial->count(),
+                'trial_held' => $heldTrial->count(),
                 'needs_review' => $all->where('status', 'review')->count(),
                 'excluded' => $all->where('status', 'excluded')->count(),
             ],
@@ -147,12 +167,19 @@ class FetTrialAnalysisService
      * @param  Collection<int, FetTrialTrip>  $trialTrips
      * @return array<int, array<string, mixed>>
      */
-    private function routeBreakdown(FetTrial $trial, Collection $baseline, Collection $trialTrips): array
-    {
+    private function routeBreakdown(
+        FetTrial $trial,
+        Collection $baseline,
+        Collection $trialTrips,
+        Collection $heldBaseline,
+        Collection $heldTrial,
+    ): array {
         $minBaseline = $trial->minBaselineTripsPerRoute();
         $tolerance = (float) config('fet_trials.thresholds.load_tolerance_pct', 15.0);
 
-        $keys = $baseline->concat($trialTrips)
+        // Held trips get a row too, so a destination driven only since the
+        // device was fitted still appears rather than vanishing.
+        $keys = $baseline->concat($trialTrips)->concat($heldBaseline)->concat($heldTrial)
             ->pluck('route_key')->filter()->unique()->sort()->values();
 
         $routes = [];
@@ -163,6 +190,8 @@ class FetTrialAnalysisService
 
             $bw = $this->weighted($b);
             $tw = $this->weighted($t);
+            $bHeld = $this->weighted($heldBaseline->where('route_key', $key)->values());
+            $tHeld = $this->weighted($heldTrial->where('route_key', $key)->values());
 
             $bLoad = $this->meanLoadKg($b);
             $tLoad = $this->meanLoadKg($t);
@@ -187,9 +216,14 @@ class FetTrialAnalysisService
 
             $routes[] = [
                 'route_key' => $key,
-                'route_label' => ($b->first() ?? $t->first())?->route_label ?? $key,
+                'route_label' => ($b->first() ?? $t->first()
+                    ?? $heldBaseline->where('route_key', $key)->first()
+                    ?? $heldTrial->where('route_key', $key)->first())?->route_label ?? $key,
                 'baseline' => $bw,
                 'trial' => $tw,
+                // Recorded but not counted — shown in grey, never in the maths.
+                'baseline_held' => $bHeld,
+                'trial_held' => $tHeld,
                 'baseline_load_kg' => $bLoad,
                 'trial_load_kg' => $tLoad,
                 'load_gap_pct' => $loadGapPct,
@@ -274,7 +308,7 @@ class FetTrialAnalysisService
      * @param  array<int, array<string, mixed>>  $warnings  open questions on the counted trips
      * @return array<string, mixed>
      */
-    private function confidence(FetTrial $trial, array $matched, array $ready, ?array $headline, array $blocking, array $warnings): array
+    private function confidence(FetTrial $trial, array $matched, array $ready, ?array $headline, array $blocking, array $warnings, int $heldTrialTrips = 0): array
     {
         $required = $trial->requiredMatchedTrips();
         $minBase = $trial->minBaselineTripsPerRoute();
@@ -295,14 +329,25 @@ class FetTrialAnalysisService
         }
 
         if ($matched === []) {
-            $shortfall[] = 'No route yet has both a usable "before" figure and a trip after installation.';
+            /*
+             * Say which of the two is actually missing. "No trip after
+             * installation" in front of somebody looking at three of them on
+             * the same screen reads as the system being broken, when the real
+             * situation is that those trips have questions against them.
+             */
+            $shortfall[] = $heldTrialTrips > 0
+                ? ($heldTrialTrips === 1
+                    ? 'One trip has run since the device was fitted, but it cannot be counted yet — see the questions above. Its figures are still shown, marked as not counted.'
+                    : $heldTrialTrips.' trips have run since the device was fitted, but none can be counted yet — see the questions above. Their figures are still shown, marked as not counted.')
+                : 'No route yet has both a usable "before" figure and a trip since the device was fitted.';
         }
 
         if ($trips < $required) {
             $need = $required - $trips;
             $shortfall[] = "{$need} more trip".($need === 1 ? '' : 's')
                 .' needed on a route that already has a "before" figure'
-                ." (currently {$trips} of {$required}).";
+                ." (currently {$trips} of {$required} countable"
+                .($heldTrialTrips > 0 ? ", with {$heldTrialTrips} recorded but not countable" : '').').';
         }
 
         // Name the routes that could carry a trial trip today — the single most

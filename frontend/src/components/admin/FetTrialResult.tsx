@@ -158,7 +158,14 @@ function NoResultYet({
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
         <Stat label="Before the device" value={`${a.counts.baseline_measurable}`} hint="usable trips" />
-        <Stat label="After the device" value={`${a.counts.trial_measurable}`} hint={`${trial.required_matched_trips} comparable needed`} highlight />
+        <Stat
+          label="After the device"
+          value={`${a.counts.trial_recorded}`}
+          hint={a.counts.trial_held > 0
+            ? `${a.counts.trial_measurable} countable · ${a.counts.trial_held} held`
+            : `${trial.required_matched_trips} comparable needed`}
+          highlight
+        />
         <Stat label="Need review" value={`${a.counts.needs_review}`} hint="held out of the maths" />
         <Stat label="Left out" value={`${a.counts.excluded}`} hint="excluded by hand" />
       </div>
@@ -225,6 +232,15 @@ function RouteLine({ row }: { row: RouteRow }) {
           <>
             {row.trial.l_per_100}
             <span className="text-[11px] block" style={{ color: "#BBB" }}>{row.trial.trips} trip{row.trial.trips === 1 ? "" : "s"}</span>
+          </>
+        ) : row.trial_held ? (
+          // The journey happened and has figures — it simply cannot be counted
+          // while a question stands against it. Hiding it read as "no data".
+          <>
+            <span style={{ color: "#8A5A18" }}>{row.trial_held.l_per_100}</span>
+            <span className="text-[11px] block" style={{ color: "#B79A6B" }}>
+              {row.trial_held.trips} trip{row.trial_held.trips === 1 ? "" : "s"} · not counted
+            </span>
           </>
         ) : <span style={{ color: "#CCC" }}>—</span>}
       </td>

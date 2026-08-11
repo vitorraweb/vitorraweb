@@ -36,8 +36,15 @@ export default function FetTrialFindings({
   const [formError, setFormError] = useState<{ id: number; text: string } | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
 
-  const outstanding = trial.flags.filter((f) => !f.resolution);
-  const settled = trial.flags.filter((f) => f.resolution);
+  const flags = trial.flags ?? [];
+  const outstanding = flags.filter((f) => !f.resolution);
+  const settled = flags.filter((f) => f.resolution);
+
+  const tripLabel = (tripId: number | null): string => {
+    if (tripId === null) return "This trial";
+    const t = (trial.trips ?? []).find((x) => x.id === tripId);
+    return t ? `${t.route_label ?? "Untitled trip"} · ${fmtDate(t.trip_date)}` : "A trip";
+  };
 
   /*
    * Grouped by trip, because one journey can raise several questions and they
@@ -51,12 +58,6 @@ export default function FetTrialFindings({
     if (found) { found.flags.push(f); } else { acc.push({ key, label: tripLabel(f.trip_id), flags: [f] }); }
     return acc;
   }, []);
-
-  const tripLabel = (tripId: number | null): string => {
-    if (tripId === null) return "This trial";
-    const t = trial.trips.find((x) => x.id === tripId);
-    return t ? `${t.route_label ?? "Untitled trip"} · ${fmtDate(t.trip_date)}` : "A trip";
-  };
 
   const resolve = async (flag: Flag) => {
     if (!note.trim()) {
@@ -130,7 +131,7 @@ export default function FetTrialFindings({
               </p>
               <div className="space-y-2.5">
           {g.flags.map((f) => {
-            const style = SEVERITY_STYLE[f.severity];
+            const style = SEVERITY_STYLE[f.severity] ?? SEVERITY_STYLE.info;
             const isAnswering = answering === f.id;
 
             return (

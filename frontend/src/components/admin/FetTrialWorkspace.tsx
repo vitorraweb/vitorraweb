@@ -104,8 +104,8 @@ export default function FetTrialWorkspace({ trialId }: { trialId: number }) {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[11px] font-semibold px-3 py-1.5 rounded-full" style={CONFIDENCE_STYLE[a.confidence.level]}>
-            {CONFIDENCE_LABEL[a.confidence.level]}
+          <span className="text-[11px] font-semibold px-3 py-1.5 rounded-full" style={CONFIDENCE_STYLE[a.confidence.level] ?? CONFIDENCE_STYLE.insufficient}>
+            {CONFIDENCE_LABEL[a.confidence.level] ?? a.confidence.level}
           </span>
           <button
             onClick={revalidate}

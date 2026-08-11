@@ -189,7 +189,8 @@ export function RouteDotPlot({ trial }: { trial: Trial }) {
 
         {rows.map(({ route_key, route_label, row }, i) => {
           const r: RouteRow = row ?? {
-            route_key, route_label, baseline: null, trial: null, baseline_load_kg: null,
+            route_key, route_label, baseline: null, trial: null,
+            baseline_held: null, trial_held: null, baseline_load_kg: null,
             trial_load_kg: null, load_gap_pct: null, matched: false,
             unmatched_reason: "no_baseline", change_pct: null,
           };

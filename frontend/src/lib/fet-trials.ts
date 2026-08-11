@@ -16,6 +16,9 @@ export type RouteRow = {
   route_label: string;
   baseline: Weighted | null;
   trial: Weighted | null;
+  /** Recorded but not counted — shown in grey, never in the maths. */
+  baseline_held: Weighted | null;
+  trial_held: Weighted | null;
   baseline_load_kg: number | null;
   trial_load_kg: number | null;
   load_gap_pct: number | null;
@@ -61,6 +64,8 @@ export type Analysis = {
     trips_total: number;
     baseline_measurable: number;
     trial_measurable: number;
+    trial_recorded: number;
+    trial_held: number;
     needs_review: number;
     excluded: number;
   };

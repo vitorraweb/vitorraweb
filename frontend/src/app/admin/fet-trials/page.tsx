@@ -172,12 +172,12 @@ export default function FetTrialsPage() {
 
               {/* A percentage only ever appears when the evidence carries it. */}
               {t.saving_pct !== null ? (
-                <span className="text-sm font-bold px-3 py-1.5 rounded-full shrink-0" style={CONFIDENCE_STYLE[t.confidence]}>
+                <span className="text-sm font-bold px-3 py-1.5 rounded-full shrink-0" style={CONFIDENCE_STYLE[t.confidence] ?? CONFIDENCE_STYLE.insufficient}>
                   {t.saving_pct > 0 ? `${t.saving_pct}% saved` : `${Math.abs(t.saving_pct)}% worse`}
                 </span>
               ) : (
-                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0" style={CONFIDENCE_STYLE[t.confidence]}>
-                  {CONFIDENCE_LABEL[t.confidence]}
+                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0" style={CONFIDENCE_STYLE[t.confidence] ?? CONFIDENCE_STYLE.insufficient}>
+                  {CONFIDENCE_LABEL[t.confidence] ?? t.confidence}
                 </span>
               )}
 

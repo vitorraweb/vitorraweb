@@ -38,7 +38,7 @@ export default function FetTrialTrips({
   const [msg, setMsg] = useState("");
 
   const flagsFor = (tripId: number): Flag[] =>
-    trial.flags.filter((f) => f.trip_id === tripId && !f.resolution);
+    (trial.flags ?? []).filter((f) => f.trip_id === tripId && !f.resolution);
 
   const num = (v: string) => (v.trim() === "" ? null : Number(v));
 
@@ -186,7 +186,7 @@ export default function FetTrialTrips({
             const isOpen = open === t.id;
             const d = isOpen ? draft : null;
             const tripFlags = flagsFor(t.id);
-            const style = TRIP_STATUS_STYLE[t.status];
+            const style = TRIP_STATUS_STYLE[t.status] ?? TRIP_STATUS_STYLE.valid;
 
             return (
               <div key={t.id} className="bg-white rounded-[16px] border border-black/[0.05] overflow-hidden">
@@ -212,7 +212,7 @@ export default function FetTrialTrips({
                     </span>
                   )}
                   {tripFlags.length > 0 && (
-                    <span className="text-[10px] font-bold px-2 py-1 rounded-full shrink-0" style={SEVERITY_STYLE[tripFlags.some((f) => f.severity === "error") ? "error" : "warn"]}>
+                    <span className="text-[10px] font-bold px-2 py-1 rounded-full shrink-0" style={SEVERITY_STYLE[tripFlags.some((f) => f.severity === "error") ? "error" : "warn"] ?? SEVERITY_STYLE.info}>
                       {tripFlags.length}
                     </span>
                   )}
