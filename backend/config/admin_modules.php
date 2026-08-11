@@ -28,6 +28,7 @@ return [
         'messages'   => 'Messages',
         'orders'     => 'Orders',
         'fet'        => 'FET savings',
+        'fet_trials' => 'FET trials',
         'newsletter' => 'Newsletter',
         'tasks'      => 'Tasks',
         'people'     => 'People (HR)',
@@ -47,13 +48,19 @@ return [
         'it'         => 'IT',
     ],
 
-    // department key => default modules (editable per-person via the override)
+    /*
+     * department key => default modules (editable per-person via the override)
+     *
+     * Note on `fet_trials`: marketing runs the client trials but has no `fet`
+     * access at all (that module is the post-sale savings loop for operations),
+     * so the trial module is granted to marketing in its own right.
+     */
     'departments' => [
-        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'fet', 'newsletter', 'tasks', 'people', 'executive', 'suppliers', 'accounting'],
-        'operations' => ['dashboard', 'orders', 'fet', 'enquiries', 'messages', 'customers', 'tasks', 'people', 'suppliers'],
+        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'fet', 'fet_trials', 'newsletter', 'tasks', 'people', 'executive', 'suppliers', 'accounting'],
+        'operations' => ['dashboard', 'orders', 'fet', 'fet_trials', 'enquiries', 'messages', 'customers', 'tasks', 'people', 'suppliers'],
         'finance'    => ['dashboard', 'orders', 'customers', 'enquiries', 'tasks', 'people', 'executive', 'suppliers', 'accounting'],
-        'marketing'  => ['dashboard', 'blog', 'media', 'prospects', 'enquiries', 'customers', 'newsletter', 'tasks'],
-        'sales'      => ['dashboard', 'enquiries', 'prospects', 'customers', 'orders', 'fet', 'tasks'],
+        'marketing'  => ['dashboard', 'blog', 'media', 'prospects', 'fet_trials', 'enquiries', 'customers', 'newsletter', 'tasks'],
+        'sales'      => ['dashboard', 'enquiries', 'prospects', 'customers', 'orders', 'fet', 'fet_trials', 'tasks'],
         'it'         => ['dashboard', 'media', 'tasks'],
     ],
 ];
