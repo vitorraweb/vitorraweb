@@ -226,6 +226,47 @@ class FetTrialAnalysisTest extends TestCase
         );
     }
 
+    public function test_leaving_a_trip_out_stops_its_questions_blocking_the_trial(): void
+    {
+        // A journey deliberately left out is out by that decision. Making the
+        // account team answer every question about it first is busywork that
+        // changes nothing — the Kitgum trip has no distance and never will.
+        $trial = $this->harissTrial();
+        $kitgum = $trial->trips()->where('route_label', 'Kitgum')->first();
+
+        $this->assertNotEmpty($this->analysis($trial)['blocking_flags']);
+
+        $kitgum->update(['status' => 'excluded', 'exclusion_reason' => 'Trip never completed.']);
+
+        $analysis = $this->analysis($trial->fresh());
+        $stillBlocking = collect($analysis['blocking_flags'])->pluck('trip_id');
+
+        $this->assertNotContains($kitgum->id, $stillBlocking, 'an excluded trip must not keep blocking');
+        // Its questions are still on record — dropped from the blocker list,
+        // not deleted.
+        $this->assertNotEmpty($trial->fresh()->flags()->where('fet_trial_trip_id', $kitgum->id)->get());
+    }
+
+    public function test_the_shortfall_names_what_each_route_is_short_of(): void
+    {
+        $trial = $this->harissTrial();
+        // Settle the two answerable questions, leave the unusable trip out.
+        foreach (['return_loaded', 'trip_before_install'] as $code) {
+            $trial->flags()->where('code', $code)->first()?->update(['resolution' => 'accepted', 'resolution_note' => 'confirmed']);
+        }
+        $trial->trips()->where('route_label', 'Kitgum')->update(['status' => 'excluded', 'exclusion_reason' => 'Never completed.']);
+        app(FetTrialValidator::class)->validate($trial->fresh());
+
+        $shortfall = implode(' ', $this->analysis($trial->fresh())['confidence']['shortfall']);
+
+        // Specific and actionable, rather than a flat "nothing comparable".
+        $this->assertStringContainsString('Masindi has trips on both sides', $shortfall);
+        $this->assertStringContainsString('only 1 from before', $shortfall);
+        $this->assertStringContainsString('Kamwenge was never driven before', $shortfall);
+        // And the generic line must not contradict them.
+        $this->assertStringNotContainsString('No route yet has both', $shortfall);
+    }
+
     public function test_route_variance_dwarfs_the_effect_being_measured(): void
     {
         // The empirical justification for route-stratification. If this ever

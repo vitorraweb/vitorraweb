@@ -122,7 +122,7 @@ class FetTrialAnalysisService
             ->pluck('id')->all();
         $warnings = $this->outstandingWarnings($trial, $countedTripIds);
 
-        $confidence = $this->confidence($trial, $matched, $ready, $headline, $blocking, $warnings, $heldTrial->count());
+        $confidence = $this->confidence($trial, $matched, $ready, $headline, $blocking, $warnings, $heldTrial->count(), $routes);
 
         return [
             'currency' => $trial->currency,
@@ -308,7 +308,7 @@ class FetTrialAnalysisService
      * @param  array<int, array<string, mixed>>  $warnings  open questions on the counted trips
      * @return array<string, mixed>
      */
-    private function confidence(FetTrial $trial, array $matched, array $ready, ?array $headline, array $blocking, array $warnings, int $heldTrialTrips = 0): array
+    private function confidence(FetTrial $trial, array $matched, array $ready, ?array $headline, array $blocking, array $warnings, int $heldTrialTrips = 0, array $routes = []): array
     {
         $required = $trial->requiredMatchedTrips();
         $minBase = $trial->minBaselineTripsPerRoute();
@@ -335,11 +335,43 @@ class FetTrialAnalysisService
              * the same screen reads as the system being broken, when the real
              * situation is that those trips have questions against them.
              */
-            $shortfall[] = $heldTrialTrips > 0
-                ? ($heldTrialTrips === 1
+            /*
+             * Name what each route is actually short of. "No route has both"
+             * is not true of a route with one trip on each side — it has both,
+             * and is one baseline trip away from being usable. Telling the
+             * account team that is the difference between a dead end and a
+             * clear next step.
+             */
+            $before = $shortfall;
+            foreach ($routes as $r) {
+                if ($r['trial'] === null && $r['trial_held'] === null) {
+                    continue;
+                }
+                $shortfall[] = match ($r['unmatched_reason']) {
+                    'sparse_baseline' => sprintf(
+                        '%s has trips on both sides, but only %d from before the device was fitted — %d are needed before it can anchor a comparison.',
+                        $r['route_label'], $r['baseline']['trips'] ?? 0, $trial->minBaselineTripsPerRoute()
+                    ),
+                    'no_baseline' => "{$r['route_label']} was never driven before the device was fitted, so there is nothing on that route to compare against.",
+                    'load_mismatch' => sprintf(
+                        '%s carried a load %s%% different from its baseline trips, so the two are not doing the same work.',
+                        $r['route_label'], number_format((float) ($r['load_gap_pct'] ?? 0), 1)
+                    ),
+                    default => null,
+                } ?? '';
+            }
+            $named = count(array_filter($shortfall)) > count(array_filter($before ?? []));
+            $shortfall = array_values(array_filter($shortfall));
+
+            if ($heldTrialTrips > 0) {
+                $shortfall[] = $heldTrialTrips === 1
                     ? 'One trip has run since the device was fitted, but it cannot be counted yet — see the questions above. Its figures are still shown, marked as not counted.'
-                    : $heldTrialTrips.' trips have run since the device was fitted, but none can be counted yet — see the questions above. Their figures are still shown, marked as not counted.')
-                : 'No route yet has both a usable "before" figure and a trip since the device was fitted.';
+                    : $heldTrialTrips.' trips have run since the device was fitted, but none can be counted yet — see the questions above. Their figures are still shown, marked as not counted.';
+            } elseif (! $named) {
+                // Only when there was nothing route-specific to say; otherwise
+                // this generic line contradicts the lines above it.
+                $shortfall[] = 'No route yet has both a usable "before" figure and a trip since the device was fitted.';
+            }
         }
 
         if ($trips < $required) {
@@ -529,9 +561,20 @@ class FetTrialAnalysisService
      */
     private function blockingFlags(FetTrial $trial): array
     {
+        /*
+         * A question about a trip that has been deliberately left out no longer
+         * blocks anything — the decision has been made, and the trip is out of
+         * the maths by that decision rather than by the question. Without this,
+         * excluding an unusable journey still required answering every question
+         * about it one by one, which is busywork that changes nothing.
+         */
+        $excludedTripIds = $trial->trips()->where('status', 'excluded')->pluck('id');
+
         return $trial->flags()
             ->where('severity', 'error')
             ->whereNull('resolution')
+            ->where(fn ($q) => $q->whereNull('fet_trial_trip_id')
+                ->orWhereNotIn('fet_trial_trip_id', $excludedTripIds))
             ->get()
             ->map(fn ($f) => [
                 'id' => $f->id,
