@@ -124,12 +124,32 @@ function axisRange(values: number[], pad = 0.08): { min: number; max: number; ti
 export function RouteDotPlot({ trial }: { trial: Trial }) {
   const [tip, setTip] = useState<Tip>(null);
 
-  const measurable = trial.trips.filter((t) => t.status === "valid" && t.l_per_100 !== null);
+  /*
+   * Counted trips are filled; trips held for review or left out are drawn
+   * hollow. Omitting them entirely — as this first did — makes a trial with
+   * three queried "after" journeys look as though no journey ever happened,
+   * which reads as the tool being broken rather than the data being queried.
+   */
+  const plotted = trial.trips.filter((t) => t.l_per_100 !== null);
+  const held = plotted.filter((t) => t.status !== "valid");
   const routes = trial.analysis.routes;
-  if (routes.length === 0 || measurable.length === 0) return null;
+  if (routes.length === 0 || plotted.length === 0) return null;
 
-  const values = measurable.map((t) => t.l_per_100 as number);
+  const values = plotted.map((t) => t.l_per_100 as number);
   const { min, max, ticks } = axisRange(values);
+
+  // Rows are built from the analysis, which only knows about counted trips —
+  // so any route that exists solely because of a held trip is added here.
+  const extraRouteKeys = [...new Set(held.map((t) => t.route_key))]
+    .filter((k) => k && !routes.some((r) => r.route_key === k)) as string[];
+  const rows: { route_key: string; route_label: string; row: RouteRow | null }[] = [
+    ...routes.map((r) => ({ route_key: r.route_key, route_label: r.route_label, row: r })),
+    ...extraRouteKeys.map((k) => ({
+      route_key: k,
+      route_label: plotted.find((t) => t.route_key === k)?.route_label ?? k,
+      row: null,
+    })),
+  ];
 
   const LEFT = 116;
   // The right gutter is reserved for each row's change figure — plotting to the
@@ -137,11 +157,11 @@ export function RouteDotPlot({ trial }: { trial: Trial }) {
   const RIGHT = 630;
   const ROW = 36;
   const TOP = 26;
-  const height = TOP + routes.length * ROW + 44;
+  const height = TOP + rows.length * ROW + 44;
   const x = (v: number) => LEFT + ((v - min) / (max - min)) * (RIGHT - LEFT);
 
   const tripsOn = (key: string, phase: "baseline" | "trial") =>
-    measurable.filter((t) => t.route_key === key && t.phase === phase);
+    plotted.filter((t) => t.route_key === key && t.phase === phase);
 
   return (
     <ChartFrame
@@ -150,18 +170,29 @@ export function RouteDotPlot({ trial }: { trial: Trial }) {
       caption="The spread down the rows is the road, not the device — which is why the result is worked out inside each destination and only then added together. Where a row has dots of both colours, the gap between them is the real change."
     >
       <Legend items={[{ colour: BEFORE, label: "Before the device" }, { colour: AFTER, label: "After the device" }]} />
+      {held.length > 0 && (
+        <p className="text-xs -mt-1 mb-3" style={{ color: "#8A5A18" }}>
+          Hollow marks are the {held.length} trip{held.length === 1 ? "" : "s"} with a question against
+          {held.length === 1 ? " it" : " them"} — shown here, but not counted until settled on the Data checks tab.
+        </p>
+      )}
       <Tooltip tip={tip} />
       <svg viewBox={`0 0 720 ${height}`} className="w-full h-auto block" role="img"
         aria-label={`Fuel use per journey grouped by destination, from ${min} to ${max} litres per 100 km.`}>
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={x(t)} y1={TOP - 8} x2={x(t)} y2={TOP + routes.length * ROW - 8} stroke={GRID} strokeWidth="1" />
-            <text x={x(t)} y={TOP + routes.length * ROW + 10} textAnchor="middle" fontSize="10" fill={MUTED}>{t.toFixed(0)}</text>
+            <line x1={x(t)} y1={TOP - 8} x2={x(t)} y2={TOP + rows.length * ROW - 8} stroke={GRID} strokeWidth="1" />
+            <text x={x(t)} y={TOP + rows.length * ROW + 10} textAnchor="middle" fontSize="10" fill={MUTED}>{t.toFixed(0)}</text>
           </g>
         ))}
-        <text x={LEFT} y={TOP + routes.length * ROW + 28} fontSize="10" fill={MUTED} letterSpacing="0.08em">LITRES PER 100 KM</text>
+        <text x={LEFT} y={TOP + rows.length * ROW + 28} fontSize="10" fill={MUTED} letterSpacing="0.08em">LITRES PER 100 KM</text>
 
-        {routes.map((r, i) => {
+        {rows.map(({ route_key, route_label, row }, i) => {
+          const r: RouteRow = row ?? {
+            route_key, route_label, baseline: null, trial: null, baseline_load_kg: null,
+            trial_load_kg: null, load_gap_pct: null, matched: false,
+            unmatched_reason: "no_baseline", change_pct: null,
+          };
           const cy = TOP + i * ROW + 6;
           const before = tripsOn(r.route_key, "baseline");
           const after = tripsOn(r.route_key, "trial");
@@ -182,20 +213,24 @@ export function RouteDotPlot({ trial }: { trial: Trial }) {
               )}
 
               {before.map((t) => (
-                <circle key={`b${t.id}`} cx={x(t.l_per_100 as number)} cy={cy} r="5.5" fill={BEFORE}
-                  stroke={SURFACE} strokeWidth="2" style={{ cursor: "pointer" }}
+                <circle key={`b${t.id}`} cx={x(t.l_per_100 as number)} cy={cy} r="5.5"
+                  fill={t.status === "valid" ? BEFORE : SURFACE}
+                  stroke={t.status === "valid" ? SURFACE : BEFORE} strokeWidth="2"
+                  strokeDasharray={t.status === "valid" ? undefined : "2 2"} style={{ cursor: "pointer" }}
                   onMouseEnter={() => setTip({
                     x: (x(t.l_per_100 as number) / 720) * 100, y: (cy / height) * 100,
-                    lines: [`${r.route_label} · before`, `${t.l_per_100} L/100km · ${fmtDate(t.trip_date)}`, `${fmtNumber(t.distance_km)} km on ${fmtNumber(t.fuel_used_l, 1)} L`],
+                    lines: [`${r.route_label} · before${t.status === "valid" ? "" : t.status === "review" ? " · needs review" : " · left out"}`, `${t.l_per_100} L/100km · ${fmtDate(t.trip_date)}`, `${fmtNumber(t.distance_km)} km on ${fmtNumber(t.fuel_used_l, 1)} L`],
                   })}
                   onMouseLeave={() => setTip(null)} />
               ))}
               {after.map((t) => (
-                <circle key={`a${t.id}`} cx={x(t.l_per_100 as number)} cy={cy} r="5.5" fill={AFTER}
-                  stroke={SURFACE} strokeWidth="2" style={{ cursor: "pointer" }}
+                <circle key={`a${t.id}`} cx={x(t.l_per_100 as number)} cy={cy} r="5.5"
+                  fill={t.status === "valid" ? AFTER : SURFACE}
+                  stroke={t.status === "valid" ? SURFACE : AFTER} strokeWidth="2"
+                  strokeDasharray={t.status === "valid" ? undefined : "2 2"} style={{ cursor: "pointer" }}
                   onMouseEnter={() => setTip({
                     x: (x(t.l_per_100 as number) / 720) * 100, y: (cy / height) * 100,
-                    lines: [`${r.route_label} · after`, `${t.l_per_100} L/100km · ${fmtDate(t.trip_date)}`, `${fmtNumber(t.distance_km)} km on ${fmtNumber(t.fuel_used_l, 1)} L`],
+                    lines: [`${r.route_label} · after${t.status === "valid" ? "" : t.status === "review" ? " · needs review, not counted" : " · left out"}`, `${t.l_per_100} L/100km · ${fmtDate(t.trip_date)}`, `${fmtNumber(t.distance_km)} km on ${fmtNumber(t.fuel_used_l, 1)} L`],
                   })}
                   onMouseLeave={() => setTip(null)} />
               ))}

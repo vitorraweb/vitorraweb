@@ -17,6 +17,9 @@ type Preview = {
   sample: Record<string, unknown>[];
   row_count: number;
   rejected: Record<string, string>;
+  blank_rows: number;
+  /** Set when nothing could be read — says why, and what to change. */
+  diagnosis: string | null;
 };
 type FieldSpec = { field: string; label: string; required: boolean };
 type PreviewResponse = {
@@ -103,8 +106,24 @@ export default function FetTrialImport({
     } finally { setBusy(false); }
   };
 
+  /** Re-read the stored upload with an adjusted column mapping. */
+  const remap = async (next: Record<string, string>) => {
+    if (!res) return;
+    try {
+      const r = await apiAdmin<{ preview: Preview }>(`/admin/fet-trials/${trial.id}/imports/repreview`, {
+        method: "POST",
+        body: JSON.stringify({ handle: res.handle, sheet, mapping: next, units }),
+      });
+      setRes({ ...res, preview: r.preview });
+    } catch { /* leave the previous preview in place */ }
+  };
+
   const commit = async () => {
     if (!res) return;
+    if (res.preview.row_count === 0) {
+      setMsg("There is nothing to import yet — fix the column mapping above first.");
+      return;
+    }
     const unanswered = res.preview.unit_questions.filter((q) => !units[q.field]);
     if (unanswered.length > 0) { setMsg("Please answer the question about units before importing."); return; }
 
@@ -232,6 +251,15 @@ export default function FetTrialImport({
             </div>
           )}
 
+          {res.preview.diagnosis && (
+            <div className="rounded-2xl p-4 mb-5" style={{ background: "rgba(158,59,51,0.07)" }}>
+              <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "#9E3B33" }}>
+                <AlertTriangle className="w-3.5 h-3.5" />No trips could be read
+              </p>
+              <p className="text-sm leading-relaxed" style={{ color: "#454545" }}>{res.preview.diagnosis}</p>
+            </div>
+          )}
+
           <p className="text-xs font-medium mb-2" style={{ color: "#888" }}>How the columns will be read</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
             {res.fields.map((f) => (
@@ -241,7 +269,13 @@ export default function FetTrialImport({
                 </span>
                 <select
                   value={mapping[f.field] ?? ""}
-                  onChange={(e) => setMapping({ ...mapping, [f.field]: e.target.value })}
+                  onChange={(e) => {
+                    const next = { ...mapping, [f.field]: e.target.value };
+                    setMapping(next);
+                    // Re-read with the corrected mapping so the row count and
+                    // any diagnosis update as you fix it.
+                    remap(next);
+                  }}
                   className={selectCls}
                   style={selectStyle}
                 >
@@ -274,9 +308,9 @@ export default function FetTrialImport({
 
           <button
             onClick={commit}
-            disabled={busy}
+            disabled={busy || res.preview.row_count === 0}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold"
-            style={{ background: "#C5B27A", color: "#1E1E1E", opacity: busy ? 0.7 : 1 }}
+            style={{ background: "#C5B27A", color: "#1E1E1E", opacity: busy || res.preview.row_count === 0 ? 0.5 : 1 }}
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
             Import {res.preview.row_count} trips

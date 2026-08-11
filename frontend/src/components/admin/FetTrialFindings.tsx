@@ -31,6 +31,10 @@ export default function FetTrialFindings({
   const [answering, setAnswering] = useState<number | null>(null);
   const [note, setNote] = useState("");
   const [choice, setChoice] = useState<string>("accepted");
+  // Keyed by flag, so the message lands next to the form in use — a shared
+  // message at the top of a long list reads as "nothing happened".
+  const [formError, setFormError] = useState<{ id: number; text: string } | null>(null);
+  const [saved, setSaved] = useState<number | null>(null);
 
   const outstanding = trial.flags.filter((f) => !f.resolution);
   const settled = trial.flags.filter((f) => f.resolution);
@@ -42,17 +46,25 @@ export default function FetTrialFindings({
   };
 
   const resolve = async (flag: Flag) => {
-    if (!note.trim()) { setMsg("Please say what you decided — it goes on the record and on the client report."); return; }
-    setBusy(flag.id); setMsg("");
+    if (!note.trim()) {
+      setFormError({ id: flag.id, text: "Please say what you decided — it goes on the record and on the client report." });
+      return;
+    }
+    setBusy(flag.id); setFormError(null); setMsg("");
     try {
       const res = await apiAdmin<{ data: Trial }>(`/admin/fet-trials/${trial.id}/flags/${flag.id}/resolve`, {
         method: "POST",
-        body: JSON.stringify({ resolution: choice, note }),
+        body: JSON.stringify({ resolution: choice, note: note.trim() }),
       });
       onChange(res.data);
       setAnswering(null); setNote(""); setChoice("accepted");
+      // Confirm it landed. Without this the finding simply vanishes from the
+      // list, which is hard to tell apart from the click doing nothing.
+      setSaved(flag.id);
+      setTimeout(() => setSaved(null), 4000);
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : "Could not save that decision.");
+      // The note is deliberately kept, so nothing typed is lost on a failure.
+      setFormError({ id: flag.id, text: e instanceof Error ? e.message : "Could not save that decision. Please try again." });
     } finally { setBusy(null); }
   };
 
@@ -75,6 +87,15 @@ export default function FetTrialFindings({
       </p>
 
       {msg && <p className="text-sm mb-3" style={{ color: "#C0392B" }}>{msg}</p>}
+
+      {saved !== null && (
+        <div className="flex items-center gap-2.5 rounded-2xl p-3.5 mb-4" style={{ background: "rgba(34,197,94,0.08)" }}>
+          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#16A34A" }} />
+          <p className="text-sm" style={{ color: "#166534" }}>
+            Recorded. It has moved to &ldquo;Already settled&rdquo; below, and the result has been recalculated.
+          </p>
+        </div>
+      )}
 
       {outstanding.length === 0 ? (
         <div className="flex items-center gap-2.5 rounded-2xl p-4 mb-5" style={{ background: "rgba(34,197,94,0.08)" }}>
@@ -130,6 +151,11 @@ export default function FetTrialFindings({
                       className="w-full text-sm rounded-xl px-3 py-2 border outline-none"
                       style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" }}
                     />
+                    {formError?.id === f.id && (
+                      <p className="text-sm mt-2 rounded-lg px-3 py-2" style={{ background: "rgba(158,59,51,0.09)", color: "#9E3B33" }}>
+                        {formError.text}
+                      </p>
+                    )}
                     <div className="flex items-center gap-2 mt-3">
                       <button
                         onClick={() => resolve(f)}

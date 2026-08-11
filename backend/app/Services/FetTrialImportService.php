@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -43,7 +44,8 @@ class FetTrialImportService
     public const FIELDS = [
         'route_label' => [
             'label' => 'Destination / route', 'type' => 'string', 'required' => true,
-            'synonyms' => ['destination', 'route', 'drop point', 'delivery point', 'to'],
+            'synonyms' => ['destination', 'route', 'drop point', 'delivery point', 'town', 'location',
+                'site', 'depot', 'district', 'delivery', 'drop', 'customer', 'to'],
         ],
         'region' => [
             'label' => 'Region', 'type' => 'string',
@@ -59,7 +61,8 @@ class FetTrialImportService
         ],
         'distance_km' => [
             'label' => 'Distance driven (km)', 'type' => 'number',
-            'synonyms' => ['mileage', 'distance', 'km covered', 'kilometres', 'kms'],
+            'synonyms' => ['mileage', 'distance', 'km covered', 'kms covered', 'distance covered',
+                'kilometres', 'kilometers', 'kms', 'km'],
         ],
         'avg_speed_kmh' => [
             'label' => 'Average speed', 'type' => 'number',
@@ -67,11 +70,12 @@ class FetTrialImportService
         ],
         'fuel_opening_l' => [
             'label' => 'Fuel at departure', 'type' => 'number',
-            'synonyms' => ['initial fuel', 'opening fuel', 'opening stock', 'fuel at depart', 'fuel opening'],
+            'synonyms' => ['initial fuel', 'opening fuel', 'opening stock', 'fuel at depart',
+                'fuel opening', 'opening', 'tank out'],
         ],
         'fuel_issued_l' => [
             'label' => 'Fuel issued', 'type' => 'number',
-            'synonyms' => ['fuel given', 'fuel issued', 'issued', 'fuel drawn'],
+            'synonyms' => ['fuel given', 'fuel issued', 'fuel drawn', 'diesel issued', 'issued', 'drawn'],
         ],
         'fuel_topup_l' => [
             'label' => 'En-route top-up', 'type' => 'number',
@@ -79,7 +83,8 @@ class FetTrialImportService
         ],
         'fuel_closing_l' => [
             'label' => 'Fuel on return', 'type' => 'number',
-            'synonyms' => ['final fuel', 'closing fuel', 'closing stock', 'fuel at return', 'final'],
+            'synonyms' => ['final fuel', 'closing fuel', 'closing stock', 'fuel at return',
+                'closing', 'tank in', 'final'],
         ],
         'fuel_used_l' => [
             'label' => 'Fuel used (if stated)', 'type' => 'number',
@@ -91,7 +96,8 @@ class FetTrialImportService
         ],
         'load_out_kg' => [
             'label' => 'Load carried out', 'type' => 'weight',
-            'synonyms' => ['actual load', 'net weight', 'load out', 'payload', 'load'],
+            'synonyms' => ['actual load', 'net weight', 'load out', 'out weight', 'payload',
+                'tonnage', 'cargo', 'load'],
         ],
         'load_in_kg' => [
             'label' => 'Weight on return', 'type' => 'weight',
@@ -141,6 +147,10 @@ class FetTrialImportService
         } finally {
             $book->disconnectWorksheets();
             unset($book);
+            // disconnectWorksheets() breaks the links but the objects are still
+            // held by cycles the refcounter cannot free on its own. Without a
+            // collection pass the memory accumulates across successive imports.
+            gc_collect_cycles();
         }
     }
 
@@ -213,6 +223,7 @@ class FetTrialImportService
 
         $parsed = [];
         $rejected = [];
+        $blank = 0;
 
         foreach ($rows as $i => $row) {
             $ref = $this->rowRef($sheet->getTitle(), $headerRow + $i + 2);
@@ -222,10 +233,16 @@ class FetTrialImportService
                 $parsed[] = $result['data'] + ['_row' => $ref];
             } elseif ($result['reason'] !== null) {
                 $rejected[$ref] = $result['reason'];
+            } else {
+                $blank++;
             }
         }
 
         return [
+            'blank_rows' => $blank,
+            'diagnosis' => $parsed === []
+                ? $this->diagnoseEmpty($headers, $mapping, $rows, $blank, count($rejected), $sheet->getTitle())
+                : null,
             'sheet' => $sheet->getTitle(),
             'header_row' => $headerRow,
             'headers' => array_values(array_filter($headers, fn ($h) => $h !== null && $h !== '')),
@@ -374,6 +391,17 @@ class FetTrialImportService
 
         $value = $cell->getValue();
 
+        /*
+         * Excel hands back a RichText object, not a string, whenever a cell
+         * carries any inline formatting — a bold heading is enough. Left
+         * unwrapped it fails every is_string() check downstream, so no column
+         * is recognised and every row is silently skipped: the file imports as
+         * "0 trips" with nothing to explain why.
+         */
+        if ($value instanceof RichText) {
+            $value = $value->getPlainText();
+        }
+
         if ($value === null || $value === '') {
             return null;
         }
@@ -404,8 +432,25 @@ class FetTrialImportService
             }
         }
 
-        // One or two coincidental matches is not a header.
-        return $bestScore >= 3 ? $best : null;
+        if ($bestScore >= 2) {
+            return $best;
+        }
+
+        /*
+         * Nothing matched confidently. Rather than refuse the file outright,
+         * fall back to the first row that looks like headings — a row of short
+         * text labels above rows that are mostly numbers. The mapping is shown
+         * for confirmation anyway, so a wrong guess costs a correction, not a
+         * corrupted import.
+         */
+        foreach (array_slice($grid, 0, self::HEADER_SEARCH_DEPTH, true) as $i => $row) {
+            $labels = array_filter($row, fn ($c) => is_string($c) && trim($c) !== '' && mb_strlen($c) <= 40);
+            if (count($labels) >= 3) {
+                return $i;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -428,7 +473,11 @@ class FetTrialImportService
 
             foreach (self::FIELDS as $field => $spec) {
                 foreach ($spec['synonyms'] as $synonym) {
-                    if (str_contains($needle, $synonym)) {
+                    // Whole-word matching. Plain str_contains let "to" match
+                    // "Total" and "in" match "Initial", quietly mis-mapping a
+                    // column and corrupting every figure built on it.
+                    $pattern = '/(?<![a-z0-9])'.preg_quote($synonym, '/').'(?![a-z0-9])/i';
+                    if (preg_match($pattern, $needle) === 1) {
                         $score = strlen($synonym);
                         // Exact heading beats a substring match.
                         if ($needle === $synonym) {
@@ -481,10 +530,15 @@ class FetTrialImportService
             $data[$field] = $get($field);
         }
 
-        // A row with nothing identifying on it is blank padding, not a failure.
+        // A row with nothing on it at all is blank padding, not a failure.
+        if (array_filter($row, fn ($v) => $v !== null && $v !== '') === []) {
+            return ['ok' => false, 'reason' => null, 'blank' => true];
+        }
+
+        // A row that carried data but nothing we could identify it by.
         $identifying = array_filter([$data['route_label'], $data['trip_date'], $data['distance_km']]);
         if ($identifying === []) {
-            return ['ok' => false, 'reason' => null];
+            return ['ok' => false, 'reason' => null, 'blank' => true];
         }
 
         if (! is_string($data['route_label']) || trim($data['route_label']) === '') {
@@ -509,10 +563,12 @@ class FetTrialImportService
             return null;
         }
         if (is_string($value)) {
-            $value = str_replace([',', ' '], '', $value);
-            if (! is_numeric($value)) {
+            // Clients write "828.24 km", "1,234 L", "29 600". Keep the number.
+            $cleaned = preg_replace('/[^0-9.\-]/', '', str_replace(',', '', trim($value)));
+            if ($cleaned === null || $cleaned === '' || ! is_numeric($cleaned)) {
                 return null;
             }
+            $value = $cleaned;
         }
 
         return is_numeric($value) ? round((float) $value, 2) : null;
@@ -529,6 +585,15 @@ class FetTrialImportService
         return (int) round($unit === 'tonnes' ? $n * 1000 : $n);
     }
 
+    /**
+     * Dates, read the way the client wrote them.
+     *
+     * Day-first, deliberately. Carbon reads "03/07/2026" as 3 March by default,
+     * but every fleet document here is day-first, so that trip would land four
+     * months from where it belongs — and the installation date is what decides
+     * whether a trip counts as "before" or "after". Getting this wrong silently
+     * inverts the entire comparison.
+     */
     private function date(mixed $value): ?CarbonImmutable
     {
         if ($value instanceof CarbonImmutable) {
@@ -538,8 +603,32 @@ class FetTrialImportService
             return null;
         }
 
+        $raw = trim($value);
+
+        // Unambiguous ISO (2026-07-04) is taken as written.
+        if (preg_match('/^\d{4}-\d{1,2}-\d{1,2}/', $raw) === 1) {
+            try {
+                return CarbonImmutable::parse($raw);
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        // Slash- or dot-separated: treat the first number as the day.
+        if (preg_match('#^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})#', $raw, $m) === 1) {
+            [, $day, $month, $year] = $m;
+            if ((int) $month <= 12) {
+                $year = strlen($year) === 2 ? '20'.$year : $year;
+                try {
+                    return CarbonImmutable::createFromFormat('!d/m/Y', "{$day}/{$month}/{$year}") ?: null;
+                } catch (\Throwable) {
+                    return null;
+                }
+            }
+        }
+
         try {
-            return CarbonImmutable::parse(trim($value));
+            return CarbonImmutable::parse($raw);
         } catch (\Throwable) {
             return null;
         }
@@ -628,6 +717,46 @@ class FetTrialImportService
     }
 
     /* ── questions for the human ──────────────────────────────────────────── */
+
+    /**
+     * Why a sheet produced nothing.
+     *
+     * "0 trips found" with no explanation is the worst possible outcome — it
+     * tells the person holding the file nothing about what to change. This says
+     * what was read, what was recognised, and what to do next.
+     *
+     * @param  array<int, mixed>  $headers
+     * @param  array<string, string>  $mapping
+     * @param  array<int, array<int, mixed>>  $rows
+     */
+    private function diagnoseEmpty(array $headers, array $mapping, array $rows, int $blank, int $rejected, string $sheet): string
+    {
+        $named = array_values(array_filter($headers, fn ($h) => is_string($h) && trim($h) !== ''));
+
+        if ($named === []) {
+            return "No column headings were found on the \"{$sheet}\" sheet, so there was nothing to read. "
+                .'Pick a different sheet above — the trips are often on a tab of their own.';
+        }
+
+        if (! isset($mapping['route_label'])) {
+            return 'Every trip needs a destination, and none of the columns on "'.$sheet.'" was recognised as one. '
+                .'Set "Destination / route" below to whichever column holds it — '
+                .'the headings found were: '.implode(', ', array_slice($named, 0, 12))
+                .(count($named) > 12 ? '…' : '').'.';
+        }
+
+        if ($rejected > 0) {
+            return "Every row on \"{$sheet}\" was skipped — see the list below for the reason against each one.";
+        }
+
+        if ($rows === [] || $blank === count($rows)) {
+            return "The \"{$sheet}\" sheet has headings but no data rows beneath them. "
+                .'If the trips are on another tab, pick it above.';
+        }
+
+        return "Nothing on \"{$sheet}\" could be read as a trip. Check the column mapping below — in particular "
+            .'which column holds the destination and which holds the date.';
+    }
 
     /**
      * Canonical fields nothing was mapped to, so the screen can say what is
