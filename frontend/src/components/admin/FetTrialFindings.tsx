@@ -34,10 +34,23 @@ export default function FetTrialFindings({
   // Keyed by flag, so the message lands next to the form in use — a shared
   // message at the top of a long list reads as "nothing happened".
   const [formError, setFormError] = useState<{ id: number; text: string } | null>(null);
-  const [saved, setSaved] = useState<number | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
 
   const outstanding = trial.flags.filter((f) => !f.resolution);
   const settled = trial.flags.filter((f) => f.resolution);
+
+  /*
+   * Grouped by trip, because one journey can raise several questions and they
+   * render almost identically — the Kitgum trip raises both "no date" and "no
+   * distance". Listed flat, settling one leaves what looks like the same card
+   * still sitting there, which reads as the save having failed.
+   */
+  const groups = outstanding.reduce<{ key: string; label: string; flags: Flag[] }[]>((acc, f) => {
+    const key = f.trip_id === null ? "trial" : String(f.trip_id);
+    const found = acc.find((g) => g.key === key);
+    if (found) { found.flags.push(f); } else { acc.push({ key, label: tripLabel(f.trip_id), flags: [f] }); }
+    return acc;
+  }, []);
 
   const tripLabel = (tripId: number | null): string => {
     if (tripId === null) return "This trial";
@@ -60,8 +73,11 @@ export default function FetTrialFindings({
       setAnswering(null); setNote(""); setChoice("accepted");
       // Confirm it landed. Without this the finding simply vanishes from the
       // list, which is hard to tell apart from the click doing nothing.
-      setSaved(flag.id);
-      setTimeout(() => setSaved(null), 4000);
+      const left = res.data.flags.filter((x) => !x.resolution && x.trip_id === flag.trip_id).length;
+      setSaved(left > 0
+        ? `Recorded. This trip still has ${left} other question${left === 1 ? "" : "s"} to settle before it can be counted.`
+        : "Recorded. Nothing else is outstanding on this trip.");
+      setTimeout(() => setSaved(null), 6000);
     } catch (e) {
       // The note is deliberately kept, so nothing typed is lost on a failure.
       setFormError({ id: flag.id, text: e instanceof Error ? e.message : "Could not save that decision. Please try again." });
@@ -91,9 +107,7 @@ export default function FetTrialFindings({
       {saved !== null && (
         <div className="flex items-center gap-2.5 rounded-2xl p-3.5 mb-4" style={{ background: "rgba(34,197,94,0.08)" }}>
           <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#16A34A" }} />
-          <p className="text-sm" style={{ color: "#166534" }}>
-            Recorded. It has moved to &ldquo;Already settled&rdquo; below, and the result has been recalculated.
-          </p>
+          <p className="text-sm" style={{ color: "#166534" }}>{saved}</p>
         </div>
       )}
 
@@ -105,8 +119,17 @@ export default function FetTrialFindings({
           </p>
         </div>
       ) : (
-        <div className="space-y-2.5 mb-6">
-          {outstanding.map((f) => {
+        <div className="space-y-4 mb-6">
+          {groups.map((g) => (
+            <div key={g.key}>
+              <p className="text-xs font-semibold mb-1.5 px-1" style={{ color: "#777" }}>
+                {g.label}
+                {g.flags.length > 1 && (
+                  <span style={{ color: "#9E3B33" }}> · {g.flags.length} separate questions on this trip, each settled on its own</span>
+                )}
+              </p>
+              <div className="space-y-2.5">
+          {g.flags.map((f) => {
             const style = SEVERITY_STYLE[f.severity];
             const isAnswering = answering === f.id;
 
@@ -117,7 +140,6 @@ export default function FetTrialFindings({
                     {style.label}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold mb-1" style={{ color: "#AAA" }}>{tripLabel(f.trip_id)}</p>
                     <p className="text-sm leading-relaxed" style={{ color: "#1E1E1E" }}>{f.message}</p>
                     {f.suggested_action && (
                       <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "#888" }}>{f.suggested_action}</p>
@@ -182,6 +204,9 @@ export default function FetTrialFindings({
               </div>
             );
           })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
