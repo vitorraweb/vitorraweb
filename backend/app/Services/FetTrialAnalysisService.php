@@ -155,6 +155,18 @@ class FetTrialAnalysisService
             'unmatched_trial_trips' => $this->unmatchedTrialTrips($routes),
             'blocking_flags' => $blocking,
             'open_questions' => $warnings,
+
+            /*
+             * Secondary lenses, added after S-Line Motors' independent
+             * assessment of the first trial (11 August 2026). They do not move
+             * the verdict — that stays anchored to distance efficiency, as
+             * their protocol recommends — but they explain a figure that looks
+             * like a plain failure until you see what the truck was carrying.
+             */
+            'transport_work' => $this->transportWork($withFigures, $trial->effectiveTareKg()),
+            'reference' => $this->referencePosition($trial, $withFigures),
+            'secondary' => $this->secondaryMeasure($withFigures),
+            'load_sensitivity' => $this->loadSensitivity($trial, $withFigures),
         ];
     }
 
@@ -584,6 +596,204 @@ class FetTrialAnalysisService
                 'action' => $f->suggested_action,
             ])
             ->all();
+    }
+
+    /* ── secondary lenses ─────────────────────────────────────────────────── */
+
+    /**
+     * Cargo moved per litre, before and after.
+     *
+     * Distance efficiency penalises a truck that carried freight home instead
+     * of returning empty — the extra tonnes burn fuel over the same road. This
+     * asks the haulier's question instead. On the first trial the two measures
+     * disagree by 77 percentage points on the same journey, which is precisely
+     * why both are reported.
+     *
+     * @param  Collection<int, FetTrialTrip>  $trips
+     * @return array<string, mixed>|null
+     */
+    private function transportWork(Collection $trips, ?int $tare): ?array
+    {
+        $side = function (Collection $set) use ($tare): ?array {
+            $work = 0.0;
+            $litres = 0.0;
+            $count = 0;
+            foreach ($set as $t) {
+                $w = $t->cargoTonneKm($tare);
+                $f = (float) ($t->fuel_used_l ?? 0);
+                if ($w === null || $f <= 0) {
+                    continue;
+                }
+                $work += $w;
+                $litres += $f;
+                $count++;
+            }
+
+            return $count > 0 && $litres > 0
+                ? ['trips' => $count, 'tonne_km' => round($work, 1), 'litres' => round($litres, 2), 'tkm_per_l' => round($work / $litres, 2)]
+                : null;
+        };
+
+        $before = $side($trips->filter(fn ($t) => $t->effectivePhase() === 'baseline'));
+        $after = $side($trips->filter(fn ($t) => $t->effectivePhase() === 'trial'));
+
+        if ($before === null || $after === null) {
+            return null;
+        }
+
+        return [
+            'baseline' => $before,
+            'trial' => $after,
+            'change_pct' => round(($after['tkm_per_l'] - $before['tkm_per_l']) / $before['tkm_per_l'] * 100, 1),
+            'note' => 'Cargo moved per litre. This rises when the vehicle carries freight on the return leg instead of '
+                .'running back empty, so it measures how well the truck was used as well as how efficiently it ran. '
+                .'It cannot on its own show what the device did.',
+        ];
+    }
+
+    /**
+     * Where each period sits against the client's own planning figure — the
+     * number their operation already budgets against, so the one they judge by.
+     *
+     * @param  Collection<int, FetTrialTrip>  $trips
+     * @return array<string, mixed>|null
+     */
+    private function referencePosition(FetTrial $trial, Collection $trips): ?array
+    {
+        $reference = (float) ($trial->fleet_standard_km_per_l ?? 0);
+        if ($reference <= 0) {
+            return null;
+        }
+
+        $side = fn (string $phase) => $this->weighted($trips->filter(fn ($t) => $t->effectivePhase() === $phase)->values());
+        $before = $side('baseline');
+        $after = $side('trial');
+
+        return [
+            'km_per_l' => round($reference, 3),
+            'baseline_pct' => $before ? round(($before['km_per_l'] - $reference) / $reference * 100, 1) : null,
+            'trial_pct' => $after ? round(($after['km_per_l'] - $reference) / $reference * 100, 1) : null,
+        ];
+    }
+
+    /**
+     * The same comparison from the client's tracker rather than their tank
+     * readings. Two independent measures agreeing is worth far more than one;
+     * two disagreeing is worth knowing before a client points it out.
+     *
+     * @param  Collection<int, FetTrialTrip>  $trips
+     * @return array<string, mixed>|null
+     */
+    private function secondaryMeasure(Collection $trips): ?array
+    {
+        $side = function (string $phase) use ($trips): ?array {
+            $km = 0.0;
+            $litres = 0.0;
+            foreach ($trips->filter(fn ($t) => $t->effectivePhase() === $phase) as $t) {
+                $d = (float) ($t->distance_km ?? 0);
+                $f = (float) ($t->fuel_used_ivms_l ?? 0);
+                if ($d > 0 && $f > 0) {
+                    $km += $d;
+                    $litres += $f;
+                }
+            }
+
+            return $km > 0 && $litres > 0 ? ['km_per_l' => round($km / $litres, 3), 'l_per_100' => round($litres / $km * 100, 2)] : null;
+        };
+
+        $before = $side('baseline');
+        $after = $side('trial');
+
+        if ($before === null || $after === null) {
+            return null;
+        }
+
+        return [
+            'baseline' => $before,
+            'trial' => $after,
+            'change_pct' => round(($after['km_per_l'] - $before['km_per_l']) / $before['km_per_l'] * 100, 1),
+        ];
+    }
+
+    /**
+     * How much of the result is explained by the trial trip simply hauling more.
+     *
+     * Where a route's trial trip carried materially more than its baseline, the
+     * honest answer depends on an unknown: how much of fuel use scales with the
+     * weight being moved. Rather than pick a figure and present a single number,
+     * this reports the whole range and the point at which the conclusion flips —
+     * which is itself the finding. Settling it needs leg-by-leg fuel records,
+     * not a better estimate.
+     *
+     * @param  Collection<int, FetTrialTrip>  $trips
+     * @return array<string, mixed>|null
+     */
+    private function loadSensitivity(FetTrial $trial, Collection $trips): ?array
+    {
+        $tare = $trial->effectiveTareKg();
+        if ($tare === null) {
+            return null;
+        }
+
+        $best = null;
+        foreach ($trips->pluck('route_key')->filter()->unique() as $key) {
+            $before = $trips->filter(fn ($t) => $t->route_key === $key && $t->effectivePhase() === 'baseline')->values();
+            $after = $trips->filter(fn ($t) => $t->route_key === $key && $t->effectivePhase() === 'trial')->values();
+            if ($before->isEmpty() || $after->isEmpty()) {
+                continue;
+            }
+
+            $bMass = $before->avg(fn ($t) => $t->averageGrossMassT($tare));
+            $aMass = $after->avg(fn ($t) => $t->averageGrossMassT($tare));
+            if (! $bMass || ! $aMass) {
+                continue;
+            }
+
+            $gap = abs($aMass - $bMass) / $bMass * 100;
+            if ($gap < 5 || ($best !== null && $gap <= $best['gap'])) {
+                continue;
+            }
+
+            $bw = $this->weighted($before);
+            $aw = $this->weighted($after);
+            if (! $bw || ! $aw) {
+                continue;
+            }
+
+            $best = ['gap' => $gap, 'key' => $key, 'label' => $after->first()->route_label,
+                'b_mass' => round($bMass, 2), 'a_mass' => round($aMass, 2), 'bw' => $bw, 'aw' => $aw];
+        }
+
+        if ($best === null) {
+            return null;
+        }
+
+        $ratio = $best['b_mass'] / $best['a_mass'];
+        $rows = [];
+        foreach ([0, 25, 50, 75, 100] as $share) {
+            $factor = (1 - $share / 100) + ($share / 100) * $ratio;
+            $litres = $best['aw']['litres'] * $factor;
+            $kmPerL = $best['aw']['km'] / $litres;
+            $rows[] = [
+                'mass_dependent_pct' => $share,
+                'litres' => round($litres, 2),
+                'km_per_l' => round($kmPerL, 3),
+                'change_pct' => round(($kmPerL - $best['bw']['km_per_l']) / $best['bw']['km_per_l'] * 100, 1),
+            ];
+        }
+
+        // The share at which the adjusted result exactly matches the baseline.
+        $needed = $best['aw']['litres'] / ($best['aw']['km'] / $best['bw']['km_per_l']);
+        $breakEven = (1 - $ratio) != 0.0 ? round((1 - 1 / $needed) / (1 - $ratio) * 100, 1) : null;
+
+        return [
+            'route_label' => $best['label'],
+            'baseline_mass_t' => $best['b_mass'],
+            'trial_mass_t' => $best['a_mass'],
+            'mass_gap_pct' => round($best['gap'], 1),
+            'rows' => $rows,
+            'break_even_pct' => ($breakEven !== null && $breakEven >= 0 && $breakEven <= 100) ? $breakEven : null,
+        ];
     }
 
     /**

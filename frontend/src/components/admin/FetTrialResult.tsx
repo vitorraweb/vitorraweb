@@ -5,6 +5,7 @@ import {
   type Trial, type RouteRow, UNMATCHED_REASON, fmtNumber, fmtMoney, fmtTonnes,
 } from "@/lib/fet-trials";
 import { RouteDotPlot, ExpectedVsActual, LoadScatter, TripTimeline } from "./FetTrialCharts";
+import FetTrialLenses from "./FetTrialLenses";
 
 /**
  * What the trial currently proves — or, far more often early on, what it does
@@ -64,6 +65,9 @@ export default function FetTrialResult({
       <ExpectedVsActual trial={trial} />
       <LoadScatter trial={trial} />
       <TripTimeline trial={trial} />
+
+      {/* The questions a client asks after the headline. */}
+      <FetTrialLenses trial={trial} />
 
       {/* Per-route detail — always shown, because it is what makes the headline
           (or its absence) explicable to a client. */}

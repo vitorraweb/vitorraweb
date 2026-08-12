@@ -84,6 +84,28 @@ export type Analysis = {
   }[];
   blocking_flags: Finding[];
   open_questions: Finding[];
+
+  /* Secondary lenses. They explain the headline; they never move it. */
+  transport_work: {
+    baseline: { trips: number; tonne_km: number; litres: number; tkm_per_l: number };
+    trial: { trips: number; tonne_km: number; litres: number; tkm_per_l: number };
+    change_pct: number;
+    note: string;
+  } | null;
+  reference: { km_per_l: number; baseline_pct: number | null; trial_pct: number | null } | null;
+  secondary: {
+    baseline: { km_per_l: number; l_per_100: number };
+    trial: { km_per_l: number; l_per_100: number };
+    change_pct: number;
+  } | null;
+  load_sensitivity: {
+    route_label: string;
+    baseline_mass_t: number;
+    trial_mass_t: number;
+    mass_gap_pct: number;
+    rows: { mass_dependent_pct: number; litres: number; km_per_l: number; change_pct: number }[];
+    break_even_pct: number | null;
+  } | null;
 };
 
 export type Trip = {
