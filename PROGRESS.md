@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 7 August 2026
+**Last updated:** 14 August 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -38,6 +38,7 @@
 | **Site could not reach the API** (blocked sign-in + all forms) | ✅ **Fixed & live** — API now served through the site itself |
 | **Leave approval — two people required** (Operations + Finance), nobody signs their own | ✅ **Built** — needs backend deploy |
 | **Staff offboarding** (`staff:offboard`) + departed accounts can no longer sign in | ✅ **Built** — needs backend deploy |
+| **FET Trial Manager** — run a client fuel trial end to end, from their own spreadsheet to a client-ready report | ✅ **Built & live** — first trial (Hariss International) loaded |
 | Monitoring / backups / CI/CD | ⏳ Sentry DSNs configured; uptime/backups/CI still to verify |
 
 ---
@@ -432,6 +433,92 @@ record stays.
 
 ---
 
+## ✅ FET Trial Manager (August 2026) — `/admin/fet-trials`
+
+Marketing were running the Hariss International trial by hand-copying the
+client's spreadsheet into our branded template. It broke down, and they raised
+it as a tooling problem. This replaces that process for Hariss and every trial
+after it.
+
+**Marketing upload whatever file the client already produces**, in the client's
+own layout. There is no template to fill in first — that requirement is what
+caused the trouble, because our log asked Hariss for odometer readings and tank
+levels their systems simply do not record. The system reads their file, asks
+about anything ambiguous rather than guessing, does the arithmetic, and produces
+a client-ready report.
+
+### The one thing that matters most
+**Comparisons are made within a single destination.** On the first trial this
+truck's fuel use varied **41% between routes** but only **4.2% between two runs
+of the same route** — roughly three times the size of the 13.9% saving FET is
+certified to deliver. Comparing a Mpondwe run against an Apac run therefore
+measures the road, not the product. That is exactly what made the Hariss trial
+first appear to be a 20% failure.
+
+### It refuses to state a result it cannot defend
+No saving figure appears anywhere — dashboard, PDF or client link — unless the
+evidence carries it. Below that line it says what is missing and which routes
+are ready to measure against. A number that collapses under a client's
+questioning costs more than an honest "still running".
+
+### What it does
+- **Reads the client's file**: picks the right sheet itself, maps the columns,
+  and queries anything ambiguous (a load column headed "tonnes" holding
+  kilogrammes, say) instead of assuming.
+- **14 data-quality checks**, each raised in plain words with a suggested action
+  — a trip dated before the device was fitted, a truck that came back loaded, a
+  journey with no distance. A trip with an unsettled question is held out of the
+  maths but stays on screen with the reason attached.
+- **Leaving a trip out always needs a reason**, which appears on the report. A
+  report that quietly dropped an inconvenient journey would not survive reading.
+- **Re-importing an updated export is safe** — trips are matched on destination
+  and date, so decisions already made are kept.
+- **Charts** that show the argument, and a **branded PDF plus an Excel trip log
+  shaped to how that client measures** — a fleet working from tank readings is
+  never handed odometer columns it cannot fill.
+- **A read-only link for the client** (`/trial/{token}`, no login) showing the
+  same strict standard, with contact records, internal notes and driver names
+  withheld.
+- **Winning a trial** creates the customer's FET savings record and carries the
+  measured baseline into it, so they are measured against their own history
+  rather than a class average.
+
+### Three lenses, after an independent review
+S-Line Motors assessed the same Hariss workbook on 11 August and reached our
+figures exactly. They also read the loaded-return trip differently, and were
+right to:
+- **Cargo moved per litre.** Fuel-per-kilometre punishes a truck that carried
+  freight home instead of running back empty. On the same journeys the truck
+  moved **15.9% more cargo per litre** while looking 20.6% worse on fuel.
+- **How much of it is the load.** That trip hauled 48.7 tonnes on average
+  against 34.2 before. The answer ranges from 19.8% worse to 14.1% better
+  depending on an unknown, flipping at about 66.7% — and that it flips inside a
+  plausible range *is* the finding.
+- **Against the client's own planning figure** (Hariss budget 2.20 km/L): the
+  baseline sat 5.2% above it, the trial period 12.7% below.
+
+None of these move the verdict, which stays anchored to fuel per kilometre.
+
+### Where the Hariss trial stands
+Eight usable trips before the device, and **no result yet — correctly**.
+Kamwenge was never driven before installation, Masindi has only one earlier trip
+where two are needed, and Kitgum never completed. Two things would settle it:
+**three trips to Mpondwe** (the only route with a solid "before" figure), or
+**asking Hariss for this truck's history back to January**, which would rebuild
+the baseline retrospectively at no cost.
+
+> Technical detail (engineering): `fet_trials` / `fet_trial_trips` /
+> `fet_trial_flags` / import runs + saved column mappings;
+> `FetTrialAnalysisService` (route-stratified expected fuel, distance-weighted
+> throughout, confidence gate), `FetTrialValidator`, `FetTrialImportService`
+> (phpoffice/phpspreadsheet), `FetTrialReportService`,
+> `FetTrialConversionService`. New `fet_trials` admin module, on by default for
+> Marketing, Sales, Leadership and Operations. 81 feature tests, several running
+> against the real client workbook and five asserting agreement with S-Line's
+> published figures. Console fallback: `php artisan fet:trial`.
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**
@@ -462,6 +549,19 @@ record stays.
    Track it with `php artisan inbound-email:status`. ⚠ New subdomain only — never touch
    the Microsoft 365 records on `vitorra.org`.
 7. Set **executive-report recipients** in `/admin/settings`.
+7b. **FET trials — two things for the Hariss account.**
+   (a) **Ask Hariss for truck UA 758AM's trip history back to January**, in the same
+   export format. It costs them nothing (their tracking system already holds it —
+   the file they sent was filtered to the trial window), and it rebuilds the
+   "before" figures that can no longer be collected now the device is fitted.
+   Without it the trial needs three fresh trips to Mpondwe to reach a conclusion.
+   (b) **Reconcile three figures with them**: whether the Kamwenge trip ran 30 Jul –
+   2 Aug (their tracker export dates it April), whether it took 340 or 400 litres
+   (their two sheets disagree, and the answer moves the headline by twelve points),
+   and whether the Kitgum trip ever completed.
+   Ops accounts with a **custom permission set** also need "FET trials" ticked in
+   `/admin/staff`; department defaults already cover Marketing, Sales, Leadership
+   and Operations.
 8. ⚠ **Now blocking leave approvals** — grant **"Accounting — approve"** to the
    **Senior Finance Officer** in `/admin/staff` (and to a second person, so leave
    does not stall when they are away). Until someone holds it, no leave request
@@ -506,6 +606,34 @@ cd backend
 > The server's default `php` is 8.2 but the app needs 8.3 — always run artisan with `/opt/alt/php83/usr/bin/php`.
 > ⚠ Never rotate `APP_KEY` in production — it would make encrypted files (`SecureFile`) and 2FA secrets unreadable.
 > Scheduled jobs (holiday reminders, **holidays:sync**, executive report, application purge, invoice reminders, recurring finance, backups, daily digest, **fet:digest**, **campaigns:send**) ride the existing `php artisan schedule:run` cron.
+### Deployed 11–12 August 2026 — FET Trial Manager
+
+Already on the server. Recorded here because the next person doing a fresh
+deploy or a rebuild needs to know it carries a **new composer dependency**:
+
+```bash
+# REQUIRED — phpoffice/phpspreadsheet, for reading and writing client files.
+/opt/alt/php83/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader
+/opt/alt/php83/usr/bin/php artisan migrate --force   # 5 migrations (fet_trials + friends)
+/opt/alt/php83/usr/bin/php artisan config:cache
+/opt/alt/php83/usr/bin/php artisan route:cache        # ~25 new routes
+```
+
+Verify with:
+
+```bash
+/opt/alt/php83/usr/bin/php artisan route:list --path=fet-trials | wc -l   # ~26
+/opt/alt/php83/usr/bin/php artisan fet:trial                              # lists trials
+```
+
+> ⚠ Skipping the composer step leaves PhpSpreadsheet missing, and every file
+> upload and Excel export fatals. Everything else keeps working, which makes it
+> easy to miss.
+>
+> `php artisan fet:trial` is also the fallback if the admin screens are ever
+> unavailable — it shows a trial's trips, findings and result, and can settle
+> findings or leave a trip out, with the same audit trail as the UI.
+
 ### Outstanding on the next deploy (7 August 2026)
 
 The **two-signature leave approval carries a database change** (`leave_approvals`),
