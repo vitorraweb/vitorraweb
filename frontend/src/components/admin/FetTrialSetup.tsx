@@ -30,6 +30,10 @@ export default function FetTrialSetup({
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/trial/${trial.share_token}`
     : null;
 
+  const reviewUrl = trial.review_token
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/trial/review/${trial.review_token}`
+    : null;
+
   const save = async () => {
     setBusy(true); setMsg("");
     try {
@@ -86,6 +90,39 @@ export default function FetTrialSetup({
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }).catch(() => setMsg("Could not copy — select the link and copy it by hand."));
+  };
+
+  const [reviewCopied, setReviewCopied] = useState(false);
+
+  const createReviewLink = async () => {
+    setBusy(true); setMsg("");
+    try {
+      await apiAdmin<{ token: string }>(`/admin/fet-trials/${trial.id}/review-link`, { method: "POST", body: JSON.stringify({}) });
+      const res = await apiAdmin<{ data: Trial }>(`/admin/fet-trials/${trial.id}`);
+      onChange(res.data); setD(res.data);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Could not create the link.");
+    } finally { setBusy(false); }
+  };
+
+  const revokeReviewLink = async () => {
+    if (!confirm("Turn off the internal review link? Anyone holding it will lose access immediately.")) return;
+    setBusy(true);
+    try {
+      await apiAdmin(`/admin/fet-trials/${trial.id}/review-link`, { method: "DELETE" });
+      const res = await apiAdmin<{ data: Trial }>(`/admin/fet-trials/${trial.id}`);
+      onChange(res.data); setD(res.data);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Could not turn the link off.");
+    } finally { setBusy(false); }
+  };
+
+  const copyReview = () => {
+    if (!reviewUrl) return;
+    navigator.clipboard.writeText(reviewUrl).then(() => {
+      setReviewCopied(true);
+      setTimeout(() => setReviewCopied(false), 2000);
     }).catch(() => setMsg("Could not copy — select the link and copy it by hand."));
   };
 
@@ -210,6 +247,37 @@ export default function FetTrialSetup({
         ) : (
           <button onClick={share} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#1E1E1E", color: "#fff", opacity: busy ? 0.7 : 1 }}>
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}Create a client link
+          </button>
+        )}
+      </div>
+
+      <div className="bg-white rounded-[20px] border border-black/[0.06] p-5">
+        <p className="text-sm font-semibold mb-1" style={{ color: "#1E1E1E" }}>Internal review link</p>
+        <p className="text-xs mb-4 leading-relaxed" style={{ color: "#999" }}>
+          The full result screen — findings, decisions and notes included — on a link that needs no staff sign-in.
+          For leadership review only: anyone holding this link sees the internal view, so send it only inside the
+          company and turn it off when the review is done. Separate from the client&rsquo;s link — each is created
+          and revoked on its own.
+        </p>
+
+        {reviewUrl ? (
+          <>
+            <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 mb-3" style={{ background: "#F7F7F5" }}>
+              <Link2 className="w-4 h-4 shrink-0" style={{ color: "#AAA" }} />
+              <span className="text-xs flex-1 min-w-0 truncate font-mono" style={{ color: "#555" }}>{reviewUrl}</span>
+              <button onClick={copyReview} className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg shrink-0" style={{ background: "#fff", color: "#555" }}>
+                {reviewCopied ? <Check className="w-3 h-3" style={{ color: "#16A34A" }} /> : <Copy className="w-3 h-3" />}
+                {reviewCopied ? "Copied" : "Copy"}
+              </button>
+            </div>
+            {trial.review_expires_at && <p className="text-xs mb-3" style={{ color: "#999" }}>Expires {fmtDate(trial.review_expires_at)}.</p>}
+            <button onClick={revokeReviewLink} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>
+              <Unlink className="w-3.5 h-3.5" />Turn the link off
+            </button>
+          </>
+        ) : (
+          <button onClick={createReviewLink} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#7A6020", color: "#fff", opacity: busy ? 0.7 : 1 }}>
+            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}Create an internal review link
           </button>
         )}
       </div>

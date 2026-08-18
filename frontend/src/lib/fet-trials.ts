@@ -194,6 +194,8 @@ export type Trial = {
   notes: string | null;
   share_token: string | null;
   share_expires_at: string | null;
+  review_token: string | null;
+  review_expires_at: string | null;
   trips: Trip[];
   flags: Flag[];
   analysis: Analysis;

@@ -234,4 +234,63 @@ class FetTrialFinalReportTest extends TestCase
         $this->assertStringContainsString('Left out', $csv);
         $this->assertStringContainsString('Client asked for this run to be set aside.', $csv);
     }
+
+    /* ── the internal review link ─────────────────────────────────────────── */
+
+    public function test_the_internal_review_link_serves_the_full_staff_view(): void
+    {
+        $trial = $this->trial();
+        $staff = $this->staff();
+        $this->import($trial, $staff);
+        $trial->fresh()->update(['notes' => 'Why the loaded trips are left out.']);
+
+        $issued = $this->actingAs($staff, 'sanctum')
+            ->postJson("/api/admin/fet-trials/{$trial->id}/review-link")
+            ->assertOk();
+
+        $response = $this->getJson('/api/trials/review/'.$issued->json('token'))->assertOk();
+
+        // The internal extras the client link deliberately strips.
+        $this->assertNotEmpty($response->json('data.flags'));
+        $this->assertSame('Why the loaded trips are left out.', $response->json('data.notes'));
+        // But neither live token rides along with the payload.
+        $this->assertNull($response->json('data.share_token'));
+        $this->assertNull($response->json('data.review_token'));
+    }
+
+    public function test_the_client_token_does_not_open_the_review_view_nor_the_reverse(): void
+    {
+        $trial = $this->trial();
+        $staff = $this->staff();
+        $this->import($trial, $staff);
+
+        $clientToken = $trial->fresh()->issueShareToken();
+        $reviewToken = $this->actingAs($staff, 'sanctum')
+            ->postJson("/api/admin/fet-trials/{$trial->id}/review-link")->json('token');
+
+        // The two tokens are separate credentials for separate views.
+        $this->getJson("/api/trials/review/{$clientToken}")->assertNotFound();
+        $this->getJson("/api/trials/{$reviewToken}")->assertNotFound();
+
+        // The client view still strips the internal side entirely.
+        $client = $this->getJson("/api/trials/{$clientToken}")->assertOk();
+        $this->assertNull($client->json('data.flags'));
+        $this->assertNull($client->json('data.notes'));
+    }
+
+    public function test_a_revoked_review_link_stops_working(): void
+    {
+        $trial = $this->trial();
+        $staff = $this->staff();
+        $this->import($trial, $staff);
+
+        $token = $this->actingAs($staff, 'sanctum')
+            ->postJson("/api/admin/fet-trials/{$trial->id}/review-link")->json('token');
+        $this->getJson("/api/trials/review/{$token}")->assertOk();
+
+        $this->actingAs($staff, 'sanctum')
+            ->deleteJson("/api/admin/fet-trials/{$trial->id}/review-link")->assertOk();
+
+        $this->getJson("/api/trials/review/{$token}")->assertNotFound();
+    }
 }

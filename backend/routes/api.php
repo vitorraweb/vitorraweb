@@ -105,6 +105,7 @@ Route::get('/invoices/pay/{token}/status', [InvoicePaymentController::class, 'st
 
 // Public, token-gated read-only view of a client's own FET trial. No login:
 // clients keep sending their export and get a link back.
+Route::get('/trials/review/{token}', [FetTrialShareController::class, 'review']);
 Route::get('/trials/{token}', [FetTrialShareController::class, 'show']);
 Route::get('/trials/{token}/pdf', [FetTrialShareController::class, 'pdf']);
 
@@ -294,6 +295,8 @@ Route::middleware('auth:sanctum')->group(function () {
             // Read-only client link
             Route::post('/fet-trials/{trial}/share', [FetTrialController::class, 'share']);
             Route::delete('/fet-trials/{trial}/share', [FetTrialController::class, 'revokeShare']);
+            Route::post('/fet-trials/{trial}/review-link', [FetTrialController::class, 'reviewLink']);
+            Route::delete('/fet-trials/{trial}/review-link', [FetTrialController::class, 'revokeReviewLink']);
         });
         Route::middleware('perm:prospects')->group(function () {
             Route::get('/prospects', [ProspectController::class, 'index']);

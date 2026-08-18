@@ -289,6 +289,36 @@ class FetTrialController extends Controller
         return response()->json(['revoked' => true]);
     }
 
+    /* ── internal review link ─────────────────────────────────────────────── */
+
+    /**
+     * Issue the internal review link: the full staff view, outside staff
+     * sign-in, for a leadership review. Separate token from the client link.
+     */
+    public function reviewLink(Request $request, FetTrial $trial): JsonResponse
+    {
+        $data = $request->validate([
+            'expires_in_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+        ]);
+
+        $token = $trial->issueReviewToken();
+        $trial->forceFill([
+            'review_expires_at' => isset($data['expires_in_days']) ? now()->addDays($data['expires_in_days']) : null,
+        ])->save();
+
+        Audit::log('fet_trial.review_link_issued', "Issued an internal review link for {$trial->reference}", $trial);
+
+        return response()->json(['token' => $token, 'expires_at' => $trial->fresh()->review_expires_at]);
+    }
+
+    public function revokeReviewLink(FetTrial $trial): JsonResponse
+    {
+        $trial->forceFill(['review_token' => null, 'review_expires_at' => null])->save();
+        Audit::log('fet_trial.review_link_revoked', "Revoked the internal review link for {$trial->reference}", $trial);
+
+        return response()->json(['revoked' => true]);
+    }
+
     /* ── shaping ──────────────────────────────────────────────────────────── */
 
     /** @return array<string, mixed> */
@@ -336,6 +366,8 @@ class FetTrialController extends Controller
             'notes' => $staff ? $trial->notes : null,
             'share_token' => $staff ? $trial->share_token : null,
             'share_expires_at' => $trial->share_expires_at,
+            'review_token' => $staff ? $trial->review_token : null,
+            'review_expires_at' => $staff ? $trial->review_expires_at : null,
             'trips' => $trial->trips->map(fn (FetTrialTrip $t) => $this->shapeTrip($t, $trial, $staff))->all(),
             'flags' => $staff ? $trial->flags->map(fn (FetTrialFlag $f) => [
                 'id' => $f->id,

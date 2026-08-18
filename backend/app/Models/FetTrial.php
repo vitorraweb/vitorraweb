@@ -43,6 +43,7 @@ class FetTrial extends Model
         'deal_value' => 'decimal:2',
         'units_sold' => 'integer',
         'share_expires_at' => 'datetime',
+        'review_expires_at' => 'datetime',
         'share_includes_driver' => 'boolean',
         'fuel_price' => 'decimal:2',
         'declared_baseline_l_per_100' => 'decimal:2',
@@ -169,5 +170,18 @@ class FetTrial extends Model
         $this->forceFill(['share_token' => Str::random(48)])->save();
 
         return $this->share_token;
+    }
+
+    /**
+     * Issue (or reissue) the INTERNAL review link — the full staff view,
+     * outside staff sign-in. A separate token from the client link, so the
+     * two can be issued and revoked independently and a client can never be
+     * handed the internal view by mistake.
+     */
+    public function issueReviewToken(): string
+    {
+        $this->forceFill(['review_token' => Str::random(48)])->save();
+
+        return $this->review_token;
     }
 }

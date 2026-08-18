@@ -57,6 +57,34 @@ class FetTrialShareController extends Controller
     }
 
     /**
+     * The INTERNAL review link — the full staff view of a trial, outside
+     * staff sign-in. Issued for a leadership review (the CEO does not hold a
+     * staff login); a deliberately separate token from the client link, so
+     * neither can widen the other and each is revoked on its own.
+     *
+     * The payload is the staff shape — findings, decisions and their notes,
+     * internal notes, held figures — minus the two live tokens, so a holder
+     * of this link cannot mint or discover the other link from it.
+     */
+    public function review(string $token): JsonResponse
+    {
+        $trial = FetTrial::where('review_token', $token)->first();
+
+        if (! $trial) {
+            return response()->json(['message' => 'This link is no longer active.'], 404);
+        }
+
+        if ($trial->review_expires_at && $trial->review_expires_at->isPast()) {
+            return response()->json(['message' => 'This link has expired. Please ask for a new one.'], 410);
+        }
+
+        $data = $this->trials->shape($trial, staff: true);
+        unset($data['share_token'], $data['review_token']);
+
+        return response()->json(['data' => $data]);
+    }
+
+    /**
      * Find the trial behind a token, or the reason it cannot be shown.
      *
      * @return FetTrial|JsonResponse
