@@ -550,6 +550,17 @@ client-shaped columns, checked figures, excluded trips named with their reason.
   route needs" set to 1 — their final report deliberately pairs one before-run
   with one after-run per destination).
 
+**Corrected workbook + marketing deck (18 August, later).** The team sat with
+the data and produced a corrected export (`Workbook1.xlsx`): the Kamwenge dates
+are now right in the file itself, and every figure carries its full decimals.
+Re-imported cleanly — all ten trips matched in place, the exclusions and
+settlements survived, and the one remaining weighbridge warning was accepted
+(client's own figure, 0.5% over rating, on a before-trip). The trial board is
+clear. A ten-slide presentation for marketing was built from the settled
+numbers (honest headline, route-by-route, the cargo-per-litre lens, the Yumbe
+load-sensitivity table, plan-vs-actual, and the three asks) — published as a
+private artifact for the team to present from or print.
+
 **Where the trial stands after settlement — no saving demonstrated.** Across
 the three comparable pairs (2,398 km) the truck used **0.2% more fuel than its
 baseline** — 2 litres over. Route by route: Paidha 17.2% better, Kitgum 6.4%
