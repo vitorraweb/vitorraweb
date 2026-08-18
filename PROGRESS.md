@@ -539,18 +539,29 @@ Reading their file needed three importer fixes, each now covered by tests:
 the same table builder as the spreadsheet so the two can never disagree —
 client-shaped columns, checked figures, excluded trips named with their reason.
 
-**Where the trial now stands — still no verdict, and correctly.** The system
-raises exactly what a sceptical reader would: the client's own file dates the
-Kamwenge trial trip 1 April (before the device was fitted); two trial trips
-(Masindi, Yumbe) came back **loaded with Kinyara sugar** — the client's own
-remark — so they did nearly double the work of the runs they'd be compared to;
-and each destination has only **one** "before" trip against the two the default
-evidence rules require. The swing is material: count everything and the trial
-reads **4% worse**; count only the two clean pairs (Kitgum, Paidha) and it
-reads **7.6% better**. Marketing settles those three findings in the trial
-screen (and can set "Earlier trips a route needs" to 1 for this trial to accept
-the client's paired method); the report will only ever state what survives
-those decisions. 369 backend tests passing (6 new).
+**The findings were settled with the client's answers (18 August):**
+- **Kamwenge trial trip** — the tracker export's 1 April date was wrong; the
+  trip ran **1–4 August**. Date corrected, trip counts.
+- **Masindi and Yumbe trial trips** — both ran as **loaded round trips**
+  (Kinyara sugar back-haul) where their "before" runs returned empty. Not
+  like-for-like, so both are **left out**, with the reason recorded and shown
+  on the report.
+- The client's **paired method accepted** for this trial ("Earlier trips a
+  route needs" set to 1 — their final report deliberately pairs one before-run
+  with one after-run per destination).
+
+**Where the trial stands after settlement — no saving demonstrated.** Across
+the three comparable pairs (2,398 km) the truck used **0.2% more fuel than its
+baseline** — 2 litres over. Route by route: Paidha 17.2% better, Kitgum 6.4%
+worse, Kamwenge 17.7% worse. The honest reading: the two clean July/August
+pairs alone would show ~7.6% saved, but the corrected Kamwenge pair pulls the
+average back to flat — and its trial run covered 701 km against the baseline's
+805 km to the same destination, which is worth querying with Hariss before
+anything is presented. The strongest remaining moves are unchanged: the
+truck's trip history back to January (rebuilds a real multi-trip baseline at
+no cost to them), or more paired runs. The system states exactly this — it
+will not put a favourable number on evidence that does not carry one.
+369 backend tests passing (6 new).
 
 ---
 
@@ -584,20 +595,16 @@ those decisions. 369 backend tests passing (6 new).
    Track it with `php artisan inbound-email:status`. ⚠ New subdomain only — never touch
    the Microsoft 365 records on `vitorra.org`.
 7. Set **executive-report recipients** in `/admin/settings`.
-7b. **FET trials — settle the Hariss final-report findings** (18 Aug: the trial
-   was recreated from Hariss's own final report — see the Trial Manager section).
-   Their file settles two of the three old questions (Kamwenge took 400 litres;
-   Kitgum did complete). Three findings now need marketing's decision in
-   `/admin/fet-trials`: the **Kamwenge trial trip is still dated 1 April** in
-   their own file (before the device was fitted — ask them to confirm the real
-   dates); the **Masindi and Yumbe trial trips came back loaded** with Kinyara
-   sugar (accept as-is, or leave out as not like-for-like); and each destination
-   has **one "before" trip against the two the default rules require** — either
-   set "Earlier trips a route needs" to 1 for this trial (accepting the client's
-   paired method), or ask for UA 758AM's trip history back to January, which
-   rebuilds a proper baseline at no cost to them. The headline swings from
-   4% worse (count everything) to 7.6% better (only the clean pairs), which is
-   why the system won't state a number until these are settled.
+7b. **FET trials — Hariss.** The trial was recreated from Hariss's own final
+   report and the findings settled with the client's answers (18 Aug — see the
+   Trial Manager section): Kamwenge's date corrected to 1–4 August, the two
+   loaded round trips (Masindi, Yumbe) left out as not like-for-like, and the
+   client's paired method accepted. Result as settled: **flat — 0.2% more fuel
+   than baseline** over the three comparable pairs. Before presenting anything:
+   query the Kamwenge trial run's 701 km (baseline ran 805 km to the same
+   destination), and keep pressing for **UA 758AM's trip history back to
+   January** or more paired runs — those are what could still move the result
+   in either direction.
    Ops accounts with a **custom permission set** also need "FET trials" ticked in
    `/admin/staff`; department defaults already cover Marketing, Sales, Leadership
    and Operations.
