@@ -410,7 +410,17 @@ class FetTrialImportService
             return CarbonImmutable::instance(ExcelDate::excelToDateTimeObject((float) $value));
         }
 
-        return is_string($value) ? trim($value) : $value;
+        /*
+         * Client files are full of non-breaking spaces — every heading and
+         * label in the Hariss final report ends in one. PHP's trim() does not
+         * strip them, so left alone they ride into route labels ("Masindi ")
+         * and column headings, and from there onto client-facing reports.
+         */
+        if (is_string($value)) {
+            return trim(str_replace("\u{00A0}", ' ', $value));
+        }
+
+        return $value;
     }
 
     /**
@@ -599,6 +609,23 @@ class FetTrialImportService
         if ($value instanceof CarbonImmutable) {
             return $value;
         }
+
+        /*
+         * A bare number in a date column is almost always an Excel date serial
+         * whose cell was left formatted "General" — the Hariss final report
+         * stores every departure and return this way, so without this branch
+         * the whole file imports with no dates and every trip is flagged.
+         * Only plausible serials are taken (2000–2079); anything else in a
+         * date column stays unread rather than becoming a nonsense date.
+         */
+        if (is_numeric($value)) {
+            $n = (float) $value;
+
+            return ($n >= 36526 && $n < 65380)
+                ? CarbonImmutable::instance(ExcelDate::excelToDateTimeObject($n))
+                : null;
+        }
+
         if (! is_string($value) || trim($value) === '') {
             return null;
         }
@@ -688,6 +715,16 @@ class FetTrialImportService
         }
 
         $v = Str::lower($value);
+
+        /*
+         * A negated marker is not a trial marker. The client's final report
+         * labels the comparison rows "Before FET" — which contains "fet", so
+         * without this the entire baseline was silently marked as trial trips
+         * and the comparison had nothing left to compare against.
+         */
+        if (str_contains($v, 'before') || str_contains($v, 'without') || str_contains($v, 'pre-')) {
+            return false;
+        }
 
         // "FET Trail trip" in the first client's file — their typo, not ours.
         return str_contains($v, 'fet') || str_contains($v, 'trial') || str_contains($v, 'trail');

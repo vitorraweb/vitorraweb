@@ -246,6 +246,21 @@ class FetTrialController extends Controller
         ]);
     }
 
+    /** The same trip log as plain CSV — for analysts, not for formatting. */
+    public function csv(FetTrial $trial): Response
+    {
+        $file = app(FetTrialReportService::class)->csv($trial);
+
+        Audit::log('fet_trial.csv_downloaded', "Downloaded the trip log (CSV) for {$trial->reference}", $trial);
+
+        return response($file['content'], 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$file['filename'].'"',
+            'Content-Length' => (string) strlen($file['content']),
+            'Cache-Control' => 'no-store',
+        ]);
+    }
+
     /* ── client share link ────────────────────────────────────────────────── */
 
     public function share(Request $request, FetTrial $trial): JsonResponse

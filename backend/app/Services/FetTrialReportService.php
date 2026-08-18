@@ -81,6 +81,35 @@ class FetTrialReportService
     }
 
     /**
+     * The trip log as CSV — the same table as the spreadsheet's Trips sheet,
+     * from the same builder, so the two can never quietly disagree. For the
+     * fleet analyst who wants the checked figures in the plainest possible
+     * form rather than a formatted workbook.
+     *
+     * @return array{content: string, filename: string}
+     */
+    public function csv(FetTrial $trial): array
+    {
+        $table = $this->tripTable($trial);
+
+        $out = fopen('php://temp', 'r+');
+        // BOM, so Excel opens it as UTF-8 rather than mangling every "é".
+        fwrite($out, "\u{FEFF}");
+        fputcsv($out, $table['columns']);
+        foreach ($table['rows'] as $row) {
+            fputcsv($out, array_map(fn ($v) => $v ?? '', $row));
+        }
+        rewind($out);
+        $content = (string) stream_get_contents($out);
+        fclose($out);
+
+        return [
+            'content' => $content,
+            'filename' => "fet-trial-{$trial->reference}.csv",
+        ];
+    }
+
+    /**
      * Which fuel columns this client can actually fill. Decided from what their
      * own trips already contain, not from what our template would prefer.
      */
@@ -99,13 +128,26 @@ class FetTrialReportService
         return 'issued_only';
     }
 
-    private function writeTrips(Worksheet $sheet, FetTrial $trial): void
+    /**
+     * The trip log as one table — columns shaped to how this client measures,
+     * every figure the derived one the analysis runs on. Both the Excel sheet
+     * and the CSV are written from here, so a figure can never differ between
+     * the two downloads.
+     *
+     * @return array{columns: array<int, string>, rows: array<int, array<int, mixed>>}
+     */
+    private function tripTable(FetTrial $trial): array
     {
-        $sheet->setTitle('Trips');
         $model = $this->measurementModel($trial);
+        $trips = $trial->trips;
+
+        // Columns the client's own data never fills are left out entirely.
+        $hasRegion = $trips->contains(fn (FetTrialTrip $t) => $t->region !== null && $t->region !== '');
+        $hasTracker = $trips->contains(fn (FetTrialTrip $t) => $t->fuel_used_ivms_l !== null);
 
         $columns = array_merge(
-            ['Date', 'Destination'],
+            ['Date', 'Return date', 'Destination'],
+            $hasRegion ? ['Region'] : [],
             $model === 'odometer'
                 ? ['Odometer out (km)', 'Odometer in (km)', 'Distance (km)']
                 : ['Distance (km)'],
@@ -114,15 +156,16 @@ class FetTrialReportService
                 'odometer' => ['Fuel added (L)'],
                 default => ['Fuel issued (L)'],
             },
-            ['Fuel used (L)', 'L/100km', 'km/L', 'Load out (kg)', 'Weight back (kg)', 'Before / after', 'Counted?', 'Notes'],
+            ['Fuel used (L)'],
+            $hasTracker ? ['Fuel used — tracker (L)'] : [],
+            ['L/100km', 'km/L', 'Load out (kg)', 'Weight back (kg)', 'Before / after', 'Counted?', 'Notes'],
         );
 
-        $sheet->fromArray([$columns], null, 'A1');
-
-        $row = 2;
-        foreach ($trial->trips as $trip) {
-            $values = array_merge(
-                [$trip->trip_date?->format('Y-m-d'), $trip->route_label],
+        $rows = [];
+        foreach ($trips as $trip) {
+            $rows[] = array_merge(
+                [$trip->trip_date?->format('Y-m-d'), $trip->return_date?->format('Y-m-d'), $trip->route_label],
+                $hasRegion ? [$trip->region] : [],
                 $model === 'odometer'
                     ? [$trip->odo_out_km, $trip->odo_in_km, $trip->distance_km]
                     : [$trip->distance_km],
@@ -130,8 +173,9 @@ class FetTrialReportService
                     'tank_dip' => [$trip->fuel_opening_l, $trip->fuel_issued_l, $trip->fuel_topup_l, $trip->fuel_closing_l],
                     default => [$trip->fuel_issued_l],
                 },
+                [$trip->fuel_used_l],
+                $hasTracker ? [$trip->fuel_used_ivms_l] : [],
                 [
-                    $trip->fuel_used_l,
                     $trip->litresPer100Km(),
                     $trip->kmPerLitre(),
                     $trip->load_out_kg,
@@ -146,14 +190,27 @@ class FetTrialReportService
                     $trip->status === 'excluded' ? $trip->exclusion_reason : $trip->notes,
                 ],
             );
+        }
 
+        return ['columns' => $columns, 'rows' => $rows];
+    }
+
+    private function writeTrips(Worksheet $sheet, FetTrial $trial): void
+    {
+        $sheet->setTitle('Trips');
+        $table = $this->tripTable($trial);
+
+        $sheet->fromArray([$table['columns']], null, 'A1');
+
+        $row = 2;
+        foreach ($table['rows'] as $values) {
             $sheet->fromArray([$values], null, "A{$row}");
             $row++;
         }
 
-        $this->styleHeader($sheet, count($columns));
+        $this->styleHeader($sheet, count($table['columns']));
         $sheet->freezePane('A2');
-        foreach (range(1, count($columns)) as $i) {
+        foreach (range(1, count($table['columns'])) as $i) {
             $sheet->getColumnDimensionByColumn($i)->setAutoSize(true);
         }
     }

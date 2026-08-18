@@ -174,6 +174,13 @@ export default function FetTrialSetup({
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />Trip log (Excel)
           </button>
+          <button
+            onClick={() => downloadFile(`/admin/fet-trials/${trial.id}/csv`, `fet-trial-${trial.reference}.csv`).catch(() => setMsg("Could not download the CSV."))}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full"
+            style={{ background: "#F2F2F2", color: "#555" }}
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />Trip log (CSV)
+          </button>
         </div>
       </div>
 

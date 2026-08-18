@@ -289,6 +289,7 @@ Route::middleware('auth:sanctum')->group(function () {
             // Client-facing output
             Route::get('/fet-trials/{trial}/report', [FetTrialController::class, 'pdf']);
             Route::get('/fet-trials/{trial}/spreadsheet', [FetTrialController::class, 'spreadsheet']);
+            Route::get('/fet-trials/{trial}/csv', [FetTrialController::class, 'csv']);
 
             // Read-only client link
             Route::post('/fet-trials/{trial}/share', [FetTrialController::class, 'share']);

@@ -517,6 +517,41 @@ the baseline retrospectively at no cost.
 > against the real client workbook and five asserting agreement with S-Line's
 > published figures. Console fallback: `php artisan fet:trial`.
 
+### Hariss's final report is now the trial (18 August 2026)
+
+Hariss produced their own **final report** for UA 758AM — five destinations
+(Masindi, Kamwenge, Kitgum, Yumbe, Paidha), each with one "Before FET" and one
+"FET Trail trip" run, in their full IVMS layout. On the marketing lead's
+direction the trial was **recreated from that file**, so our records and the
+client's are now the same ten trips — nothing extra, nothing missing. Our
+figures reproduce the client's own km/L to the decimal on all ten.
+
+Reading their file needed three importer fixes, each now covered by tests:
+- Their dates are plain Excel numbers with no date formatting — every trip
+  used to import undated; now they read correctly.
+- Their labels all end in an invisible non-breaking space — cleaned, so
+  "Masindi " no longer differs from "Masindi" on a client-facing page.
+- Their "Before FET" label contains "FET", which the importer used to read as
+  a trial marking — the entire baseline imported as trial trips. A negated
+  marker is now recognised for what it is.
+
+**New: the trip log downloads as CSV** (button next to the PDF and Excel), from
+the same table builder as the spreadsheet so the two can never disagree —
+client-shaped columns, checked figures, excluded trips named with their reason.
+
+**Where the trial now stands — still no verdict, and correctly.** The system
+raises exactly what a sceptical reader would: the client's own file dates the
+Kamwenge trial trip 1 April (before the device was fitted); two trial trips
+(Masindi, Yumbe) came back **loaded with Kinyara sugar** — the client's own
+remark — so they did nearly double the work of the runs they'd be compared to;
+and each destination has only **one** "before" trip against the two the default
+evidence rules require. The swing is material: count everything and the trial
+reads **4% worse**; count only the two clean pairs (Kitgum, Paidha) and it
+reads **7.6% better**. Marketing settles those three findings in the trial
+screen (and can set "Earlier trips a route needs" to 1 for this trial to accept
+the client's paired method); the report will only ever state what survives
+those decisions. 369 backend tests passing (6 new).
+
 ---
 
 ## ⏳ Remaining / pending
@@ -549,16 +584,20 @@ the baseline retrospectively at no cost.
    Track it with `php artisan inbound-email:status`. ⚠ New subdomain only — never touch
    the Microsoft 365 records on `vitorra.org`.
 7. Set **executive-report recipients** in `/admin/settings`.
-7b. **FET trials — two things for the Hariss account.**
-   (a) **Ask Hariss for truck UA 758AM's trip history back to January**, in the same
-   export format. It costs them nothing (their tracking system already holds it —
-   the file they sent was filtered to the trial window), and it rebuilds the
-   "before" figures that can no longer be collected now the device is fitted.
-   Without it the trial needs three fresh trips to Mpondwe to reach a conclusion.
-   (b) **Reconcile three figures with them**: whether the Kamwenge trip ran 30 Jul –
-   2 Aug (their tracker export dates it April), whether it took 340 or 400 litres
-   (their two sheets disagree, and the answer moves the headline by twelve points),
-   and whether the Kitgum trip ever completed.
+7b. **FET trials — settle the Hariss final-report findings** (18 Aug: the trial
+   was recreated from Hariss's own final report — see the Trial Manager section).
+   Their file settles two of the three old questions (Kamwenge took 400 litres;
+   Kitgum did complete). Three findings now need marketing's decision in
+   `/admin/fet-trials`: the **Kamwenge trial trip is still dated 1 April** in
+   their own file (before the device was fitted — ask them to confirm the real
+   dates); the **Masindi and Yumbe trial trips came back loaded** with Kinyara
+   sugar (accept as-is, or leave out as not like-for-like); and each destination
+   has **one "before" trip against the two the default rules require** — either
+   set "Earlier trips a route needs" to 1 for this trial (accepting the client's
+   paired method), or ask for UA 758AM's trip history back to January, which
+   rebuilds a proper baseline at no cost to them. The headline swings from
+   4% worse (count everything) to 7.6% better (only the clean pairs), which is
+   why the system won't state a number until these are settled.
    Ops accounts with a **custom permission set** also need "FET trials" ticked in
    `/admin/staff`; department defaults already cover Marketing, Sales, Leadership
    and Operations.
@@ -633,6 +672,16 @@ Verify with:
 > `php artisan fet:trial` is also the fallback if the admin screens are ever
 > unavailable — it shows a trial's trips, findings and result, and can settle
 > findings or leave a trip out, with the same audit trail as the UI.
+
+### Also riding the next deploy (18 August 2026) — final-report importer + CSV
+
+The Hariss final-report import fixes and the CSV download need only the
+standard steps — no migration, no new composer dependency, but `route:cache`
+matters (one new route). After deploying, **upload
+`Hariss International Final Report.xlsx` into the Hariss trial** in
+`/admin/fet-trials` (answer both load-unit questions "kg") — that recreates the
+trial from the client's own final report on the server, replacing the trips
+from the older export.
 
 ### Outstanding on the next deploy (7 August 2026)
 
