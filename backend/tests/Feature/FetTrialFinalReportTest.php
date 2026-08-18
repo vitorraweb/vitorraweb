@@ -132,6 +132,21 @@ class FetTrialFinalReportTest extends TestCase
         $this->assertNull($response->json('data.analysis.verdict'));
     }
 
+    public function test_a_route_whose_trip_ran_but_was_left_out_is_named_as_such(): void
+    {
+        // Masindi and Yumbe DID run after fitting; their loaded-return trips
+        // are held out of the maths. Reporting that as "no trip since fitting"
+        // reads as a lost record on a route the client can see was driven.
+        $trial = $this->trial();
+        $response = $this->import($trial, $this->staff());
+
+        $routes = collect($response->json('data.analysis.routes'))->keyBy('route_key');
+
+        $this->assertSame('trial_excluded', $routes['MASINDI']['unmatched_reason']);
+        $this->assertSame('trial_excluded', $routes['YUMBE']['unmatched_reason']);
+        $this->assertNotNull($routes['MASINDI']['trial_held'], 'the held figures stay visible');
+    }
+
     /* ── the CSV download ─────────────────────────────────────────────────── */
 
     public function test_the_trip_log_downloads_as_csv_with_the_checked_figures(): void

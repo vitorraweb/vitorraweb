@@ -23,7 +23,7 @@ export type RouteRow = {
   trial_load_kg: number | null;
   load_gap_pct: number | null;
   matched: boolean;
-  unmatched_reason: "no_trial_trip" | "no_baseline" | "sparse_baseline" | "load_mismatch" | null;
+  unmatched_reason: "no_trial_trip" | "trial_excluded" | "no_baseline" | "baseline_excluded" | "sparse_baseline" | "load_mismatch" | null;
   change_pct: number | null;
 };
 
@@ -266,7 +266,9 @@ export const TRIP_STATUS_STYLE: Record<Trip["status"], { background: string; col
 /** Why a route cannot anchor a comparison, in plain words. */
 export const UNMATCHED_REASON: Record<string, string> = {
   no_trial_trip: "No trip here since the device was fitted",
+  trial_excluded: "Driven since fitting, but the trip was left out of the calculation",
   no_baseline: "Never driven before the device was fitted",
+  baseline_excluded: "The earlier trip here was left out of the calculation",
   sparse_baseline: "Only driven once before the device was fitted",
   load_mismatch: "Carrying a different load from the baseline trips",
 };

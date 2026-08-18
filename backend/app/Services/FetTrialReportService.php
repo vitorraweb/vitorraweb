@@ -32,7 +32,9 @@ class FetTrialReportService
     /** Plain-English reasons a route could not anchor a comparison. */
     private const REASONS = [
         'no_trial_trip' => 'No trip since fitting',
+        'trial_excluded' => 'Ran since fitting, left out (reason on the trip)',
         'no_baseline' => 'No earlier trip',
+        'baseline_excluded' => 'Earlier trip left out (reason on the trip)',
         'sparse_baseline' => 'Only one earlier trip',
         'load_mismatch' => 'Different load',
     ];

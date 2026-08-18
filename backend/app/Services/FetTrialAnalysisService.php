@@ -212,12 +212,15 @@ class FetTrialAnalysisService
                 ? round(abs($tLoad - $bLoad) / $bLoad * 100, 1)
                 : null;
 
-            // Why this route can or cannot carry the comparison.
+            // Why this route can or cannot carry the comparison. A trip that
+            // ran but was left out is named as exactly that — "no trip since
+            // fitting" on a route the client can see was driven reads as a
+            // lost record, and costs the report its credibility.
             $reason = null;
             if ($tw === null) {
-                $reason = 'no_trial_trip';
+                $reason = $tHeld !== null ? 'trial_excluded' : 'no_trial_trip';
             } elseif ($bw === null) {
-                $reason = 'no_baseline';
+                $reason = $bHeld !== null ? 'baseline_excluded' : 'no_baseline';
             } elseif ($bw['trips'] < $minBaseline) {
                 $reason = 'sparse_baseline';
             } elseif ($loadGapPct !== null && $loadGapPct > $tolerance) {
@@ -365,6 +368,8 @@ class FetTrialAnalysisService
                         $r['route_label'], $r['baseline']['trips'] ?? 0, $trial->minBaselineTripsPerRoute()
                     ),
                     'no_baseline' => "{$r['route_label']} was never driven before the device was fitted, so there is nothing on that route to compare against.",
+                    'trial_excluded' => "{$r['route_label']} has run since the device was fitted, but that trip was left out of the calculation — the reason is recorded on the trip itself.",
+                    'baseline_excluded' => "{$r['route_label']}'s earlier trip was left out of the calculation, so there is nothing counted on that route to compare against — the reason is recorded on the trip itself.",
                     'load_mismatch' => sprintf(
                         '%s carried a load %s%% different from its baseline trips, so the two are not doing the same work.',
                         $r['route_label'], number_format((float) ($r['load_gap_pct'] ?? 0), 1)
