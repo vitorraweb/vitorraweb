@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UA 758AM Trial Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+<style>
+  :root {
+    --charcoal: #1E1E1E;
+    --charcoal-2: #262626;
+    --ivory: #F2F2F2;
+    --ivory-2: #FAFAF8;
+    --gold: #C5B27A;
+    --gold-dark: #7A6020;
+    --ink-dark-bg: #EDEAE2;
+    --ink-dark-bg-soft: #B8B3A6;
+    --ink-light-bg: #454545;
+    --ink-light-bg-soft: #767065;
+    --chart-gold-dark: #B5861F;
+    --chart-gold-light: #D9A032;
+    --chart-blue: #4E86C8;
+    --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    --sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--charcoal);
+    color: var(--ink-dark-bg);
+    font-family: var(--sans);
+    font-size: clamp(15px, 1.35vw, 19px);
+    line-height: 1.55;
+    overflow: hidden;
+  }
+
+  .deck { position: relative; height: 100vh; width: 100vw; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(2rem, 6vh, 4.5rem) clamp(1.5rem, 8vw, 8rem);
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  /* keep the top reachable when a slide is taller than the viewport */
+  .slide > * { flex: none; }
+  .slide::before, .slide::after { content: ""; margin: auto 0; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .slide.active { animation: slidein 420ms ease both; }
+    @keyframes slidein {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+  }
+
+  .slide.dark { background: var(--charcoal); color: var(--ink-dark-bg); }
+  .slide.light { background: var(--ivory); color: var(--ink-light-bg); }
+
+  .eyebrow {
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .slide.dark .eyebrow { color: var(--gold); }
+  .slide.light .eyebrow { color: var(--gold-dark); }
+  .eyebrow::before {
+    content: "";
+    width: 2.2rem;
+    height: 1px;
+    background: currentColor;
+    flex: none;
+  }
+
+  h1, h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    line-height: 1.08;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+  h1 { font-size: clamp(2.6rem, 6.5vw, 5.2rem); }
+  h2 { font-size: clamp(2rem, 4.6vw, 3.6rem); margin-bottom: 1.6rem; }
+  .slide.dark h1, .slide.dark h2 { color: #F6F3EA; }
+  .slide.light h1, .slide.light h2 { color: var(--charcoal); }
+
+  p { max-width: 62ch; }
+  .lede { font-size: 1.08em; max-width: 56ch; }
+  .soft { }
+  .slide.dark .soft { color: var(--ink-dark-bg-soft); }
+  .slide.light .soft { color: var(--ink-light-bg-soft); }
+
+  .note {
+    font-size: 0.82em;
+    max-width: 58ch;
+    margin-top: 1.6rem;
+    padding-left: 1rem;
+  }
+  .slide.dark .note { color: var(--ink-dark-bg-soft); border-left: 2px solid rgba(197, 178, 122, 0.45); }
+  .slide.light .note { color: var(--ink-light-bg-soft); border-left: 2px solid rgba(122, 96, 32, 0.4); }
+
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* cover */
+  .cover-title { max-width: 16ch; }
+  .cover-sub {
+    margin-top: 1.8rem;
+    font-size: 1.05em;
+    color: var(--ink-dark-bg-soft);
+    max-width: 48ch;
+  }
+  .cover-meta {
+    margin-top: 3.2rem;
+    display: flex;
+    gap: 2.6rem;
+    flex-wrap: wrap;
+    font-size: 0.85em;
+  }
+  .cover-meta div { display: flex; flex-direction: column; gap: 0.15rem; }
+  .cover-meta dt { font-size: 0.78em; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+  .cover-meta dd { color: var(--ink-dark-bg); }
+
+  /* fact grid */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1px;
+    background: rgba(69, 69, 69, 0.18);
+    border: 1px solid rgba(69, 69, 69, 0.18);
+    max-width: 58rem;
+    margin-top: 0.6rem;
+  }
+  .fact { background: var(--ivory-2); padding: 1.3rem 1.4rem 1.5rem; }
+  .fact .big {
+    font-family: var(--serif);
+    font-size: 2.6rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--charcoal);
+    font-variant-numeric: tabular-nums;
+  }
+  .fact .big small { font-size: 0.45em; font-family: var(--sans); color: var(--ink-light-bg-soft); margin-left: 0.2rem; }
+  .fact .lbl { margin-top: 0.5rem; font-size: 0.78em; color: var(--ink-light-bg-soft); line-height: 1.4; }
+
+  /* settled list */
+  .settled { display: grid; gap: 1.15rem; max-width: 60ch; margin-top: 0.4rem; }
+  .settled li { list-style: none; display: grid; grid-template-columns: auto 1fr; gap: 0.9rem; align-items: baseline; }
+  .settled .tick {
+    font-family: var(--serif);
+    font-size: 1.35rem;
+    color: var(--gold-dark);
+    line-height: 1;
+  }
+  .settled b { color: var(--charcoal); font-weight: 700; }
+
+  /* chart */
+  .legend {
+    display: flex;
+    gap: 1.6rem;
+    font-size: 0.8em;
+    margin: 0.4rem 0 1.4rem;
+    flex-wrap: wrap;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 0.5rem; }
+  .legend i { width: 0.85rem; height: 0.85rem; border-radius: 3px; display: inline-block; }
+
+  .routes { display: grid; gap: 1.05rem; max-width: 56rem; }
+  .route { display: grid; grid-template-columns: 7.5rem 1fr auto; gap: 1.1rem; align-items: center; }
+  .route .name { font-weight: 700; font-size: 0.92em; }
+  .route .name small { display: block; font-weight: 400; font-size: 0.78em; }
+  .slide.dark .route .name small { color: var(--ink-dark-bg-soft); }
+  .bars { display: grid; gap: 2px; }
+  .bar {
+    height: 1.05rem;
+    border-radius: 0 4px 4px 0;
+    display: flex;
+    align-items: center;
+    min-width: 2px;
+    position: relative;
+    transition: filter 120ms ease;
+  }
+  .bar:hover { filter: brightness(1.15); }
+  .bar .v {
+    position: absolute;
+    left: calc(100% + 0.55rem);
+    font-size: 0.74rem;
+    white-space: nowrap;
+    color: var(--ink-dark-bg);
+    font-variant-numeric: tabular-nums;
+  }
+  .bar.before { background: var(--chart-blue); }
+  .bar.after { background: var(--chart-gold-dark); }
+  .bar.held {
+    background: repeating-linear-gradient(135deg, rgba(184, 179, 166, 0.55) 0 4px, transparent 4px 8px);
+    border: 1px solid rgba(184, 179, 166, 0.5);
+  }
+  .route .delta {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 500;
+    text-align: right;
+    min-width: 5.2rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .route .delta small { display: block; font-family: var(--sans); font-size: 0.62rem; font-weight: 400; color: var(--ink-dark-bg-soft); }
+
+  /* hero number */
+  .hero-num {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(4.5rem, 13vw, 10rem);
+    line-height: 0.95;
+    color: var(--charcoal);
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-cap { font-size: 1.05em; margin-top: 1.2rem; max-width: 52ch; }
+  .hero-row { display: flex; gap: 3rem; margin-top: 2.4rem; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+  .hero-row div { display: flex; flex-direction: column; }
+  .hero-row .k { font-size: 0.74em; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-dark); font-weight: 700; }
+  .hero-row .n { font-family: var(--serif); font-size: 1.9rem; color: var(--charcoal); }
+
+  /* freight lens */
+  .lens { display: flex; gap: 3.5rem; align-items: flex-end; margin: 1rem 0 1.8rem; flex-wrap: wrap; }
+  .lens .col { display: flex; flex-direction: column; gap: 0.4rem; }
+  .lens .k { font-size: 0.74em; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+  .lens .n { font-family: var(--serif); font-size: clamp(2.6rem, 6vw, 4.4rem); line-height: 1; color: #F6F3EA; font-variant-numeric: tabular-nums; }
+  .lens .n small { font-size: 0.34em; font-family: var(--sans); color: var(--ink-dark-bg-soft); }
+  .lens .arrow { font-family: var(--serif); font-size: 2.4rem; color: var(--gold); padding-bottom: 0.4rem; }
+
+  /* sensitivity table */
+  table { border-collapse: collapse; font-size: 0.88em; margin-top: 0.5rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 0.5rem 1.4rem 0.5rem 0; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    font-size: 0.76em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light-bg-soft);
+    border-bottom: 1px solid rgba(69, 69, 69, 0.3);
+    font-weight: 700;
+  }
+  tbody tr { border-bottom: 1px solid rgba(69, 69, 69, 0.12); }
+  tbody tr.flip td { color: var(--gold-dark); font-weight: 700; }
+  .tbl-wrap { overflow-x: auto; max-width: 44rem; }
+
+  /* plan slide */
+  .plan-pair { display: flex; gap: 4rem; margin: 1.4rem 0 1.2rem; flex-wrap: wrap; }
+  .plan-pair .col { display: flex; flex-direction: column; gap: 0.3rem; }
+  .plan-pair .k { font-size: 0.74em; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+  .plan-pair .n { font-family: var(--serif); font-size: 3.4rem; line-height: 1; color: #F6F3EA; font-variant-numeric: tabular-nums; }
+  .plan-pair .s { font-size: 0.8em; color: var(--ink-dark-bg-soft); }
+
+  /* asks */
+  .asks { counter-reset: ask; display: grid; gap: 1.5rem; max-width: 60ch; margin-top: 0.4rem; }
+  .asks li { list-style: none; display: grid; grid-template-columns: auto 1fr; gap: 1.1rem; }
+  .asks li::before {
+    counter-increment: ask;
+    content: counter(ask);
+    font-family: var(--serif);
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--gold-dark);
+    min-width: 1.4rem;
+  }
+  .asks b { color: var(--charcoal); }
+
+  .closing {
+    margin-top: 2.6rem;
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-style: italic;
+    color: var(--charcoal);
+    max-width: 34ch;
+    text-wrap: balance;
+  }
+
+  /* navigation */
+  .nav {
+    position: fixed;
+    bottom: 1.1rem;
+    right: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    z-index: 10;
+    font-size: 0.8rem;
+    background: rgba(30, 30, 30, 0.85);
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+  }
+  .nav button {
+    background: rgba(197, 178, 122, 0.14);
+    color: var(--gold);
+    border: 1px solid rgba(197, 178, 122, 0.5);
+    border-radius: 999px;
+    width: 2.4rem;
+    height: 2.4rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 130ms ease;
+  }
+  .nav button:hover { background: rgba(197, 178, 122, 0.3); }
+  .nav button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .counter { color: var(--gold); font-variant-numeric: tabular-nums; letter-spacing: 0.08em; }
+
+  .brandmark {
+    position: fixed;
+    bottom: 1.35rem;
+    left: 1.6rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #9C8B5C;
+    z-index: 10;
+  }
+
+  .hint {
+    position: fixed;
+    bottom: 1.35rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.68rem;
+    color: #8F8A7D;
+    z-index: 10;
+  }
+
+  /* print: every slide on its own page */
+  @media print {
+    body { overflow: visible; }
+    .deck { height: auto; }
+    .slide { position: static; display: flex !important; min-height: 100vh; page-break-after: always; }
+    .nav, .hint { display: none; }
+    .brandmark { position: static; margin: 0.6rem 1.6rem; }
+  }
+
+  @media (max-width: 640px) {
+    .route { grid-template-columns: 5rem 1fr auto; gap: 0.6rem; }
+    .bar .v { font-size: 0.64rem; }
+    .hero-row { gap: 1.6rem; }
+    .lens { gap: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- 1 · cover -->
+  <section class="slide dark active">
+    <p class="eyebrow">Vitorra Holdings · Fuel Eco Tech</p>
+    <h1 class="cover-title">One truck, five roads, and what the fuel records show</h1>
+    <p class="cover-sub">A review of the Fuel Eco Tech trial on Hariss International truck UA&nbsp;758AM, built from the trip and fuel records Hariss keeps, checked line by line.</p>
+    <dl class="cover-meta">
+      <div><dt>Client</dt><dd>Hariss International</dd></div>
+      <div><dt>Vehicle</dt><dd>UA 758AM · Faw trailer, 30 t</dd></div>
+      <div><dt>Trial window</dt><dd>4 July to 16 August 2026</dd></div>
+      <div><dt>Prepared</dt><dd>18 August 2026</dd></div>
+    </dl>
+  </section>
+
+  <!-- 2 · how it ran -->
+  <section class="slide light">
+    <p class="eyebrow">How the trial ran</p>
+    <h2>The same truck drove each road twice</h2>
+    <p class="lede">Five destinations. Each was driven once before the device was fitted on 27 July, and once after. Every figure below comes from Hariss's own tracker and fuel records.</p>
+    <div class="facts" style="margin-top: 1.8rem;">
+      <div class="fact"><div class="big num">10</div><div class="lbl">trips, one before and one after per destination</div></div>
+      <div class="fact"><div class="big num">7,935<small>km</small></div><div class="lbl">of driving across Western, South, North and West Nile</div></div>
+      <div class="fact"><div class="big num">3,471<small>L</small></div><div class="lbl">of diesel accounted for, tank checked at both ends</div></div>
+      <div class="fact"><div class="big num">14</div><div class="lbl">automatic checks run on every trip before it counts</div></div>
+    </div>
+  </section>
+
+  <!-- 3 · the measuring rule -->
+  <section class="slide dark">
+    <p class="eyebrow">The measuring rule</p>
+    <h2>A road is only compared with itself</h2>
+    <p class="lede">In the before period alone, this truck's fuel use per kilometre differed by up to 38% between destinations. The road to Kitgum and the road to Paidha are simply not the same job.</p>
+    <p style="margin-top: 1.2rem;">So Masindi is judged against Masindi, Kitgum against Kitgum, and so on. Any other comparison would measure the road, not the device.</p>
+    <p class="note">This is the same standard an independent reviewer, S-Line Motors, applied to this truck's records on 11 August. Their figures and ours agree.</p>
+  </section>
+
+  <!-- 4 · settled -->
+  <section class="slide light">
+    <p class="eyebrow">Checked and settled with Hariss</p>
+    <h2>Three questions came up. We closed all three.</h2>
+    <ul class="settled">
+      <li><span class="tick">✓</span><span><b>The Kamwenge dates were wrong in the export.</b> The tracker file showed 1 April. Hariss confirmed the trip ran 1 to 4 August, and the record now carries the corrected dates.</span></li>
+      <li><span class="tick">✓</span><span><b>Two runs came home loaded.</b> The Masindi and Yumbe runs after fitting carried Kinyara sugar on the return leg, while their before runs came back empty. Nearly double the work is not a fair comparison, so both are set aside, with the reason printed on the report.</span></li>
+      <li><span class="tick">✓</span><span><b>One load read slightly over rating.</b> 30,160 kg against a rated 30,000. It is Hariss's own weighbridge figure, on a before trip, and within normal weighbridge variation. Accepted.</span></li>
+    </ul>
+    <p class="note">Every one of these decisions is recorded on the trial itself. Nothing is quietly dropped.</p>
+  </section>
+
+  <!-- 5 · route by route -->
+  <section class="slide dark">
+    <p class="eyebrow">Route by route · kilometres per litre</p>
+    <h2>Three fair comparisons, two set aside</h2>
+    <div class="legend">
+      <span><i style="background: var(--chart-blue);"></i>Before FET</span>
+      <span><i style="background: var(--chart-gold-dark);"></i>With FET</span>
+      <span><i class="bar held" style="width: 0.85rem; height: 0.85rem; border-radius: 3px;"></i>Set aside, loaded return</span>
+    </div>
+    <div class="routes">
+      <div class="route">
+        <div class="name">Paidha<small>West Nile</small></div>
+        <div class="bars">
+          <div class="bar before" style="width: 61%;"><span class="v">2.02 km/L</span></div>
+          <div class="bar after" style="width: 73.7%;"><span class="v">2.44 km/L</span></div>
+        </div>
+        <div class="delta num">17.1%<small>less fuel per km</small></div>
+      </div>
+      <div class="route">
+        <div class="name">Kitgum<small>North</small></div>
+        <div class="bars">
+          <div class="bar before" style="width: 84.6%;"><span class="v">2.80 km/L</span></div>
+          <div class="bar after" style="width: 79.4%;"><span class="v">2.63 km/L</span></div>
+        </div>
+        <div class="delta num">6.5%<small>more fuel per km</small></div>
+      </div>
+      <div class="route">
+        <div class="name">Kamwenge<small>South</small></div>
+        <div class="bars">
+          <div class="bar before" style="width: 66.1%;"><span class="v">2.19 km/L</span></div>
+          <div class="bar after" style="width: 56.2%;"><span class="v">1.86 km/L</span></div>
+        </div>
+        <div class="delta num">17.6%<small>more fuel per km</small></div>
+      </div>
+      <div class="route">
+        <div class="name">Masindi<small>Western</small></div>
+        <div class="bars">
+          <div class="bar before" style="width: 76.3%;"><span class="v">2.52 km/L</span></div>
+          <div class="bar held" style="width: 61.1%;"><span class="v">2.02 km/L · loaded both ways</span></div>
+        </div>
+        <div class="delta num soft" style="font-size: 0.95rem;">set aside</div>
+      </div>
+      <div class="route">
+        <div class="name">Yumbe<small>West Nile</small></div>
+        <div class="bars">
+          <div class="bar before" style="width: 71.3%;"><span class="v">2.36 km/L</span></div>
+          <div class="bar held" style="width: 68.2%;"><span class="v">2.26 km/L · loaded both ways</span></div>
+        </div>
+        <div class="delta num soft" style="font-size: 0.95rem;">set aside</div>
+      </div>
+    </div>
+    <p class="note">One caution on Kamwenge: the run after fitting logged 701 km where the before run logged 805 km to the same destination. We have asked Hariss to confirm the distance. If it changes, this route's figure changes with it.</p>
+  </section>
+
+  <!-- 6 · headline -->
+  <section class="slide light">
+    <p class="eyebrow">The headline, as it stands</p>
+    <div class="hero-num">0.2<span style="font-size: 0.4em;">%</span></div>
+    <p class="hero-cap"><b>more fuel than its own baseline.</b> Across the three fair comparisons the truck was expected to use 1,046 litres and used 1,049. Two litres over 2,398 kilometres.</p>
+    <div class="hero-row">
+      <div><span class="k">Distance compared</span><span class="n">2,398 km</span></div>
+      <div><span class="k">Fuel expected</span><span class="n">1,046 L</span></div>
+      <div><span class="k">Fuel used</span><span class="n">1,049 L</span></div>
+    </div>
+    <p class="note">On fuel per kilometre this trial is flat. Three pairs of trips cannot yet show a 13.9% effect in either direction, and we will not put a number on evidence that does not carry one. The next slides show what the same records say from two other angles, and what would settle the question.</p>
+  </section>
+
+  <!-- 7 · freight lens -->
+  <section class="slide dark">
+    <p class="eyebrow">The same records, the haulier's question</p>
+    <h2>Cargo moved per litre went up 37.7%</h2>
+    <div class="lens">
+      <div class="col"><span class="k">Before FET</span><span class="n num">34.2 <small>tonne-km / L</small></span></div>
+      <div class="arrow">→</div>
+      <div class="col"><span class="k">With FET</span><span class="n num">47.0 <small>tonne-km / L</small></span></div>
+    </div>
+    <p class="lede">During the trial the truck twice carried freight home instead of running back empty. Fuel per kilometre punishes that. Cargo moved per litre rewards it, because it measures what a haulier actually buys diesel for.</p>
+    <p class="note">To be plain: this rise measures how well the truck was used as much as how it ran, and cannot on its own prove the device. We show it because leaving it out would be just as misleading.</p>
+  </section>
+
+  <!-- 8 · loaded runs weighed fairly -->
+  <section class="slide light">
+    <p class="eyebrow">The set-aside runs, weighed fairly</p>
+    <h2>Take Yumbe. It hauled 46.6% more mass.</h2>
+    <p class="lede">The Yumbe run after fitting averaged 49.0 tonnes of gross mass against 33.4 before. How it reads depends on how much of the fuel followed that extra weight.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>If fuel that follows mass is</th><th>km / L</th><th>Reads as</th></tr></thead>
+        <tbody>
+          <tr><td>0% (none of it)</td><td>2.26</td><td>4.4% worse</td></tr>
+          <tr class="flip"><td>13.8% · the flip point</td><td>2.36</td><td>break even</td></tr>
+          <tr><td>25%</td><td>2.45</td><td>3.9% better</td></tr>
+          <tr><td>50%</td><td>2.68</td><td>13.7% better</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">For a loaded truck, well under half of fuel following mass would be unusually low. The honest conclusion is that these two runs are different work, not evidence against the device. That is exactly why they sit outside the headline.</p>
+  </section>
+
+  <!-- 9 · against plan -->
+  <section class="slide dark">
+    <p class="eyebrow">Against Hariss's own planning figure</p>
+    <h2>Both periods beat the 2.2 km/L budget</h2>
+    <div class="plan-pair">
+      <div class="col"><span class="k">Before FET</span><span class="n num">+5.9%</span><span class="s">better than plan</span></div>
+      <div class="col"><span class="k">With FET</span><span class="n num">+2.0%</span><span class="s">better than plan</span></div>
+    </div>
+    <p class="lede">Hariss budgets this truck at 2.2 kilometres per litre. It ran better than that budget in both periods, and the before period was the stronger of the two.</p>
+    <p class="note">A planning figure is a target, not a measurement, so this lens frames the numbers rather than deciding them. The decision stays with the road-to-road comparison.</p>
+  </section>
+
+  <!-- 10 · what settles it -->
+  <section class="slide light">
+    <p class="eyebrow">What settles it</p>
+    <h2>Three things, two of them free</h2>
+    <ol class="asks">
+      <li><span><b>This truck's trip history back to January</b>, in the same export Hariss already sends. Their tracking system holds it, it costs nothing to pull, and it rebuilds a proper multi-trip baseline for every route. This is the single strongest move available.</span></li>
+      <li><span><b>Confirm the Kamwenge distance.</b> The run after fitting logged 701 km against 805 km before, to the same destination. One answer from the dispatch office moves or holds a seventeen-point swing.</span></li>
+      <li><span><b>Keep driving pairs.</b> Every further trip on a road that already has a before figure sharpens the answer. Three more would carry a verdict on their own.</span></li>
+    </ol>
+    <p class="closing">We would rather show you a number that survives your questions than a bigger one that does not.</p>
+    <p style="margin-top: 2rem; font-size: 0.85em;" class="soft">Vitorra Holdings Limited · vitorra.org · support@vitorra.org</p>
+  </section>
+
+</div>
+
+<p class="brandmark">Vitorra</p>
+<p class="hint">Use ← → or the buttons to move</p>
+<div class="nav">
+  <button type="button" id="prev" aria-label="Previous slide">←</button>
+  <span class="counter num" id="counter">1 / 10</span>
+  <button type="button" id="next" aria-label="Next slide">→</button>
+</div>
+
+<script>
+  (function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+    var counter = document.getElementById("counter");
+    var i = 0;
+
+    function show(n) {
+      i = Math.max(0, Math.min(slides.length - 1, n));
+      slides.forEach(function (s, j) { s.classList.toggle("active", j === i); });
+      counter.textContent = (i + 1) + " / " + slides.length;
+    }
+
+    document.getElementById("next").addEventListener("click", function () { show(i + 1); });
+    document.getElementById("prev").addEventListener("click", function () { show(i - 1); });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); show(i + 1); }
+      if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); show(i - 1); }
+      if (e.key === "Home") { show(0); }
+      if (e.key === "End") { show(slides.length - 1); }
+    });
+
+    var touchX = null;
+    document.addEventListener("touchstart", function (e) { touchX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener("touchend", function (e) {
+      if (touchX === null) return;
+      var dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 60) { show(dx < 0 ? i + 1 : i - 1); }
+      touchX = null;
+    }, { passive: true });
+
+    show(0);
+  })();
+</script>
+</body>
+</html>
