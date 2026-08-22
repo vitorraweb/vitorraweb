@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 14 August 2026
+**Last updated:** 22 August 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -572,7 +572,30 @@ anything is presented. The strongest remaining moves are unchanged: the
 truck's trip history back to January (rebuilds a real multi-trip baseline at
 no cost to them), or more paired runs. The system states exactly this — it
 will not put a favourable number on evidence that does not carry one.
-369 backend tests passing (6 new).
+
+**Later that week (18 August, evening):**
+- **A left-out trip is now named as left out, not as a trip that never ran.**
+  The route summary reported Masindi and Yumbe as "no trip since fitting",
+  which read as a lost record on roads the client can see were driven. Routes
+  whose trips ran but were held out of the calculation now say exactly that —
+  on the dashboard, the report, the spreadsheet, the CSV and the client link,
+  with the held figures still shown. The deck's set-aside slide also carries
+  the counterfactual out loud: counted as ordinary trips those two loaded
+  round trips would read 24.8% and 4.6% worse and drag the headline from flat
+  to 4% worse, so leaving them out is rigour, not favourable treatment. The
+  same explanation is saved as a note on the trial record itself.
+- **Internal review link** — the CEO wanted to review the actual result
+  screen, and holds no staff login. The trial's Setup tab can now issue a
+  second token serving the **full staff view** at `/trial/review/{token}` —
+  verdict, routes, charts and lenses, the findings and the decisions taken on
+  them with their notes, the trial note, and the whole trip log — read-only,
+  badged "Internal review — not for clients". A deliberately **separate token
+  from the client link** (neither can widen the other; each created and
+  revoked on its own, audit-logged; the payload carries neither live token).
+  ⚠ Until revoked, anyone holding the URL sees the internal view — treat the
+  link like a confidential document and turn it off after the review.
+
+367 backend tests passing.
 
 ---
 
@@ -690,6 +713,20 @@ Verify with:
 > `php artisan fet:trial` is also the fallback if the admin screens are ever
 > unavailable — it shows a trial's trips, findings and result, and can settle
 > findings or leave a trip out, with the same audit trail as the UI.
+
+### Also riding the next deploy (18 August 2026, evening) — internal review link
+
+Carries a **database change** (`review_token` on `fet_trials`) and three new
+routes, so after the pull:
+
+```bash
+/opt/alt/php83/usr/bin/php artisan migrate --force
+/opt/alt/php83/usr/bin/php artisan config:cache
+/opt/alt/php83/usr/bin/php artisan route:cache
+```
+
+Then create the CEO's link from the trial's Setup tab ("Internal review
+link"), and revoke it there once the review is done.
 
 ### Also riding the next deploy (18 August 2026) — final-report importer + CSV
 
