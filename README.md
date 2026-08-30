@@ -4,6 +4,8 @@ Diversified distribution and management company serving Uganda, East Africa, and
 international markets across four product lines: Fuel Eco Tech, SEAL Hemostatic
 Wound Spray, Vitorra Coffee, and Logistics Services.
 
+**Live:** https://vitorraweb.vercel.app
+
 ## Architecture
 
 This is the **rebuild** — a clean monorepo replacing the previous React/Firebase site.
