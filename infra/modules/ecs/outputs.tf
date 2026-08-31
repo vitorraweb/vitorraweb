@@ -10,6 +10,11 @@ output "service_name" {
   value = aws_ecs_service.app.name
 }
 
+output "service_arn" {
+  value       = aws_ecs_service.app.id
+  description = "Used to scope the deploy role to this one service."
+}
+
 output "task_definition_family" {
   value       = aws_ecs_task_definition.app.family
   description = "CI registers new revisions against this family."

@@ -1,9 +1,15 @@
 name: CI
 
-# Runs quality checks on every push and pull request.
-# No deployment yet: the frontend auto-deploys via Vercel, and the backend is
-# released manually over SSH (see PROGRESS.md / the ops runbook). A deploy job
-# lands here in Phase 3 of planning/11-aws-migration-plan.md.
+# Quality checks on every push and pull request, then deployment of the
+# frontend to AWS on pushes to master.
+#
+# The backend is still released manually over SSH (see planning/09-ops-runbook.md).
+# Vercel also still auto-deploys the frontend until DNS cutover — the two run in
+# parallel on purpose, so Vercel remains a working rollback for a fortnight after
+# the switch.
+#
+# Authentication uses GitHub OIDC: no AWS access keys are stored in this
+# repository. See infra/modules/github-oidc for the trust boundary.
 
 on:
   push:
@@ -90,3 +96,143 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # ── Deploy ────────────────────────────────────────────────────────────────
+  # Staging first, then production, both only from master and only after the
+  # tests and build above have passed.
+
+  deploy-staging:
+    name: Deploy → staging
+    needs: [backend, frontend]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # required to request the OIDC token
+      contents: read
+    env:
+      AWS_REGION: eu-west-1
+      REGISTRY: 950177940799.dkr.ecr.eu-west-1.amazonaws.com
+      CLUSTER: vitorra-staging
+      SERVICE: vitorra-staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::950177940799:role/vitorra-staging-github-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      # NEXT_PUBLIC_* values are compiled into the client bundle at BUILD time,
+      # so staging and production are genuinely different images and one can
+      # never be promoted to the other.
+      #
+      # --provenance=false: buildx otherwise attaches an attestation, which
+      # makes each push store two images and quietly halves how far back the
+      # ECR lifecycle rule lets us roll back.
+      - name: Build and push
+        working-directory: frontend
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          IMAGE="$REGISTRY/vitorra-frontend:${{ github.sha }}"
+          docker build \
+            --platform linux/amd64 --provenance=false --sbom=false \
+            --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
+            --build-arg NEXT_PUBLIC_API_URL=https://api.vitorra.org/api \
+            --build-arg NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }} \
+            --build-arg NEXT_PUBLIC_SENTRY_ENVIRONMENT=staging \
+            --build-arg SENTRY_ORG=${{ secrets.SENTRY_ORG }} \
+            --build-arg SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT }} \
+            -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      # Tags are immutable SHAs, so a deploy is a NEW task definition revision
+      # rather than a restart. Terraform ignores task_definition changes on the
+      # service for exactly this reason.
+      - name: Fetch current task definition
+        run: |
+          aws ecs describe-task-definition --task-definition "$SERVICE" \
+            --query taskDefinition > task-definition.json
+
+      - uses: aws-actions/amazon-ecs-render-task-definition@v1
+        id: render
+        with:
+          task-definition: task-definition.json
+          container-name: frontend
+          image: ${{ env.IMAGE }}
+
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: ${{ env.SERVICE }}
+          cluster: ${{ env.CLUSTER }}
+          # Fail the run if the new revision never becomes healthy. The service's
+          # circuit breaker rolls it back; this makes the failure visible.
+          wait-for-service-stability: true
+
+  deploy-production:
+    name: Deploy → production
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # Declaring the environment means you can add required reviewers in GitHub
+    # (Settings → Environments → production) to gate production behind human
+    # approval. ⚠ Until you do, this deploys automatically.
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: eu-west-1
+      REGISTRY: 574247905057.dkr.ecr.eu-west-1.amazonaws.com
+      CLUSTER: vitorra-prod
+      SERVICE: vitorra-prod
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::574247905057:role/vitorra-prod-github-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push
+        working-directory: frontend
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          IMAGE="$REGISTRY/vitorra-frontend:${{ github.sha }}"
+          docker build \
+            --platform linux/amd64 --provenance=false --sbom=false \
+            --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
+            --build-arg NEXT_PUBLIC_API_URL=https://api.vitorra.org/api \
+            --build-arg NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }} \
+            --build-arg NEXT_PUBLIC_SENTRY_ENVIRONMENT=production \
+            --build-arg SENTRY_ORG=${{ secrets.SENTRY_ORG }} \
+            --build-arg SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT }} \
+            -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Fetch current task definition
+        run: |
+          aws ecs describe-task-definition --task-definition "$SERVICE" \
+            --query taskDefinition > task-definition.json
+
+      - uses: aws-actions/amazon-ecs-render-task-definition@v1
+        id: render
+        with:
+          task-definition: task-definition.json
+          container-name: frontend
+          image: ${{ env.IMAGE }}
+
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: ${{ env.SERVICE }}
+          cluster: ${{ env.CLUSTER }}
+          wait-for-service-stability: true

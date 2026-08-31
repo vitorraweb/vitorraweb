@@ -122,6 +122,23 @@ module "ecs" {
   log_retention_days     = 30
 }
 
+module "github_deploy" {
+  source = "../../modules/github-oidc"
+
+  name_prefix = local.name_prefix
+
+  # Pinned to one repository and one branch. A wildcard here would let any pull
+  # request from any fork deploy — the module's validation rejects that.
+  allowed_subjects = ["repo:vitorraweb/vitorraweb:ref:refs/heads/master"]
+
+  ecr_repository_arn = module.ecr.repository_arn
+  ecs_service_arn    = module.ecs.service_arn
+  passable_role_arns = [
+    module.ecs.execution_role_arn,
+    module.ecs.task_role_arn,
+  ]
+}
+
 output "account_id" {
   value       = data.aws_caller_identity.current.account_id
   description = "Sanity check — should match var.account_id."
@@ -133,6 +150,11 @@ output "vpc_id" {
 
 output "public_subnet_ids" {
   value = module.network.public_subnet_ids
+}
+
+output "github_deploy_role_arn" {
+  value       = module.github_deploy.role_arn
+  description = "role-to-assume for aws-actions/configure-aws-credentials."
 }
 
 output "ecs_cluster" {
