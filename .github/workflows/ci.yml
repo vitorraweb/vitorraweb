@@ -17,10 +17,19 @@ on:
   pull_request:
     branches: ["master"]
 
-# Cancel superseded runs on the same ref to save minutes.
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+# NOTE: there is deliberately NO workflow-level concurrency block.
+#
+# Workflow-level `cancel-in-progress` cancels the entire run, deploy jobs
+# included. That has two sharp edges we hit in practice:
+#
+#   1. A production deploy paused for approval is silently cancelled by the next
+#      push. You can open the email, click Approve, and be approving a dead run.
+#   2. Worse, cancelling mid-rollout stops the WATCHER, not the deployment. ECS
+#      carries on regardless; the circuit breaker still rolls back a bad
+#      revision, but no job reports it and nobody is watching.
+#
+# So cancellation lives on the test jobs, where superseding an old run is purely
+# a saving, and the deploy jobs queue instead.
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -29,6 +38,10 @@ jobs:
   backend:
     name: Backend (Laravel)
     runs-on: ubuntu-latest
+    # Superseded test runs are wasted minutes — cancel them.
+    concurrency:
+      group: test-backend-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         working-directory: backend
@@ -70,6 +83,9 @@ jobs:
   frontend:
     name: Frontend (Next.js)
     runs-on: ubuntu-latest
+    concurrency:
+      group: test-frontend-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         working-directory: frontend
@@ -106,6 +122,12 @@ jobs:
     needs: [backend, frontend]
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    # Never cancelled, and one at a time. A second push waits for this deploy to
+    # finish rather than interrupting a rollout half-way through. Not scoped to
+    # the ref: there is only ever one staging environment.
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
     permissions:
       id-token: write   # required to request the OIDC token
       contents: read
@@ -182,6 +204,13 @@ jobs:
     # (Settings → Environments → production) to gate production behind human
     # approval. ⚠ Until you do, this deploys automatically.
     environment: production
+    # Never cancelled. A deploy waiting for approval stays waiting, so the
+    # approval you were emailed about is still the one you are granting.
+    # ⚠ Consequence: if two runs both reach here, the second QUEUES behind the
+    # first. Approve or reject the older one to release it.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     permissions:
       id-token: write
       contents: read
