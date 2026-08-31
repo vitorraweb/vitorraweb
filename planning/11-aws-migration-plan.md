@@ -211,6 +211,38 @@ This single variable drives **three** separate things (`backend/config/services.
 After changing it: `php artisan config:cache`, then verify with
 `/opt/alt/php83/usr/bin/php artisan flutterwave:status`.
 
+#### The revalidation secret — set 2026-08-31, keep the three copies in sync
+
+`FRONTEND_REVALIDATE_SECRET` was **never set in production**. `FrontendRevalidator`
+returns early when it is empty, before the try block, so nothing was ever sent and
+nothing was ever logged — every blog post since the feature shipped took the full ISR
+window (30 minutes) to appear. Fixed on 2026-08-31; verified end to end:
+
+```
+url: https://vitorra.org/api/revalidate
+secret length: 64
+status: 200
+```
+
+The same value now lives in three places and **all three must match**:
+
+| Where | Name |
+|---|---|
+| Namecheap `backend/.env` | `FRONTEND_REVALIDATE_SECRET` |
+| Vercel env (until cutover) | `REVALIDATE_SECRET` |
+| AWS Secrets Manager `vitorra-prod/revalidate-secret` | injected as `REVALIDATE_SECRET` |
+
+Retrieve it with:
+
+```bash
+aws secretsmanager get-secret-value --secret-id vitorra-prod/revalidate-secret \
+  --query SecretString --output text --profile vitorra-prod
+```
+
+⚠ At cutover, `FRONTEND_URL` changes to `https://www.vitorra.org`, which changes the
+revalidate URL with it. Re-run the check above afterwards — a 200 before and a
+connection error after means that variable, not the secret.
+
 **CORS needs no change** — `backend/config/cors.php` already allows both apex and `www`.
 
 ---
