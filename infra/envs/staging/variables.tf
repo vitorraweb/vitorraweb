@@ -18,3 +18,9 @@ variable "region" {
   description = "Primary region for all regional resources."
   default     = "eu-west-1"
 }
+
+variable "alert_emails" {
+  type        = list(string)
+  description = "Who hears about alarms and budget warnings. Add the junior engineer once he has an account."
+  default     = ["john@vitorra.org"]
+}

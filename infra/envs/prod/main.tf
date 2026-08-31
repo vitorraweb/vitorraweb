@@ -152,6 +152,30 @@ module "github_deploy" {
   ]
 }
 
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  name_prefix = local.name_prefix
+  region      = var.region
+
+  # ⚠ Each address gets a confirmation email from AWS and receives nothing until
+  # the link is clicked. Check the subscription reads "Confirmed".
+  alert_emails = var.alert_emails
+
+  alb_arn_suffix          = module.alb.arn_suffix
+  target_group_arn_suffix = module.alb.target_group_arn_suffix
+  ecs_cluster_name        = module.ecs.cluster_name
+  ecs_service_name        = module.ecs.service_name
+}
+
+module "budget" {
+  source = "../../modules/budget"
+
+  name_prefix       = local.name_prefix
+  monthly_limit_usd = 60
+  alert_emails      = var.alert_emails
+}
+
 output "account_id" {
   value       = data.aws_caller_identity.current.account_id
   description = "Sanity check — should match var.account_id."
@@ -168,6 +192,15 @@ output "public_subnet_ids" {
 output "github_deploy_role_arn" {
   value       = module.github_deploy.role_arn
   description = "role-to-assume for aws-actions/configure-aws-credentials."
+}
+
+output "alerts_topic_arn" {
+  value = module.monitoring.sns_topic_arn
+}
+
+output "alarm_names" {
+  description = "Fire each once with `aws cloudwatch set-alarm-state` and confirm the email arrives."
+  value       = module.monitoring.alarm_names
 }
 
 output "ecs_cluster" {

@@ -20,6 +20,11 @@ output "target_group_arn" {
   value = aws_lb_target_group.this.arn
 }
 
+output "target_group_arn_suffix" {
+  value       = aws_lb_target_group.this.arn_suffix
+  description = "CloudWatch dimension value for target-group metrics."
+}
+
 output "origin_verify_secret" {
   value       = random_password.origin_verify.result
   sensitive   = true
