@@ -5,13 +5,21 @@
    it necessarily keeps its own state in a LOCAL file. That state is NOT committed
    (see .gitignore) — state files are plaintext and we never want the habit.
 
-   Losing this particular state file is recoverable and not an emergency: the
+   Losing one of these state files is recoverable and not an emergency: the
    bucket still exists, and you adopt it again with
-     tofu import aws_s3_bucket.state vitorra-tfstate-<account-id>
+     tofu import -state=terraform-prod.tfstate \
+       aws_s3_bucket.state vitorra-tfstate-<account-id>
+
+   ⚠ ALWAYS pass -state. This one directory bootstraps BOTH accounts, so the
+   default filename would make the second run try to replace the first account's
+   bucket. State is kept per account instead:
+       terraform-prod.tfstate      terraform-staging.tfstate
 
    Run once per account:
      cd infra/bootstrap
-     AWS_PROFILE=vitorra-prod tofu init && tofu apply
+     tofu init
+     AWS_PROFILE=vitorra-prod tofu apply \
+       -state=terraform-prod.tfstate -var-file=../envs/prod/bootstrap.tfvars
 
    See infra/README.md.
    ───────────────────────────────────────────────────────────────────────────── */

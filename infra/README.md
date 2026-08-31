@@ -34,10 +34,14 @@ switch, and no way to apply production config to staging by accident.
 # 1. Sign in (short-lived credentials, no access keys on disk)
 aws sso login --profile vitorra-prod
 
-# 2. Create the state bucket
+# 2. Create the state bucket.
+#    -state is REQUIRED: one directory bootstraps both accounts, and the default
+#    filename would make the second run try to replace the first one's bucket.
 cd infra/bootstrap
 tofu init
-AWS_PROFILE=vitorra-prod tofu apply -var-file=../envs/prod/bootstrap.tfvars
+AWS_PROFILE=vitorra-prod tofu apply \
+  -state=terraform-prod.tfstate \
+  -var-file=../envs/prod/bootstrap.tfvars
 
 # 3. Then the environment itself
 cd ../envs/prod
