@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 22 August 2026
+**Last updated:** 31 August 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -39,7 +39,10 @@
 | **Leave approval — two people required** (Operations + Finance), nobody signs their own | ✅ **Built** — needs backend deploy |
 | **Staff offboarding** (`staff:offboard`) + departed accounts can no longer sign in | ✅ **Built** — needs backend deploy |
 | **FET Trial Manager** — run a client fuel trial end to end, from their own spreadsheet to a client-ready report | ✅ **Built & live** — first trial (Hariss International) loaded |
-| Monitoring / backups / CI/CD | ⏳ Sentry DSNs configured; uptime/backups/CI still to verify |
+| **Blog posts appearing instantly** when published, instead of up to 30 minutes later | ✅ **Fixed & live** — had never worked in production |
+| **Moving the website onto infrastructure we own** (AWS) | 🔨 **Built, not switched on** — site still served by Vercel; waiting on AWS to verify the account |
+| **Automatic releases** — a change goes live without anyone running commands | ✅ **Built & proven** — production needs a human approval |
+| Monitoring / backups | ⏳ Still to do — first job for the incoming junior engineer |
 
 ---
 
@@ -599,11 +602,104 @@ will not put a favourable number on evidence that does not carry one.
 
 ---
 
+## 🔨 Moving onto our own infrastructure (August 2026) — built, not yet switched on
+
+The website currently runs on Vercel, a service that hosts it for us and makes the
+decisions about how. We are moving it onto **Amazon Web Services under our own
+account**, so the company owns the platform its public face runs on.
+
+**Nothing has switched yet.** Every visitor to vitorra.org is still served by Vercel,
+exactly as before. The AWS copy is built, running and healthy — but no customer traffic
+reaches it, and none will until we deliberately switch over.
+
+### Why
+
+- **We own it.** No other company can change its pricing, its terms, or how our site is
+  served without us choosing to accept it.
+- **We can see what we spend**, to the penny, per environment, with alerts before a bill
+  surprises anyone.
+- **Somewhere to grow into.** Future systems can run on the same platform rather than
+  needing another supplier.
+- **Something the new engineer can own** — watching it, securing it, and reporting on
+  its cost is real work for the incoming junior developer.
+
+### What it costs
+
+About **$78 a month**, against roughly $20 for Vercel. This is **more expensive, not
+less**, and deliberately so: what we are buying is control and a platform we can
+operate, not a cheaper bill. For a fortnight after the switch we pay both, because
+Vercel stays live as a working undo button.
+
+### What is built and running
+
+Two completely separate AWS accounts — one for the live site, one for testing — so a
+mistake while learning cannot reach customers. Both have the full stack: private
+network, container registry, load balancer with its own HTTPS certificate, and the
+website itself running in a container and reporting healthy.
+
+Releases are automatic: a change pushed to the main branch is built, tested, and
+deployed to the test site on its own. **The live site additionally requires a human to
+approve it** before anything reaches customers.
+
+### ⏳ What is blocking the switch
+
+**Amazon must verify the account** before it will allow the content-delivery layer
+(the part that puts the site on servers close to visitors, in Nairobi and Lagos rather
+than Ireland, and shields it from attack). A support case is open and unanswered. This
+is an anti-abuse hold Amazon places on all new accounts — nothing is wrong with our
+setup.
+
+Once Amazon replies: roughly **a week to switch over** — a couple of days walking the
+whole site on the test copy first, then the switch itself on a quiet Sunday morning.
+Vercel then stays live for **two more weeks** as a rollback before being retired.
+
+### One thing that surfaced along the way
+
+Preparing the move turned up a live bug: **blog posts had never appeared instantly**.
+The setting that lets the admin panel tell the website "this post is published" was
+never filled in on the server, and the code was written to fail silently when it is
+missing — so nothing errored, nothing logged, and every post the team published sat
+invisible for up to half an hour. Now fixed and verified on the live site.
+
+### The switch itself, when it comes
+
+The address changes from `vitorra.org` to **`www.vitorra.org`** — the bare address will
+redirect. This is forced by how the delivery layer works, and search rankings carry
+across a redirect. ⚠ Company email is untouched throughout: every change is on new
+subdomains, and the Microsoft 365 records are never edited.
+
+> Engineering detail lives in `planning/12-aws-migration-plan.md` (architecture, the
+> gotchas that cost us time, the cutover runbook, rollback) and
+> `planning/13-junior-dev-onboarding.md` (what the new engineer owns, and when).
+> Infrastructure is defined in code under `infra/`.
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**
 1. ~~**Live payment gateway**~~ ✅ **Built (Flutterwave)** — now an **activation** task, not a build: set `PAYMENT_DRIVER=flutterwave` + keys, generate a webhook secret hash in the Flutterwave dashboard and set `FLUTTERWAVE_SECRET_HASH`, set `NEXT_PUBLIC_ONLINE_PAYMENTS=true`. Verify with `/admin/payments` or `php artisan flutterwave:status`. Sandbox-test, then go live.
 2. **Confirm coffee retail prices** → enter in `/admin/products`, then flip the coffee shop on (one flag) — Flutterwave checkout already wired.
+
+**The AWS move — waiting on Amazon, then on us**
+A. **Amazon must verify both accounts** before the delivery layer can be created.
+   Support case open, unanswered. Nothing else can proceed until it is.
+B. Once verified: create that layer in both accounts (~1 hour, already written),
+   then **walk the whole test site** for two or three days — every product page,
+   admin sign-in with 2FA, the staff and customer portals, a CV upload, a blog
+   publish, both languages. Watch how hard the server is working: the site now
+   also passes every form and sign-in through to the API, which it did not when
+   the size was chosen.
+C. **The switch itself** — about an hour on a Sunday morning. Change two records
+   at GoDaddy, point the backend at the new address, and verify payments,
+   enquiries and blog publishing straight after. ⚠ Never touch the Microsoft 365
+   email records.
+D. **Two weeks later**, retire Vercel. Until then it stays live and warm as a
+   ten-minute undo.
+E. **Before the switch:** turn the firewall from watching to blocking (it is
+   deliberately in report-only mode until we have seen a few days of real
+   traffic), and remove the temporary rule that lets one office address reach
+   the test site directly.
 
 **Deploy first (built, not yet on the server)**
 3. **Run the standard backend deploy** — the two-signature leave approval
@@ -662,7 +758,12 @@ will not put a favourable number on evidence that does not carry one.
 19. Later (need a small server): on-site search, self-hosted newsletter, live chat, logistics maps.
 
 **Reliability**
-20. Confirm Sentry is live in prod; add uptime alerts, automated DB backups, CI/CD.
+20. ~~CI/CD~~ ✅ **Built** — a change pushed to the main branch now builds, tests
+    and releases itself; the live site additionally waits for a human approval.
+    Still outstanding: confirm Sentry is genuinely receiving errors (the setting
+    exists but nothing has been seen arrive), add uptime alerts, and automate
+    database backups. These three are the incoming junior engineer's first
+    assignments — weeks 2–4 of `planning/13-junior-dev-onboarding.md`.
 
 **Content / lower priority**
 21. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
@@ -671,7 +772,9 @@ will not put a favourable number on evidence that does not carry one.
 
 ## 🚀 Standard backend deploy (Namecheap)
 
-Frontend auto-deploys via Vercel on push to `master`. Backend:
+The frontend releases itself on push to `master` — currently to Vercel (live) and,
+in parallel, to AWS (built, not yet serving). Nothing to run by hand either way.
+The backend is still released manually:
 
 ```bash
 cd /home/okelvaxj/vitorraweb && git pull origin master
