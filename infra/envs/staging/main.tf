@@ -18,7 +18,7 @@ module "network" {
 
   # TEMPORARY — John's address, so the load balancer can be verified before
   # CloudFront exists in front of it. Remove once CloudFront is live.
-  alb_ingress_extra_cidrs = ["41.210.157.214/32"]
+  alb_ingress_extra_cidrs = ["102.211.61.229/32"]
 }
 
 module "ecr" {
