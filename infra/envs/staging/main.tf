@@ -46,6 +46,58 @@ module "alb" {
   deletion_protection = false
 }
 
+/* The shared secret the Laravel backend sends when it calls /api/revalidate
+   after a blog post is published. Terraform creates the secret but deliberately
+   does NOT own its value — the real value already exists on the Namecheap box
+   as FRONTEND_REVALIDATE_SECRET, and the two must match exactly.
+
+   Set it once, by hand, and Terraform will leave it alone thereafter:
+     aws secretsmanager put-secret-value \
+       --secret-id vitorra-staging/revalidate-secret \
+       --secret-string '<the value from backend/.env>' --profile vitorra-staging  */
+resource "aws_secretsmanager_secret" "revalidate" {
+  name                    = "${local.name_prefix}/revalidate-secret"
+  description             = "Must match FRONTEND_REVALIDATE_SECRET in the Laravel backend."
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "revalidate" {
+  secret_id     = aws_secretsmanager_secret.revalidate.id
+  secret_string = "PLACEHOLDER-set-me-by-hand"
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
+}
+
+module "ecs" {
+  source = "../../modules/ecs"
+
+  name_prefix = local.name_prefix
+  region      = var.region
+
+  repository_url = module.ecr.repository_url
+  image_tag      = "2ef5de2"
+
+  subnet_ids        = module.network.public_subnet_ids
+  security_group_id = module.network.tasks_security_group_id
+  target_group_arn  = module.alb.target_group_arn
+  container_port    = 3000
+
+  cpu           = 512
+  memory        = 1024
+  desired_count = 1
+
+  secret_arns = {
+    REVALIDATE_SECRET = aws_secretsmanager_secret.revalidate.arn
+  }
+
+  # Staging is where we debug, so allow shelling into a running task.
+  enable_execute_command = true
+  container_insights     = false
+  log_retention_days     = 14
+}
+
 output "account_id" {
   value       = data.aws_caller_identity.current.account_id
   description = "Sanity check — should match var.account_id."
@@ -65,6 +117,18 @@ output "ecr_repository_url" {
 
 output "alb_dns_name" {
   value = module.alb.dns_name
+}
+
+output "ecs_cluster" {
+  value = module.ecs.cluster_name
+}
+
+output "ecs_service" {
+  value = module.ecs.service_name
+}
+
+output "log_group" {
+  value = module.ecs.log_group_name
 }
 
 output "origin_verify_secret_arn" {
