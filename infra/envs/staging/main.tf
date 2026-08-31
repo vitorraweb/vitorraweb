@@ -98,6 +98,24 @@ module "ecs" {
   log_retention_days     = 14
 }
 
+/* Certificate for the load balancer's origin hostname. Regional — must be in
+   the same region as the ALB. */
+module "cert_origin" {
+  source      = "../../modules/acm"
+  domain_name = "staging-origin.vitorra.org"
+}
+
+/* Certificate for the public hostname CloudFront serves. MUST be us-east-1;
+   CloudFront rejects certificates from anywhere else. */
+module "cert_public" {
+  source      = "../../modules/acm"
+  domain_name = "staging.vitorra.org"
+
+  providers = {
+    aws = aws.us_east_1
+  }
+}
+
 output "account_id" {
   value       = data.aws_caller_identity.current.account_id
   description = "Sanity check — should match var.account_id."
@@ -109,6 +127,22 @@ output "vpc_id" {
 
 output "public_subnet_ids" {
   value = module.network.public_subnet_ids
+}
+
+output "dns_records_to_add" {
+  description = "Add these at GoDaddy. Validation records are permanent — renewal re-checks them."
+  value = {
+    origin_cert_validation = module.cert_origin.validation_records
+    public_cert_validation = module.cert_public.validation_records
+  }
+}
+
+output "cert_origin_arn" {
+  value = module.cert_origin.arn
+}
+
+output "cert_public_arn" {
+  value = module.cert_public.arn
 }
 
 output "ecr_repository_url" {
