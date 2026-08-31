@@ -1,0 +1,28 @@
+# Build context exclusions for the ECS Fargate image.
+# See planning/11-aws-migration-plan.md
+
+# Installed on the build platform — macOS/Windows native binaries (sharp, swc)
+# would be wrong for the Linux runtime. The image installs its own.
+node_modules
+
+# A locally-built .next carries the HOST platform's traced binaries. Letting it
+# into the context risks shipping darwin/win32 sharp into a Linux container.
+.next
+out
+
+# Never bake secrets into an image layer.
+.env
+.env.*
+!.env.example
+
+# Not needed to build, and they bust the layer cache on every commit.
+.git
+.gitignore
+.github
+*.md
+.DS_Store
+npm-debug.log*
+yarn-error.log*
+.vscode
+.idea
+coverage

@@ -1,8 +1,9 @@
 name: CI
 
 # Runs quality checks on every push and pull request.
-# No deployment: the frontend auto-deploys via Vercel, and the backend is
-# released manually over SSH (see PROGRESS.md / the ops runbook).
+# No deployment yet: the frontend auto-deploys via Vercel, and the backend is
+# released manually over SSH (see PROGRESS.md / the ops runbook). A deploy job
+# lands here in Phase 3 of planning/11-aws-migration-plan.md.
 
 on:
   push:
@@ -69,16 +70,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node 22
+      - name: Set up Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-      # Using `npm install` (not `npm ci`) because the committed lockfile is
-      # regenerated on Windows and may omit Linux-only optional deps; install is
-      # more forgiving. Switch to `npm ci` if the lockfile is regenerated on Linux.
+      # `npm ci` installs the lockfile exactly and fails loudly on drift, which
+      # is what we want gating a deploy. It needs Node 24 / npm 11: the lockfile
+      # is npm 11-generated and npm 10 (shipped with Node 22) rejects it with a
+      # spurious "out of sync" error. Keep this pin in step with
+      # frontend/Dockerfile — CI, Docker and laptops must share one npm major.
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Lint
         run: npm run lint
