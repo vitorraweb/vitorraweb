@@ -25,6 +25,16 @@ module "network" {
   alb_ingress_extra_cidrs = []
 }
 
+module "ecr" {
+  source = "../../modules/ecr"
+
+  name = "vitorra-frontend"
+
+  # Ten deploys of headroom to roll back across. Images are ~470MB, so this caps
+  # storage at roughly $0.50/month.
+  keep_last_n_images = 10
+}
+
 output "account_id" {
   value       = data.aws_caller_identity.current.account_id
   description = "Sanity check — should match var.account_id."
@@ -36,4 +46,8 @@ output "vpc_id" {
 
 output "public_subnet_ids" {
   value = module.network.public_subnet_ids
+}
+
+output "ecr_repository_url" {
+  value = module.ecr.repository_url
 }

@@ -336,6 +336,7 @@ credentials that expire in an hour. Nothing long-lived exists to leak.
         run: |
           IMAGE="$REGISTRY/vitorra-frontend:${{ github.sha }}"
           docker build \
+            --platform linux/amd64 --provenance=false --sbom=false \
             --build-arg NEXT_PUBLIC_API_URL=https://api.vitorra.org/api \
             --build-arg NEXT_PUBLIC_SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
             --build-arg NEXT_PUBLIC_SENTRY_ENVIRONMENT=production \

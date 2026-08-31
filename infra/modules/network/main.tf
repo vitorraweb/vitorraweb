@@ -118,20 +118,36 @@ resource "aws_vpc_security_group_ingress_rule" "alb_https_from_cloudfront" {
   to_port        = 443
 }
 
-/* Temporary direct access, for testing the load balancer before CloudFront
-   exists in front of it. Default is empty — an empty list means no rule is
-   created at all. Set it to your own address as a /32, and take it back out
-   once CloudFront is live. */
-resource "aws_vpc_security_group_ingress_rule" "alb_https_extra" {
+/* Temporary direct access, for testing the load balancer before CloudFront sits
+   in front of it. Default is empty — an empty list creates no rules at all.
+   Set it to your own address as a /32, and take it back out once CloudFront is
+   live. Both ports are opened because HTTPS needs a certificate on a real
+   hostname, which does not exist until DNS is cut over.
+
+   ⚠ Anything left here bypasses CloudFront, and therefore the WAF and the rate
+   limiting, for whoever holds that address. */
+resource "aws_vpc_security_group_ingress_rule" "alb_extra_https" {
   for_each = toset(var.alb_ingress_extra_cidrs)
 
   security_group_id = aws_security_group.alb.id
-  description       = "Temporary direct access for testing"
+  description       = "Temporary direct access for testing (HTTPS)"
 
   cidr_ipv4   = each.value
   ip_protocol = "tcp"
   from_port   = 443
   to_port     = 443
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_extra_http" {
+  for_each = toset(var.alb_ingress_extra_cidrs)
+
+  security_group_id = aws_security_group.alb.id
+  description       = "Temporary direct access for testing (HTTP, pre-certificate)"
+
+  cidr_ipv4   = each.value
+  ip_protocol = "tcp"
+  from_port   = 80
+  to_port     = 80
 }
 
 resource "aws_vpc_security_group_egress_rule" "alb_to_tasks" {
