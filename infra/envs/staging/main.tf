@@ -117,6 +117,32 @@ module "cert_public" {
   }
 }
 
+module "waf" {
+  source = "../../modules/waf"
+
+  name_prefix = local.name_prefix
+
+  # Start in count-only mode: log what WOULD be blocked, block nothing. Read the
+  # CloudWatch metrics for a few days, then flip to false.
+  count_only = true
+  rate_limit = 2000
+
+  providers = {
+    aws = aws.us_east_1
+  }
+}
+
+module "cloudfront" {
+  source = "../../modules/cloudfront"
+
+  name_prefix          = local.name_prefix
+  domain_name          = "staging.vitorra.org"
+  origin_domain_name   = "staging-origin.vitorra.org"
+  origin_verify_secret = module.alb.origin_verify_secret
+  certificate_arn      = module.cert_public.arn
+  web_acl_arn          = module.waf.web_acl_arn
+}
+
 output "account_id" {
   value       = data.aws_caller_identity.current.account_id
   description = "Sanity check — should match var.account_id."
@@ -128,6 +154,11 @@ output "vpc_id" {
 
 output "public_subnet_ids" {
   value = module.network.public_subnet_ids
+}
+
+output "cloudfront_domain" {
+  value       = module.cloudfront.domain_name
+  description = "CNAME target for staging.vitorra.org at GoDaddy."
 }
 
 output "dns_records_to_add" {
