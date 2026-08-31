@@ -1,7 +1,7 @@
-# 12 — Junior Developer Onboarding & Infrastructure Ownership
+# 13 — Junior Developer Onboarding & Infrastructure Ownership
 
 **Status:** Ready to run · **Manager:** John Oluwaseyi (IT Officer)
-**Drafted:** 31 August 2026 · **Pairs with:** `11-aws-migration-plan.md`
+**Drafted:** 31 August 2026 · **Pairs with:** `12-aws-migration-plan.md`
 
 ---
 
@@ -63,7 +63,7 @@ happens. Production is where it is applied.
 
 **Reading list, in this order — expect roughly half a day:**
 1. `PROGRESS.md` — what the business actually does, in plain language
-2. `planning/11-aws-migration-plan.md` — the infrastructure he is inheriting
+2. `planning/12-aws-migration-plan.md` — the infrastructure he is inheriting
 3. `planning/09-ops-runbook.md` — how the platform is operated today
 4. `CLAUDE.md` §Security Hardening — what we already protect and why
 

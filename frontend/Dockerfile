@@ -2,7 +2,7 @@
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Vitorra frontend — production image for ECS Fargate.
-# See planning/11-aws-migration-plan.md
+# See planning/12-aws-migration-plan.md
 #
 # Built inside Linux on purpose: Next's standalone tracer copies only the
 # BUILD platform's native binaries (sharp, swc). Building on macOS and copying

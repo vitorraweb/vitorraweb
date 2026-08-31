@@ -1,4 +1,4 @@
-# 11 — AWS Migration Plan (Frontend: Vercel → AWS)
+# 12 — AWS Migration Plan (Frontend: Vercel → AWS)
 
 **Status:** Planned, not started · **Owner:** John Oluwaseyi · **Drafted:** 31 August 2026
 **Scope:** Frontend only. The Laravel backend stays on Namecheap cPanel at `api.vitorra.org` — untouched.
@@ -393,6 +393,48 @@ credentials that expire in an hour. Nothing long-lived exists to leak.
 ECS performs a **rolling deployment**: it starts the new container, waits for the ALB health
 check to pass, shifts traffic, then stops the old one. Zero downtime, and an automatic stop
 if the new container never becomes healthy.
+
+---
+
+## 6b. The API proxy changes the load profile — added 2026-08-31
+
+Master gained a same-origin API proxy (`rewrites()` in `next.config.ts`) because the
+API host sits behind Imunify360 WebShield, which answers every CORS preflight `OPTIONS`
+with a 415 before Laravel runs. The browser now calls `/api/*` on the site itself and
+Next forwards it to `api.vitorra.org`.
+
+That was a fix for a real outage, and it is the right one. But it materially changes
+what the Fargate container does, and the sizing in this plan predates it.
+
+**Before:** the container rendered pages. Browser API calls went straight to
+`api.vitorra.org` and never touched it.
+
+**After:** every login, form submission, admin action and portal request also passes
+*through* the container:
+
+```
+browser → CloudFront → ALB → Fargate → api.vitorra.org
+```
+
+Three consequences worth holding in mind:
+
+- **Capacity.** One task at 0.5 vCPU / 1 GB now serves both page rendering and every
+  API round trip. Watch `CPUUtilization` during the staging soak rather than assuming
+  the original sizing still holds. Scaling up (bigger task) is safe; scaling *out*
+  is not — see §7.
+- **Latency.** Browser API calls gain a hop. Kampala → CloudFront edge → Ireland →
+  Namecheap, where previously it was browser → Namecheap directly. Mostly offset by
+  the connection being warm and same-origin, but measure rather than assume.
+- **Caching.** CloudFront must never cache `/api/*`. The default behaviour is already
+  `CachingDisabled`, so this is satisfied — but if HTML caching is ever enabled (§5),
+  `/api/*` needs its own explicit uncached behaviour first.
+
+**Verified 2026-08-31:** filesystem routes still win over the rewrite, so
+`/api/health` is served by our own handler and `/api/revalidate` is not proxied.
+Confirmed against a real build — `/api/health` returns `{"status":"ok","uptime":N}`
+while `/api/products` returns Laravel data. This matters: had `/api/health` been
+proxied, the ALB health check would have depended on the backend, and a backend blip
+would have killed healthy frontend containers.
 
 ---
 

@@ -133,7 +133,7 @@ resource "aws_ecs_task_definition" "app" {
     operating_system_family = "LINUX"
     # Must match what the image was built for. Graviton would be ~20% cheaper,
     # but GitHub's ARM runners are not free for private repos, so CI would need
-    # QEMU emulation on every push. See planning/11-aws-migration-plan.md.
+    # QEMU emulation on every push. See planning/12-aws-migration-plan.md.
     cpu_architecture = "X86_64"
   }
 

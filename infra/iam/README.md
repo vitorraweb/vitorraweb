@@ -29,7 +29,7 @@ somewhere, encrypted material stays unreadable.
 Own monitoring outright (dashboards, alarms, log queries, retention, Synthetics
 canaries), route alerts (SNS), and run the security tooling (WAF, GuardDuty, Security
 Hub, Inspector, Access Analyzer). That is the whole job description from
-`planning/12-junior-dev-onboarding.md`, and nothing in it requires reading a secret.
+`planning/13-junior-dev-onboarding.md`, and nothing in it requires reading a secret.
 
 ### Deliberate design notes
 

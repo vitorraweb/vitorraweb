@@ -16,7 +16,7 @@ const API_HOST = API_ORIGIN.replace(/\/api\/?$/, "");
 const nextConfig: NextConfig = {
   // Emits .next/standalone — a self-contained Node server bundled with only the
   // node_modules actually reached at runtime. Required for the Docker image we
-  // deploy to ECS Fargate (planning/11-aws-migration-plan.md); it takes the
+  // deploy to ECS Fargate (planning/12-aws-migration-plan.md); it takes the
   // runtime image from ~1.2GB to ~200MB. Harmless on Vercel, which ignores it.
   output: "standalone",
   turbopack: {

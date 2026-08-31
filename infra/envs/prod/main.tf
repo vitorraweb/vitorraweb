@@ -2,7 +2,7 @@
    THE LIVE SITE. Changes here go through a reviewed pull request.
 
    Read top to bottom to understand what this environment is. Modules are added
-   here as each is built (planning/11-aws-migration-plan.md, Phase 2). */
+   here as each is built (planning/12-aws-migration-plan.md, Phase 2). */
 
 data "aws_caller_identity" "current" {}
 

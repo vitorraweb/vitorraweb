@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-/* Liveness probe for the ECS/ALB target group (planning/11-aws-migration-plan.md).
+/* Liveness probe for the ECS/ALB target group (planning/12-aws-migration-plan.md).
    The load balancer polls this every 30s and kills any container that stops
    answering, so what it checks matters more than it looks.
 
