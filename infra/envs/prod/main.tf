@@ -127,9 +127,22 @@ module "github_deploy" {
 
   name_prefix = local.name_prefix
 
-  # Pinned to one repository and one branch. A wildcard here would let any pull
-  # request from any fork deploy — the module's validation rejects that.
-  allowed_subjects = ["repo:vitorraweb/vitorraweb:ref:refs/heads/master"]
+  /* Pinned to the production ENVIRONMENT, not to a branch.
+
+     This is not interchangeable with the ref form. A job that declares
+     `environment: production` gets a different OIDC subject claim from GitHub:
+
+         no environment  →  repo:vitorraweb/vitorraweb:ref:refs/heads/master
+         environment set →  repo:vitorraweb/vitorraweb:environment:production
+
+     Pinning the ref while the workflow declares an environment fails with
+     "Not authorized to perform sts:AssumeRoleWithWebIdentity", which reads like
+     a broken trust policy rather than a mismatched claim.
+
+     The environment form is also stricter: only a job running in the
+     approval-gated production environment can assume this role, whatever
+     branch it came from. */
+  allowed_subjects = ["repo:vitorraweb/vitorraweb:environment:production"]
 
   ecr_repository_arn = module.ecr.repository_arn
   ecs_service_arn    = module.ecs.service_arn
