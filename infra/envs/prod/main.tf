@@ -53,6 +53,75 @@ module "cert_public" {
   }
 }
 
+module "alb" {
+  source = "../../modules/alb"
+
+  name_prefix       = local.name_prefix
+  vpc_id            = module.network.vpc_id
+  subnet_ids        = module.network.public_subnet_ids
+  security_group_id = module.network.alb_security_group_id
+  container_port    = 3000
+
+  certificate_arn = module.cert_origin.arn
+
+  # Production. Deleting this should require removing the protection first.
+  deletion_protection = true
+}
+
+/* Shared secret the Laravel backend sends when calling /api/revalidate after a
+   blog post is published. Terraform creates the secret but deliberately does
+   NOT own its value — the real one already exists on the Namecheap box as
+   FRONTEND_REVALIDATE_SECRET, and the two must match exactly or published posts
+   silently take up to thirty minutes to appear.
+
+   Set it once, by hand, before cutover:
+     aws secretsmanager put-secret-value \
+       --secret-id vitorra-prod/revalidate-secret \
+       --secret-string '<value from backend/.env>' --profile vitorra-prod       */
+resource "aws_secretsmanager_secret" "revalidate" {
+  name                    = "${local.name_prefix}/revalidate-secret"
+  description             = "Must match FRONTEND_REVALIDATE_SECRET in the Laravel backend."
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "revalidate" {
+  secret_id     = aws_secretsmanager_secret.revalidate.id
+  secret_string = "PLACEHOLDER-set-me-before-cutover"
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
+}
+
+module "ecs" {
+  source = "../../modules/ecs"
+
+  name_prefix = local.name_prefix
+  region      = var.region
+
+  repository_url = module.ecr.repository_url
+  image_tag      = "407a781"
+
+  subnet_ids        = module.network.public_subnet_ids
+  security_group_id = module.network.tasks_security_group_id
+  target_group_arn  = module.alb.target_group_arn
+  container_port    = 3000
+
+  cpu           = 512
+  memory        = 1024
+  desired_count = 1
+
+  secret_arns = {
+    REVALIDATE_SECRET = aws_secretsmanager_secret.revalidate.arn
+  }
+
+  # Production: no shelling into live containers, and keep per-container metrics
+  # so the junior engineer's dashboards have something to show.
+  enable_execute_command = false
+  container_insights     = true
+  log_retention_days     = 30
+}
+
 output "account_id" {
   value       = data.aws_caller_identity.current.account_id
   description = "Sanity check — should match var.account_id."
@@ -64,6 +133,27 @@ output "vpc_id" {
 
 output "public_subnet_ids" {
   value = module.network.public_subnet_ids
+}
+
+output "ecs_cluster" {
+  value = module.ecs.cluster_name
+}
+
+output "ecs_service" {
+  value = module.ecs.service_name
+}
+
+output "log_group" {
+  value = module.ecs.log_group_name
+}
+
+output "alb_dns_name" {
+  value       = module.alb.dns_name
+  description = "CNAME target for origin.vitorra.org at GoDaddy."
+}
+
+output "origin_verify_secret_arn" {
+  value = module.alb.origin_verify_secret_arn
 }
 
 output "dns_records_to_add" {
