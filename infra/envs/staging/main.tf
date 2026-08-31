@@ -40,9 +40,10 @@ module "alb" {
   security_group_id = module.network.alb_security_group_id
   container_port    = 3000
 
-  # No certificate yet — needs origin.vitorra.org and DNS validation at GoDaddy.
-  # Until then the listener serves HTTP so the stack can be verified end to end.
-  certificate_arn     = null
+  # staging-origin.vitorra.org, validated by DNS at GoDaddy. With this set, the
+  # HTTPS listener carries the origin-verify gate and HTTP becomes a permanent
+  # redirect to it.
+  certificate_arn     = module.cert_origin.arn
   deletion_protection = false
 }
 
