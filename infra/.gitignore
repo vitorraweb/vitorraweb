@@ -1,0 +1,19 @@
+# Provider binaries and module caches — re-downloaded by `tofu init`.
+.terraform/
+
+# State is plaintext and can contain secrets. It belongs in S3, never in git.
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Saved plan files can also contain sensitive values.
+*.tfplan
+
+# Local overrides for one person's machine.
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# NOTE: .terraform.lock.hcl IS committed on purpose — it pins provider versions
+# and checksums so everyone, and CI, resolves the identical provider build.
