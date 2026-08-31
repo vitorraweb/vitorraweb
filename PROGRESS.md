@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 31 August 2026
+**Last updated:** 31 August 2026 (evening)
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -42,7 +42,9 @@
 | **Blog posts appearing instantly** when published, instead of up to 30 minutes later | ✅ **Fixed & live** — had never worked in production |
 | **Moving the website onto infrastructure we own** (AWS) | 🔨 **Built, not switched on** — site still served by Vercel; waiting on AWS to verify the account |
 | **Automatic releases** — a change goes live without anyone running commands | ✅ **Built & proven** — production needs a human approval |
-| Monitoring / backups | ⏳ Still to do — first job for the incoming junior engineer |
+| **Being told when the website breaks** — before a customer notices | ✅ **Built & tested on both environments** — a real alert was fired and the email confirmed arriving |
+| **Knowing what we spend, before the bill** | ✅ **Built** — warnings at 60/85/100% of budget, plus unusual-spending detection |
+| Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
 
@@ -653,6 +655,35 @@ Once Amazon replies: roughly **a week to switch over** — a couple of days walk
 whole site on the test copy first, then the switch itself on a quiet Sunday morning.
 Vercel then stays live for **two more weeks** as a rollback before being retired.
 
+### Watching it — built and proven (31 August)
+
+Until now, if the website went down at night we would have found out when a
+customer told us. That is now closed, on both the live and test copies:
+
+- **One screen showing health** — is it up, is it erroring, is it slow, is it
+  struggling. Nothing else, because a dashboard with forty things on it is one
+  nobody looks at.
+- **Six alarms that email the team**, covering the site being down, an unusual
+  share of requests failing, pages becoming slow, and the server working too
+  hard.
+- **The alert path was deliberately tested**, not assumed. A real alarm was
+  triggered on each environment and the email confirmed arriving. An alarm
+  nobody has ever seen fire is a belief, not a warning system.
+- **Spending alerts** at 60%, 85% and 100% of the monthly budget, plus detection
+  of a sudden change in the *rate* of spend — which catches a mistake days
+  before it would cross a monthly limit.
+
+A useful figure fell out of it. The live copy, sitting idle, uses **under 1% of
+its processing power and 6% of its memory**. It is heavily over-provisioned for
+what it does today — but that is not the answer to the real question, because
+the site now also passes every sign-in and form through to the API, and none of
+that traffic exists until we switch over. What the numbers do give us is an
+honest before-and-after.
+
+This is also deliberate preparation for the new engineer: he arrives to a
+working system to understand and argue with, rather than a blank account and an
+instruction to build monitoring.
+
 ### One thing that surfaced along the way
 
 Preparing the move turned up a live bug: **blog posts had never appeared instantly**.
@@ -700,6 +731,11 @@ E. **Before the switch:** turn the firewall from watching to blocking (it is
    deliberately in report-only mode until we have seen a few days of real
    traffic), and remove the temporary rule that lets one office address reach
    the test site directly.
+F. **Write the incident runbook** — what to check, in what order, when the site
+   is down. Worth doing while the problems we hit are fresh: a container looping
+   while perfectly healthy, every request timing out while the service was fine,
+   a certificate refused because of a record in someone else's domain. A generic
+   runbook would list none of those.
 
 **Deploy first (built, not yet on the server)**
 3. **Run the standard backend deploy** — the two-signature leave approval
@@ -760,10 +796,14 @@ E. **Before the switch:** turn the firewall from watching to blocking (it is
 **Reliability**
 20. ~~CI/CD~~ ✅ **Built** — a change pushed to the main branch now builds, tests
     and releases itself; the live site additionally waits for a human approval.
-    Still outstanding: confirm Sentry is genuinely receiving errors (the setting
-    exists but nothing has been seen arrive), add uptime alerts, and automate
-    database backups. These three are the incoming junior engineer's first
-    assignments — weeks 2–4 of `planning/13-junior-dev-onboarding.md`.
+    ~~Monitoring~~ ✅ **Built & tested** — health dashboards, six alarms and
+    budget warnings on both environments, with the alert emails proven to
+    arrive rather than assumed.
+    Still outstanding: **confirm Sentry is genuinely receiving errors** (the
+    setting exists but nothing has ever been seen to arrive — treat it as
+    unproven), **uptime checks** from outside AWS, and **automated database
+    backups**. All three are the incoming engineer's first assignments — weeks
+    2–4 of `planning/13-junior-dev-onboarding.md`.
 
 **Content / lower priority**
 21. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
