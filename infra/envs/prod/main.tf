@@ -122,6 +122,50 @@ module "ecs" {
   log_retention_days     = 30
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   The CDN, and the firewall that only exists once there is a CloudFront to
+   attach it to.
+
+   Creating these changes nothing for customers. Every visitor keeps reaching
+   Vercel until `CNAME www` at GoDaddy is repointed at the distribution below —
+   that repoint IS the cutover (§9 of planning/12-aws-migration-plan.md).
+   ───────────────────────────────────────────────────────────────────────────── */
+
+module "waf" {
+  source = "../../modules/waf"
+
+  name_prefix = local.name_prefix
+
+  # Report-only on purpose, and it must stay that way until after cutover. A
+  # managed rule group that 403s the enquiry form is worse than no firewall at
+  # all, and which rules misfire on our traffic is not knowable until our
+  # traffic has run through them. Read the CloudWatch counts for a few days,
+  # then set this to false — item E of the pending list in PROGRESS.md.
+  count_only = true
+  rate_limit = 2000
+
+  # The Laravel backend POSTs to /api/revalidate from the Namecheap box after
+  # every blog publish — this is the A record of api.vitorra.org. Rate-limiting
+  # it is how blog publishing silently stops working, which is exactly the
+  # failure we just spent August finding and fixing. Gotcha #10 in the plan.
+  trusted_ips = ["192.64.118.27/32"]
+
+  providers = {
+    aws = aws.us_east_1
+  }
+}
+
+module "cloudfront" {
+  source = "../../modules/cloudfront"
+
+  name_prefix          = local.name_prefix
+  domain_name          = "www.vitorra.org"
+  origin_domain_name   = "origin.vitorra.org"
+  origin_verify_secret = module.alb.origin_verify_secret
+  certificate_arn      = module.cert_public.arn
+  web_acl_arn          = module.waf.web_acl_arn
+}
+
 module "github_deploy" {
   source = "../../modules/github-oidc"
 
@@ -192,6 +236,16 @@ output "public_subnet_ids" {
 output "github_deploy_role_arn" {
   value       = module.github_deploy.role_arn
   description = "role-to-assume for aws-actions/configure-aws-credentials."
+}
+
+output "cloudfront_domain" {
+  value       = module.cloudfront.domain_name
+  description = "CNAME target for www.vitorra.org at GoDaddy. ⚠ Pointing it here IS the cutover."
+}
+
+output "cloudfront_distribution_id" {
+  value       = module.cloudfront.distribution_id
+  description = "aws cloudfront create-invalidation --distribution-id <this> --paths '/*'"
 }
 
 output "alerts_topic_arn" {

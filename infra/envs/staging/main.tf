@@ -202,6 +202,11 @@ output "cloudfront_domain" {
   description = "CNAME target for staging.vitorra.org at GoDaddy."
 }
 
+output "cloudfront_distribution_id" {
+  value       = module.cloudfront.distribution_id
+  description = "aws cloudfront create-invalidation --distribution-id <this> --paths '/*'"
+}
+
 output "dns_records_to_add" {
   description = "Add these at GoDaddy. Validation records are permanent — renewal re-checks them."
   value = {
