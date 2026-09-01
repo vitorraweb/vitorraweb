@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\NewEnquiry;
 use App\Models\Enquiry;
 use App\Rules\PhoneNumber;
+use App\Support\LeadSource;
 use App\Support\Phone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,9 +31,17 @@ class EnquiryController extends Controller
             'requirements.*.key'   => ['required_with:requirements', 'string', 'max:100'],
             'requirements.*.label' => ['required_with:requirements', 'string', 'max:200'],
             'requirements.*.value' => ['required_with:requirements', 'string', 'max:2000'],
+            // Where this lead came from, captured by the browser on the landing
+            // page. Untrusted and entirely optional — a blocked or stripped
+            // referrer must never cost us the enquiry itself.
+            'attribution'          => ['nullable', 'array'],
         ]);
 
         $data['phone'] = Phone::e164($data['phone'] ?? null);
+
+        // Resolve the channel before create() so it is stored on the row itself
+        // and not inferred later from something that has since been lost.
+        $data = array_merge($data, LeadSource::resolve($request->input('attribution', []) ?: []));
 
         // Auto-route by product: assign the owning team and pick its inbox.
         $route = config('enquiries.routing')[$data['product_category'] ?? ''] ?? null;

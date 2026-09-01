@@ -21,11 +21,19 @@ class Enquiry extends Model
         'assigned_to',
         'assigned_user_id',
         'replied_at',
+        'lead_source',
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'attribution',
     ];
 
     protected $casts = [
-        'requirements' => 'array',
-        'replied_at'   => 'datetime',
+        'requirements'     => 'array',
+        'attribution'      => 'array',
+        'replied_at'       => 'datetime',
+        'sla_notified_at'  => 'datetime',
+        'sla_escalated_at' => 'datetime',
     ];
 
     public function isNew(): bool

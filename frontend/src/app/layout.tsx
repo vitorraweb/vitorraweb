@@ -7,6 +7,7 @@ import "./globals.css";
 import { CookieBanner } from "@/components/ui/cookie-banner";
 import { CartProvider } from "@/lib/cart";
 import { Toaster } from "@/components/ui/sonner";
+import { AttributionCapture } from "@/components/AttributionCapture";
 import { ANALYTICS_ENABLED, PLAUSIBLE_DOMAIN } from "@/lib/constants";
 
 /* ── Body: DM Sans — geometric humanist, cleaner and more distinctive than
@@ -99,6 +100,7 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CartProvider>
             {children}
+            <AttributionCapture />
             <CookieBanner />
             <Toaster position="bottom-right" />
           </CartProvider>

@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 31 August 2026 (evening)
+**Last updated:** 1 September 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -44,6 +44,8 @@
 | **Automatic releases** — a change goes live without anyone running commands | ✅ **Built & proven** — production needs a human approval |
 | **Being told when the website breaks** — before a customer notices | ✅ **Built & tested on both environments** — a real alert was fired and the email confirmed arriving |
 | **Knowing what we spend, before the bill** | ✅ **Built** — warnings at 60/85/100% of budget, plus unusual-spending detection |
+| **Knowing which channel produced every enquiry** (Google Ads, Facebook, referral, direct) | ✅ **Built** — needs backend deploy |
+| **Enquiries chased and escalated when nobody replies** | ✅ **Built** — needs backend deploy + escalation list |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -706,6 +708,69 @@ subdomains, and the Microsoft 365 records are never edited.
 
 ---
 
+## ✅ Knowing where leads come from, and chasing the ones we ignore (1 September 2026)
+
+Two gaps the 27 August operations review exposed. Both are now closed, tested
+and ready for the next backend deploy. Full analysis of that meeting:
+`planning/14-aug27-qa-tech-actions.md`.
+
+### We can now say which channel produced every enquiry
+
+The CEO spent much of that meeting asking how much we spend on Google Ads and
+what it produced. **Nothing in the system could answer it** — no enquiry had
+ever recorded where it came from, so every lead from every channel looked
+identical.
+
+- Every enquiry and contact message now records **how that visitor reached us** —
+  the campaign tag, the ad click, or the site that linked to us — captured on
+  arrival and stored on the record.
+- A **"Where enquiries come from"** panel on the admin dashboard ranks the
+  channels, and shows **how many each one actually won** beside its volume. That
+  second number is the point: a channel can deliver plenty of enquiries and no
+  customers, which is exactly what the Google Ads spend appears to have been
+  doing — the betting and loan enquiries the team kept receiving.
+- Each enquiry in `/admin/enquiries` shows its channel on the row.
+- Untagged Google Ads clicks are recognised too, so paid traffic is not
+  quietly miscounted as people finding us on their own.
+- **Honest by default.** Enquiries taken before this existed report as
+  "unknown", never folded into "direct" — and "direct" is described on screen
+  as what it really is (no tag and no referring site, which includes links
+  opened from WhatsApp or a PDF), not as people seeking us out.
+- Attribution never blocks a submission: if a browser strips it, the enquiry
+  still arrives exactly as before.
+
+> ⚠ It only measures from the day it is deployed — it cannot recover the origin
+> of past enquiries. And it can only report on tagged links: for the Google Ads
+> figures to mean anything, the ad URLs need campaign tags, which is a job for
+> whoever runs the ads.
+
+### An enquiry can no longer sit unanswered without anyone being told
+
+A real enquiry — a buyer naming his vehicle, 9 July — went unanswered until the
+CEO found it himself in the meeting. The system had recorded the delay all
+along, but only ever used it to average response times after the fact.
+
+- Now, an enquiry with no reply after **4 hours** emails the team that owns it,
+  and after **24 hours** escalates to a named list. Both thresholds and the
+  escalation recipients are configurable.
+- **One email per team listing every overdue enquiry**, not one nag per
+  enquiry — and each stage sends **once**, so an hourly check never becomes
+  hourly email.
+- It only sends **on weekdays during working hours**, so an enquiry arriving on
+  Friday evening is chased on Monday morning rather than at 2am.
+- Actioning the enquiry is what stops the emails; replying to the alert does
+  nothing. That is deliberate.
+- Escalation recipients are set with `ENQUIRY_SLA_ESCALATE_TO` (comma-separated).
+  **Left empty, escalations reach the team inbox only** — set it before this is
+  relied on.
+
+> Covered by 22 new automated checks. **389 backend tests passing**, up from 367.
+> (The 17 FET-trial tests that fail on a fresh laptop were a missing local
+> dependency, not a code fault — `composer install` fixes it, and the suite is
+> green again.)
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**
@@ -880,6 +945,40 @@ matters (one new route). After deploying, **upload
 `/admin/fet-trials` (answer both load-unit questions "kg") — that recreates the
 trial from the client's own final report on the server, replacing the trips
 from the older export.
+
+### Also riding the next deploy (1 September 2026) — lead source + enquiry chasing
+
+Carries a **database change** (lead-source columns on `enquiries` and
+`contact_messages`, SLA timestamps on `enquiries`) and one new scheduled
+command, so after the pull:
+
+```bash
+/opt/alt/php83/usr/bin/php artisan migrate --force
+/opt/alt/php83/usr/bin/php artisan config:cache
+```
+
+Then, before the chaser is relied on, set the escalation list in `backend/.env`:
+
+```
+ENQUIRY_SLA_ESCALATE_TO=victor@vitorra.org,solomon@vitorra.org
+# Optional — defaults are 4 and 24 hours:
+# ENQUIRY_SLA_CHASE_HOURS=4
+# ENQUIRY_SLA_ESCALATE_HOURS=24
+```
+
+Check what it would do without sending anything:
+
+```bash
+/opt/alt/php83/usr/bin/php artisan enquiries:chase --force --dry-run
+```
+
+> `enquiries:chase` rides the existing `schedule:run` cron (hourly) and decides
+> for itself whether it is inside working hours. The frontend half deploys
+> itself.
+>
+> ⚠ Lead-source reporting starts from the deploy date — it cannot backfill where
+> past enquiries came from. For the Google Ads figures to be meaningful, the ad
+> destination URLs need campaign tags adding by whoever manages the ads.
 
 ### Outstanding on the next deploy (7 August 2026)
 

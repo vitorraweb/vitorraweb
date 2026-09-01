@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "./constants";
+import { getAttribution } from "@/lib/attribution";
 import type {
   ApiResponse,
   BlogPost,
@@ -88,7 +89,12 @@ export async function submitEnquiry(
 ): Promise<Enquiry> {
   const res = await request<ApiResponse<Enquiry>>("/enquiries", {
     method: "POST",
-    body: JSON.stringify({ ...data, turnstile_token: turnstileToken }),
+    body: JSON.stringify({
+      ...data,
+      turnstile_token: turnstileToken,
+      // How this visitor reached us — see lib/attribution.ts.
+      attribution: getAttribution(),
+    }),
   });
   return res.data;
 }
@@ -108,7 +114,11 @@ export async function submitContact(
 ): Promise<{ message: string }> {
   return request<{ message: string }>("/contact", {
     method: "POST",
-    body: JSON.stringify({ ...data, turnstile_token: turnstileToken }),
+    body: JSON.stringify({
+      ...data,
+      turnstile_token: turnstileToken,
+      attribution: getAttribution(),
+    }),
   });
 }
 

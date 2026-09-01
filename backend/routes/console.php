@@ -58,3 +58,10 @@ Schedule::command('fet:digest')->monthlyOn(1, '08:30')
 // a request or trips the mail provider's rate limit. No-op when nothing is queued.
 Schedule::command('campaigns:send')->everyMinute()->withoutOverlapping()
     ->onFailure(fn () => logger()->error('Scheduled campaigns:send failed'));
+
+// Chase enquiries nobody has replied to, then escalate the ones still sitting
+// there. Hourly; the command decides for itself whether it is inside the
+// working-hours window, so an enquiry arriving on Friday night is chased on
+// Monday morning rather than at 2am.
+Schedule::command('enquiries:chase')->hourly()->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Scheduled enquiries:chase failed'));

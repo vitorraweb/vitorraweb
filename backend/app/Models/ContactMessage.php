@@ -13,9 +13,15 @@ class ContactMessage extends Model
         'message',
         'status',
         'read_at',
+        'lead_source',
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'attribution',
     ];
 
     protected $casts = [
-        'read_at' => 'datetime',
+        'read_at'     => 'datetime',
+        'attribution' => 'array',
     ];
 }

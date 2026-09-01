@@ -36,6 +36,11 @@ type Stats = {
     by_status: Record<string, number>;
     by_category: Record<string, number>;
   };
+  lead_sources?: {
+    by_source: { source: string; count: number; converted: number }[];
+    by_campaign: { campaign: string; count: number }[];
+    tracked_from: string | null;
+  };
   trends?: {
     labels: string[];
     enquiries: number[];
@@ -290,6 +295,57 @@ export default function AdminDashboard() {
               </p>
             </Card>
           </div>
+
+          {/* ── Where enquiries come from ────────────────────────────────
+              The channel breakdown. Added after the August operations review,
+              where "how much are we spending on Google Ads and what did it
+              produce?" turned out to be unanswerable. `converted` is shown
+              beside every channel because volume on its own is what made the
+              ad spend look like it was working. */}
+          {stats.lead_sources && stats.lead_sources.by_source.length > 0 && (
+            <Card title="Where enquiries come from">
+              {(() => {
+                const rows = stats.lead_sources!.by_source;
+                const max = Math.max(1, ...rows.map((r) => r.count));
+                return (
+                  <>
+                    <div className="space-y-3.5">
+                      {rows.map((r) => (
+                        <div key={r.source}>
+                          <div className="flex items-baseline justify-between mb-1.5 gap-3">
+                            <span className="text-xs font-medium truncate" style={{ color: r.source === "unknown" ? "#AAA" : "#555" }}>
+                              {r.source}
+                            </span>
+                            <span className="text-xs shrink-0" style={{ color: "#999" }}>
+                              <span className="font-bold" style={{ color: "#1E1E1E" }}>{r.count}</span>
+                              {r.converted > 0 && <> · {r.converted} won</>}
+                            </span>
+                          </div>
+                          <div style={{ height: "8px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
+                            <div style={{
+                              height: "100%",
+                              width: `${(r.count / max) * 100}%`,
+                              borderRadius: "999px",
+                              background: r.source === "unknown"
+                                ? "#E2E2E2"
+                                : "linear-gradient(90deg, #C5B27A, #D4C49A)",
+                              transition: "width .4s",
+                            }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-4 text-xs leading-relaxed" style={{ color: "#999" }}>
+                      &ldquo;Unknown&rdquo; is every enquiry taken before source tracking was added
+                      &mdash; not the same thing as &ldquo;direct&rdquo;. &ldquo;Direct&rdquo; means no campaign tag and
+                      no referring site, which also covers links opened from WhatsApp,
+                      a PDF, or a typed address.
+                    </p>
+                  </>
+                );
+              })()}
+            </Card>
+          )}
 
           {/* ── Orders & revenue ─────────────────────────────────────────── */}
           <Card title="Orders & revenue" href="/admin/orders">

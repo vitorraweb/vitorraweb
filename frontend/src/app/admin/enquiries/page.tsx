@@ -14,6 +14,7 @@ type Enquiry = {
   company: string | null; phone: string | null; country: string; message: string;
   requirements: Requirement[] | null; assigned_to: string | null; assigned_user_id: number | null;
   status: string; created_at: string;
+  lead_source: string | null;
 };
 
 type AssignableUser = { id: number; name: string };
@@ -200,7 +201,13 @@ export default function EnquiriesPage() {
                     {e.product_category && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>{e.product_category}</span>}
                     {e.assigned_to && <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}><UserCheck className="w-3 h-3" />{e.assigned_to}</span>}
                   </div>
-                  <p className="text-xs truncate" style={{ color: "#999999" }}>{e.email} · {e.country} · {formatDate(e.created_at)}</p>
+                  <p className="text-xs truncate" style={{ color: "#999999" }}>
+                    {e.email} · {e.country} · {formatDate(e.created_at)}
+                    {/* Which channel produced this lead. Enquiries taken before
+                        lead-source tracking existed have none, and show nothing
+                        rather than being labelled a guess. */}
+                    {e.lead_source && <> · via {e.lead_source}</>}
+                  </p>
                 </div>
                 <StatusBadge status={e.status} />
                 <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === e.id ? "rotate-180" : ""}`} style={{ color: "#BBBBBB" }} />

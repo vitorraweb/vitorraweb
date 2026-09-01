@@ -84,6 +84,32 @@ class AdminController extends Controller
         $prospectTotal = Prospect::count();
         $prospectReached = $prospectTotal - $prospectStatus['not_contacted'] - $prospectStatus['bounced'];
 
+        /* ── Where leads come from ──────────────────────────────────────
+           Grouped on the normalised label rather than the raw UTM fields, so
+           tagged and auto-tagged Google traffic count as one channel. Rows
+           predating lead-source tracking have a NULL label and are reported as
+           "unknown" — not folded into "direct", which would overstate the
+           share of people who found us on their own.
+
+           `converted` is the number that matters commercially: a channel can
+           deliver volume and still be worthless, which is exactly what the
+           Google Ads spend turned out to be doing. */
+        $sourceRows = Enquiry::selectRaw(
+            "COALESCE(NULLIF(lead_source, ''), 'unknown') AS s,
+             COUNT(*) c,
+             SUM(CASE WHEN status = 'converted' THEN 1 ELSE 0 END) conv"
+        )->groupBy('s')->orderByDesc('c')->get();
+
+        $bySource = $sourceRows->map(fn ($r) => [
+            'source'    => $r->s,
+            'count'     => (int) $r->c,
+            'converted' => (int) $r->conv,
+        ])->values();
+
+        $campaignRows = Enquiry::whereNotNull('utm_campaign')
+            ->selectRaw('utm_campaign, COUNT(*) c')
+            ->groupBy('utm_campaign')->orderByDesc('c')->take(10)->get();
+
         /* ── 7-day trend lines (for KPI sparklines) ─────────────────────── */
         $sevenDaysAgo = $now->copy()->subDays(6)->startOfDay();
         $enqTrendRaw = Enquiry::where('created_at', '>=', $sevenDaysAgo)
@@ -170,6 +196,14 @@ class AdminController extends Controller
                     'needs_fixing'  => Prospect::whereNotNull('flags')->count(),
                     'by_status'     => $prospectStatus,
                     'by_category'   => $prospectCat,
+                ],
+                'lead_sources' => [
+                    'by_source'    => $bySource,
+                    'by_campaign'  => $campaignRows->map(fn ($r) => [
+                        'campaign' => $r->utm_campaign,
+                        'count'    => (int) $r->c,
+                    ])->values(),
+                    'tracked_from' => Enquiry::whereNotNull('lead_source')->min('created_at'),
                 ],
                 'trends' => [
                     'labels'    => $trendLabels,

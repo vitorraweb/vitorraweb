@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\NewContactMessage;
 use App\Models\ContactMessage;
+use App\Support\LeadSource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -18,7 +19,11 @@ class ContactController extends Controller
             'email'   => ['required', 'email', 'max:255'],
             'subject' => ['nullable', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:5000'],
+            // See EnquiryController — optional, untrusted, never blocking.
+            'attribution' => ['nullable', 'array'],
         ]);
+
+        $data = array_merge($data, LeadSource::resolve($request->input('attribution', []) ?: []));
 
         $msg = ContactMessage::create($data);
 
