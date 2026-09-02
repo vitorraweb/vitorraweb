@@ -163,6 +163,19 @@ class EnquirySlaTest extends TestCase
         $this->assertNull(Enquiry::first()->sla_notified_at);
     }
 
+    public function test_dry_run_does_not_double_count_an_escalation_as_a_chase(): void
+    {
+        // A real run keeps the stages apart through the database; a dry run
+        // writes nothing, so it has to remember what it already covered.
+        // Without that, one enquiry reads as both escalated AND chased, and the
+        // preview overstates what a real run would send.
+        $this->enquiry(30);
+
+        $this->artisan('enquiries:chase --force --dry-run')
+            ->expectsOutputToContain('Chased 0, escalated 1')
+            ->assertSuccessful();
+    }
+
     public function test_it_stays_silent_outside_the_sending_window(): void
     {
         $this->enquiry(5);

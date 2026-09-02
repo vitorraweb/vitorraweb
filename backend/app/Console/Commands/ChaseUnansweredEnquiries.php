@@ -25,6 +25,16 @@ class ChaseUnansweredEnquiries extends Command
 
     protected $description = 'Email the owning team about enquiries with no reply, and escalate the worst.';
 
+    /**
+     * Enquiries already covered by an earlier stage in THIS invocation.
+     *
+     * A real run keeps stages apart through the database: escalating stamps
+     * sla_notified_at too, so the chase query no longer sees the row. A dry run
+     * writes nothing, so without this it would report the same enquiry as both
+     * escalated and chased and overstate what a real run would send.
+     */
+    private array $handled = [];
+
     public function handle(): int
     {
         $sla     = config('enquiries.sla');
@@ -55,6 +65,7 @@ class ChaseUnansweredEnquiries extends Command
         $due = Enquiry::where('status', 'new')
             ->whereNull('replied_at')
             ->whereNull($column)
+            ->whereNotIn('id', $this->handled)
             ->where('created_at', '<', now()->subHours($hours))
             ->orderBy('created_at')
             ->get();
@@ -62,6 +73,8 @@ class ChaseUnansweredEnquiries extends Command
         if ($due->isEmpty()) {
             return 0;
         }
+
+        $this->handled = array_merge($this->handled, $due->pluck('id')->all());
 
         // One email per destination inbox, so a team is not sent other teams'
         // enquiries and nobody receives five separate nags.
