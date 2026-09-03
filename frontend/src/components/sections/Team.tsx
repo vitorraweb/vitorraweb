@@ -22,7 +22,6 @@ type Size = "ceo" | "lead" | "officer";
 const leadership: Member[] = [
   { name: "Joseph Rwabu",      roleKey: "seniorFinance",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
   { name: "Victor Lojum",      roleKey: "headOfOperations", file: "Victor Lojum - Head of Operations.jpg" },
-  { name: "Thurayya Nakayima", roleKey: "seniorMarketing",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
 ];
 
 const officers: Member[] = [

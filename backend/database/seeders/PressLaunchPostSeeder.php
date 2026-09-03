@@ -42,7 +42,7 @@ The system suits passenger cars, SUVs, commercial trucks, buses, and agricultura
 
 > "As fuel prices continue to rise and environmental regulations become increasingly important, Fuel Eco Tec offers a practical and cost-effective solution for vehicle owners, fleet operators, transport companies, schools, logistics firms, agricultural businesses and government institutions."
 >
-> — Thurayya Nakayima, Head of Marketing, Vitorra Holdings
+> — Vitorra Holdings
 
 Mechanic and content creator Moses Kiboneka, who has tested the device, added:
 
@@ -76,7 +76,7 @@ Mfumo unafaa kwa magari ya abiria, SUV, malori ya kibiashara, mabasi, na mitambo
 
 > "Wakati bei za mafuta zikiendelea kupanda na kanuni za mazingira zikizidi kuwa muhimu, Fuel Eco Tec inatoa suluhisho la vitendo na lenye gharama nafuu kwa wamiliki wa magari, waendeshaji wa makundi ya magari, kampuni za usafiri, shule, kampuni za usafirishaji, biashara za kilimo na taasisi za serikali."
 >
-> — Thurayya Nakayima, Mkuu wa Masoko, Vitorra Holdings
+> — Vitorra Holdings
 
 Fundi na mtengenezaji wa maudhui Moses Kiboneka, ambaye amejaribu kifaa hicho, aliongeza:
 

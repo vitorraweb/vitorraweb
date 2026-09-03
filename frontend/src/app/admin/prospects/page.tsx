@@ -65,7 +65,7 @@ const STATUS_COLOR: Record<string, { bg: string; fg: string }> = {
   converted:      { bg: "rgba(34,197,94,0.12)",     fg: "#16A34A" },
   not_interested: { bg: "rgba(0,0,0,0.06)",         fg: "#777" },
 };
-const ASSIGNEES = ["Thurayya Nakayima", "Sarah Nuwamanya", "John Oluwaseyi"];
+const ASSIGNEES = ["Sarah Nuwamanya", "John Oluwaseyi"];
 
 const MAX_FILES = 5;
 const MAX_FILE_MB = 8;

@@ -17,7 +17,6 @@ class OnboardStaff extends Command
         ['name' => 'Solomon Okello',      'email' => 'solomon@vitorra.org',      'department' => 'leadership', 'job_title' => 'Chief Executive Officer'],
         ['name' => 'Victor Lojum',        'email' => 'victor@vitorra.org',       'department' => 'operations', 'job_title' => 'Head of Operations'],
         ['name' => 'Joseph Rwabu',        'email' => 'joseph.rwabu@vitorra.org', 'department' => 'finance',    'job_title' => 'Senior Finance Officer'],
-        ['name' => 'Thurayya Nakayima',   'email' => 'thurayya@vitorra.org',     'department' => 'marketing',  'job_title' => 'Senior Marketing Officer'],
         ['name' => 'Sarah Nuwamanya',     'email' => 'sarah@vitorra.org',        'department' => 'marketing',  'job_title' => 'Marketing Officer'],
         ['name' => 'Olivia Sandra Agata', 'email' => 'agataoli@vitorra.org',     'department' => 'marketing',  'job_title' => 'Brand Designer'],
         ['name' => 'Daniel Tuke',         'email' => 'daniel@vitorra.org',       'department' => 'finance',    'job_title' => 'Finance Officer'],
