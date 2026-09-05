@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 const avatars = [
   { name: "Victor Lojum",      roleKey: "headOfOperations", file: "Victor Lojum - Head of Operations.jpg" },
   { name: "Joseph Rwabu",      roleKey: "seniorFinance",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
+  { name: "Thurayya Nakayima", roleKey: "seniorMarketing",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
   { name: "John Oluwaseyi",    roleKey: "itOfficer",        file: "John Oluwaseyi - IT Officer.jpeg" },
   { name: "Sarah Nuwamanya",   roleKey: "marketingOfficer", file: "Sarah Nuwamanya - Marketing Officer.jpg" },
   { name: "Olivia Sandra",     roleKey: "brandDesigner",    file: "Olivia Sandra - Brand Designer.jpeg" },

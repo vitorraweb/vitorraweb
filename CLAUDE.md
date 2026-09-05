@@ -17,6 +17,7 @@
 | Engineer / You | John Oluwaseyi | john@vitorra.org / leojohnseyi@gmail.com |
 | Head of Operations | Victor Lojum | — |
 | Senior Finance Officer | Joseph Rwabu | — |
+| Senior Marketing Officer | Thurayya Nakayima | — |
 | Finance Officer | Daniel Tuke | — |
 | Marketing Officer | Sarah Nuwamanya | — |
 | IT Officer | John Oluwaseyi | — |
@@ -168,7 +169,7 @@ Dark → Gold strip → White → Dark → White → Ivory → Dark → Ivory �
 | Page | Route | Status | Notes |
 |------|-------|--------|-------|
 | Homepage | `/` | ✅ Complete | 11-section premium layout |
-| About | `/about` | ✅ Complete | 8-section, all 7 team members with photos |
+| About | `/about` | ✅ Complete | 8-section, all 8 team members with photos |
 | Fuel Eco Tech | `/products/fuel-eco-tech` | ✅ Complete | VW T5 test data + **public 4-tier pricing guide + savings calculator** (EUR) |
 | SEAL Wound Spray | `/products/seal-wound-spray` | ✅ Complete | **Rebuilt from product deck** — chitosan/FDA story, 3 variants, how-it-works, specs, trust signals, safety |
 | Vitorra Coffee | `/products/coffee` | ✅ Complete | Aligned with design system |
@@ -208,7 +209,7 @@ Dark → Gold strip → White → Dark → White → Ivory → Dark → Ivory �
 7. **Stats Band** — 4 glassmorphism cards on warm ivory. Digit-scramble animation fires on scroll-in. Gold completion line draws after lock.
 8. **Sectors Strip** — Centered, Stripe mixed-weight headline. 6 sector icon pills.
 9. **Why Vitorra** — Dark glass panels, semi-circle arc vectors.
-10. **Team Teaser** — 7 overlapping portrait avatars, tooltip on hover.
+10. **Team Teaser** — 8 overlapping portrait avatars, tooltip on hover.
 11. **Blog Preview** — 3 recent posts (server component). Falls back to editorial placeholders when backend offline.
 12. **Certifications** — URSB incorporation credential card.
 13. **Final CTA** — White, corner bracket SVGs, inverted arc vectors, 3 aurora clouds, magnetic button.
@@ -267,12 +268,13 @@ Source: `SEAL HEMOSTATIC WOUND SPRAY.pptx` (project root). The SEAL page (`/prod
 | Solomon Okello | Chief Executive Officer | CEO |
 | Victor Lojum | Head of Operations | Leadership |
 | Joseph Rwabu | Senior Finance Officer | Leadership |
+| Thurayya Nakayima | Senior Marketing Officer | Leadership |
 | John Oluwaseyi | IT Officer | Officers |
 | Sarah Nuwamanya | Marketing Officer | Officers |
 | Olivia Sandra | Brand Designer | Officers |
 | Daniel Tuke | Finance Officer | Officers |
 
-All 7 current members have real photos. No placeholder slots remain.
+All 8 current members have real photos. No placeholder slots remain.
 
 ---
 
@@ -358,7 +360,7 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 | `frontend/src/components/sections/BlogPreview.tsx` | Server component, ISR blog preview |
 | `frontend/src/components/sections/FinalCTA.tsx` | White CTA with corner brackets + arc vectors |
 | `frontend/src/components/sections/Team.tsx` | Full team constellation (hierarchical) |
-| `frontend/src/components/sections/TeamTeaser.tsx` | Homepage 7-avatar stack |
+| `frontend/src/components/sections/TeamTeaser.tsx` | Homepage 9-avatar stack |
 | `frontend/src/components/sections/Hero.tsx` | Sector-switching cinematic hero |
 | `frontend/src/lib/constants.ts` | CONTACT_EMAIL, CONTACT_PHONE, API_BASE_URL, PRODUCTS |
 | `frontend/src/lib/cart.tsx` | Cart context + `useCart` (localStorage, currency) |
