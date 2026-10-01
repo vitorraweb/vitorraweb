@@ -136,7 +136,19 @@ export function KioskSpotlight() {
           playsInline
           preload="auto"
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[1400ms] ease-in-out"
-          style={{ opacity: activeFilm === film.src ? 1 : 0, filter: film.grade }}
+          style={{
+            opacity: activeFilm === film.src ? 1 : 0,
+            filter: film.grade,
+            /* The poster is also painted behind the element, not just set as the
+               `poster` attribute. A browser drops decoded video for a hidden tab,
+               so a TV waking from sleep can have the sector on screen holding no
+               frame — and a transparent layer shows the film stacked beneath it,
+               which looks exactly like the caption disagreeing with the footage.
+               This way a layer with nothing to draw still draws its own sector. */
+            backgroundImage: `url(${film.poster})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         />
       ))}
       {STILLS.map((still) => {
