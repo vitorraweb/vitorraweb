@@ -7,11 +7,10 @@ import { useRotation } from "@/lib/kiosk";
 /* ─── The stage ────────────────────────────────────────────────────────────
    The reception screen is a brand stage, not a dashboard: the media runs
    full-bleed to all four edges and everything else floats over it. Each
-   business line brings its own imagery — FET and Coffee run brand films, SEAL
-   and Logistics run stills with a slow Ken Burns drift. Borrowing one line's
-   film for another put an engine bay behind a coffee caption, which read as a
-   mistake. See the note on SEAL below for why that one is a still by choice
-   rather than for want of footage.
+   business line brings its own imagery — FET, SEAL and Coffee run brand films;
+   Logistics runs a still with a slow Ken Burns drift until its film is shot.
+   Borrowing one line's film for another put an engine bay behind a coffee
+   caption, which read as a mistake.
 
    Films are all mounted at once and cross-faded so a change never shows a
    black frame mid-buffer, and only the visible one plays — this runs all day
@@ -46,14 +45,7 @@ const SECTORS: Sector[] = [
   {
     index: "02",
     tag: "SEAL Wound Spray",
-    /* The SEAL brand film is an anatomical render of an open wound. On the
-       product page that is the right material — a visitor there has chosen it.
-       A reception screen is a captive, mixed audience who cannot look away, and
-       injury imagery makes a meaningful share of people faint. This still also
-       simply sells better: the film never shows the product, while this has the
-       branded canister in a paramedic's hands over a trauma kit. The film stays
-       in /videos for the product page hero. */
-    media: { kind: "still", src: "/hero/seal.png" },
+    media: { kind: "film", src: "/videos/seal-hero.mp4", poster: "/videos/seal-hero-poster.jpg" },
     headline: "FDA-cleared,",
     accent: "field\u2011proven hemostatic care", // non-breaking hyphen: never split across lines
     body: "Chitosan-based rapid bleeding control — field-deployed with Maryland EMS.",
