@@ -1,18 +1,28 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Fuel, Syringe, Coffee, Truck, type LucideIcon } from "lucide-react";
 import { useRotation } from "@/lib/kiosk";
 
 /* ─── Sector spotlight data ────────────────────────────────────────────────
-   The kiosk plays one FET brand film on loop (fet-hero.mp4 — the same asset
-   used on the Fuel Eco Tech product page hero), while the caption + sector
-   pill beneath it rotate across all four business lines. One video, four
-   stories — no extra footage needed until sector-specific films exist.
+   The kiosk rotates through all four business lines, and plays the brand film
+   belonging to whichever line is on screen: the FET film (fet-hero.mp4) and the
+   SEAL film (seal-hero.mp4) — the same assets used on the product page heroes.
+   Coffee and Logistics have no footage of their own yet, so they borrow the FET
+   film; drop in `coffee-hero.mp4` / `logistics-hero.mp4` and point `film` at a
+   new entry in FILMS to give them their own.
+
+   Every film is mounted at once and cross-faded, so a sector change never shows
+   a black frame while a video buffers. Only the visible one plays — the rest are
+   paused, because this runs all day on modest front-desk hardware.
    ─────────────────────────────────────────────────────────────────────────── */
-const SECTORS: { icon: LucideIcon; tag: string; headline: string; accent: string; body: string; stat?: string; statLabel?: string }[] = [
+const FILMS = ["/videos/fet-hero.mp4", "/videos/seal-hero.mp4"] as const;
+
+const SECTORS: { icon: LucideIcon; tag: string; film: number; headline: string; accent: string; body: string; stat?: string; statLabel?: string }[] = [
   {
     icon: Fuel,
     tag: "Fuel Eco Tech",
+    film: 0,
     headline: "A verified",
     accent: "13.9% fuel reduction",
     body: "Independently tested by CTI GmbH, Germany — VW T5 fleet, November 2025.",
@@ -22,6 +32,7 @@ const SECTORS: { icon: LucideIcon; tag: string; headline: string; accent: string
   {
     icon: Syringe,
     tag: "SEAL Wound Spray",
+    film: 1,
     headline: "FDA-cleared,",
     accent: "field-proven hemostatic care",
     body: "Chitosan-based rapid bleeding control — field-deployed with Maryland EMS.",
@@ -31,6 +42,7 @@ const SECTORS: { icon: LucideIcon; tag: string; headline: string; accent: string
   {
     icon: Coffee,
     tag: "Vitorra Coffee",
+    film: 0,
     headline: "Ugandan coffee,",
     accent: "graded and exported at origin",
     body: "Farm-direct sourcing across Uganda's highlands, held to export standard.",
@@ -38,6 +50,7 @@ const SECTORS: { icon: LucideIcon; tag: string; headline: string; accent: string
   {
     icon: Truck,
     tag: "Logistics",
+    film: 0,
     headline: "Dependable freight,",
     accent: "port to door across East Africa",
     body: "Warehousing, customs clearance, and delivery for B2B partners regionwide.",
@@ -50,19 +63,41 @@ export function KioskSpotlight() {
   const index = useRotation(SECTORS.length, ROTATE_MS);
   const active = SECTORS[index];
   const Icon = active.icon;
+  const videos = useRef<(HTMLVideoElement | null)[]>([]);
+
+  /* Play only the film on screen; leave the others paused and ready. */
+  useEffect(() => {
+    videos.current.forEach((el, i) => {
+      if (!el) return;
+      if (i === active.film) {
+        void el.play().catch(() => {
+          /* A browser that blocks autoplay still shows the frame — no action. */
+        });
+      } else {
+        el.pause();
+      }
+    });
+  }, [active.film]);
 
   return (
     <div className="card-stadium relative h-full overflow-hidden" style={{ backgroundColor: "#111111" }}>
-      {/* FET brand film — always playing */}
-      <video
-        src="/videos/fet-hero.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      {/* Brand films — cross-faded, only the active one playing */}
+      {FILMS.map((src, i) => (
+        <video
+          key={src}
+          ref={(el) => {
+            videos.current[i] = el;
+          }}
+          src={src}
+          autoPlay={i === 0}
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+          style={{ opacity: i === active.film ? 1 : 0 }}
+        />
+      ))}
       <div
         aria-hidden="true"
         className="absolute inset-0"

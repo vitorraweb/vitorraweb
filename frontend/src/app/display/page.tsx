@@ -7,7 +7,7 @@ import { KioskTicker } from "@/components/display/KioskTicker";
 
 /* ─── /display — reception lobby screen ───────────────────────────────────────
    An unattended, always-on kiosk view for the front desk: live clock, Kampala
-   weather, the FET brand film with a rotating sector spotlight, HQ photo,
+   weather, the brand film of whichever business line is on screen, HQ photo,
    certifications, a proven-savings stat, and a live news/credentials ticker.
 
    Design notes:
