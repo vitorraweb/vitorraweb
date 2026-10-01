@@ -1,23 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { MapPin, BadgeCheck } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { useKioskScramble, useRotation } from "@/lib/kiosk";
 
-/* ─── Corner bracket — luxury editorial framing (matches FinalCTA's motif) ── */
-function CornerBracket({ position }: { position: "tl" | "br" }) {
-  const S = 40;
-  const G = 2;
-  const d = position === "tl" ? `M${S} ${G} L${G} ${G} L${G} ${S}` : `M${G} ${S - G} L${S - G} ${S - G} L${S - G} ${G}`;
-  const pos = position === "tl" ? "top-4 left-4" : "bottom-4 right-4";
-  return (
-    <svg aria-hidden="true" className={`absolute ${pos} pointer-events-none`} width={S} height={S} fill="none">
-      <path d={d} stroke="rgba(197,178,122,0.85)" strokeWidth="1.5" strokeLinecap="square" />
-    </svg>
-  );
-}
+/* ─── The rail ─────────────────────────────────────────────────────────────
+   One continuous column of dark glass over the film, divided by hairlines —
+   rather than a stack of separate cards in three different colours, which
+   read as a dashboard sitting on top of the brand instead of part of it.
 
-/* ─── Certifications — auto-cycling highlight (no hover on a kiosk) ───────── */
+   Everything here is sized to be read from across a lobby, which is why the
+   certifications show one at a time rather than a list of six: a 12px row is
+   legible at a desk and invisible at four metres.
+   ─────────────────────────────────────────────────────────────────────────── */
+
 const CERTS = [
   { code: "ISO 9001:2015", label: "Quality management" },
   { code: "ISO 14001:2015", label: "Environmental management" },
@@ -27,99 +23,143 @@ const CERTS = [
   { code: "qm-solutions GmbH", label: "German certified" },
 ] as const;
 
-function CertificationsCard() {
-  const active = useRotation(CERTS.length, 2600);
+const STATS = [
+  { numeric: "13.9", suffix: "%", label: "Verified fuel reduction", sub: "CTI GmbH, Germany · Nov 2025" },
+  { numeric: "6", suffix: "", label: "Independent certifications", sub: "ISO · Zurich · AVL · qm-solutions" },
+  { numeric: "36", suffix: "", label: "Month shelf life — SEAL", sub: "Room-temperature stable" },
+] as const;
+
+/* ─── Section label — a hairline rule and small caps, used on every module so
+   the rail reads as one object with parts, not three unrelated boxes. ────── */
+function RailLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 mb-4">
+      <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(197,178,122,0.95)" }}>
+        {children}
+      </span>
+      <span className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(197,178,122,0.4), rgba(197,178,122,0))" }} />
+    </div>
+  );
+}
+
+/* ─── Certification spotlight — one at a time, large enough to read ──────── */
+function CertificationSpotlight() {
+  const active = useRotation(CERTS.length, 3400);
+  const cert = CERTS[active];
 
   return (
-    <div className="rounded-[28px] p-5 flex-1 flex flex-col min-h-0" style={{ background: "#FAFAF8", border: "1px solid rgba(197,178,122,0.16)" }}>
-      <div className="flex items-center gap-2 mb-3.5 shrink-0">
-        <BadgeCheck className="w-4 h-4" style={{ color: "#7A6020" }} strokeWidth={2} />
-        <span className="eyebrow">Independently certified</span>
+    <div className="px-7 py-6 flex-1 flex flex-col justify-center min-h-0">
+      <RailLabel>Independently certified</RailLabel>
+
+      <div key={active} className="hero-enter">
+        <div
+          style={{
+            fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
+            fontSize: 27,
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+            lineHeight: 1.15,
+            color: "#FFFFFF",
+          }}
+        >
+          {cert.code}
+        </div>
+        <div className="mt-1" style={{ fontSize: 13.5, color: "rgba(255,255,255,0.56)" }}>
+          {cert.label}
+        </div>
       </div>
-      <div className="flex flex-col gap-1 overflow-hidden">
-        {CERTS.map((c, i) => {
-          const isActive = i === active;
-          return (
-            <div
-              key={c.code}
-              className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg transition-all duration-500"
-              style={{
-                borderLeft: isActive ? "2px solid rgba(197,178,122,0.75)" : "2px solid transparent",
-                background: isActive ? "rgba(197,178,122,0.09)" : "transparent",
-              }}
-            >
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1E1E1E" }}>{c.code}</span>
-              <span style={{ fontSize: 11, color: "#8A8A8A" }}>{c.label}</span>
-            </div>
-          );
-        })}
+
+      {/* Six marks — which one you are on, and that there are six of them */}
+      <div className="mt-5 flex items-center gap-1.5">
+        {CERTS.map((c, i) => (
+          <span
+            key={c.code}
+            className="h-[3px] rounded-full transition-all duration-500"
+            style={{
+              width: i === active ? 22 : 10,
+              background: i === active ? "#C5B27A" : "rgba(255,255,255,0.22)",
+            }}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-/* ─── Rotating headline stat — digit-scramble on change ───────────────────── */
-const STATS = [
-  { numeric: "13.9", suffix: "%", label: "Verified fuel reduction", sub: "CTI GmbH, Germany · Nov 2025" },
-  { numeric: "6", suffix: "", label: "Independent certifications", sub: "ISO · Zurich · AVL · qm-solutions" },
-  { numeric: "36", suffix: "", label: "Month shelf life — SEAL", sub: "Room-temperature stable · MIL-STD-810H tested" },
-] as const;
-
-function StatSpotlightCard() {
-  const index = useRotation(STATS.length, 6500);
+/* ─── Proof figure — the one number the room should leave with ───────────── */
+function ProofStat() {
+  const index = useRotation(STATS.length, 7600);
   const stat = STATS[index];
   const output = useKioskScramble(stat.numeric);
 
   return (
-    <div
-      className="stat-card relative overflow-hidden px-6 py-5 shrink-0"
-      style={{ borderRadius: 28 }}
-    >
-      <div aria-hidden="true" className="stat-orb" />
-      <div className="relative z-10 font-numeric flex items-baseline gap-1">
-        <span style={{ fontSize: "clamp(34px, 3vw, 46px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#1E1E1E" }}>
-          {output}
-        </span>
-        {stat.suffix && <span style={{ fontSize: "clamp(20px, 2vw, 28px)", fontWeight: 800, color: "#C5B27A" }}>{stat.suffix}</span>}
-      </div>
-      <div className="relative z-10 mt-1.5" style={{ fontSize: 12.5, fontWeight: 700, color: "#1E1E1E" }}>
-        {stat.label}
-      </div>
-      <div className="relative z-10 mt-0.5" style={{ fontSize: 11, color: "#999999" }}>
-        {stat.sub}
+    <div className="px-7 py-6 flex-1 flex flex-col justify-center min-h-0">
+      <RailLabel>Proven</RailLabel>
+      <div key={index} className="hero-enter">
+        <div className="font-numeric flex items-baseline gap-1.5">
+          <span style={{ fontSize: "clamp(42px, 3.6vw, 62px)", fontWeight: 300, letterSpacing: "-0.04em", lineHeight: 1, color: "#FFFFFF" }}>
+            {output}
+          </span>
+          {stat.suffix && (
+            <span style={{ fontSize: "clamp(22px, 1.8vw, 30px)", fontWeight: 400, color: "#C5B27A" }}>{stat.suffix}</span>
+          )}
+        </div>
+        <div className="mt-2.5" style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>
+          {stat.label}
+        </div>
+        <div className="mt-0.5" style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+          {stat.sub}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ─── Side rail — HQ photo, certifications, rotating stat ─────────────────── */
+/* ─── Side rail ───────────────────────────────────────────────────────────── */
 export function KioskSideRail() {
   return (
-    <div className="h-full flex flex-col gap-4 w-full lg:w-[360px] shrink-0">
-      {/* HQ photo */}
-      <div className="relative rounded-[28px] overflow-hidden shrink-0" style={{ height: "34%" }}>
+    <aside
+      className="h-full w-full lg:w-[372px] shrink-0 flex flex-col overflow-hidden"
+      style={{
+        borderRadius: 28,
+        background: "linear-gradient(180deg, rgba(20,20,20,0.72) 0%, rgba(14,14,14,0.80) 100%)",
+        backdropFilter: "blur(22px)",
+        WebkitBackdropFilter: "blur(22px)",
+        border: "1px solid rgba(197,178,122,0.22)",
+        boxShadow: "0 24px 70px rgba(0,0,0,0.5)",
+      }}
+    >
+      {/* HQ plate — the building, not a stock photo of an office */}
+      <div className="relative shrink-0" style={{ height: "38%", minHeight: 150 }}>
         <Image
           src="/hero/about-hq.jpg"
           alt="Vitorra Holdings HQ — Padre Pio House, Kampala"
           fill
-          sizes="360px"
+          sizes="372px"
           className="object-cover"
         />
         <div
           aria-hidden="true"
           className="absolute inset-0"
-          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.05) 55%, rgba(0,0,0,0.25) 100%)" }}
+          style={{ background: "linear-gradient(to top, rgba(10,10,10,0.95) 6%, rgba(10,10,10,0.15) 62%, rgba(10,10,10,0.35) 100%)" }}
         />
-        <CornerBracket position="tl" />
-        <CornerBracket position="br" />
-        <div className="absolute left-4 bottom-3.5 right-4 flex items-center gap-1.5">
-          <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: "#C5B27A" }} strokeWidth={2} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#FFFFFF" }}>Padre Pio House, Kampala — HQ</span>
+        <div className="absolute left-7 bottom-5 right-6">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: "#C5B27A" }} strokeWidth={2.25} />
+            <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(197,178,122,0.95)" }}>
+              Head office
+            </span>
+          </div>
+          <div className="mt-1" style={{ fontSize: 15, fontWeight: 600, color: "#FFFFFF" }}>
+            Padre Pio House, Kampala
+          </div>
         </div>
       </div>
 
-      <CertificationsCard />
-      <StatSpotlightCard />
-    </div>
+      <div className="h-px shrink-0" style={{ background: "rgba(197,178,122,0.18)" }} />
+      <CertificationSpotlight />
+      <div className="h-px shrink-0" style={{ background: "rgba(197,178,122,0.18)" }} />
+      <ProofStat />
+    </aside>
   );
 }

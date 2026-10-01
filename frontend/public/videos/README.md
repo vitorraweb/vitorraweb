@@ -36,7 +36,17 @@ the reception kiosk (`/display`).
 3. Add the file to `FILMS`, and point that sector's `film` at its index
 4. Done — the kiosk cross-fades to it when that business line comes round
 
+Also drop in a `{product}-hero-poster.jpg` (`ffmpeg -ss 6 -i film.mp4 -frames:v 1
+-vf scale=1280:-2 -q:v 4 poster.jpg`). A cold start spends about ten seconds
+buffering, and without a poster the screen is a black rectangle for all of it.
+
 > ⚠ H.264 only. HEVC/H.265 plays on some browsers and shows a black rectangle on
 > others, which on an unattended front-desk TV nobody would think to debug.
 > Check what you have before committing it:
 > `ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 file.mp4`
+
+> ⚠ Shoot or pick dark. The kiosk is a dark cinematic stage with white type over
+> it. Footage shot high-key on white (a product-page packshot) washes out and
+> kills the headline. If that is all you have, give the sector a `grade` in
+> `KioskSpotlight.tsx` — the Coffee film carries one — but graded-down product
+> footage is a rescue, not the look to aim for.

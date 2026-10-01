@@ -775,6 +775,12 @@
   to   { transform: scale(1.08); }
 }
 
+/* Reception kiosk — dwell progress under the sector headline */
+@keyframes kiosk-dwell {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
 /* Seamless ticker scroll for the trust marquee */
 @keyframes vitorra-marquee {
   from { transform: translateX(0); }

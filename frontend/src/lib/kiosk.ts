@@ -30,9 +30,11 @@ export function useKioskClock() {
     return () => clearInterval(id);
   }, []);
 
+  /* No seconds: a digit changing once a second pulls the eye off the film all
+     day, and nobody crossing a lobby needs the second. */
   const time = now
-    ? now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-    : "--:--:--";
+    ? now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+    : "--:--";
   const date = now
     ? now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
     : "";
