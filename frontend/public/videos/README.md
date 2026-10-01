@@ -13,6 +13,24 @@ the reception kiosk (`/display`).
 | Vitorra Coffee | `coffee.mp4` | `coffee-hero.mp4` | `coffee-poster.jpg` |
 | Logistics Services | `logistics.mp4` | `logistics-hero.mp4` | `logistics-poster.jpg` |
 
+## Where each file came from
+
+Keep this current. If a clip's licence is ever questioned, this table is the
+answer, and "we think someone downloaded it" is not.
+
+| File | Source | Licence |
+|------|--------|---------|
+| `fet-hero.mp4`, `fet.mp4` | Supplied by Vitorra (FET manufacturer material) | Own/supplied |
+| `seal-hero.mp4` | Supplied by Vitorra (SEAL manufacturer material) | Own/supplied |
+| `coffee-hero.mp4` | Supplied by Vitorra | Own/supplied |
+| `logistics-hero.mp4` | [Pexels video 13742716](https://www.pexels.com/video/trucks-in-port-13742716/) — "Trucks in Port" | [Pexels licence](https://www.pexels.com/license/) — free for commercial use, no attribution required |
+
+> On stock footage: containers in any port shot carry shipping-line marks
+> (MSC, Maersk and a handful of others own most of the world's boxes). That is
+> unavoidable and fine — what is not fine is footage where another company's
+> branding is the subject, or where a phone number or logo is legible enough to
+> read as an endorsement. Two candidates were rejected on exactly that.
+
 ## Format requirements
 
 - **Container:** MP4

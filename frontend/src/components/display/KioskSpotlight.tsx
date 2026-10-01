@@ -7,10 +7,10 @@ import { useRotation } from "@/lib/kiosk";
 /* ─── The stage ────────────────────────────────────────────────────────────
    The reception screen is a brand stage, not a dashboard: the media runs
    full-bleed to all four edges and everything else floats over it. Each
-   business line brings its own imagery — FET, SEAL and Coffee run brand films;
-   Logistics runs a still with a slow Ken Burns drift until its film is shot.
-   Borrowing one line's film for another put an engine bay behind a coffee
-   caption, which read as a mistake.
+   business line runs its own film. Borrowing one line's film for another put
+   an engine bay behind a coffee caption, which read as a mistake. The still
+   path below is kept because it is how a sector runs before its footage
+   exists — all four have footage today.
 
    Films are all mounted at once and cross-faded so a change never shows a
    black frame mid-buffer, and only the visible one plays — this runs all day
@@ -71,7 +71,7 @@ const SECTORS: Sector[] = [
   {
     index: "04",
     tag: "Logistics",
-    media: { kind: "still", src: "/hero/logistics.png" },
+    media: { kind: "film", src: "/videos/logistics-hero.mp4", poster: "/videos/logistics-hero-poster.jpg" },
     headline: "Dependable freight,",
     accent: "port to door across East Africa",
     body: "Warehousing, customs clearance, and delivery for B2B partners regionwide.",
