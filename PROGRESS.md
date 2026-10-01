@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 1 September 2026
+**Last updated:** 1 October 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -34,13 +34,13 @@
 | **Online payments — Flutterwave** (cards + MTN/Airtel) across FET reserve, invoices, installments, coffee | ✅ **Built & tested** — needs activation (keys + webhook secret) |
 | **Multilingual careers portal** (EN / SW / **FR** pilot) | ✅ **Built** |
 | **Zero-cost upgrades** (keyless FX, auto holidays, phone validation) | ✅ **Built** |
-| **Reception lobby display** (`/display` — clock, weather, FET film, certifications, news ticker) | ✅ **Built** — point the front-desk TV's browser at it |
+| **Reception lobby display** (`/display`) | ✅ **Built & redesigned** (Oct) — all four business lines now run their own film; point the front-desk TV's browser at it |
 | **Site could not reach the API** (blocked sign-in + all forms) | ✅ **Fixed & live** — API now served through the site itself |
 | **Leave approval — two people required** (Operations + Finance), nobody signs their own | ✅ **Built** — needs backend deploy |
 | **Staff offboarding** (`staff:offboard`) + departed accounts can no longer sign in | ✅ **Built** — needs backend deploy |
 | **FET Trial Manager** — run a client fuel trial end to end, from their own spreadsheet to a client-ready report | ✅ **Built & live** — first trial (Hariss International) loaded |
 | **Blog posts appearing instantly** when published, instead of up to 30 minutes later | ✅ **Fixed & live** — had never worked in production |
-| **Moving the website onto infrastructure we own** (AWS) | 🔨 **Built, not switched on** — site still served by Vercel; waiting on AWS to verify the account |
+| **Moving the website onto infrastructure we own** (AWS) | 🔨 **Built, not switched on** — site still served by Vercel. Amazon's account hold cleared; the delivery layer and firewall are now live on **both** environments. Remaining work is ours, not theirs |
 | **Automatic releases** — a change goes live without anyone running commands | ✅ **Built & proven** — production needs a human approval |
 | **Being told when the website breaks** — before a customer notices | ✅ **Built & tested on both environments** — a real alert was fired and the email confirmed arriving |
 | **Knowing what we spend, before the bill** | ✅ **Built** — warnings at 60/85/100% of budget, plus unusual-spending detection |
@@ -182,6 +182,10 @@ the business one-pager):
   supplier, careers and profile. Critical for mobile-money + future SMS.
 
 ## ✅ Reception lobby display (July 2026)
+
+> ⚠ **Superseded in October 2026** — the screen was rebuilt and every business
+> line now has its own film. See "The reception screen, rebuilt" below. The
+> description here is kept as the record of what was first built.
 
 A premium, always-on screen for the front desk — `vitorra.org/display` — so the
 first thing a visitor sees is the brand, not a blank TV.
@@ -771,17 +775,104 @@ along, but only ever used it to average response times after the fact.
 
 ---
 
+## ✅ Loose ends from the operations review (September 2026)
+
+Three items landed after the 1 September entry above and were never written up.
+
+- **The delivery layer and firewall went live on production** (1 Sep). Staging
+  already had both; production had neither, so when Amazon's account hold
+  cleared there was nothing on production to apply it to. Production now mirrors
+  staging. The firewall is deliberately **watching, not blocking**, until we have
+  seen a few days of real traffic — a managed rule that blocks the enquiry form
+  is worse than no firewall at all. The Namecheap backend is allow-listed first,
+  because it is what tells the site a blog post has been published, and
+  rate-limiting that is precisely how blog publishing silently stops working.
+- **The enquiry-chaser preview was telling the truth about the wrong thing**
+  (2 Sep). A dry run counted the same enquiry as both chased *and* escalated, so
+  it promised twice the email a real run sends. A real run cannot do this because
+  escalating marks the record; a dry run writes nothing and so had no such
+  barrier. Found on the production dry run, against the two enquiries actually
+  sitting unanswered there.
+- **A colleague left and returned** (3 and 5 Sep). Thurayya Nakayima resigned and
+  asked for her data cleared; she was removed from the public site and the
+  internal lists, and her press quotes re-attributed to the company rather than
+  deleted — they were the company's own launch messaging. She rejoined two days
+  later and everything was restored. ⚠ The code revert could not restore her
+  **production user account**, which had been deleted: it was recreated with a
+  new id and the records pointing at the old one — one enquiry and five customer
+  replies — were relinked by hand.
+
+---
+
+## ✅ The reception screen, rebuilt (1 October 2026)
+
+The lobby screen worked, but it was laid out as a dashboard: the brand film sat
+in a box as one card among several, so the weather carried the same visual
+weight as an independently verified laboratory result and a visitor had no idea
+where to look. It now reads as a brand stage.
+
+### What a visitor sees
+- **The film fills the screen.** Whichever business line is up plays edge to
+  edge, and everything else floats over it. The old layout dimmed the footage
+  almost to black; it is now lit so you can actually see it.
+- **Every business line has its own footage.** FET, SEAL and Coffee play the
+  films we hold; Logistics plays licensed stock of a container terminal, which
+  finally makes the picture agree with the words "port to door". Previously
+  Coffee and Logistics both played the Fuel Eco Tech film — an engine bay behind
+  a coffee caption, which read as a mistake.
+- **Readable from across the room.** The headline is set much larger, with a
+  numbered index (01/04) and a progress bar showing where the loop has got to.
+  Certifications now show **one at a time, large**, instead of a cramped list.
+- **Less noise.** The ticking seconds are gone — a digit changing every second
+  pulls the eye off the film all day. The forecast is three days rather than
+  five, because five identical cloud icons read as placeholder data. The gold
+  certifications marquee is gone, as it scrolled the same six certifications the
+  screen now shows properly.
+
+### Three faults fixed that nobody had reported
+- The certifications card was **silently hiding three of its six** — the box was
+  too short and the rest were clipped off.
+- A cold start showed a **black rectangle for about ten seconds** while the film
+  loaded. Every film now shows a still frame immediately.
+- A film layer with nothing to draw could **reveal the business line underneath
+  it** — the caption saying one thing while the footage showed another. Found
+  while testing; each film now paints its own still behind itself.
+
+### Worth knowing
+- The SEAL film supplied was in a format that plays on some browsers and shows a
+  **black rectangle on others** — on an unattended TV, nobody would think to
+  look. Converted, and the spec now says which format to supply.
+- **SEAL's film is clinical** — an anatomical render of an open wound, now
+  full-screen in a waiting area. It was briefly swapped for a photograph of a
+  paramedic holding the product; the Director's decision was to keep the film,
+  and the film is what is live.
+- The coffee film was shot on a white background for a product page and had to
+  be darkened to sit with the others. Future footage for this screen should be
+  **shot dark** — noted in the spec.
+- Where every file came from and the licence it carries is now recorded in
+  `frontend/public/videos/README.md`. Two stock candidates were rejected for
+  carrying another company's branding.
+
+> ⚠ **Nobody has watched this on the actual TV yet.** It was verified in a
+> browser. The cross-fades, the type at viewing distance and how the SEAL film
+> reads at full lobby scale are worth two minutes in front of the real screen.
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**
 1. ~~**Live payment gateway**~~ ✅ **Built (Flutterwave)** — now an **activation** task, not a build: set `PAYMENT_DRIVER=flutterwave` + keys, generate a webhook secret hash in the Flutterwave dashboard and set `FLUTTERWAVE_SECRET_HASH`, set `NEXT_PUBLIC_ONLINE_PAYMENTS=true`. Verify with `/admin/payments` or `php artisan flutterwave:status`. Sandbox-test, then go live.
 2. **Confirm coffee retail prices** → enter in `/admin/products`, then flip the coffee shop on (one flag) — Flutterwave checkout already wired.
 
-**The AWS move — waiting on Amazon, then on us**
-A. **Amazon must verify both accounts** before the delivery layer can be created.
-   Support case open, unanswered. Nothing else can proceed until it is.
-B. Once verified: create that layer in both accounts (~1 hour, already written),
-   then **walk the whole test site** for two or three days — every product page,
+**The AWS move — no longer waiting on Amazon; the rest is ours**
+A. ~~**Amazon must verify both accounts**~~ ✅ **Cleared (1 September).** The
+   delivery layer (CloudFront) and the firewall are now live on production as
+   well as staging — `www.vitorra.org` served from `origin.vitorra.org`, WAF in
+   report-only mode. The Namecheap backend address is allow-listed at priority
+   0, because it POSTs `/api/revalidate` after every blog publish and
+   rate-limiting that is exactly how blog publishing silently stops working.
+B. **Next: walk the whole test site** for two or three days — every product page,
    admin sign-in with 2FA, the staff and customer portals, a CV upload, a blog
    publish, both languages. Watch how hard the server is working: the site now
    also passes every form and sign-in through to the API, which it did not when
@@ -871,7 +962,13 @@ F. **Write the incident runbook** — what to check, in what order, when the sit
     2–4 of `planning/13-junior-dev-onboarding.md`.
 
 **Content / lower priority**
-21. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos; hero videos.
+21. Native-speaker review of the Swahili (and new French) copy; blog posts; client testimonials; coffee photos.
+22. **Footage.** The reception screen is covered — all four lines have film. Still
+    worth having: our own Logistics footage to replace the licensed stock, and a
+    sharper SEAL film (the one we hold is the lowest-resolution asset on the
+    screen, and there is no better master to re-encode from). Anything shot for
+    that screen should be **dark and cinematic** — see
+    `frontend/public/videos/README.md`.
 
 ---
 
