@@ -9,6 +9,7 @@ import Footer from "@/components/layout/Footer";
 import { Container } from "@/components/system";
 import { ContactBand } from "@/components/system/blocks";
 import { getBlogPost } from "@/lib/api";
+import { SITE_URL } from "@/lib/constants";
 
 /* ─── Article — Quiet Authority ───────────────────────────────────────────────
    Title first, in the display serif; the cover as a wide editorial figure
@@ -21,7 +22,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params;
   try {
     const post = await getBlogPost(slug, locale);
-    return { title: post.seo_title ?? post.title, description: post.seo_description ?? post.excerpt ?? undefined };
+    const title = post.seo_title ?? post.title;
+    const description = post.seo_description ?? post.excerpt ?? undefined;
+    const path = `${locale === "en" ? "" : `/${locale}`}/blog/${post.slug}`;
+    return {
+      title,
+      description,
+      alternates: {
+        canonical: path,
+        languages: { en: `/blog/${post.slug}`, sw: `/sw/blog/${post.slug}`, "x-default": `/blog/${post.slug}` },
+      },
+      openGraph: {
+        type: "article",
+        title,
+        description,
+        url: path,
+        publishedTime: post.published_at ?? undefined,
+        images: post.cover_image ? [{ url: post.cover_image }] : undefined,
+      },
+      twitter: { card: "summary_large_image", title, description, images: post.cover_image ? [post.cover_image] : undefined },
+    };
   } catch {
     const t = await getTranslations({ locale, namespace: "meta.article" });
     return { title: t("title") };
@@ -42,8 +62,24 @@ export default async function BlogPostPage({ params }: Props) {
     notFound();
   }
 
+  /* Article structured data, so search engines can show the post as an
+     article (headline, date, publisher) rather than a plain link. */
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt ?? undefined,
+    datePublished: post.published_at ?? undefined,
+    image: post.cover_image ? [new URL(post.cover_image, SITE_URL).toString()] : undefined,
+    mainEntityOfPage: `${SITE_URL}${locale === "en" ? "" : `/${locale}`}/blog/${post.slug}`,
+    inLanguage: locale,
+    author: { "@type": "Organization", name: "Vitorra Holdings Limited", url: SITE_URL },
+    publisher: { "@type": "Organization", name: "Vitorra Holdings Limited", url: SITE_URL, logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` } },
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <Header />
       <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
         <article className="q-scope">

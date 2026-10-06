@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import Team from "@/components/sections/Team";
 import { Reveal } from "@/components/ui/reveal";
 import { Section, Container, Label, Text, TextLink } from "@/components/system";
 import { SectionHead, FactGrid, CredentialGroups, ContactBand } from "@/components/system/blocks";
@@ -106,14 +105,6 @@ export default async function AboutPage() {
           <Container>
             <SectionHead id="about-businesses-heading" label={t("portfolioLabel")} title={t("portfolioTitle")} className="mb-14" />
             <BusinessDoors />
-          </Container>
-        </Section>
-
-        {/* ══ The people ════════════════════════════════════════════════════ */}
-        <Section tone="deep" id="team" aria-labelledby="about-team">
-          <Container>
-            <SectionHead id="about-team" label={t("teamLabel")} title={t("teamTitle")} body={t("teamBody")} className="mb-16" />
-            <Team labels={{ leadership: t("leadershipLabel"), officers: t("officersLabel") }} />
           </Container>
         </Section>
 
