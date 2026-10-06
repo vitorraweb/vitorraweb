@@ -1084,6 +1084,31 @@ terms first; Logistics: the five details needed to quote in one round.
 3. **WhatsApp no longer pulses** — a labelled button instead; reverses July's call.
 4. **Real photography** for Logistics and Coffee — there is none yet.
 
+### Second pass (6 October 2026): motion, type, photography
+
+After the first deploy the pages felt too dry. This pass adds what luxury
+houses layer on top of restraint, without bringing the template effects back.
+
+- **Type:** Fraunces (headlines; the free relative of Canela / Noe Display,
+  with an optical-size axis) and Hanken Grotesk (body), replacing Cormorant
+  Garamond and DM Sans. ⚠ A change to the brand typography; Olivia to sign off.
+- **Motion, all CSS-first and switched off under reduced motion:** full-screen
+  openings where the photo settles from a slow zoom and the headline rises in
+  line by line; images that unveil as they scroll in; slow parallax on
+  full-width photo bands; the 13.9% figure counts up; each page fades in on
+  navigation; the header sits transparent over the opening photo, turns solid
+  on scroll, and steps aside while reading down.
+- **Photography:** 15 licensed Unsplash photographs, all graded to read as one
+  set, recorded with source and photographer in
+  `frontend/public/images/stock/README.md`. Never captioned as Vitorra's own.
+  Four candidates rejected for another organisation's branding (Boston EMS,
+  a kit maker's logo, a supermarket truck, a branded monitor); the Kampala
+  skyline is cropped to remove a building-sized Johnnie Walker billboard.
+  Vitorra's real photographs (head office, reception, FET field fitting, the
+  SEAL manufacturer photo) are kept wherever they exist.
+- **Copy:** every em dash removed from the site text in both languages (68 per
+  language), each sentence repunctuated by hand rather than replaced blindly.
+
 **Still to redesign:** About, Enquire, Contact, Blog, Certifications, Careers,
 Suppliers, legal, Shop. Until then those pages carry the old styling.
 

@@ -54,7 +54,7 @@ export function Film({
             type="button"
             onClick={() => setPlaying(true)}
             className="group absolute inset-0 h-full w-full text-left"
-            aria-label={`${playLabel} — ${title}`}
+            aria-label={`${playLabel}: ${title}`}
           >
             <Image src={poster} alt="" fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
             <span className="absolute left-5 bottom-5 inline-flex items-center gap-3 rounded-edge bg-paper/95 px-4 min-h-11 t-small font-medium text-ink transition-colors group-hover:bg-paper">

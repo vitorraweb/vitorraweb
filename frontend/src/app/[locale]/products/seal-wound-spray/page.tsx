@@ -4,11 +4,12 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/reveal";
 import { Faq } from "@/components/ui/faq";
-import { Section, Container, Text, Figure, TextLink } from "@/components/system";
+import { Section, Container, Text, TextLink } from "@/components/system";
 import {
-  ProductIntro, SectionHead, Steps, FactGrid, SpecTable, ContactBand,
+  SectionHead, Steps, FactGrid, SpecTable, ContactBand,
 } from "@/components/system/blocks";
 import { Film } from "@/components/system/Film";
+import { CinematicHero, FactStrip, ImageBand, Picture } from "@/components/system/imagery";
 
 /* ─── SEAL Hemostatic Wound Spray — Quiet Authority ───────────────────────────
    Built around a procurement journey, because SEAL is bought by institutions:
@@ -39,6 +40,7 @@ export default async function SealPage() {
   const home = await getTranslations("homeQA");
   const shared = await getTranslations("productQA");
   const tp = await getTranslations("products");
+  const alt = await getTranslations("imageAlt");
 
   const variants = [
     { name: "SEAL OTC", tagline: old("v1Tagline"), body: old("v1Body"), specs: [1, 2, 3, 4, 5].map((n) => old(`v1Spec${n}`)) },
@@ -50,32 +52,26 @@ export default async function SealPage() {
 
   return (
     <>
-      <Header />
-      <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
+      <Header overlay />
+      <main id="main" className="flex-1 bg-paper">
 
-        <ProductIntro
+        <CinematicHero
+          image="/images/stock/trauma-kit-open.jpg"
+          alt={alt("traumaKit")}
           index="02"
-          name={tp("seal.name")}
-          title={t("title")}
+          label={tp("seal.name")}
+          lines={[t("title")]}
           lead={t("lead")}
           primary={{ label: t("primary"), href: ENQUIRE }}
           secondary={{ label: t("secondary"), href: "#seal-range" }}
+        />
+        <FactStrip
           facts={[
             { k: t("factClearK"), v: t("factClearV") },
             { k: t("factShelfK"), v: t("factShelfV") },
             { k: t("factStoreK"), v: t("factStoreV") },
             { k: t("factUseK"), v: t("factUseV") },
           ]}
-          media={
-            <Figure
-              src="/products/seal/Picture1.jpg"
-              alt={t("photoAlt")}
-              caption={t("photoCaption")}
-              ratio="4/3"
-              priority
-              sizes="(min-width: 1024px) 45vw, 100vw"
-            />
-          }
         />
 
         {/* ══ How it is used ════════════════════════════════════════════════ */}
@@ -140,6 +136,8 @@ export default async function SealPage() {
           </Container>
         </Section>
 
+        <ImageBand image="/images/stock/ambulance-motion.jpg" alt={alt("ambulance")} height="medium" />
+
         {/* ══ Specifications and safety ═════════════════════════════════════ */}
         <Section tone="deep" aria-labelledby="seal-specs">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
@@ -163,6 +161,7 @@ export default async function SealPage() {
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
             <div className="lg:col-span-5">
               <SectionHead id="seal-proc" onInk label={t("procLabel")} title={t("procTitle")} body={t("procBody")} />
+              <Picture className="mt-12 max-w-[26rem]" src="/products/seal/Picture1.jpg" alt={t("photoAlt")} caption={t("photoCaption")} ratio="4/3" grade={false} sizes="(min-width: 1024px) 30vw, 100vw" />
             </div>
             <ol className="lg:col-span-6 lg:col-start-7 border-t border-ink-line">
               {[t("proc1"), t("proc2"), t("proc3"), t("proc4")].map((p, i) => (

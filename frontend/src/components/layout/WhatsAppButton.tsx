@@ -31,7 +31,7 @@ export default function WhatsAppButton() {
     >
       <MessageCircle aria-hidden="true" className="h-4 w-4 text-gold-ink" />
       {t("messageUs")}
-      <span className="sr-only">— {t("chatOnWhatsapp")}</span>
+      <span className="sr-only">, {t("chatOnWhatsapp")}</span>
     </a>
   );
 }

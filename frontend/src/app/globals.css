@@ -954,7 +954,7 @@
 /* ── Type scale — the only sizes the public site uses ───────────────────── */
 @utility t-display {
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 340;
   font-size: clamp(2.75rem, 1.6rem + 4.6vw, 5.75rem);
   line-height: 1.0;
   letter-spacing: -0.02em;
@@ -962,7 +962,7 @@
 }
 @utility t-h1 {
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 360;
   font-size: clamp(2.25rem, 1.5rem + 3vw, 4rem);
   line-height: 1.05;
   letter-spacing: -0.018em;
@@ -970,7 +970,7 @@
 }
 @utility t-h2 {
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 380;
   font-size: clamp(1.875rem, 1.4rem + 1.9vw, 3rem);
   line-height: 1.1;
   letter-spacing: -0.015em;
@@ -978,14 +978,14 @@
 }
 @utility t-h3 {
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 420;
   font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
 @utility t-figure {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 300;
   font-size: clamp(4rem, 2.4rem + 6.5vw, 8.5rem);
   line-height: 0.9;
   letter-spacing: -0.03em;
@@ -1088,3 +1088,63 @@
     }
   }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   QUIET AUTHORITY — motion & imagery (October 2026, second pass)
+   ══════════════════════════════════════════════════════════════════════════
+   Motion the way luxury houses use it: slow, few, purposeful. Everything is
+   CSS-first and additive — content is fully visible without JavaScript and
+   under prefers-reduced-motion. One easing curve throughout.               */
+
+@theme inline {
+  --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* One colour grade for every stock photograph, so images from different
+   photographers read as one commissioned set: slightly desaturated, a touch
+   more contrast, warmed toward the brand's ivory. */
+.q-grade { filter: saturate(0.82) contrast(1.05) brightness(0.97) sepia(0.06); }
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* Page open — each route's <main> rises in gently on navigation. */
+  @keyframes q-page-in { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
+  main#main { animation: q-page-in 700ms var(--ease-cinematic) both; }
+
+  /* Headline lines rise on load, staggered by --d (set inline per line). */
+  @keyframes q-rise { from { opacity: 0; translate: 0 0.6em; } to { opacity: 1; translate: 0 0; } }
+  .q-rise { animation: q-rise 1100ms var(--ease-cinematic) both; animation-delay: var(--d, 0ms); }
+
+  /* Hero photograph settles from a slow zoom. */
+  @keyframes q-settle { from { scale: 1.12; } to { scale: 1; } }
+  .q-settle { animation: q-settle 2600ms var(--ease-cinematic) both; }
+
+  @supports (animation-timeline: view()) {
+    /* Unveil — an image opens from the bottom as it scrolls in, while the
+       photograph inside eases back from a slight zoom. */
+    @keyframes q-unveil { from { clip-path: inset(18% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+    @keyframes q-unzoom { from { scale: 1.18; } to { scale: 1; } }
+    .q-unveil { animation: q-unveil linear both; animation-timeline: view(); animation-range: entry 0% cover 35%; }
+    /* The ease-back runs on an inner layer, so the image itself stays free
+       for the hover zoom — a finished animation would otherwise pin its scale. */
+    .q-unveil > .q-inner { animation: q-unzoom linear both; animation-timeline: view(); animation-range: entry 0% cover 45%; }
+
+    /* Parallax — a large photograph drifts against its frame for depth.
+       The image is drawn 16% taller than the frame so no edge shows. */
+    @keyframes q-drift { from { translate: 0 -8%; } to { translate: 0 8%; } }
+    .q-parallax img { scale: 1.16; animation: q-drift linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+
+    /* A gold rule that draws itself as its section arrives. */
+    @keyframes q-draw { from { scale: 0 1; } to { scale: 1 1; } }
+    .q-draw { transform-origin: left center; animation: q-draw linear both; animation-timeline: view(); animation-range: entry 10% cover 30%; }
+  }
+}
+
+/* Image hover: a slow, small zoom — the only hover motion on photographs. */
+.q-zoom img { transition: scale 1200ms var(--ease-cinematic); }
+.q-zoom:hover img, .group:hover .q-zoom img { scale: 1.04; }
+
+/* Header steps out of the way while reading down, returns on scroll up. */
+.q-header { transition: translate 500ms var(--ease-cinematic), background-color 300ms ease; }
+.q-header[data-hidden="true"] { translate: 0 -100%; }

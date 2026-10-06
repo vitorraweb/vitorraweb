@@ -48,30 +48,47 @@ function CartButton({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function Wordmark({ small = false, onNavigate }: { small?: boolean; onNavigate?: () => void }) {
+function Wordmark({ small = false, light = false, onNavigate }: { small?: boolean; light?: boolean; onNavigate?: () => void }) {
   return (
-    <Link href="/" onClick={onNavigate} className="flex items-center gap-3 shrink-0" aria-label="Vitorra Holdings Limited — home">
-      <Image src="/logo.png" alt="" width={small ? 30 : 34} height={small ? 30 : 34} className="mix-blend-multiply" priority />
+    <Link href="/" onClick={onNavigate} className="flex items-center gap-3 shrink-0" aria-label="Vitorra Holdings Limited, home">
+      <Image src="/logo.png" alt="" width={small ? 30 : 34} height={small ? 30 : 34} className={light ? "" : "mix-blend-multiply"} priority />
       <span className="flex flex-col leading-none">
-        <span className="font-display text-[1.375rem] tracking-[-0.01em] text-ink">Vitorra</span>
-        <span className="t-label text-[0.625rem] tracking-[0.22em] text-ink-muted mt-1">Holdings Limited</span>
+        <span className={cn("font-display text-[1.375rem] tracking-[-0.01em] transition-colors", light ? "text-ink-fg" : "text-ink")}>Vitorra</span>
+        <span className={cn("t-label text-[0.625rem] tracking-[0.22em] mt-1 transition-colors", light ? "text-ink-fg-muted" : "text-ink-muted")}>Holdings Limited</span>
       </span>
     </Link>
   );
 }
 
-export default function Header() {
+export default function Header({ overlay = false }: {
+  /** The page opens on a full-screen photograph: the header sits transparent
+      over it until the visitor scrolls, then turns solid. */
+  overlay?: boolean;
+} = {}) {
   const t = useTranslations();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [tucked, setTucked] = useState(false);
   const [open, setOpen] = useState(false);
 
+  /* Solid once scrolled; steps out of the way while reading down, comes back
+     the moment the visitor scrolls up. */
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 24);
+      if (Math.abs(y - last) > 6) {
+        setTucked(y > last && y > 480);
+        last = y;
+      }
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const light = overlay && !scrolled && !open;
 
   /* Lock page scroll while the menu is open; Escape closes it. */
   useEffect(() => {
@@ -91,7 +108,11 @@ export default function Header() {
   return (
     <>
       <header
-        className="q-scope fixed inset-x-0 top-0 z-[60] bg-paper border-b border-line"
+        data-hidden={tucked && !open ? "true" : "false"}
+        className={cn(
+          "q-scope q-header fixed inset-x-0 top-0 z-[60] border-b",
+          light ? "bg-transparent border-transparent" : "bg-paper border-line",
+        )}
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         {/* ── Utility row (desktop) ──────────────────────────────────────── */}
@@ -99,25 +120,26 @@ export default function Header() {
           className={cn(
             "hidden lg:block overflow-hidden border-b border-line transition-[height,opacity] duration-300 ease-quiet",
             scrolled ? "h-0 opacity-0 border-transparent" : "h-9 opacity-100",
+            light && "border-ink-fg/15",
           )}
         >
-          <div className="q-container flex h-9 items-center justify-end gap-7 t-label text-ink-muted">
+          <div className={cn("q-container flex h-9 items-center justify-end gap-7 t-label", light ? "text-ink-fg/75" : "text-ink-muted")}>
             {utilityLinks.map((l) => (
               <Link
                 key={l.key}
                 href={l.href}
                 aria-current={isActive(l.href) ? "page" : undefined}
-                className={cn("transition-colors hover:text-ink", isActive(l.href) && "text-ink")}
+                className={cn("transition-colors", light ? "hover:text-ink-fg" : "hover:text-ink", isActive(l.href) && (light ? "text-ink-fg" : "text-ink"))}
               >
                 {t(`nav.${l.key}`)}
               </Link>
             ))}
             <span aria-hidden="true" className="h-3 w-px bg-line-strong" />
-            <LanguageSwitcher />
+            <LanguageSwitcher dark={light} />
             {COFFEE_SHOP_ENABLED && <CartButton />}
             <Link
               href="/account/dashboard"
-              className="inline-flex items-center gap-1.5 transition-colors hover:text-ink"
+              className={cn("inline-flex items-center gap-1.5 transition-colors", light ? "hover:text-ink-fg" : "hover:text-ink")}
             >
               <User aria-hidden="true" className="h-3.5 w-3.5" />
               {t("common.myAccount")}
@@ -127,7 +149,7 @@ export default function Header() {
 
         {/* ── Main row ───────────────────────────────────────────────────── */}
         <div className="q-container flex h-16 items-center justify-between gap-6">
-          <Wordmark onNavigate={close} />
+          <Wordmark light={light} onNavigate={close} />
 
           <nav aria-label={t("header.navigation")} className="hidden lg:block">
             <ul className="flex items-center gap-8">
@@ -138,7 +160,9 @@ export default function Header() {
                     aria-current={isActive(b.href) ? "page" : undefined}
                     className={cn(
                       "relative py-5 text-[0.9375rem] transition-colors",
-                      isActive(b.href) ? "text-ink" : "text-ink-soft hover:text-ink",
+                      light
+                        ? isActive(b.href) ? "text-ink-fg" : "text-ink-fg/80 hover:text-ink-fg"
+                        : isActive(b.href) ? "text-ink" : "text-ink-soft hover:text-ink",
                       "after:absolute after:inset-x-0 after:bottom-[-1px] after:h-px after:bg-gold after:transition-transform after:duration-300 after:ease-quiet after:origin-left",
                       isActive(b.href) ? "after:scale-x-100" : "after:scale-x-0 hover:after:scale-x-100",
                     )}
@@ -147,12 +171,12 @@ export default function Header() {
                   </Link>
                 </li>
               ))}
-              <li aria-hidden="true" className="h-4 w-px bg-line-strong" />
+              <li aria-hidden="true" className={cn("h-4 w-px", light ? "bg-ink-fg/30" : "bg-line-strong")} />
               <li>
                 <Link
                   href="/about"
                   aria-current={isActive("/about") ? "page" : undefined}
-                  className={cn("text-[0.9375rem] transition-colors", isActive("/about") ? "text-ink" : "text-ink-soft hover:text-ink")}
+                  className={cn("text-[0.9375rem] transition-colors", light ? "text-ink-fg/80 hover:text-ink-fg" : isActive("/about") ? "text-ink" : "text-ink-soft hover:text-ink")}
                 >
                   {t("nav.about")}
                 </Link>
@@ -161,15 +185,15 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link href="/enquire" className="q-btn hidden lg:inline-flex min-h-10 px-5 bg-ink text-paper hover:bg-black">
+            <Link href="/enquire" className={cn("q-btn hidden lg:inline-flex min-h-10 px-5", light ? "bg-ink-fg text-ink hover:bg-white" : "bg-ink text-paper hover:bg-black")}>
               {t("common.requestQuote")}
             </Link>
             <div className="lg:hidden">
-              <LanguageSwitcher />
+              <LanguageSwitcher dark={light} />
             </div>
             <button
               type="button"
-              className="lg:hidden inline-flex h-10 w-10 items-center justify-center text-ink"
+              className={cn("lg:hidden inline-flex h-10 w-10 items-center justify-center", light ? "text-ink-fg" : "text-ink")}
               onClick={() => setOpen(true)}
               aria-label={t("header.toggleMenu")}
               aria-expanded={open}

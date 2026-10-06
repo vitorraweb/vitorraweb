@@ -5,9 +5,9 @@ import Footer from "@/components/layout/Footer";
 import { Faq } from "@/components/ui/faq";
 import { Section, Container, ButtonLink } from "@/components/system";
 import {
-  ProductIntro, SectionHead, FactGrid, Steps, ContactBand,
+  SectionHead, FactGrid, Steps, ContactBand,
 } from "@/components/system/blocks";
-import { Film } from "@/components/system/Film";
+import { CinematicHero, FactStrip, ImageBand, Picture } from "@/components/system/imagery";
 
 /* ─── Logistics Services — Quiet Authority ────────────────────────────────────
    Built around getting a usable quote: what we do → the services → the five
@@ -19,7 +19,8 @@ import { Film } from "@/components/system/Film";
    every time". Border processing depends on the authorities; tracking depends
    on the route and carrier — so we say what we do and agree the rest when we
    quote. All generated imagery (Vitorra-liveried trucks, warehouse, control
-   room) is gone; the one film is licensed stock and its caption says so.     */
+   room) is gone; photographs are licensed stock (public/images/stock/README.md)
+   and never captioned as Vitorra's own fleet or premises.     */
 
 export async function generateMetadata({
   params,
@@ -39,6 +40,7 @@ export default async function LogisticsPage() {
   const home = await getTranslations("homeQA");
   const shared = await getTranslations("productQA");
   const tp = await getTranslations("products");
+  const alt = await getTranslations("imageAlt");
 
   const faqs = [
     { q: old("faq1Q"), a: old("faq1A") },
@@ -50,32 +52,26 @@ export default async function LogisticsPage() {
 
   return (
     <>
-      <Header />
-      <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
+      <Header overlay />
+      <main id="main" className="flex-1 bg-paper">
 
-        <ProductIntro
+        <CinematicHero
+          image="/images/stock/port-aerial.jpg"
+          alt={alt("portAerial")}
           index="04"
-          name={tp("logistics.name")}
-          title={t("title")}
+          label={tp("logistics.name")}
+          lines={[t("title")]}
           lead={t("lead")}
           primary={{ label: t("primary"), href: ENQUIRE }}
           secondary={{ label: t("secondary"), href: "#logistics-need" }}
+        />
+        <FactStrip
           facts={[
             { k: t("factModesK"), v: t("factModesV") },
             { k: t("factCoverK"), v: t("factCoverV") },
             { k: t("factCustomsK"), v: t("factCustomsV") },
             { k: t("factQuoteK"), v: t("factQuoteV") },
           ]}
-          media={
-            <Film
-              src="/videos/logistics-hero.mp4"
-              poster="/videos/logistics-hero-poster.jpg"
-              title={t("filmTitle")}
-              caption={t("filmCaption")}
-              playLabel={shared("playFilm")}
-              ratio="4/5"
-            />
-          }
         />
 
         {/* ══ Services ══════════════════════════════════════════════════════ */}
@@ -94,6 +90,8 @@ export default async function LogisticsPage() {
           </Container>
         </Section>
 
+        <ImageBand image="/images/stock/ship-wake.jpg" alt={alt("shipWake")} height="medium" />
+
         {/* ══ What we need to quote ═════════════════════════════════════════ */}
         <Section tone="deep" id="logistics-need" aria-labelledby="logistics-need-heading">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
@@ -102,6 +100,7 @@ export default async function LogisticsPage() {
               <div className="mt-10">
                 <ButtonLink href={ENQUIRE}>{t("primary")}</ButtonLink>
               </div>
+              <Picture className="mt-14 hidden lg:block" src="/images/stock/warehouse-dark.jpg" alt={alt("warehouse")} ratio="4/3" sizes="35vw" />
             </div>
             <ol className="lg:col-span-6 lg:col-start-7 border-t border-line-strong">
               {[1, 2, 3, 4, 5].map((n) => (

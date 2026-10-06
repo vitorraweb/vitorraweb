@@ -6,9 +6,9 @@ import { Faq } from "@/components/ui/faq";
 import CoffeeExportSpec from "@/components/sections/CoffeeExportSpec";
 import { Section, Container, TextLink } from "@/components/system";
 import {
-  ProductIntro, SectionHead, Steps, SpecTable, ContactBand,
+  SectionHead, Steps, SpecTable, ContactBand,
 } from "@/components/system/blocks";
-import { Film } from "@/components/system/Film";
+import { CinematicHero, FactStrip, ImageBand, Mosaic } from "@/components/system/imagery";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
 /* ─── Vitorra Coffee — Quiet Authority ────────────────────────────────────────
@@ -20,8 +20,8 @@ import { COFFEE_SHOP_ENABLED } from "@/lib/config";
    Removed on the way in: the claim that "every bag carries a QR code that
    traces your coffee back to its source". Retail bags aren't on sale yet and
    nothing shows that tracing working; it can come back when it does.
-   Generated imagery (a "farmer", branded export cartons) is no longer used —
-   the only picture is the coffee film Vitorra supplied.                     */
+   Generated imagery (a "farmer", branded export cartons) is no longer used;
+   photographs are licensed stock (public/images/stock/README.md).                     */
 
 export async function generateMetadata({
   params,
@@ -41,6 +41,7 @@ export default async function CoffeePage() {
   const home = await getTranslations("homeQA");
   const shared = await getTranslations("productQA");
   const tp = await getTranslations("products");
+  const alt = await getTranslations("imageAlt");
 
   const ways = [
     { title: old("exportTitle"), body: old("exportBody"), href: "#coffee-export", cta: old("exportCta") },
@@ -55,32 +56,26 @@ export default async function CoffeePage() {
 
   return (
     <>
-      <Header />
-      <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
+      <Header overlay />
+      <main id="main" className="flex-1 bg-paper">
 
-        <ProductIntro
+        <CinematicHero
+          image="/images/stock/coffee-valley.jpg"
+          alt={alt("coffeeValley")}
           index="03"
-          name={tp("coffee.name")}
-          title={t("title")}
+          label={tp("coffee.name")}
+          lines={[t("title")]}
           lead={t("lead")}
           primary={{ label: t("primary"), href: ENQUIRE_EXPORT }}
           secondary={{ label: t("secondary"), href: "#coffee-export" }}
+        />
+        <FactStrip
           facts={[
             { k: t("factGradeK"), v: t("factGradeV") },
             { k: t("factMoqK"), v: t("factMoqV") },
             { k: t("factHsK"), v: t("factHsV") },
             { k: t("factTermsK"), v: t("factTermsV") },
           ]}
-          media={
-            <Film
-              src="/videos/coffee-hero.mp4"
-              poster="/videos/coffee-hero-poster.jpg"
-              title={t("filmTitle")}
-              caption={t("filmCaption")}
-              playLabel={shared("playFilm")}
-              ratio="4/5"
-            />
-          }
         />
 
         {/* ══ Origin and process ════════════════════════════════════════════ */}
@@ -88,6 +83,12 @@ export default async function CoffeePage() {
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
             <div className="lg:col-span-5">
               <SectionHead id="coffee-origin" label={t("originLabel")} title={t("originTitle")} body={t("originBody")} />
+              <div className="mt-14">
+                <Mosaic
+                  a={{ src: "/images/stock/coffee-cherries.jpg", alt: alt("coffeeCherries") }}
+                  b={{ src: "/images/stock/coffee-hands.jpg", alt: alt("coffeeHands") }}
+                />
+              </div>
             </div>
             <div className="lg:col-span-7">
               <Steps
@@ -101,6 +102,8 @@ export default async function CoffeePage() {
             </div>
           </Container>
         </Section>
+
+        <ImageBand image="/images/stock/coffee-roaster.jpg" alt={alt("coffeeRoaster")} height="medium" />
 
         <CoffeeExportSpec />
 

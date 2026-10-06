@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { DM_Sans, Cormorant_Garamond } from "next/font/google";
+import { Hanken_Grotesk, Fraunces } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
@@ -10,24 +10,32 @@ import { Toaster } from "@/components/ui/sonner";
 import { AttributionCapture } from "@/components/AttributionCapture";
 import { ANALYTICS_ENABLED, PLAUSIBLE_DOMAIN } from "@/lib/constants";
 
-/* ── Body: DM Sans — geometric humanist, cleaner and more distinctive than
-   Inter. Used by Notion, Google product pages, and many premium SaaS brands.
-   Variable font: supports optical-size axis for precise weight control.     */
-const dmSans = DM_Sans({
-  variable: "--font-inter",   /* reuses existing CSS var — no component changes needed */
+/* ── Type pairing — Quiet Authority (October 2026) ─────────────────────────────
+   Display: Fraunces — a variable serif with an optical-size axis, the closest
+   free relative of Canela and Noe Display (the typefaces many luxury houses
+   use). At headline sizes the opsz axis sharpens contrast; WONK and SOFT are
+   left at 0 so it reads crisp and classical, not quirky. Replaces Cormorant
+   Garamond, whose hairlines broke up at small sizes and on cheap screens.
+
+   Body/UI: Hanken Grotesk — a clean grotesk that holds up at 12–16px. Chosen
+   over Inter/DM Sans, which external research names as the type of the
+   "generic AI site".
+
+   Both keep the old CSS variable names (--font-playfair, --font-inter) so the
+   pages not yet redesigned — and the admin portal — pick the change up with
+   no component edits. ⚠ This changes the brand typography in the design
+   system doc (CLAUDE.md); Olivia should sign it off.                        */
+const hanken = Hanken_Grotesk({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
 
-/* ── Headings: Cormorant Garamond — high-contrast luxury serif. Used by
-   LVMH, premium agencies, and editorial publications. At 60-80px the thin/
-   thick stroke contrast creates visual richness that Playfair Display can't
-   match. Weight 600-700 gives authority at smaller card-title sizes too.   */
-const cormorant = Cormorant_Garamond({
-  variable: "--font-playfair", /* reuses existing CSS var — no component changes needed */
+const fraunces = Fraunces({
+  variable: "--font-playfair",
   subsets: ["latin"],
   display: "swap",
-  weight: ["300", "400", "500", "600", "700"],
+  axes: ["opsz"],
   style: ["normal", "italic"],
 });
 
@@ -93,7 +101,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${dmSans.variable} ${cormorant.variable} h-full`}
+      className={`${hanken.variable} ${fraunces.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased">

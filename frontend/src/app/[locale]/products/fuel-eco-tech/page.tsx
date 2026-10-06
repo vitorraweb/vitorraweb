@@ -6,11 +6,13 @@ import { Reveal } from "@/components/ui/reveal";
 import { Faq } from "@/components/ui/faq";
 import FetCalculator from "@/components/sections/FetCalculator";
 import FetPricing from "@/components/sections/FetPricing";
-import { Section, Container, Label, Text, TextLink, Figure } from "@/components/system";
+import { Section, Container, Label, Text, TextLink } from "@/components/system";
 import {
-  ProductIntro, SectionHead, Steps, FactGrid, CredentialGroups, ContactBand,
+  SectionHead, Steps, FactGrid, CredentialGroups, ContactBand,
 } from "@/components/system/blocks";
 import { Film } from "@/components/system/Film";
+import { CinematicHero, FactStrip, ImageBand, Mosaic } from "@/components/system/imagery";
+import { CountUp } from "@/components/system/CountUp";
 import APPLICATIONS from "@/data/fet-applications.json";
 import { engineSpanLabel } from "@/lib/fet-pricing";
 
@@ -47,6 +49,7 @@ export default async function FuelEcoTechPage() {
   const shared = await getTranslations("productQA");
   const tp = await getTranslations("products");
   const pricing = await getTranslations("fetPricing");
+  const alt = await getTranslations("imageAlt");
 
   const evidenceRows: [string, string][] = [
     [home("evidenceRowBefore"), `11.52 ${home("evidenceUnit")}`],
@@ -71,33 +74,27 @@ export default async function FuelEcoTechPage() {
 
   return (
     <>
-      <Header />
-      <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
+      <Header overlay />
+      <main id="main" className="flex-1 bg-paper">
 
         {/* ══ Intro ═════════════════════════════════════════════════════════ */}
-        <ProductIntro
+        <CinematicHero
+          image="/images/stock/road-mountains.jpg"
+          alt={alt("roadMountains")}
           index="01"
-          name={tp("fet.name")}
-          title={t("title")}
+          label={tp("fet.name")}
+          lines={[t("title")]}
           lead={t("lead")}
           primary={{ label: t("primary"), href: ENQUIRE }}
           secondary={{ label: t("secondary"), href: "#fet-calculator" }}
+        />
+        <FactStrip
           facts={[
             { k: t("factFitK"), v: t("factFitV") },
             { k: t("factEngineK"), v: t("factEngineV") },
             { k: t("factSizesK"), v: t("factSizesV") },
             { k: t("factWarrantyK"), v: t("factWarrantyV") },
           ]}
-          media={
-            <Figure
-              src="/products/fet/field-truck.jpg"
-              alt={t("howCaption")}
-              caption={t("howCaption")}
-              ratio="4/5"
-              priority
-              sizes="(min-width: 1024px) 45vw, 100vw"
-            />
-          }
         />
 
         {/* ══ Evidence ══════════════════════════════════════════════════════ */}
@@ -106,7 +103,7 @@ export default async function FuelEcoTechPage() {
             <Reveal className="lg:col-span-6">
               <Label onInk className="mb-10">{home("evidenceLabel")}</Label>
               <p id="fet-evidence" className="t-figure text-ink-fg">
-                13.9<span className="text-gold">%</span>
+                <CountUp value={13.9} /><span className="text-gold">%</span>
               </p>
               <Text size="lead" onInk className="mt-6 max-w-[30rem]">{home("evidenceFigureCaption")}</Text>
 
@@ -161,10 +158,20 @@ export default async function FuelEcoTechPage() {
           </Container>
         </Section>
 
-        {/* ══ What it doesn't touch ═════════════════════════════════════════ */}
+        <ImageBand image="/images/stock/engine-hands.jpg" alt={alt("engineHands")} height="medium" />
+
+        {/* ══ What it doesn't touch — with Vitorra's own fitting photographs ═ */}
         <Section tone="deep" aria-labelledby="fet-notouch">
           <Container>
-            <SectionHead id="fet-notouch" label={t("noTouchLabel")} title={t("noTouchTitle")} className="mb-14" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-end mb-16">
+              <SectionHead id="fet-notouch" label={t("noTouchLabel")} title={t("noTouchTitle")} className="lg:col-span-5" />
+              <div className="lg:col-span-6 lg:col-start-7">
+                <Mosaic
+                  a={{ src: "/products/fet/field-installed.jpg", alt: t("howCaption"), caption: t("howCaption") }}
+                  b={{ src: "/products/fet/field-in-hand.jpg", alt: t("fieldDeviceAlt") }}
+                />
+              </div>
+            </div>
             <FactGrid
               surface="deep"
               columns={4}

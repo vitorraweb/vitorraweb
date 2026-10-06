@@ -7,9 +7,11 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/reveal";
 import {
-  Section, Container, Label, Heading, Text, ButtonLink, TextLink, Figure,
+  Section, Container, Label, Heading, Text, TextLink,
 } from "@/components/system";
 import { ContactBand, CredentialGroups } from "@/components/system/blocks";
+import { CinematicHero, ImageBand, Picture, Mosaic } from "@/components/system/imagery";
+import { CountUp } from "@/components/system/CountUp";
 import { getBlogPosts } from "@/lib/api";
 import { CONTACT_ADDRESS, COMPANY_REG_NO } from "@/lib/constants";
 import type { BlogPost } from "@/types";
@@ -44,6 +46,7 @@ export async function generateMetadata({
 export default async function HomePage() {
   const t = await getTranslations("homeQA");
   const tp = await getTranslations("products");
+  const alt = await getTranslations("imageAlt");
   const locale = await getLocale();
 
   let posts: BlogPost[] = [];
@@ -56,6 +59,8 @@ export default async function HomePage() {
   const doors = [
     {
       key: "fet",
+      image: "/images/stock/road-mountains.jpg",
+      imageAlt: alt("roadMountains"),
       href: "/products/fuel-eco-tech",
       body: t("door1Body"),
       action: { label: t("door1Action"), href: "/products/fuel-eco-tech#fet-calculator" },
@@ -63,18 +68,24 @@ export default async function HomePage() {
     },
     {
       key: "seal",
+      image: "/images/stock/trauma-kit-open.jpg",
+      imageAlt: alt("traumaKit"),
       href: "/products/seal-wound-spray",
       body: t("door2Body"),
       action: { label: t("door2Action"), href: "/enquire?sector=SEAL" },
     },
     {
       key: "coffee",
+      image: "/images/stock/coffee-valley.jpg",
+      imageAlt: alt("coffeeValley"),
       href: "/products/coffee",
       body: t("door3Body"),
       action: { label: t("door3Action"), href: "/products/coffee#coffee-export" },
     },
     {
       key: "logistics",
+      image: "/images/stock/port-aerial.jpg",
+      imageAlt: alt("portAerial"),
       href: "/products/logistics",
       body: t("door4Body"),
       action: { label: t("door4Action"), href: "/enquire?sector=LOGISTICS" },
@@ -123,54 +134,38 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header />
-      <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
+      <Header overlay />
+      <main id="main" className="flex-1 bg-paper">
 
         {/* ══ 1 · Opening ═══════════════════════════════════════════════════ */}
-        <Section tone="paper" className="!pt-12 lg:!pt-20" aria-labelledby="home-title">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-end">
-            <div className="lg:col-span-7 lg:pb-6">
-              <Label className="mb-8">{t("openLabel")}</Label>
-              <Heading as="h1" size="display" id="home-title" className="text-ink">
-                {t("openTitle1")}
-                <br />
-                {t("openTitle2")}
-              </Heading>
-              <Text size="lead" className="mt-8 max-w-[34rem]">{t("openLead")}</Text>
-              <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
-                <ButtonLink href="/enquire">{t("openCta")}</ButtonLink>
-                <TextLink href="/about">{t("openSecondary")}</TextLink>
-              </div>
-            </div>
-            <div className="lg:col-span-5">
-              <Figure
-                src="/hero/about-hq.jpg"
-                alt={t("openImageAlt")}
-                caption={t("openCaption")}
-                ratio="4/5"
-                priority
-                sizes="(min-width: 1024px) 38vw, 100vw"
-              />
-            </div>
-          </Container>
-        </Section>
+        <CinematicHero
+          image="/images/stock/kampala-skyline.jpg"
+          alt={alt("kampala")}
+          label={t("openLabel")}
+          lines={[t("openTitle1"), t("openTitle2")]}
+          lead={t("openLead")}
+          primary={{ label: t("openCta"), href: "/enquire" }}
+          secondary={{ label: t("openSecondary"), href: "/about" }}
+          credit={t("heroCredit")}
+        />
 
-        {/* ══ 2 · Four doors ════════════════════════════════════════════════ */}
-        <section aria-labelledby="doors-heading" className="q-scope bg-paper border-y border-line">
+        {/* ══ 2 · Four doors — each shows the photograph its page opens on ═ */}
+        <Section tone="paper" aria-labelledby="doors-heading">
           <h2 id="doors-heading" className="sr-only">{t("doorsHeading")}</h2>
           <Container>
-            {/* Hairline grid: a 1px gap over the line colour draws every
-                divider at every breakpoint, with no per-column border rules. */}
-            <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-line md:-mx-8">
+            <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
               {doors.map((d, i) => (
-                <li key={d.key} className="flex flex-col bg-paper py-10 md:px-8 lg:py-14">
-                  <Label index={String(i + 1).padStart(2, "0")} className="mb-6">
+                <li key={d.key} className="flex flex-col">
+                  <Link href={d.href} className="group block" aria-label={tp(`${d.key}.name`)}>
+                    <Picture src={d.image} alt={d.imageAlt} ratio="4/5" zoom sizes="(min-width: 1024px) 24vw, (min-width: 640px) 46vw, 100vw" />
+                  </Link>
+                  <Label index={String(i + 1).padStart(2, "0")} className="mt-7 mb-4">
                     {tp(`${d.key}.tagline`)}
                   </Label>
                   <Heading as="h3" size="h3" className="text-ink">
                     <Link href={d.href} className="hover:text-gold-ink transition-colors">{tp(`${d.key}.name`)}</Link>
                   </Heading>
-                  <Text size="small" className="mt-3 mb-8 max-w-[22rem]">{d.body}</Text>
+                  <Text size="small" className="mt-3 mb-7">{d.body}</Text>
                   <div className="mt-auto flex flex-col items-start gap-3">
                     <TextLink href={d.action.href}>{d.action.label}</TextLink>
                     {d.second && <TextLink href={d.second.href} className="text-ink-muted">{d.second.label}</TextLink>}
@@ -179,7 +174,9 @@ export default async function HomePage() {
               ))}
             </ol>
           </Container>
-        </section>
+        </Section>
+
+        <ImageBand image="/images/stock/hills-road.jpg" alt={alt("hillsRoad")} statement={t("bandStatement")} />
 
         {/* ══ 3 · Evidence ══════════════════════════════════════════════════ */}
         <Section tone="ink" aria-labelledby="evidence-heading">
@@ -187,7 +184,7 @@ export default async function HomePage() {
             <Reveal className="lg:col-span-6">
               <Label onInk className="mb-10">{t("evidenceLabel")}</Label>
               <p id="evidence-heading" className="t-figure text-ink-fg">
-                13.9<span className="text-gold">%</span>
+                <CountUp value={13.9} /><span className="text-gold">%</span>
               </p>
               <Text size="lead" onInk className="mt-6 max-w-[30rem]">{t("evidenceFigureCaption")}</Text>
             </Reveal>
@@ -234,16 +231,13 @@ export default async function HomePage() {
         {/* ══ 5 · The company ═══════════════════════════════════════════════ */}
         <Section tone="deep" aria-labelledby="company-heading">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            <div className="lg:col-span-5 lg:order-2">
-              <Figure
-                src="/hero/brand-wall.jpg"
-                alt=""
-                caption={CONTACT_ADDRESS.join(", ")}
-                ratio="4/3"
-                sizes="(min-width: 1024px) 38vw, 100vw"
+            <div className="lg:col-span-6 lg:order-2">
+              <Mosaic
+                a={{ src: "/hero/about-hq.jpg", alt: alt("hq"), caption: CONTACT_ADDRESS.join(", ") }}
+                b={{ src: "/hero/brand-wall.jpg", alt: alt("reception"), caption: t("companyPhotoCaption") }}
               />
             </div>
-            <div className="lg:col-span-6 lg:order-1">
+            <div className="lg:col-span-5 lg:order-1">
               <Label className="mb-6">{t("companyLabel")}</Label>
               <Heading id="company-heading" size="h2" className="text-ink">{t("companyTitle")}</Heading>
               <Text className="mt-6 max-w-[34rem]">{t("companyBody", { reg: COMPANY_REG_NO })}</Text>
@@ -287,14 +281,14 @@ export default async function HomePage() {
                 {fallbackNews.map((n) => {
                   const body = (
                     <>
-                      <div className="relative overflow-hidden rounded-frame bg-paper-deep" style={{ aspectRatio: "4/3" }}>
-                        <Image
+                      <div className="relative overflow-hidden rounded-frame bg-paper-deep q-unveil q-zoom" style={{ aspectRatio: "4/3" }}>
+                        <div className="q-inner absolute inset-0"><Image
                           src={n.image}
                           alt={n.caption}
                           fill
                           sizes="(min-width: 768px) 30vw, 100vw"
-                          className="object-cover transition-transform duration-700 ease-quiet group-hover:scale-[1.02]"
-                        />
+                          className="object-cover"
+                        /></div>
                       </div>
                       <p className="t-label text-ink-muted mt-5">{n.tag}</p>
                       <p className="t-h3 text-ink mt-2 group-hover:text-gold-ink transition-colors">{n.title}</p>
