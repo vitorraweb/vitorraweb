@@ -340,6 +340,19 @@ export default function Testimonials() {
           ))}
         </div>
 
+        {/* The payback figure is real but conditional — it is the VW T5's, not
+            a promise for every vehicle. Unlabelled it contradicted both the
+            calculator and the blog, which read as unreliability rather than as
+            three different vehicles. */}
+        <Reveal delay={240}>
+          <p
+            className="mt-6 mx-auto text-center"
+            style={{ fontSize: "12px", lineHeight: 1.7, color: "#8A8A8A", maxWidth: "720px" }}
+          >
+            {t("metricsBasis")}
+          </p>
+        </Reveal>
+
       </div>
     </section>
   );

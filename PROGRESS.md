@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 1 October 2026
+**Last updated:** 6 October 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -858,6 +858,184 @@ where to look. It now reads as a brand stage.
 > reads at full lobby scale are worth two minutes in front of the real screen.
 
 ---
+
+---
+
+## ✅ Coffee is now sold on the website — the export side (6 October 2026)
+
+Vitorra is a **Gold Plus verified supplier on go4WorldBusiness** (member since
+September 2026) with a live listing for **Arabica (Roasted) Coffee Beans**. That
+listing carried real trade terms — a price, a minimum order, grades, an HS code,
+a loading port — while vitorra.org carried none of them. A buyer who found us on
+the portal and then came to our own site found less information, not more.
+
+That is now closed. `/products/coffee` has a full **export & wholesale
+specification**, in both English and Swahili.
+
+### What a buyer now sees on our own site
+- **The price, openly:** $5,600 – $5,800 per metric tonne, EXW — the same band
+  already published on the portal.
+- **The bulk caveat sits next to the price, not in the small print.** The listing
+  says plainly that the band does not apply to bulk; so does our page. A buyer
+  who discovers that only at quote stage is a buyer we have misled.
+- **The terms that decide whether they enquire:** HS 0901.21, minimum order
+  1 metric tonne, EXW, Mombasa, 7-day lead time, customised packaging, the
+  Vitorra Coffee trademark.
+- **The five grades** we can supply (AA, A, AB, B, PB Peaberry), with A marked as
+  the grade our price is quoted on.
+- **Documentation offered on enquiry** — certificate of origin, grading report,
+  phytosanitary, food safety — framed as *what we will confirm in writing for
+  your market*, never as certifications we already hold.
+- **Two ways in:** request a bulk quote, or request a sample (sample and its
+  shipping carried by the buyer, exactly as the listing states).
+
+The enquiry form now asks export buyers for **grade, delivery terms and whether
+they want a sample**, so a serious enquiry arrives quotable instead of costing
+the team a round-trip email.
+
+### A contradiction this caught
+The enquiry form told buyers **"export starts at 60 kg (one bag)"**. Our trade
+listing says the minimum is **one metric tonne** — sixteen times that. A buyer
+briefed at 60 kg and quoted at a tonne is a lost buyer. Corrected in English and
+Swahili.
+
+### ⚠ Four things deliberately left OFF the website
+Each is on the trade listing, and each needs the Director to confirm it before it
+goes on our own site:
+
+| On the listing | Why it is not on vitorra.org |
+|---|---|
+| **"Production capacity: 500,000 tons"** | Uganda's **entire national annual output** is roughly 400,000 tonnes. As written we claim to out-produce the country. A serious importer checks this. |
+| **Export destinations** | The company profile says France, Germany, Italy, Denmark, Poland, Portugal. The product page says Germany, Netherlands, Croatia. They overlap only on Germany. We say "European buyers", which both support, until one is confirmed. |
+| **"Annual sales USD 1m–5m"** | Commercially sensitive, and a buyer does not need it to enquire. |
+| **"Organically harvested"** | No organic certification is claimed anywhere. In the EU this is a regulated word. |
+
+### ⏳ What Operations still needs to settle
+Not code — but these decide whether export orders can actually be fulfilled:
+1. **UCDA registration.** Exporting coffee from Uganda requires registration with
+   the Uganda Coffee Development Authority. Nothing in our records confirms we
+   hold it. This is a licence question, not a website question.
+2. **EUDR.** The EU Deforestation Regulation covers coffee. Selling into France,
+   Germany or Italy requires due-diligence statements and plot geolocation. The
+   listing's "Standard: NA" is the opposite of what an EU buyer needs to see.
+3. **EXW vs Mombasa.** The listing quotes **EXW** (buyer collects in Kampala) but
+   also names **Mombasa** as the loading port. Under EXW a loading port is
+   meaningless — the two together read as inexperience to a real importer. Most
+   coffee trades FOB Mombasa or CIF destination. Worth deciding which we mean.
+4. **Roasted vs green.** We list *roasted* beans (HS 0901.21) in 1-tonne lots.
+   European buyers overwhelmingly import **green** coffee (HS 0901.11) and roast
+   locally, because roasted coffee stales in weeks and a tonne of it is a short
+   shelf life to ship. If we can supply green, it likely opens more doors than
+   the current listing does.
+5. **The two export-destination lists** above need reconciling on the portal too,
+   not just on our site.
+
+> **Retail is still gated and this does not change that.** The trade listing
+> carries no retail price, so the coffee shop stays off until the team confirms
+> the bag prices. Item 2 under "Revenue-blocking" is unchanged.
+
+> Technical detail (engineering): `lib/coffee-export.ts` (trade terms, grades,
+> price band — with the omitted claims documented in-file),
+> `components/sections/CoffeeExportSpec.tsx` (ivory section between Proof and
+> Ways to Buy, keeping the dark/light alternation), coffee page copy + FAQ
+> reordered export-first, `lib/enquiry-schema.ts` export branch (grade,
+> incoterms, sample), `messages/{en,sw}.json`. Typecheck and production build
+> clean; both locales verified rendering. ⚠ Swahili copy is mine, not a native
+> speaker's — it joins the pending review in item 21.
+
+
+---
+
+## ✅ Acting on the external platform review (6 October 2026)
+
+An outside review of the site raised nine areas. Every concrete claim was checked
+against the code before anything was changed. Several were confirmed, one turned
+out worse than reported, and several "I can't tell whether this exists" items
+already exist (server-side payment verification, account scoping, monitoring,
+lead-source tracking, enquiry chasing, the CRM).
+
+### The website was turning away customers the device fits
+The review spotted two tiers whose engine ranges disagreed with our own PDF
+datasheet. Checked against the **manufacturer's** application overviews (the two
+`2026-02-05_Engine overview_*.pdf` files), **all four tiers under-stated what the
+device covers**:
+
+| Device | Site said | Manufacturer says | Who was told "no fit" |
+|---|---|---|---|
+| FI | 1.4–2.0L | **1.0–2.0L** | Small cars (Polo, Fiesta class) |
+| FII | 1.5–3.0L cars & SUVs | 1.5–3.0L **plus Sprinter-class vans to 5t** | Van fleets |
+| FIII | 3.0–6.7L light trucks | **3.0–9.0L**, light **and medium trucks to 18t**, plus 4.0–6.5L performance cars | Medium-truck fleets |
+| FIV | 12–13L | **10–16L** | Hauliers running 10–12L or 15–16L engines |
+
+Fixed at the root: the manufacturer table now lives in one file
+(`frontend/src/data/fet-applications.json`), the website derives every range from
+it, and the PDF generator **refuses to build** if its tables disagree with it. The
+two can no longer drift apart silently.
+
+### Three payback figures, now explained instead of contradicting each other
+The homepage said 3–5 months, a blog placeholder said "around 14 months", and the
+calculator's own default produced about two years. The 3–5 month figure is real —
+it is the VW T5's — but it was never labelled. It now says whose figure it is and
+on what basis. The "14-month" line was editorial filler with no source behind it,
+shown whenever the blog could not load; it has been replaced with a statement
+that is true.
+
+### The calculator is now a decision tool
+Before: a customer got a precise-looking answer without ever saying how much fuel
+their vehicle uses (it was hidden and fixed per tier), in euros, at a German pump
+price, with a savings floor of 8% — so it could never show a purchase that does
+not pay.
+
+Now:
+- **Your real fuel use** — in L/100km or km/L — **or simply what you spend on
+  fuel a month**, which most fleet managers know better than their consumption.
+- **UGX first**, with USD and EUR; the device price is converted at the day's rate.
+- **Savings down to 0%**, with one-tap "if it saves nothing" and "low case"
+  scenarios. At 0% it says plainly: no saving, no payback.
+- **Petrol and diesel** use their own emission figures.
+- **Every input still on a default is tagged "Assumed"**, and the full working is
+  printed under the result, so nothing is a black box.
+- **Share link** — the estimate opens again with exactly the same inputs, and the
+  link travels inside the enquiry, so sales sees the customer's own numbers.
+
+**What it now shows honestly:** at a Kampala pump price and a 10% saving, a
+typical **car pays back in about 32 months; light and heavy trucks in about 10–11
+months**. FET's economics are a fleet and truck story — the old calculator's EUR
+figures were obscuring that, and it is worth knowing for where marketing spends.
+
+> ⚠ The calculator's starting pump price is **UGX 5,000/L** — labelled as an
+> assumption on screen and always editable, but confirm it against the current
+> pump price before a campaign (`DEFAULT_FUEL_PRICE_UGX` in `lib/fet-pricing.ts`).
+
+### "Cookie settings" now exists
+Our cookie policy tells visitors to click "Cookie settings" in the footer to
+change their choice. There was no such control — once someone chose, they could
+never change it. It now sits in the footer's Legal column, reopens the banner,
+and shows the choice currently on record.
+
+### Still open from the review — needs the business, not code
+- **Evidence centre** (the review's top point): the structure can be built, but it
+  needs, per claim, the certificate or report, who issued it, its number, scope
+  and expiry, and whether we may publish it. ISO 9001 / 27001 are company
+  management certifications — they should sit apart from the CTI product test
+  and the Zurich insurance, not in the same block.
+- **Measured pilot offer**: cost, duration, eligibility, and what happens if the
+  saving comes in low. The FET Trial Manager already does the measuring.
+- **Before-you-pay summary** on reservations: deposit or full payment, what
+  happens if the device does not fit, and cancellation and refund terms.
+- **Logistics**: the real tracking service and realistic border commitments.
+
+> Technical detail (engineering): `data/fet-applications.json` +
+> `engineSpanLabel`/derived spans in `lib/fet-pricing.ts`; drift guard
+> `assert_spans_match_source()` in `scripts/generate_fet_pdfs.py`;
+> `estimateSavings()` (usage/spend modes, fuel-specific CO₂, payback in months —
+> the old `computeSavings()` is kept for the customer-portal widget);
+> `FetCalculator.tsx` rebuilt (assumption tracking, scenario chips, working
+> panel, share link via `?fetcalc=1…#fet-calculator`); `FALLBACK_RATES` exported
+> from `lib/currency.ts`; `components/ui/cookie-settings-button.tsx` + consent
+> helpers in `lib/cookies.ts`. EN + SW. Typecheck and production build clean.
+> ⚠ Swahili is mine, not a native speaker's.
+
 
 ## ⏳ Remaining / pending
 

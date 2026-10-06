@@ -10,6 +10,7 @@ and any customer PII. The datasheet shows only the public Kampala selling prices
 Run:  python scripts/generate_fet_pdfs.py   (requires reportlab)
 """
 
+import json
 import os
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -226,6 +227,43 @@ def datasheet():
 
     build(os.path.join(OUT, "vitorra-fet-datasheet.pdf"), flow)
 
+# ─── Drift guard ──────────────────────────────────────────────────────────────
+# The engine ranges printed in these PDFs must agree with the website, which
+# derives its ranges from the transcribed manufacturer application overview at
+# frontend/src/data/fet-applications.json. Until October 2026 the two were
+# maintained independently and silently diverged: the site advertised FIV as
+# "12-13L" while this PDF correctly said 10-16L, so a haulier with 15-litre
+# trucks was told on the website that nothing fitted. This refuses to generate
+# a PDF that disagrees with that source.
+APPLICATIONS_JSON = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "frontend", "src", "data", "fet-applications.json",
+)
+
+# What this script's own tables claim each device spans, in litres.
+PDF_SPANS = {"FI": (1.0, 2.0), "FII": (1.5, 3.0), "FIII": (3.0, 9.0), "FIV": (10.0, 16.0)}
+
+
+def assert_spans_match_source():
+    """Fail loudly if the PDF tables and the manufacturer source disagree."""
+    with open(APPLICATIONS_JSON) as fh:
+        rows = json.load(fh)["rows"]
+
+    for device, (lo, hi) in PDF_SPANS.items():
+        got = [r for r in rows if r["device"] == device]
+        if not got:
+            raise SystemExit(f"FET drift: no application rows for {device}")
+        src = (min(r["engineMinL"] for r in got), max(r["engineMaxL"] for r in got))
+        if src != (lo, hi):
+            raise SystemExit(
+                f"FET drift: this script prints {device} as {lo}-{hi}L but "
+                f"{os.path.relpath(APPLICATIONS_JSON)} says {src[0]}-{src[1]}L.\n"
+                "Reconcile against the manufacturer overview before publishing."
+            )
+    print(f"  spans verified against {os.path.relpath(APPLICATIONS_JSON)}")
+
+
 if __name__ == "__main__":
+    assert_spans_match_source()
     application_guide()
     datasheet()

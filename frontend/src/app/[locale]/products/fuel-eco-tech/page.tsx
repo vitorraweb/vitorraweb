@@ -553,6 +553,19 @@ export default function FuelEcoTechPage() {
                 </Reveal>
               ))}
             </div>
+
+            {/* The payback figure is the VW T5's, not a promise for every
+                vehicle. Unlabelled it contradicted the calculator directly
+                below it, which reads as unreliability rather than as two
+                different vehicles. */}
+            <Reveal delay={240}>
+              <p
+                className="mt-6 mx-auto text-center"
+                style={{ fontSize: "12px", lineHeight: 1.7, color: "rgba(255,255,255,0.38)", maxWidth: "720px" }}
+              >
+                {t("metricsBasis")}
+              </p>
+            </Reveal>
           </div>
         </section>
 

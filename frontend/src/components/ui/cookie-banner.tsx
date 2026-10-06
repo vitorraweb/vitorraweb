@@ -5,31 +5,41 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { X } from "lucide-react";
-
-const KEY = "vitorra_cookie_consent";
+import { COOKIE_SETTINGS_EVENT, readConsent, writeConsent, type CookieConsent } from "@/lib/cookies";
 
 export function CookieBanner() {
   const t = useTranslations("cookieBanner");
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
+  /* The choice already on record, so a returning visitor sees what they picked
+     rather than a banner that looks like a first-time prompt. */
+  const [current, setCurrent] = useState<CookieConsent | null>(null);
 
   useEffect(() => {
-    try {
-      if (!localStorage.getItem(KEY)) setVisible(true);
-    } catch { /* private browsing */ }
+    const choice = readConsent();
+    setCurrent(choice);
+    if (!choice) setVisible(true);
+
+    /* "Cookie settings" in the footer reopens this — the policy promises the
+       preference can be changed at any time. */
+    const reopen = () => {
+      setCurrent(readConsent());
+      setVisible(true);
+    };
+    window.addEventListener(COOKIE_SETTINGS_EVENT, reopen);
+    return () => window.removeEventListener(COOKIE_SETTINGS_EVENT, reopen);
   }, []);
 
   // Unattended reception kiosk — nobody is present to dismiss a consent banner.
   if (pathname?.startsWith("/display")) return null;
 
-  const accept = () => {
-    try { localStorage.setItem(KEY, "accepted"); } catch { /* */ }
+  const choose = (value: CookieConsent) => {
+    writeConsent(value);
+    setCurrent(value);
     setVisible(false);
   };
-  const decline = () => {
-    try { localStorage.setItem(KEY, "declined"); } catch { /* */ }
-    setVisible(false);
-  };
+  const accept = () => choose("accepted");
+  const decline = () => choose("declined");
 
   if (!visible) return null;
 
@@ -48,10 +58,20 @@ export function CookieBanner() {
             {t("policyLink")}
           </Link>
         </p>
-        <button onClick={decline} aria-label={t("dismiss")} className="shrink-0 hover:opacity-60 transition-opacity" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <button
+          onClick={() => (current ? setVisible(false) : decline())}
+          aria-label={t("dismiss")}
+          className="shrink-0 hover:opacity-60 transition-opacity"
+          style={{ color: "rgba(255,255,255,0.4)" }}
+        >
           <X className="w-4 h-4" />
         </button>
       </div>
+      {current && (
+        <p className="text-[11.5px] mb-2.5" style={{ color: "rgba(255,255,255,0.45)" }}>
+          {t(current === "accepted" ? "currentAccepted" : "currentDeclined")}
+        </p>
+      )}
       <div className="flex gap-2">
         <button onClick={decline} className="btn-ghost-dark text-xs px-4 py-2" style={{ borderRadius: "12px" }}>
           {t("decline")}

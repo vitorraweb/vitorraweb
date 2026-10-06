@@ -196,6 +196,47 @@ export function getEnquirySchemas(t: Translator, tt: Translator): Record<UiCateg
               ? t("coffeeHelpLocal")
               : null,
       },
+      /* Export-only trade questions. Grade, incoterms and destination port are
+         what turn "how much is coffee" into a quotable brief — without them
+         every export enquiry costs the team a round-trip email. */
+      {
+        id: "grade",
+        label: t("coffeeGrade"),
+        type: "single",
+        showIf: (a) => a.channel === "export",
+        options: [
+          { value: "A", label: t("coffeeGradeA") },
+          { value: "AA", label: t("coffeeGradeAA") },
+          { value: "AB", label: t("coffeeGradeAB") },
+          { value: "B", label: t("coffeeGradeB") },
+          { value: "PB", label: t("coffeeGradePB") },
+          { value: "advise", label: t("coffeeGradeAdvise") },
+        ],
+      },
+      {
+        id: "incoterms",
+        label: t("coffeeIncoterms"),
+        type: "single",
+        showIf: (a) => a.channel === "export",
+        options: [
+          { value: "exw", label: t("coffeeExw") },
+          { value: "fob", label: t("coffeeFob") },
+          { value: "cif", label: t("coffeeCif") },
+          { value: "advise", label: t("coffeeIncotermsAdvise") },
+        ],
+        help: t("coffeeIncotermsHelp"),
+      },
+      {
+        id: "sample",
+        label: t("coffeeSample"),
+        type: "single",
+        showIf: (a) => a.channel === "export",
+        options: [
+          { value: "yes", label: t("coffeeSampleYes") },
+          { value: "no", label: t("coffeeSampleNo") },
+        ],
+        help: t("coffeeSampleHelp"),
+      },
       {
         id: "frequency",
         label: t("coffeeFrequency"),

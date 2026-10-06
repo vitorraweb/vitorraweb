@@ -1,0 +1,44 @@
+{
+  "_provenance": {
+    "source": "FET manufacturer application overviews, 2026-02-05",
+    "files": [
+      "2026-02-05_Engine overview_Cars_SUV_Sportcars (1).pdf",
+      "2026-02-05_Engine overview_Commercial Vehicle_til_40t (1).pdf"
+    ],
+    "transcribed": "2026-10-06",
+    "note": "SINGLE SOURCE OF TRUTH for which device fits which vehicle. The website tier cards, the enquiry form and scripts/generate_fet_pdfs.py all derive from this file. Do not edit a displayed engine range anywhere else — edit it here. The manufacturer RRP column is deliberately NOT carried over: we publish our own landed selling price, never the supplier's RRP.",
+    "warning": "Class assignment also depends on fuel-line inner diameter, flow rate, injection system, vehicle class and usage profile. Displacement alone does not confirm a fit — every sale is confirmed by assessment."
+  },
+
+  "rows": [
+    { "device": "FI",   "class": "Small cars",           "displacement": "1.0",       "engineMinL": 1.0, "engineMaxL": 1.0, "typical": "Polo, Fiesta",        "role": "Downsizing" },
+    { "device": "FI",   "class": "Compact class",        "displacement": "1.4 – 1.5", "engineMinL": 1.4, "engineMaxL": 1.5, "typical": "Golf, A3",            "role": "EU standard" },
+    { "device": "FI",   "class": "Compact class",        "displacement": "1.8 – 2.0", "engineMinL": 1.8, "engineMaxL": 2.0, "typical": "GTI, i30N",           "role": "Sporty" },
+    { "device": "FI",   "class": "Mid-range",            "displacement": "2.0",       "engineMinL": 2.0, "engineMaxL": 2.0, "typical": "Passat, 3-series",    "role": "Sweet spot" },
+    { "device": "FI",   "class": "Mini-bus / Van",       "displacement": "1.6",       "engineMinL": 1.6, "engineMaxL": 1.6, "typical": "Shuttle, taxi",       "role": "Up to 3.5t" },
+    { "device": "FI",   "class": "Mini-bus / Van",       "displacement": "2.0",       "engineMinL": 2.0, "engineMaxL": 2.0, "typical": "Standard transport",  "role": "Up to 3.5t" },
+
+    { "device": "FII",  "class": "Mid-range",            "displacement": "2.5",       "engineMinL": 2.5, "engineMaxL": 2.5, "typical": "RS3",                 "role": "Performance" },
+    { "device": "FII",  "class": "Upper class",          "displacement": "3.0",       "engineMinL": 3.0, "engineMaxL": 3.0, "typical": "5-series, E-Class",   "role": "Premium" },
+    { "device": "FII",  "class": "SUV compact",          "displacement": "1.5 – 2.0", "engineMinL": 1.5, "engineMaxL": 2.0, "typical": "Tiguan, Q3",          "role": "Mass market" },
+    { "device": "FII",  "class": "Large SUV",            "displacement": "3.0",       "engineMinL": 3.0, "engineMaxL": 3.0, "typical": "X5, GLE",             "role": "Long distance" },
+    { "device": "FII",  "class": "Sports cars",          "displacement": "2.0",       "engineMinL": 2.0, "engineMaxL": 2.0, "typical": "Supra 2.0",           "role": "Lightweight" },
+    { "device": "FII",  "class": "Sports cars",          "displacement": "3.0",       "engineMinL": 3.0, "engineMaxL": 3.0, "typical": "Supra, 911",          "role": "Performance" },
+    { "device": "FII",  "class": "Mini-bus / Van",       "displacement": "2.2 – 2.3", "engineMinL": 2.2, "engineMaxL": 2.3, "typical": "Payload-oriented",    "role": "Up to 3.5t" },
+    { "device": "FII",  "class": "Mini-bus / Van",       "displacement": "3.0",       "engineMinL": 3.0, "engineMaxL": 3.0, "typical": "Trailer / mountains", "role": "Up to 3.5t" },
+    { "device": "FII",  "class": "Transporter / Sprinter","displacement": "2.0 – 2.3","engineMinL": 2.0, "engineMaxL": 2.3, "typical": "Local transport",     "role": "3.5 – 5.0t" },
+    { "device": "FII",  "class": "Transporter / Sprinter","displacement": "3.0",      "engineMinL": 3.0, "engineMaxL": 3.0, "typical": "5t class",            "role": "3.5 – 5.0t" },
+
+    { "device": "FIII", "class": "Upper class",          "displacement": "4.0",       "engineMinL": 4.0, "engineMaxL": 4.0, "typical": "S-Class",             "role": "Luxury" },
+    { "device": "FIII", "class": "SUV performance",      "displacement": "4.0",       "engineMinL": 4.0, "engineMaxL": 4.0, "typical": "X5M, G63",            "role": "High performance" },
+    { "device": "FIII", "class": "Supersport cars",      "displacement": "4.0 – 6.5", "engineMinL": 4.0, "engineMaxL": 6.5, "typical": "Ferrari, Lamborghini","role": "Emotion" },
+    { "device": "FIII", "class": "Light trucks",         "displacement": "3.0 – 4.5", "engineMinL": 3.0, "engineMaxL": 4.5, "typical": "City / distribution", "role": "5.0 – 12t" },
+    { "device": "FIII", "class": "Light trucks",         "displacement": "6.0 – 6.7", "engineMinL": 6.0, "engineMaxL": 6.7, "typical": "Distribution traffic","role": "5.0 – 12t" },
+    { "device": "FIII", "class": "Medium trucks",        "displacement": "7.7 – 8.0", "engineMinL": 7.7, "engineMaxL": 8.0, "typical": "Regional / long-haul","role": "12 – 18t" },
+    { "device": "FIII", "class": "Medium trucks",        "displacement": "9.0",       "engineMinL": 9.0, "engineMaxL": 9.0, "typical": "Heavy distribution",  "role": "12 – 18t" },
+
+    { "device": "FIV",  "class": "Heavy trucks",         "displacement": "10 – 12",   "engineMinL": 10.0, "engineMaxL": 12.0, "typical": "Long-distance",     "role": "Up to 40t" },
+    { "device": "FIV",  "class": "Heavy trucks",         "displacement": "12 – 13",   "engineMinL": 12.0, "engineMaxL": 13.0, "typical": "Long-distance",     "role": "Up to 40t" },
+    { "device": "FIV",  "class": "Heavy trucks",         "displacement": "15 – 16",   "engineMinL": 15.0, "engineMaxL": 16.0, "typical": "Heavy load",        "role": "Up to 40t" }
+  ]
+}

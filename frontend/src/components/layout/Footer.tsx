@@ -2,6 +2,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ArrowUpRight, MapPin, Mail, Phone } from "lucide-react";
+import { CookieSettingsButton } from "@/components/ui/cookie-settings-button";
 import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_ALT, CONTACT_ADDRESS, COMPANY_REG_NO, SITE_NAME } from "@/lib/constants";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 import NewsletterSignup from "./NewsletterSignup";
@@ -139,6 +140,14 @@ export default function Footer() {
                     </Link>
                   </li>
                 ))}
+                {/* The published cookie policy tells visitors to click
+                    "Cookie settings" here, so the control lives in the Legal
+                    column beside the policy it changes. */}
+                {col.heading === t("footer.colLegal") && (
+                  <li>
+                    <CookieSettingsButton className="text-sm text-white/55 hover:text-white transition-colors" />
+                  </li>
+                )}
               </ul>
             </div>
           ))}

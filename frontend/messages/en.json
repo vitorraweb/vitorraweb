@@ -17,10 +17,22 @@
     "contact": "Contact"
   },
   "products": {
-    "fet": { "name": "Fuel Eco Tech", "tagline": "Fleet fuel efficiency technology" },
-    "seal": { "name": "SEAL Wound Spray", "tagline": "Hemostatic emergency care" },
-    "coffee": { "name": "Vitorra Coffee", "tagline": "Premium Ugandan coffee" },
-    "logistics": { "name": "Logistics Services", "tagline": "End-to-end freight & supply chain" }
+    "fet": {
+      "name": "Fuel Eco Tech",
+      "tagline": "Fleet fuel efficiency technology"
+    },
+    "seal": {
+      "name": "SEAL Wound Spray",
+      "tagline": "Hemostatic emergency care"
+    },
+    "coffee": {
+      "name": "Vitorra Coffee",
+      "tagline": "Premium Ugandan coffee"
+    },
+    "logistics": {
+      "name": "Logistics Services",
+      "tagline": "End-to-end freight & supply chain"
+    }
   },
   "header": {
     "navigation": "Navigation",
@@ -52,7 +64,10 @@
     "policyLink": "Cookie policy",
     "dismiss": "Dismiss without accepting",
     "decline": "Decline",
-    "acceptAll": "Accept all"
+    "acceptAll": "Accept all",
+    "settings": "Cookie settings",
+    "currentAccepted": "You currently allow optional analytics cookies.",
+    "currentDeclined": "You currently decline optional analytics cookies."
   },
   "meta": {
     "home": {
@@ -99,13 +114,33 @@
       "title": "Vitorra Coffee | Retail Store Launching Soon",
       "description": "Our single-origin GOLD retail store is launching soon. Wholesale and export buyers can order today, enquire for pricing and volumes."
     },
-    "legalPrivacy": { "title": "Privacy Policy | Vitorra Holdings Limited", "description": "How Vitorra Holdings Limited collects, uses, and protects your personal information." },
-    "legalTerms": { "title": "Terms & Conditions | Vitorra Holdings Limited", "description": "The terms governing use of the Vitorra Holdings website and purchase of Vitorra products." },
-    "legalReturns": { "title": "Returns & Warranty | Vitorra Holdings Limited", "description": "Vitorra Holdings returns, refund, and warranty policy for Coffee Shop orders and B2B products." },
-    "legalCookies": { "title": "Cookie Policy | Vitorra Holdings Limited", "description": "How Vitorra Holdings uses cookies and how to manage your preferences." },
-    "blog": { "title": "Blog & Insights | Vitorra Holdings Limited", "description": "Insights, updates, and stories from Vitorra Holdings: fuel technology, healthcare, premium Ugandan coffee, and logistics across East Africa." },
-    "article": { "title": "Article | Vitorra Holdings" },
-    "careers": { "title": "Careers | Vitorra Holdings Limited", "description": "Join Vitorra Holdings: careers across fuel technology, healthcare, premium coffee, and logistics in Kampala, Uganda. Send a general application or ask about open roles." }
+    "legalPrivacy": {
+      "title": "Privacy Policy | Vitorra Holdings Limited",
+      "description": "How Vitorra Holdings Limited collects, uses, and protects your personal information."
+    },
+    "legalTerms": {
+      "title": "Terms & Conditions | Vitorra Holdings Limited",
+      "description": "The terms governing use of the Vitorra Holdings website and purchase of Vitorra products."
+    },
+    "legalReturns": {
+      "title": "Returns & Warranty | Vitorra Holdings Limited",
+      "description": "Vitorra Holdings returns, refund, and warranty policy for Coffee Shop orders and B2B products."
+    },
+    "legalCookies": {
+      "title": "Cookie Policy | Vitorra Holdings Limited",
+      "description": "How Vitorra Holdings uses cookies and how to manage your preferences."
+    },
+    "blog": {
+      "title": "Blog & Insights | Vitorra Holdings Limited",
+      "description": "Insights, updates, and stories from Vitorra Holdings: fuel technology, healthcare, premium Ugandan coffee, and logistics across East Africa."
+    },
+    "article": {
+      "title": "Article | Vitorra Holdings"
+    },
+    "careers": {
+      "title": "Careers | Vitorra Holdings Limited",
+      "description": "Join Vitorra Holdings: careers across fuel technology, healthcare, premium coffee, and logistics in Kampala, Uganda. Send a general application or ask about open roles."
+    }
   },
   "hero": {
     "primaryCta": "Request a Quote",
@@ -316,7 +351,8 @@
     "metric2Unit": "- €1,300",
     "metric2Label": "Total estimated annual savings",
     "metric3Unit": "incidents",
-    "metric3Label": "Limp-mode events post-installation"
+    "metric3Label": "Limp-mode events post-installation",
+    "metricsBasis": "Payback shown for the VW T5 test vehicle — its measured 13.9% reduction, commercial-van fuel use and European pump prices, against the FET-PRO-FI device price. Payback moves with the vehicle, the distance driven and the local fuel price. The calculator estimates yours."
   },
   "blogPreview": {
     "eyebrow": "Blog & Insights",
@@ -329,7 +365,7 @@
     "placeholder1Body": "Vitorra introduced the German-engineered fuel-saving system to the Ugandan market, lower fuel costs and emissions, with no engine modification.",
     "placeholder1Cta": "About Fuel Eco Tech",
     "placeholder2Tag": "Fuel Eco Tech",
-    "placeholder2Title": "Proven savings, around a 14-month payback",
+    "placeholder2Title": "Independently verified in a German field test",
     "placeholder2Body": "ISO-certified and Zurich-insured, FET fits between the fuel pump and filter to optimise combustion across cars, fleets, and machinery.",
     "placeholder2Cta": "Request an assessment",
     "placeholder3Tag": "In the press",
@@ -535,13 +571,34 @@
     "finalCtaTitleLead": "Ready to cut your",
     "finalCtaTitleAccent": "fuel bill?",
     "finalCtaBody": "Book a no-obligation fuel savings assessment. We'll review your fleet and come back with tailored options and expected results.",
-    "finalCtaCaption": "No obligation  ·  Tailored to your fleet  ·  Reply within 24 hours"
+    "finalCtaCaption": "No obligation  ·  Tailored to your fleet  ·  Reply within 24 hours",
+    "metricsBasis": "Payback shown for the VW T5 test vehicle — its measured 13.9% reduction, commercial-van fuel use and European pump prices, against the FET-PRO-FI device price. Your own figure depends on your vehicle, annual distance and fuel price."
   },
   "fetTiers": {
-    "car": { "label": "Car / Mini-bus", "fits": "Compact & mid-range cars, mini-buses", "segment": "Petrol / diesel · 1.4-2.0L", "examples": "Corolla, Golf, Hiace, mini-buses & vans" },
-    "suv": { "label": "SUV / Large car", "fits": "SUVs, sports, upper-class & large cars", "segment": "Petrol / diesel · 1.5-3.0L", "examples": "Tiguan, RAV4, X5, GLE, Sprinter vans" },
-    "lighttruck": { "label": "Light truck", "fits": "Light commercial trucks & vans", "segment": "Diesel · 3.0-6.7L", "examples": "City & distribution trucks, 5-18t" },
-    "heavytruck": { "label": "Heavy truck", "fits": "Heavy goods vehicles & haulage", "segment": "Diesel · 12-13L", "examples": "Long-haul trucks, up to 40t" }
+    "car": {
+      "label": "Car / Mini-bus",
+      "fits": "Small, compact & mid-range cars, mini-buses",
+      "segment": "Petrol / diesel · 1.0-2.0L",
+      "examples": "Polo, Fiesta, Corolla, Golf, Passat, Hiace"
+    },
+    "suv": {
+      "label": "SUV / Large car / Van",
+      "fits": "SUVs, sports & upper-class cars, Sprinter-class vans",
+      "segment": "Petrol / diesel · 1.5-3.0L",
+      "examples": "Tiguan, RAV4, X5, GLE, Supra, Sprinter to 5t"
+    },
+    "lighttruck": {
+      "label": "Light & medium truck",
+      "fits": "Light and medium trucks to 18t, plus performance cars",
+      "segment": "Diesel / petrol · 3.0-9.0L",
+      "examples": "City, distribution & regional trucks, 5-18t"
+    },
+    "heavytruck": {
+      "label": "Heavy truck",
+      "fits": "Heavy goods vehicles & haulage",
+      "segment": "Diesel · 10-16L",
+      "examples": "Long-haul & heavy-load trucks, up to 40t"
+    }
   },
   "fetPricing": {
     "eyebrow": "Full line pricing",
@@ -594,7 +651,7 @@
   "fetCalculator": {
     "eyebrow": "Savings calculator",
     "title": "How much could your fleet save?",
-    "body": "Enter your vehicles and usage to see an estimated annual fuel saving, payback period, and CO₂ avoided. Your real figures are confirmed in a free assessment.",
+    "body": "Tell us what your vehicles actually use, or simply what you spend on fuel, and see an estimated saving, payback and CO₂ avoided — with the working shown. Your real figures are confirmed in a free assessment.",
     "seePricing": "See full line pricing",
     "vehicleType": "Vehicle type",
     "fleetSize": "Fleet size",
@@ -611,17 +668,55 @@
     "resultPaybackLabel": "Payback period",
     "resultPaybackSub": "Time to break even",
     "resultCo2Label": "CO₂ avoided",
-    "resultCo2Sub": "Lower emissions / year",
+    "resultCo2Sub": "A year, {fuel} factor",
     "yearAbbr": "yr",
     "fleetInvestmentPrefix": "Total device investment",
     "fleetInvestmentSuffix": "· {price} per vehicle, installed",
     "requestQuote": "Request a Quote",
-    "disclaimer": "Estimates based on field and lab test data. Actual savings vary by vehicle condition and driving pattern.",
-    "enquiryMessage": "I'd like a Fuel Eco Tech quote for {fleetText} ({model}). Based on the savings calculator, {km} km/year per vehicle at €{price}/L and {pct}% expected savings, the estimated annual saving is {saving} (≈ {co2} CO₂ avoided) with a payback of ~{payback}. Please send tailored options.",
+    "disclaimer": "An estimate, not a promise. Actual savings depend on the vehicle, its condition, routes, loads and driving — they are confirmed in a free assessment and can be measured in a trial.",
+    "enquiryMessage": "I'd like a Fuel Eco Tech quote for {fleetText} ({model}). From the savings calculator: {basis}, at {pct}% expected savings, the estimated annual saving is {saving} (≈ {co2} CO₂ avoided) with payback in about {payback}. My exact inputs: {link}",
     "fleetTextMulti": "a fleet of {count} × {label}",
     "fleetTextSingle": "my {label}",
     "paybackYears": "{years} years",
-    "paybackNa": "n/a"
+    "paybackNa": "n/a",
+    "currency": "Currency",
+    "modeUsage": "I know my fuel use",
+    "modeSpend": "I know what I spend",
+    "modeAria": "How would you like to enter your fuel?",
+    "consumption": "Fuel use",
+    "consumptionUnit": "Fuel-use unit",
+    "assumedTag": "Assumed",
+    "monthlySpend": "Fuel spend per vehicle, per month ({currency})",
+    "monthlySpendPh": "e.g. 1500000",
+    "fuelPriceIn": "Fuel price ({currency}/L)",
+    "fuelType": "Fuel",
+    "petrol": "Petrol",
+    "diesel": "Diesel",
+    "devicePriceEur": "Quoted as {price}, installed",
+    "noSaving": "No saving 0%",
+    "scenarioZero": "If it saves nothing",
+    "scenarioLow": "Low case {pct}%",
+    "paybackNever": "Never",
+    "paybackMonths": "{months} months",
+    "resultPaybackNeverSub": "No saving, no payback",
+    "workingTitle": "How this is calculated",
+    "workingUsage": "{km} km a year at {lp} L/100km is about {litres} litres; at {price} a litre that is {spend} of fuel a year.",
+    "workingSpend": "{monthly} a month × 12 is {spend} of fuel a year.",
+    "workingSaving": "{spend} × {pct}% = {saving} saved a year, per vehicle.",
+    "workingPayback": "Device {device} ÷ {saving} a year = payback in about {payback}.",
+    "workingNoPayback": "At this saving the device does not pay for itself.",
+    "assumptionsTitle": "Still assumed — replace with your own",
+    "assumeConsumption": "Fuel use is a typical figure for this vehicle class, not your vehicle. Enter your own for a real answer.",
+    "assumePrice": "Fuel price is an indicative Kampala pump price.",
+    "assumeSpendMissing": "Enter your monthly fuel spend to see a result.",
+    "assumeFuel": "Fuel type is the usual one for this vehicle class.",
+    "assumeSaving": "The saving percentage is your assumption. The German field test measured {pct}% on one vehicle, in one month; your vehicles, routes and loads may differ — which is what a measured trial is for.",
+    "assumeRateLive": "The device price is converted from EUR at today's indicative exchange rate.",
+    "assumeRateOffline": "The device price is converted from EUR at an offline fallback rate — today's rate could not be loaded.",
+    "shareCta": "Copy a link to this estimate",
+    "shareCopied": "Link copied — it opens with these exact inputs",
+    "basisUsage": "{km} km a year per vehicle at {consumption} and {price} a litre",
+    "basisSpend": "{spend} of fuel a month per vehicle"
   },
   "fetCalculatorWidget": {
     "launcher": "Calculate your fuel savings",
@@ -758,15 +853,15 @@
     "finalCtaCaption": "FDA-cleared  ·  Single-use & sterile  ·  Reply within 24 hours"
   },
   "coffeePage": {
-    "heroEyebrow": "Vitorra Coffee · B2B · B2C",
+    "heroEyebrow": "Vitorra Coffee · Export · Wholesale",
     "heroTitleLead": "Premium Ugandan coffee.",
     "heroTitleAccent": "Farm to cup.",
-    "heroBody": "Traceable, responsibly sourced single-origin coffee from the slopes of Mount Elgon, for consumers, hospitality, and international importers.",
+    "heroBody": "Traceable, responsibly sourced Arabica from the slopes of Mount Elgon — supplied to European importers, roasters and hospitality buyers, by the tonne.",
     "heroPill1": "100% Arabica",
     "heroPill2": "Single origin",
-    "heroPill3": "Mount Elgon, Uganda",
-    "heroPill4": "Traceable, farm to cup",
-    "heroCtaPrimary": "Enquire: Wholesale & Export",
+    "heroPill3": "Grade A · HS 0901.21",
+    "heroPill4": "From 1 metric tonne",
+    "heroCtaPrimary": "Request a bulk quote",
     "shopVisit": "Visit the Coffee Shop",
     "shopSoon": "Coffee retail, launching soon",
     "benefitsEyebrow": "Why Vitorra Coffee",
@@ -791,7 +886,7 @@
     "spec4Key": "Process",
     "spec4Value": "Washed & Sun Dried",
     "spec5Key": "Format",
-    "spec5Value": "Roasted in Uganda · 250g",
+    "spec5Value": "Roasted whole beans · bulk or 250g retail",
     "ftcEyebrow": "Farm to cup",
     "ftcTitleLine1": "Traceable from",
     "ftcTitleLine2": "the first cherry.",
@@ -824,11 +919,11 @@
     "retailSoonBody": "Home & office packs are almost ready. Register your interest and we'll be in touch first.",
     "retailSoonCta": "Register interest",
     "wholesaleTitle": "Wholesale",
-    "wholesaleBody": "Stock Vitorra Coffee in your café, hotel, or store.",
+    "wholesaleBody": "Stock Vitorra Coffee in your café, hotel or store — local supply, quoted on your volume.",
     "wholesaleCta": "Enquire wholesale",
     "exportTitle": "Export",
-    "exportBody": "Source traceable Ugandan coffee at volume.",
-    "exportCta": "Enquire export",
+    "exportBody": "Roasted Arabica by the metric tonne, from 1 MT. Grade A as standard, customised packaging, EXW.",
+    "exportCta": "See export terms",
     "faqEyebrow": "Questions",
     "faqTitle": "Everything you need to know.",
     "faqWholesaleExport": "Wholesale or export?",
@@ -837,16 +932,23 @@
     "faq1A": "It's single-origin 100% Arabica, grown on the highland slopes of Mount Elgon in eastern Uganda, then washed, sun-dried, and roasted in Uganda.",
     "faq2Q": "Can I buy wholesale for my café?",
     "faq2A": "Yes. We supply cafés, hotels, restaurants, and retailers. Enquire for wholesale pricing and regular supply options.",
-    "faq3Q": "Do you export internationally?",
-    "faq3A": "Yes. We supply traceable Ugandan coffee to international importers and roasters. Enquire for export volumes, pricing, and documentation.",
+    "faq3Q": "What is your minimum order for export?",
+    "faq3A": "One metric tonne. We supply roasted Arabica (HS 0901.21) under the Vitorra Coffee trademark, Grade A as standard, in packaging customised to your specification, with a 7-day lead time from confirmation. Our listed band is EXW; tell us your destination and we will quote the terms you actually need.",
     "faq4Q": "How is the coffee traceable?",
     "faq4A": "Every bag carries a QR code that traces your coffee back to its source, and we provide origin and process documentation on request.",
     "faq5Q": "What does it taste like?",
     "faq5A": "Our GOLD medium roast is smooth and balanced with caramel notes, washed and sun-dried for a clean, rounded cup.",
     "finalCtaTitleLead": "Taste the pride of",
     "finalCtaTitleAccent": "Africa.",
-    "finalCtaBody": "Shop retail packs, stock your business, or source at export volumes, our team replies within 24 hours.",
-    "finalCtaCaption": "Single origin  ·  Traceable  ·  Reply within 24 hours"
+    "finalCtaBody": "Source by the tonne, stock your business, or register for retail — our team replies within 24 hours.",
+    "finalCtaCaption": "Single origin  ·  Traceable  ·  Reply within 24 hours",
+    "exportSpecCta": "See export terms",
+    "faq6Q": "Can I get a sample before ordering?",
+    "faq6A": "Yes. Samples are available on request — the sample and its shipping are carried by the buyer. Tell us the grade and roast profile you want to assess and we will send it with its grading report.",
+    "faq7Q": "Is the listed price your bulk price?",
+    "faq7A": "No, and we would rather say so up front. The published band is indicative. Bulk is quoted separately on quantity, coffee format, specification, packaging and delivery destination, so a real quote can land either side of it.",
+    "faq8Q": "Which grades can you supply?",
+    "faq8A": "Grade A is quoted as standard. AA, AB, B and PB (Peaberry) are available subject to availability and your specification. Specialty and export-grade selections can be arranged against an agreed spec."
   },
   "logisticsPage": {
     "heroEyebrow": "Logistics Services · B2B · Enterprise",
@@ -1422,8 +1524,8 @@
     "coffeeLocal": "Local wholesale (Uganda)",
     "coffeeExport": "Export (international)",
     "coffeeVolume": "Volume per order",
-    "coffeeVolumePh": "e.g. 60",
-    "coffeeHelpExport": "Export starts at 60 kg (one bag).",
+    "coffeeVolumePh": "e.g. 1000",
+    "coffeeHelpExport": "Export starts at 1 metric tonne (1,000 kg). Below that, ask us about wholesale.",
     "coffeeHelpLocal": "Local wholesale minimum is 10 kg.",
     "coffeeFrequency": "How often?",
     "coffeeOneoff": "One-off",
@@ -1469,7 +1571,24 @@
     "logNotsure": "Not sure, advise me",
     "logShipmentType": "Shipment type",
     "logOneoff": "One-off shipment",
-    "logOngoing": "Ongoing / recurring"
+    "logOngoing": "Ongoing / recurring",
+    "coffeeGrade": "Grade required",
+    "coffeeGradeA": "A — our standard export grade",
+    "coffeeGradeAA": "AA — largest screen",
+    "coffeeGradeAB": "AB — blended A/B screens",
+    "coffeeGradeB": "B — smaller screen",
+    "coffeeGradePB": "PB — Peaberry",
+    "coffeeGradeAdvise": "Not sure — advise me",
+    "coffeeIncoterms": "Delivery terms",
+    "coffeeExw": "EXW — I arrange collection",
+    "coffeeFob": "FOB — loaded at port",
+    "coffeeCif": "CIF — delivered to my port",
+    "coffeeIncotermsAdvise": "Not sure — advise me",
+    "coffeeIncotermsHelp": "Our listed price is EXW. Tell us which terms you work on and we will quote them properly.",
+    "coffeeSample": "Would you like a sample first?",
+    "coffeeSampleYes": "Yes, send a sample",
+    "coffeeSampleNo": "No, quote only",
+    "coffeeSampleHelp": "Samples are available; the sample and its shipping are carried by the buyer."
   },
   "newsletter": {
     "title": "Stay in the loop",
@@ -1683,5 +1802,46 @@
     "errNameEmail": "Name and email are required.",
     "errCvRead": "We couldn't read that file. Please try a PDF, or fill the form manually.",
     "errSubmit": "Submission failed."
+  },
+  "coffeeExport": {
+    "eyebrow": "Export & wholesale",
+    "titleLead": "Container quantities, quoted on",
+    "titleAccent": "real terms.",
+    "body": "Vitorra Coffee is a verified Ugandan coffee exporter supplying roasted Arabica to European buyers. These are the terms our trade listing is quoted on — the same figures an importer needs before opening a conversation.",
+    "priceEyebrow": "Indicative price",
+    "perUnit": "per metric tonne · {incoterms}",
+    "bulkCaveat": "This band does not apply to bulk orders. Bulk is quoted separately on quantity, coffee format, specification, packaging and delivery destination — tell us what you need and we will price it properly.",
+    "ctaQuote": "Request a bulk quote",
+    "ctaSample": "Request a sample",
+    "sampleNote": "Samples are available; shipping and sample cost are carried by the buyer.",
+    "termsTitle": "Trade terms",
+    "termHsCode": "HS code",
+    "termOrigin": "Origin",
+    "originValue": "Uganda — mainly Mount Elgon",
+    "termMoq": "Minimum order",
+    "moqValue": "{tonnes} metric tonne",
+    "termIncoterms": "Incoterms",
+    "termLoadingPort": "Loading port",
+    "termLeadTime": "Lead time",
+    "leadTimeValue": "{days} days from confirmation",
+    "termPackaging": "Packaging",
+    "packagingValue": "Customised to your specification",
+    "termTrademark": "Trademark",
+    "gradesTitle": "Grades we supply",
+    "gradesBody": "Grade A is quoted as standard. Other grades and screen selections are available subject to availability and your specification.",
+    "gradeStandard": "Standard",
+    "grades": {
+      "AA": "Largest screen size, the top of the commercial range.",
+      "A": "The grade our listed price is quoted on.",
+      "AB": "Blended A and B screens — a common export workhorse.",
+      "B": "Smaller screen, consistent in the cup.",
+      "PB": "Peaberry — the single round bean, selected separately."
+    },
+    "docsTitle": "Documentation on enquiry",
+    "docsBody": "Tell us your destination market and we will confirm, in writing, exactly which documents we can issue for your shipment before you commit to anything.",
+    "docOrigin": "Certificate of origin",
+    "docGrading": "Grading and quality report",
+    "docPhyto": "Phytosanitary certificate",
+    "docFoodSafety": "Food-safety documentation"
   }
 }

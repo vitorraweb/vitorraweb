@@ -11,6 +11,7 @@ import { ParallaxImage } from "@/components/ui/parallax-image";
 import { Faq } from "@/components/ui/faq";
 import { Mountain, QrCode, Sprout, Flame, Coffee, Droplets, ShoppingBag, Store, Globe, ArrowRight, ArrowUpRight } from "lucide-react";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
+import CoffeeExportSpec from "@/components/sections/CoffeeExportSpec";
 
 export async function generateMetadata({
   params,
@@ -23,6 +24,8 @@ export async function generateMetadata({
 }
 
 const ENQUIRE = "/enquire?sector=COFFEE";
+/** Export buyers land on the trade-spec section, not the gated shop. */
+const EXPORT_SPEC = "#coffee-export";
 
 export default function CoffeePage() {
   const t = useTranslations("coffeePage");
@@ -61,21 +64,27 @@ export default function CoffeePage() {
     ? { icon: ShoppingBag, title: t("retailShopTitle"), body: t("retailShopBody"), href: "/shop", cta: t("retailShopCta") }
     : { icon: ShoppingBag, title: t("retailSoonTitle"), body: t("retailSoonBody"), href: ENQUIRE, cta: t("retailSoonCta") };
 
+  /* Export leads — it is the motion that is actually selling today, and the
+     only one with published terms. Retail stays last while it is gated. */
   const ways = [
+    { icon: Globe, title: t("exportTitle"),    body: t("exportBody"),    href: EXPORT_SPEC, cta: t("exportCta") },
+    { icon: Store, title: t("wholesaleTitle"), body: t("wholesaleBody"), href: ENQUIRE,     cta: t("wholesaleCta") },
     retailWay,
-    { icon: Store, title: t("wholesaleTitle"), body: t("wholesaleBody"), href: ENQUIRE, cta: t("wholesaleCta") },
-    { icon: Globe, title: t("exportTitle"),    body: t("exportBody"),    href: ENQUIRE, cta: t("exportCta") },
   ];
 
-  /* Secondary CTA pointing at the shop — relabelled to the holding page while off. */
-  const SHOP_CTA = COFFEE_SHOP_ENABLED
+  /* Hero secondary CTA. While retail is gated there is nothing to send a buyer
+     to in the shop, so it points at the export terms instead. */
+  const SECONDARY_CTA = COFFEE_SHOP_ENABLED
     ? { href: "/shop", label: t("shopVisit") }
-    : { href: "/shop", label: t("shopSoon") };
+    : { href: EXPORT_SPEC, label: t("exportSpecCta") };
 
   const faqs = [
+    { q: t("faq3Q"), a: t("faq3A") },
+    { q: t("faq7Q"), a: t("faq7A") },
+    { q: t("faq8Q"), a: t("faq8A") },
+    { q: t("faq6Q"), a: t("faq6A") },
     { q: t("faq1Q"), a: t("faq1A") },
     { q: t("faq2Q"), a: t("faq2A") },
-    { q: t("faq3Q"), a: t("faq3A") },
     { q: t("faq4Q"), a: t("faq4A") },
     { q: t("faq5Q"), a: t("faq5A") },
   ];
@@ -149,8 +158,8 @@ export default function CoffeePage() {
                   {t("heroCtaPrimary")}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link href={SHOP_CTA.href} className="btn-ghost-dark">
-                  {SHOP_CTA.label}
+                <Link href={SECONDARY_CTA.href} className="btn-ghost-dark">
+                  {SECONDARY_CTA.label}
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -418,6 +427,11 @@ export default function CoffeePage() {
           </div>
         </section>
 
+        {/* ══ EXPORT SPEC ═════════════════════════════════════════════════════ */}
+        {/* Ivory, sitting between the white Proof section and the dark Ways to
+            Buy — keeps the page's dark/light alternation intact. */}
+        <CoffeeExportSpec />
+
         {/* ══ WAYS TO BUY ═════════════════════════════════════════════════════ */}
         <section
           className="section-padding relative overflow-hidden"
@@ -522,8 +536,8 @@ export default function CoffeePage() {
           body={t("finalCtaBody")}
           primaryLabel={t("heroCtaPrimary")}
           primaryHref={ENQUIRE}
-          secondaryLabel={SHOP_CTA.label}
-          secondaryHref={SHOP_CTA.href}
+          secondaryLabel={SECONDARY_CTA.label}
+          secondaryHref={SECONDARY_CTA.href}
           caption={t("finalCtaCaption")}
         />
 

@@ -17,7 +17,7 @@ export interface Rates {
 }
 
 /* Sensible offline defaults so the helper still works if the API is unreachable. */
-const FALLBACK: Rates = { ugxPerUsd: 3750, eurPerUsd: 0.92, source: "fallback" };
+export const FALLBACK_RATES: Rates = { ugxPerUsd: 3750, eurPerUsd: 0.92, source: "fallback" };
 
 /* One shared in-flight fetch per page session (avoids every card re-fetching). */
 let cached: Promise<Rates> | null = null;
@@ -28,12 +28,12 @@ export async function fetchRates(): Promise<Rates> {
     if (!res.ok) throw new Error("rate fetch failed");
     const d = (await res.json())?.data ?? {};
     return {
-      ugxPerUsd: Number(d.ugx_per_usd) || FALLBACK.ugxPerUsd,
-      eurPerUsd: Number(d.eur_per_usd) || FALLBACK.eurPerUsd,
+      ugxPerUsd: Number(d.ugx_per_usd) || FALLBACK_RATES.ugxPerUsd,
+      eurPerUsd: Number(d.eur_per_usd) || FALLBACK_RATES.eurPerUsd,
       source: d.source ?? "fallback",
     };
   } catch {
-    return FALLBACK;
+    return FALLBACK_RATES;
   }
 }
 
