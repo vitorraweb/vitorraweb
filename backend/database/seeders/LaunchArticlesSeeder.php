@@ -53,7 +53,7 @@ class LaunchArticlesSeeder extends Seeder
                 'slug'            => 'how-to-reduce-fleet-fuel-costs-uganda',
                 'title'           => 'How to reduce your fleet’s fuel costs in Uganda: a practical guide',
                 'excerpt'         => 'Fuel is usually the biggest running cost a Ugandan fleet has. Here is how to measure it properly, the everyday habits that bring it down, and how to judge any fuel-saving product on your own numbers.',
-                'seo_title'       => 'How to Reduce Fleet Fuel Costs in Uganda | Vitorra',
+                'seo_title'       => 'How to Reduce Fleet Fuel Costs in Uganda',
                 'seo_description' => 'A practical guide for Ugandan fleet owners: measure fuel use per vehicle, cut idling and waste, maintain engines and tyres, stop fuel loss, and test savings properly.',
                 'cover'           => '/products/fet/field-truck.jpg',
                 'content'         => <<<'MD'
