@@ -36,25 +36,23 @@ export default function InstallationScheduler({
   };
 
   return (
-    <div className="mt-7 pt-6 border-t" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "#8a8a8a" }}>{t("installationTitle")}</p>
-      <p className="text-xs mb-4" style={{ color: "#999" }}>{t("installationPending")}</p>
+    <div className="mt-7 pt-6 border-t border-line">
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 text-ink-muted">{t("installationTitle")}</p>
+      <p className="text-xs mb-4 text-ink-muted">{t("installationPending")}</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <div>
-          <label className="block text-[11px] font-semibold mb-1" style={{ color: "#777" }}>{t("installationDateLabel")}</label>
+          <label className="block text-[11px] font-semibold mb-1 text-ink-muted">{t("installationDateLabel")}</label>
           <input
             type="date" min={minDate} value={date} onChange={(e) => setDate(e.target.value)}
-            className="w-full text-sm rounded-lg px-3 py-2 border outline-none"
-            style={{ borderColor: "rgba(0,0,0,0.12)", color: "#1E1E1E" }}
+            className="w-full text-sm rounded-edge px-3 py-2 border outline-none border-line-strong text-ink"
           />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold mb-1" style={{ color: "#777" }}>{t("installationLocationLabel")}</label>
+          <label className="block text-[11px] font-semibold mb-1 text-ink-muted">{t("installationLocationLabel")}</label>
           <input
             type="text" value={loc} onChange={(e) => setLoc(e.target.value)}
-            className="w-full text-sm rounded-lg px-3 py-2 border outline-none"
-            style={{ borderColor: "rgba(0,0,0,0.12)", color: "#1E1E1E" }}
+            className="w-full text-sm rounded-edge px-3 py-2 border outline-none border-line-strong text-ink"
           />
         </div>
       </div>
@@ -62,14 +60,13 @@ export default function InstallationScheduler({
       <button
         onClick={submit}
         disabled={!date || status === "saving"}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full transition-opacity"
-        style={{ background: "#1E1E1E", color: "#FFFFFF", opacity: !date || status === "saving" ? 0.6 : 1 }}
+        className="q-btn min-h-10 px-4 bg-ink text-paper hover:bg-black disabled:opacity-60"
       >
         {status === "saving" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
         {status === "saved" && <Check className="w-3.5 h-3.5" />}
         {status === "saved" ? t("installationSaved") : t("installationSubmit")}
       </button>
-      {status === "error" && <p className="text-xs mt-2" style={{ color: "#C0392B" }}>{t("saveFailed")}</p>}
+      {status === "error" && <p className="text-xs mt-2 text-alert-ink">{t("saveFailed")}</p>}
     </div>
   );
 }

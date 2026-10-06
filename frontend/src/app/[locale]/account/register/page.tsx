@@ -7,8 +7,8 @@ import { Loader2, ArrowRight } from "lucide-react";
 import { registerCustomer } from "@/lib/customer-auth";
 import AuthShell from "@/components/account/AuthShell";
 
-const inputCls = "w-full h-12 rounded-2xl px-4 text-[15px] bg-white outline-none border border-black/10 focus:border-[#C5B27A] transition-colors";
-const labelCls = "block text-[11px] font-bold uppercase tracking-[0.14em] mb-2";
+const inputCls = "w-full h-12 rounded-edge px-3.5 t-body bg-white text-ink outline-none border border-line-strong focus:border-ink transition-colors";
+const labelCls = "block t-label text-ink-muted mb-2";
 
 export default function CustomerRegister() {
   const t = useTranslations("account");
@@ -28,43 +28,43 @@ export default function CustomerRegister() {
 
   return (
     <AuthShell lead={t("registerLead")} accent={t("registerAccent")}>
-      <span className="eyebrow mb-4 inline-flex">{t("createAccount")}</span>
-      <h1 className="mb-2" style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "clamp(30px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }}>
+      <p className="t-label text-ink-muted mb-6">{t("createAccount")}</p>
+      <h1 className="t-h1 text-ink">
         {t("registerTitle")}
       </h1>
-      <p className="text-sm mb-8" style={{ color: "#777" }}>{t("registerSub")}</p>
+      <p className="t-body text-ink-muted mt-4 mb-10">{t("registerSub")}</p>
 
       <form onSubmit={submit} className="space-y-5">
         <div>
-          <label className={labelCls} style={{ color: "#8a8a8a" }}>{t("fullName")}</label>
-          <input required value={f.name} onChange={(e) => set("name", e.target.value)} placeholder={t("namePlaceholder")} className={inputCls} />
+          <label className={labelCls}>{t("fullName")}</label>
+          <input required value={f.name} onChange={(e) => set("name", e.target.value)} placeholder={t("namePlaceholder")} className={inputCls} autoComplete="name" />
         </div>
         <div>
-          <label className={labelCls} style={{ color: "#8a8a8a" }}>{t("email")}</label>
-          <input required type="email" value={f.email} onChange={(e) => set("email", e.target.value)} placeholder={t("emailPlaceholder")} className={inputCls} />
+          <label className={labelCls}>{t("email")}</label>
+          <input required type="email" value={f.email} onChange={(e) => set("email", e.target.value)} placeholder={t("emailPlaceholder")} className={inputCls} autoComplete="email" />
         </div>
         <div>
-          <label className={labelCls} style={{ color: "#8a8a8a" }}>{t("password")}</label>
-          <input required type="password" value={f.password} onChange={(e) => set("password", e.target.value)} placeholder={t("passwordPlaceholder")} className={inputCls} />
+          <label className={labelCls}>{t("password")}</label>
+          <input required type="password" value={f.password} onChange={(e) => set("password", e.target.value)} placeholder={t("passwordPlaceholder")} className={inputCls} autoComplete="new-password" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls} style={{ color: "#8a8a8a" }}>{t("company")}</label>
-            <input value={f.company} onChange={(e) => set("company", e.target.value)} placeholder={t("optional")} className={inputCls} />
+            <label className={labelCls}>{t("company")}</label>
+            <input value={f.company} onChange={(e) => set("company", e.target.value)} placeholder={t("optional")} className={inputCls} autoComplete="organization" />
           </div>
           <div>
-            <label className={labelCls} style={{ color: "#8a8a8a" }}>{t("phone")}</label>
+            <label className={labelCls}>{t("phone")}</label>
             <input value={f.phone} onChange={(e) => set("phone", e.target.value)} placeholder={t("optional")} className={inputCls} />
           </div>
         </div>
-        {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
-        <button type="submit" disabled={busy} className="btn-primary w-full justify-center" style={{ height: "48px", opacity: busy ? 0.7 : 1 }}>
+        {error && <p role="alert" className="t-small text-alert-ink">{error}</p>}
+        <button type="submit" disabled={busy} className="q-btn w-full bg-ink text-paper hover:bg-black disabled:opacity-70">
           {busy ? <><Loader2 className="w-4 h-4 animate-spin" />{t("creating")}</> : <>{t("createAccount")}<ArrowRight className="w-4 h-4" /></>}
         </button>
       </form>
 
-      <p className="text-sm mt-8" style={{ color: "#777" }}>
-        {t("haveAccount")} <Link href="/account/login" className="font-semibold" style={{ color: "#7A6020" }}>{t("signIn")}</Link>
+      <p className="t-small text-ink-muted mt-10 pt-8 border-t border-line">
+        {t("haveAccount")} <Link href="/account/login" className="q-inline-link font-medium">{t("signIn")}</Link>
       </p>
     </AuthShell>
   );

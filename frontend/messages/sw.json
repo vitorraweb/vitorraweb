@@ -738,7 +738,7 @@
     "logout": "Toka",
     "shellEyebrow": "Akaunti ya Vitorra",
     "perk1": "Fuatilia kila agizo na ombi mahali pamoja",
-    "perk2": "Ona hasa hali ya nukuu zako, kwa wakati halisi",
+    "perk2": "Ona kila ombi na bei vimefikia wapi",
     "perk3": "Pakua nyaraka, karatasi za data, na ankara zako",
     "backToSite": "Rudi vitorra.org",
     "shellTagline": "Kampuni ya Kiafrika yenye sekta mbalimbali, teknolojia ya mafuta, afya, kahawa bora, na usafirishaji.",
@@ -851,7 +851,11 @@
     "installationSubmit": "Hifadhi mapendeleo",
     "installationSaved": "Imehifadhiwa",
     "docsOrderDocuments": "Hati za oda",
-    "docsProductLiterature": "Maandiko ya bidhaa"
+    "docsProductLiterature": "Maandiko ya bidhaa",
+    "quickLabel": "Njia za mkato",
+    "quickEnquiry": "Anza ombi jipya",
+    "quickCalc": "Kadiria akiba ya mafuta",
+    "quickContact": "Ongea na timu"
   },
   "enquiryForm": {
     "catFetLabel": "Fuel Eco Tech",

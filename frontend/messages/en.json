@@ -738,7 +738,7 @@
     "logout": "Log out",
     "shellEyebrow": "Vitorra Account",
     "perk1": "Track every order and enquiry in one place",
-    "perk2": "See exactly where your quotes stand, in real time",
+    "perk2": "See where each enquiry and quote stands",
     "perk3": "Download your documents, datasheets, and invoices",
     "backToSite": "Back to vitorra.org",
     "shellTagline": "A diversified African holdings company, fuel technology, healthcare, premium coffee, and logistics.",
@@ -851,7 +851,11 @@
     "installationSubmit": "Save preference",
     "installationSaved": "Saved",
     "docsOrderDocuments": "Order documents",
-    "docsProductLiterature": "Product literature"
+    "docsProductLiterature": "Product literature",
+    "quickLabel": "Shortcuts",
+    "quickEnquiry": "Start a new enquiry",
+    "quickCalc": "Estimate a fuel saving",
+    "quickContact": "Talk to the team"
   },
   "enquiryForm": {
     "catFetLabel": "Fuel Eco Tech",

@@ -45,55 +45,53 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   // Auth pages are intentionally chrome-free — no nav/footer, just the focused
   // split layout. The logo inside AuthShell links home so there's still a way back.
   if (isAuthPage) {
-    return <main className="flex-1">{children}</main>;
+    return <main id="main" className="flex-1">{children}</main>;
   }
 
+  /* Quiet Authority portal shell: a paper header with the customer's name,
+     underlined tabs (scrolling sideways on phones), then the content. */
   return (
     <>
       <Header />
-      <main className="flex-1" style={{ backgroundColor: "#F2F2F2" }}>
-        {/* ── Dark account header band (aurora + grain, like the site heroes) ── */}
-        <section className="relative overflow-hidden" style={{ backgroundColor: "#141414" }}>
-          <div aria-hidden="true" className="hero-aurora-right" />
-          <div aria-hidden="true" className="hero-grain" />
-          <div className="max-w-[1080px] mx-auto px-6 lg:px-10 pt-28 md:pt-32 pb-8 relative z-10">
-            <div className="flex items-end justify-between gap-4 flex-wrap">
+      <main id="main" className="q-scope flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
+        <section className="border-b border-line bg-paper">
+          <div className="q-container pt-12 lg:pt-16">
+            <div className="flex items-end justify-between gap-6 flex-wrap">
               <div>
-                <span className="eyebrow-light mb-3 inline-flex">{t("yourAccountEyebrow")}</span>
-                <h1 style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "clamp(30px, 4vw, 48px)", fontWeight: 700, letterSpacing: "-0.025em", lineHeight: 1.05, color: "#FFFFFF" }}>
-                  {t("welcome", { name: user?.name.split(" ")[0] ?? "" })}
-                </h1>
+                <p className="t-label text-ink-muted mb-5">{t("yourAccountEyebrow")}</p>
+                <h1 className="t-h1 text-ink">{t("welcome", { name: user?.name.split(" ")[0] ?? "" })}</h1>
               </div>
-              <button onClick={logout} className="btn-ghost-dark"><LogOut className="w-4 h-4" />{t("logout")}</button>
+              <button onClick={logout} className="q-link t-small text-ink-muted hover:text-ink">
+                <LogOut aria-hidden="true" className="w-3.5 h-3.5" />{t("logout")}
+              </button>
             </div>
 
-            <div className="flex gap-2 mt-8 overflow-x-auto no-scrollbar -mx-6 px-6 lg:mx-0 lg:px-0 lg:flex-wrap">
-              {TAB_META.map((tab) => {
-                const active = pathname === tab.href || pathname.startsWith(tab.href + "/");
-                return (
-                  <Link
-                    key={tab.href}
-                    href={tab.href}
-                    className="relative inline-flex shrink-0 items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full transition-colors whitespace-nowrap"
-                    style={active
-                      ? { background: "#C5B27A", color: "#1E1E1E" }
-                      : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.1)" }}
-                  >
-                    <tab.icon className="w-4 h-4" />{t(tab.labelKey)}
-                    {tab.href === "/account/messages" && unreadMessages > 0 && (
-                      <span className="w-2 h-2 rounded-full" style={{ background: active ? "#1E1E1E" : "#C5B27A" }} />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
+            <nav aria-label={t("yourAccountEyebrow")} className="mt-10 -mx-5 px-5 md:mx-0 md:px-0 overflow-x-auto no-scrollbar">
+              <ul className="flex gap-8 min-w-max">
+                {TAB_META.map((tab) => {
+                  const active = pathname === tab.href || pathname.startsWith(tab.href + "/");
+                  return (
+                    <li key={tab.href}>
+                      <Link
+                        href={tab.href}
+                        aria-current={active ? "page" : undefined}
+                        className={`relative inline-flex items-center gap-2 pb-4 t-small transition-colors after:absolute after:inset-x-0 after:-bottom-px after:h-px after:transition-colors ${active ? "text-ink after:bg-gold" : "text-ink-muted hover:text-ink after:bg-transparent"}`}
+                      >
+                        <tab.icon aria-hidden="true" className="w-4 h-4" strokeWidth={1.5} />
+                        {t(tab.labelKey)}
+                        {tab.href === "/account/messages" && unreadMessages > 0 && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-gold" aria-label={String(unreadMessages)} />
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
           </div>
         </section>
 
-        {/* ── Content ──────────────────────────────────────────────────────── */}
-        <div className="max-w-[1080px] mx-auto px-6 lg:px-10 py-12 md:py-16">
-          {children}
-        </div>
+        <div className="q-container py-12 md:py-16">{children}</div>
       </main>
       <Footer />
     </>

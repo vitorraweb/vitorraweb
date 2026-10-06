@@ -60,49 +60,49 @@ export function TwoFactorPanel({ api }: { api: Api }) {
   };
 
   return (
-    <div className="bg-white rounded-[20px] border border-black/[0.06] p-6 mt-5">
+    <div className="bg-paper rounded-frame border border-line p-6 mt-5">
       <div className="flex items-center gap-2 mb-1">
-        <ShieldCheck className="w-4 h-4" style={{ color: "#C5B27A" }} />
-        <h2 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "#1E1E1E" }}>Two-factor authentication</h2>
+        <ShieldCheck className="w-4 h-4 text-gold" />
+        <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-ink">Two-factor authentication</h2>
         {enabled !== null && (
-          <span className="ml-auto px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" style={enabled ? { background: "rgba(34,197,94,0.12)", color: "#16A34A" } : { background: "#F2F2F2", color: "#999" }}>
+          <span className={`ml-auto inline-flex items-center gap-2 t-label ${enabled ? "text-ok-ink" : "text-ink-muted"}`}><span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${enabled ? "bg-ok-ink" : "bg-line-strong"}`} />
             {enabled ? "On" : "Off"}
           </span>
         )}
       </div>
-      <p className="text-xs mb-4" style={{ color: "#999" }}>
+      <p className="text-xs mb-4 text-ink-muted">
         Protects your account if your password is ever stolen. Use an authenticator app (Google Authenticator, Microsoft Authenticator, Authy).
       </p>
 
       {enabled === null ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : recovery ? (
         /* One-time recovery codes — shown immediately after enabling. */
         <div>
-          <div className="rounded-xl px-4 py-3 mb-3" style={{ background: "rgba(34,197,94,0.08)" }}>
-            <p className="text-sm font-semibold mb-1" style={{ color: "#16A34A" }}>Two-factor is now on.</p>
-            <p className="text-xs" style={{ color: "#555" }}>Save these recovery codes somewhere safe. Each works once if you lose your phone. They won&apos;t be shown again.</p>
+          <div className="rounded-edge px-4 py-3 mb-3 border-l-2 border-ok-ink bg-paper-deep">
+            <p className="text-sm font-semibold mb-1 text-ok-ink">Two-factor is now on.</p>
+            <p className="text-xs text-ink-soft">Save these recovery codes somewhere safe. Each works once if you lose your phone. They won&apos;t be shown again.</p>
           </div>
           <div className="grid grid-cols-2 gap-2 mb-3">
-            {recovery.map((c) => <code key={c} className="text-sm tabular-nums px-3 py-2 rounded-lg text-center" style={{ background: "#FAFAF8", color: "#1E1E1E", border: "1px solid rgba(0,0,0,0.06)" }}>{c}</code>)}
+            {recovery.map((c) => <code key={c} className="text-sm tabular-nums px-3 py-2 rounded-edge text-center bg-paper-deep text-ink border border-line">{c}</code>)}
           </div>
-          <button onClick={() => navigator.clipboard?.writeText(recovery.join("\n")).catch(() => {})} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Copy className="w-3.5 h-3.5" />Copy codes</button>
-          <button onClick={() => setRecovery(null)} className="ml-2 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#1E1E1E", color: "#fff" }}><Check className="w-3.5 h-3.5" />Done</button>
+          <button onClick={() => navigator.clipboard?.writeText(recovery.join("\n")).catch(() => {})} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-paper-deep text-ink-soft"><Copy className="w-3.5 h-3.5" />Copy codes</button>
+          <button onClick={() => setRecovery(null)} className="ml-2 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-ink text-paper"><Check className="w-3.5 h-3.5" />Done</button>
         </div>
       ) : setup ? (
         /* Enrolment: scan QR, then confirm a code. */
         <div>
-          <p className="text-xs mb-3" style={{ color: "#777" }}>1. Scan this with your authenticator app (or enter the key manually), then 2. enter the 6-digit code it shows.</p>
+          <p className="text-xs mb-3 text-ink-muted">1. Scan this with your authenticator app (or enter the key manually), then 2. enter the 6-digit code it shows.</p>
           <div className="flex flex-col sm:flex-row gap-4 items-start">
-            <Image src={setup.qr_code} alt="Two-factor QR code" width={160} height={160} className="rounded-xl border" style={{ borderColor: "rgba(0,0,0,0.08)" }} unoptimized />
+            <Image src={setup.qr_code} alt="Two-factor QR code" width={160} height={160} className="rounded-edge border border-line" unoptimized />
             <div className="flex-1 w-full">
-              <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: "#bbb" }}>Manual key</p>
-              <code className="block text-xs break-all px-3 py-2 rounded-lg mb-3" style={{ background: "#FAFAF8", color: "#1E1E1E", border: "1px solid rgba(0,0,0,0.06)" }}>{setup.secret}</code>
-              <input value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" className="w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none tracking-widest focus:border-[#C5B27A]" style={{ borderColor: "rgba(0,0,0,0.12)" }} />
-              {error && <p className="text-sm mt-2" style={{ color: "#C0392B" }}>{error}</p>}
+              <p className="text-[11px] font-bold uppercase tracking-wide mb-1 text-ink-muted">Manual key</p>
+              <code className="block text-xs break-all px-3 py-2 rounded-edge mb-3 bg-paper-deep text-ink border border-line">{setup.secret}</code>
+              <input value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" className="w-full text-sm rounded-edge px-3.5 py-2.5 border outline-none tracking-widest focus:border-ink border-line-strong" />
+              {error && <p className="text-sm mt-2 text-alert-ink">{error}</p>}
               <div className="flex items-center gap-2 mt-3">
-                <button onClick={confirm} disabled={busy || !code} className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50" style={{ background: "#1E1E1E", color: "#fff" }}>{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}Confirm</button>
-                <button onClick={() => { setSetup(null); setCode(""); setError(""); }} className="text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#777" }}>Cancel</button>
+                <button onClick={confirm} disabled={busy || !code} className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50 bg-ink text-paper">{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}Confirm</button>
+                <button onClick={() => { setSetup(null); setCode(""); setError(""); }} className="q-btn min-h-10 px-4 border border-line-strong text-ink-muted hover:border-ink">Cancel</button>
               </div>
             </div>
           </div>
@@ -110,22 +110,22 @@ export function TwoFactorPanel({ api }: { api: Api }) {
       ) : enabled ? (
         disabling ? (
           <div className="space-y-3 max-w-sm">
-            <p className="text-xs" style={{ color: "#777" }}>Confirm your password and a current code to turn two-factor off.</p>
-            <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Your password" autoComplete="current-password" className="w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none focus:border-[#C5B27A]" style={{ borderColor: "rgba(0,0,0,0.12)" }} />
-            <input value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" placeholder="6-digit or recovery code" className="w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none tracking-widest focus:border-[#C5B27A]" style={{ borderColor: "rgba(0,0,0,0.12)" }} />
-            {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
+            <p className="text-xs text-ink-muted">Confirm your password and a current code to turn two-factor off.</p>
+            <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Your password" autoComplete="current-password" className="w-full text-sm rounded-edge px-3.5 py-2.5 border outline-none focus:border-ink border-line-strong" />
+            <input value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" placeholder="6-digit or recovery code" className="w-full text-sm rounded-edge px-3.5 py-2.5 border outline-none tracking-widest focus:border-ink border-line-strong" />
+            {error && <p className="text-sm text-alert-ink">{error}</p>}
             <div className="flex items-center gap-2">
-              <button onClick={disable} disabled={busy || !pw || !code} className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50" style={{ background: "#C0392B", color: "#fff" }}>{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldOff className="w-4 h-4" />}Turn off</button>
-              <button onClick={() => { setDisabling(false); setPw(""); setCode(""); setError(""); }} className="text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#777" }}>Cancel</button>
+              <button onClick={disable} disabled={busy || !pw || !code} className="q-btn min-h-10 px-4 bg-alert-ink text-paper hover:opacity-90 disabled:opacity-50">{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldOff className="w-4 h-4" />}Turn off</button>
+              <button onClick={() => { setDisabling(false); setPw(""); setCode(""); setError(""); }} className="q-btn min-h-10 px-4 border border-line-strong text-ink-muted hover:border-ink">Cancel</button>
             </div>
           </div>
         ) : (
-          <button onClick={() => { setDisabling(true); setError(""); }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "#F2F2F2", color: "#C0392B" }}><ShieldOff className="w-4 h-4" />Turn off two-factor</button>
+          <button onClick={() => { setDisabling(true); setError(""); }} className="q-btn min-h-10 px-4 border border-line-strong text-alert-ink hover:border-alert-ink"><ShieldOff className="w-4 h-4" />Turn off two-factor</button>
         )
       ) : (
         <>
-          {error && <p className="text-sm mb-2" style={{ color: "#C0392B" }}>{error}</p>}
-          <button onClick={begin} disabled={busy} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold disabled:opacity-50" style={{ background: "#1E1E1E", color: "#fff" }}>{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}Set up two-factor</button>
+          {error && <p className="text-sm mb-2 text-alert-ink">{error}</p>}
+          <button onClick={begin} disabled={busy} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold disabled:opacity-50 bg-ink text-paper">{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}Set up two-factor</button>
         </>
       )}
     </div>

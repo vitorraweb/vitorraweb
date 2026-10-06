@@ -76,26 +76,26 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
     }
   }
 
-  if (error) return <p className="text-sm" style={{ color: "#C0392B" }}>{error}. <Link href="/account/orders" className="underline">{t("backToOrders")}</Link></p>;
-  if (!order) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
+  if (error) return <p className="text-sm text-alert-ink">{error}. <Link href="/account/orders" className="underline">{t("backToOrders")}</Link></p>;
+  if (!order) return <div className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
 
   const addr = order.shipping_address ?? {};
   const fetItem = order.items?.find((it) => it.product_slug?.startsWith("fet-"));
 
   return (
     <div className="max-w-2xl">
-      <Link href="/account/orders" className="inline-flex items-center gap-1.5 text-sm mb-5" style={{ color: "#777" }}><ArrowLeft className="w-4 h-4" />{t("allOrders")}</Link>
+      <Link href="/account/orders" className="inline-flex items-center gap-1.5 text-sm mb-5 text-ink-muted"><ArrowLeft className="w-4 h-4" />{t("allOrders")}</Link>
 
-      <div className="bg-white rounded-[28px] border border-black/[0.05] shadow-card p-7 md:p-9">
+      <div className="bg-paper rounded-frame border border-line p-7 md:p-9">
         <div className="flex items-start justify-between gap-4 flex-wrap mb-5">
           <div>
-            <h1 style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "28px", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }}>{order.reference}</h1>
+            <h1 className="t-h2 text-ink">{order.reference}</h1>
             {order.tracking_number && (
-              <p className="text-xs mt-1.5" style={{ color: "#999" }}>{t("trackingLabel")}: {order.tracking_number}</p>
+              <p className="text-xs mt-1.5 text-ink-muted">{t("trackingLabel")}: {order.tracking_number}</p>
             )}
           </div>
           {order.invoice_url && (
-            <a href={order.invoice_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#1E1E1E" }}>
+            <a href={order.invoice_url} target="_blank" rel="noopener noreferrer" className="q-btn min-h-10 px-4 border border-line-strong text-ink hover:border-ink">
               <Download className="w-4 h-4" />{t("invoice")}
             </a>
           )}
@@ -103,32 +103,32 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
 
         <OrderTimeline status={order.status} paymentStatus={order.payment_status} />
 
-        <div className="divide-y" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+        <div className="divide-y border-line">
           {order.items?.map((it) => (
             <div key={it.id} className="flex items-center justify-between py-3.5">
               <div>
-                <p className="text-sm font-medium" style={{ color: "#1E1E1E" }}>{it.product_name}</p>
-                <p className="text-xs" style={{ color: "#999" }}>{t("qty")} {it.quantity}{it.options?.grind ? ` · ${it.options.grind}` : ""}</p>
+                <p className="text-sm font-medium text-ink">{it.product_name}</p>
+                <p className="text-xs text-ink-muted">{t("qty")} {it.quantity}{it.options?.grind ? ` · ${it.options.grind}` : ""}</p>
               </div>
-              <span className="text-sm" style={{ color: "#1E1E1E" }}>{money(order.currency, it.line_total)}</span>
+              <span className="text-sm text-ink">{money(order.currency, it.line_total)}</span>
             </div>
           ))}
         </div>
 
-        <div className="flex items-center justify-between pt-5 mt-2 border-t" style={{ borderColor: "rgba(0,0,0,0.1)" }}>
-          <span className="text-sm font-bold uppercase tracking-wide" style={{ color: "#777" }}>{t("total")}</span>
-          <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "24px", fontWeight: 700, color: "#1E1E1E" }}>{money(order.currency, order.total)}</span>
+        <div className="flex items-center justify-between pt-5 mt-2 border-t border-line-strong">
+          <span className="t-label text-ink-muted">{t("total")}</span>
+          <span className="font-display text-[1.75rem] leading-none text-ink [font-variant-numeric:lining-nums_tabular-nums]">{money(order.currency, order.total)}</span>
         </div>
 
         {order.installment_plan && (
-          <div className="mt-7 pt-6 border-t" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: "#8a8a8a" }}>{t("paymentPlan")}</p>
+          <div className="mt-7 pt-6 border-t border-line">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3 text-ink-muted">{t("paymentPlan")}</p>
             <div className="flex flex-wrap gap-x-6 gap-y-1 mb-3 text-sm">
-              <span style={{ color: "#16A34A" }}>{t("paymentPaid")}: <strong>{money(order.currency, order.installment_plan.paid)}</strong></span>
-              <span style={{ color: "#C0392B" }}>{t("balanceLabel")}: <strong>{money(order.currency, order.installment_plan.balance)}</strong></span>
+              <span className="text-ok-ink">{t("paymentPaid")}: <strong>{money(order.currency, order.installment_plan.paid)}</strong></span>
+              <span className="text-alert-ink">{t("balanceLabel")}: <strong>{money(order.currency, order.installment_plan.balance)}</strong></span>
             </div>
             {confirming && (
-              <div className="flex items-center gap-2 mb-3 rounded-xl px-3.5 py-2.5 text-sm" style={{ background: "rgba(197,178,122,0.12)", color: "#7A6020" }}>
+              <div className="flex items-center gap-2 mb-3 rounded-edge px-3.5 py-2.5 text-sm bg-paper-deep text-gold-ink">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 {t("confirmingPayment")}
               </div>
@@ -137,16 +137,16 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
               {order.installment_plan.payments.map((p) => {
                 const canPay = ONLINE_PAYMENTS_ENABLED && !!order.installment_plan?.online_enabled && !p.paid;
                 return (
-                  <div key={p.id} className="flex items-center justify-between gap-3 text-sm rounded-xl px-3.5 py-2.5" style={{ background: "#FAFAF8" }}>
-                    <span style={{ color: "#454545" }}>
+                  <div key={p.id} className="flex items-center justify-between gap-3 text-sm rounded-edge px-3.5 py-2.5 bg-paper">
+                    <span className="text-ink-soft">
                       {p.label}
-                      {p.due_date && !p.paid && <span style={{ color: "#999" }}> · {t("dueLabel")} {new Date(p.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>}
-                      {p.paid && p.paid_at && <span style={{ color: "#999" }}> · {new Date(p.paid_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>}
+                      {p.due_date && !p.paid && <span className="text-ink-muted"> · {t("dueLabel")} {new Date(p.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>}
+                      {p.paid && p.paid_at && <span className="text-ink-muted"> · {new Date(p.paid_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>}
                     </span>
                     <span className="flex items-center gap-2 shrink-0">
-                      <span className="tabular-nums" style={{ color: "#1E1E1E" }}>{money(order.currency, p.amount)}</span>
+                      <span className="tabular-nums text-ink">{money(order.currency, p.amount)}</span>
                       {p.paid ? (
-                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}>
+                        <span className="t-label text-[0.6875rem] px-2 py-0.5 rounded-full bg-paper-deep text-ok-ink">
                           {t("paymentPaid")}
                         </span>
                       ) : canPay ? (
@@ -154,13 +154,12 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
                           type="button"
                           onClick={() => payInstallment(p.id)}
                           disabled={payingId !== null}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full transition-opacity hover:opacity-90 disabled:opacity-50"
-                          style={{ background: "#C5B27A", color: "#1E1E1E" }}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full transition-opacity hover:opacity-90 disabled:opacity-50 bg-ink text-paper"
                         >
                           {payingId === p.id ? <Loader2 className="w-3 h-3 animate-spin" /> : t("payOnline")}
                         </button>
                       ) : (
-                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.06)", color: "#888" }}>
+                        <span className="t-label text-ink-muted">
                           {t("dueLabel")}
                         </span>
                       )}
@@ -170,8 +169,8 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
               })}
             </div>
             {ONLINE_PAYMENTS_ENABLED && order.installment_plan.online_enabled && order.installment_plan.balance > 0 && (
-              <p className="inline-flex items-center gap-1.5 mt-3 text-xs" style={{ color: "#999" }}>
-                <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#7A6020" }} />
+              <p className="inline-flex items-center gap-1.5 mt-3 text-xs text-ink-muted">
+                <ShieldCheck className="w-3.5 h-3.5 text-gold-ink" />
                 {t("payOnlineNotice")}
               </p>
             )}
@@ -179,9 +178,9 @@ export default function OrderDetail({ params }: { params: Promise<{ reference: s
         )}
 
         {(addr.line1 || addr.city) && (
-          <div className="mt-7 pt-6 border-t" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "#8a8a8a" }}>{t("delivery")}</p>
-            <p className="text-sm" style={{ color: "#555" }}>{[addr.line1, addr.line2, addr.city, addr.country, addr.postcode].filter(Boolean).join(", ")}</p>
+          <div className="mt-7 pt-6 border-t border-line">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 text-ink-muted">{t("delivery")}</p>
+            <p className="text-sm text-ink-soft">{[addr.line1, addr.line2, addr.city, addr.country, addr.postcode].filter(Boolean).join(", ")}</p>
           </div>
         )}
 

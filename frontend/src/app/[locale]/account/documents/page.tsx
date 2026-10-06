@@ -17,13 +17,13 @@ export default function AccountDocuments() {
     apiCustomer<{ data: DocsResponse }>("/account/documents").then((r) => setDocs(r.data)).catch(() => setDocs({ order_documents: [], product_literature: [] }));
   }, []);
 
-  if (!docs) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
+  if (!docs) return <div className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
 
   return (
     <div>
       {docs.order_documents.length > 0 && (
         <div className="mb-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: "#8a8a8a" }}>{t("docsOrderDocuments")}</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3 text-ink-muted">{t("docsOrderDocuments")}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {docs.order_documents.map((d) => (
               <a
@@ -31,17 +31,16 @@ export default function AccountDocuments() {
                 href={d.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group glow-card rounded-[20px] p-6 flex items-center gap-4 hover-lift"
-                style={{ background: "linear-gradient(145deg, #FFFFFF 0%, #FAF8F4 100%)", border: "1px solid rgba(197,178,122,0.16)" }}
+                className="group rounded-frame p-6 flex items-center gap-4 bg-paper border border-line"
               >
-                <span className="flex items-center justify-center w-12 h-12 rounded-2xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
+                <span className="flex items-center justify-center w-12 h-12 rounded-frame shrink-0 bg-paper-deep text-gold-ink">
                   <FileText className="w-6 h-6" />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{d.name}</p>
-                  <p className="text-xs" style={{ color: "#999" }}>{d.order_reference ?? d.type}</p>
+                  <p className="font-semibold text-sm text-ink">{d.name}</p>
+                  <p className="text-xs text-ink-muted">{d.order_reference ?? d.type}</p>
                 </div>
-                <Download className="w-5 h-5 shrink-0 transition-transform group-hover:translate-y-0.5" style={{ color: "#7A6020" }} />
+                <Download className="w-5 h-5 shrink-0 transition-transform group-hover:translate-y-0.5 text-gold-ink" />
               </a>
             ))}
           </div>
@@ -49,7 +48,7 @@ export default function AccountDocuments() {
       )}
 
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: "#8a8a8a" }}>{t("docsProductLiterature")}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3 text-ink-muted">{t("docsProductLiterature")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {docs.product_literature.map((d) => (
             <a
@@ -57,23 +56,22 @@ export default function AccountDocuments() {
               href={d.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group glow-card rounded-[20px] p-6 flex items-center gap-4 hover-lift"
-              style={{ background: "linear-gradient(145deg, #FFFFFF 0%, #FAF8F4 100%)", border: "1px solid rgba(197,178,122,0.16)" }}
+              className="group rounded-frame p-6 flex items-center gap-4 bg-paper border border-line"
             >
-              <span className="flex items-center justify-center w-12 h-12 rounded-2xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
+              <span className="flex items-center justify-center w-12 h-12 rounded-frame shrink-0 bg-paper-deep text-gold-ink">
                 <FileText className="w-6 h-6" />
               </span>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{d.name}</p>
-                <p className="text-xs" style={{ color: "#999" }}>{d.type}</p>
+                <p className="font-semibold text-sm text-ink">{d.name}</p>
+                <p className="text-xs text-ink-muted">{d.type}</p>
               </div>
-              <Download className="w-5 h-5 shrink-0 transition-transform group-hover:translate-y-0.5" style={{ color: "#7A6020" }} />
+              <Download className="w-5 h-5 shrink-0 transition-transform group-hover:translate-y-0.5 text-gold-ink" />
             </a>
           ))}
         </div>
       </div>
 
-      <p className="text-xs mt-5" style={{ color: "#999" }}>{t("docsFoot")}</p>
+      <p className="text-xs mt-5 text-ink-muted">{t("docsFoot")}</p>
     </div>
   );
 }

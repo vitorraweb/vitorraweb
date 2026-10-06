@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { ShoppingBag, MessageSquare, FileText, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { apiCustomer } from "@/lib/customer-auth";
 
+/* Account dashboard — Quiet Authority. The three things a customer comes for,
+   as figures in a hairline row, then shortcuts to the next useful action. */
 export default function AccountDashboard() {
   const t = useTranslations("account");
   const [stats, setStats] = useState<{ orders: number; enquiries: number } | null>(null);
@@ -20,33 +22,49 @@ export default function AccountDashboard() {
   }, []);
 
   const cards = [
-    { label: t("tabOrders"), value: stats ? String(stats.orders) : "—", sub: t("cardOrdersSub"), href: "/account/orders", icon: ShoppingBag },
-    { label: t("tabEnquiries"), value: stats ? String(stats.enquiries) : "—", sub: t("cardEnquiriesSub"), href: "/account/enquiries", icon: MessageSquare },
-    { label: t("tabDocuments"), value: "", sub: t("cardDocumentsSub"), href: "/account/documents", icon: FileText },
+    { label: t("tabOrders"), value: stats ? String(stats.orders) : "·", sub: t("cardOrdersSub"), href: "/account/orders" },
+    { label: t("tabEnquiries"), value: stats ? String(stats.enquiries) : "·", sub: t("cardEnquiriesSub"), href: "/account/enquiries" },
+    { label: t("tabDocuments"), value: "", sub: t("cardDocumentsSub"), href: "/account/documents" },
+  ];
+
+  const quick = [
+    { label: t("quickEnquiry"), href: "/enquire" },
+    { label: t("quickCalc"), href: "/products/fuel-eco-tech#fet-calculator" },
+    { label: t("quickContact"), href: "/contact" },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-      {cards.map((c) => (
-        <Link
-          key={c.label}
-          href={c.href}
-          className="group glow-card rounded-[24px] p-7 hover-lift"
-          style={{ background: "linear-gradient(145deg, #FFFFFF 0%, #FAF8F4 100%)", border: "1px solid rgba(197,178,122,0.16)", boxShadow: "0 2px 10px rgba(0,0,0,0.03)" }}
-        >
-          <div className="flex items-center justify-between mb-5">
-            <span className="flex items-center justify-center w-12 h-12 rounded-2xl" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-              <c.icon className="w-6 h-6" />
-            </span>
-            <ArrowRight className="w-4 h-4 arrow-nudge" style={{ color: "#CCC" }} />
-          </div>
-          {c.value !== "" && (
-            <p style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "48px", fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em", color: "#1E1E1E" }}>{c.value}</p>
-          )}
-          <p className="mt-2.5 text-base font-semibold" style={{ color: "#1E1E1E" }}>{c.label}</p>
-          <p className="text-sm" style={{ color: "#999" }}>{c.sub}</p>
-        </Link>
-      ))}
+    <div className="space-y-16">
+      <ul className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-line border-y border-line">
+        {cards.map((c) => (
+          <li key={c.label} className="bg-paper">
+            <Link href={c.href} className="group flex h-full flex-col py-8 sm:px-8 sm:first:pl-0">
+              <span className="t-label text-ink-muted">{c.label}</span>
+              {c.value !== "" ? (
+                <span className="t-figure text-[clamp(3rem,2.4rem+2vw,4.5rem)] text-ink mt-5" aria-live="polite">{c.value}</span>
+              ) : (
+                <span className="t-h2 text-ink mt-5">{c.label}</span>
+              )}
+              <span className="t-small text-ink-muted mt-3 flex-1">{c.sub}</span>
+              <ArrowRight aria-hidden="true" className="w-4 h-4 mt-6 text-ink-muted transition-transform group-hover:translate-x-1" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <div>
+        <p className="t-label text-ink-muted pb-4 border-b border-line-strong">{t("quickLabel")}</p>
+        <ul>
+          {quick.map((q) => (
+            <li key={q.href} className="border-b border-line">
+              <Link href={q.href} className="group flex items-center justify-between py-5">
+                <span className="font-display text-[1.375rem] text-ink group-hover:text-gold-ink transition-colors">{q.label}</span>
+                <ArrowRight aria-hidden="true" className="w-4 h-4 text-ink-muted transition-transform group-hover:translate-x-1" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

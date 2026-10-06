@@ -40,13 +40,13 @@ export default function AccountFet() {
     .catch(() => setList([]));
   useEffect(() => { load(); }, []);
 
-  if (!list) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
+  if (!list) return <div className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
 
   if (list.length === 0) {
     return (
-      <div className="bg-white rounded-[28px] border border-black/[0.05] shadow-card p-14 text-center">
-        <span className="mx-auto mb-5 flex items-center justify-center w-14 h-14 rounded-full" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}><Gauge className="w-6 h-6" /></span>
-        <p className="text-sm max-w-md mx-auto" style={{ color: "#999" }}>{t("fetEmpty")}</p>
+      <div className="bg-paper rounded-frame border border-line p-14 text-center">
+        <span className="mx-auto mb-5 flex items-center justify-center w-14 h-14 rounded-full bg-paper-deep text-gold-ink"><Gauge className="w-6 h-6" /></span>
+        <p className="text-sm max-w-md mx-auto text-ink-muted">{t("fetEmpty")}</p>
       </div>
     );
   }
@@ -57,12 +57,12 @@ export default function AccountFet() {
   return (
     <div className="space-y-5">
       {showFleet && (
-        <div className="rounded-[24px] p-6 text-white relative overflow-hidden" style={{ background: "#141414" }}>
+        <div className="rounded-frame p-6 text-white relative overflow-hidden bg-ink">
           <div aria-hidden className="hero-aurora-right" />
           <div className="relative z-10">
             <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-              <span className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: "#C5B27A" }}>{t("fetFleetTitle")}</span>
-              <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{t("fetFleetVehicles", { n: fleet!.vehicles })}</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gold">{t("fetFleetTitle")}</span>
+              <span className="text-xs text-ink-fg-muted">{t("fetFleetVehicles", { n: fleet!.vehicles })}</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <FleetStat label={t("fetAvgReduction")} value={fleet!.avg_reduction_pct != null ? `${fleet!.avg_reduction_pct}%` : "—"} highlight />
@@ -83,8 +83,8 @@ export default function AccountFet() {
 function FleetStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div>
-      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>{label}</p>
-      <p className="font-bold" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "26px", color: highlight ? "#C5B27A" : "#fff" }}>{value}</p>
+      <p className="t-label text-[0.6875rem] mb-1 text-ink-fg-muted">{label}</p>
+      <p className={`font-display text-[1.75rem] leading-none [font-variant-numeric:lining-nums_tabular-nums] ${highlight ? "text-gold" : "text-ink-fg"}`}>{value}</p>
     </div>
   );
 }
@@ -116,20 +116,19 @@ function InstallCard({ install, onLogged }: { install: Install; onLogged: () => 
   };
 
   const cert = () => downloadCustomerFile(`/account/fet/${install.reference}/certificate`, `fet-savings-${install.reference}.pdf`).catch(() => {});
-  const inp = "w-full text-sm rounded-xl px-3 py-2 border outline-none";
-  const inpStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
-
+  const inp = "h-11 w-full rounded-edge px-3 t-small bg-white text-ink border border-line-strong outline-none focus:border-ink transition-colors";
+  
   return (
-    <div className="bg-white rounded-[24px] border border-black/[0.05] shadow-card overflow-hidden">
+    <div className="bg-paper rounded-frame border border-line overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 p-5 border-b" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-        <span className="flex items-center justify-center w-11 h-11 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.12)", color: "#7A6020" }}><Gauge className="w-5 h-5" /></span>
+      <div className="flex items-center gap-3 p-5 border-b border-line">
+        <span className="flex items-center justify-center w-11 h-11 rounded-edge shrink-0 bg-paper-deep text-gold-ink"><Gauge className="w-5 h-5" /></span>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{install.vehicle ?? install.tier_label}</p>
-          <p className="text-xs" style={{ color: "#999" }}>{t("fetDevice")}: {install.device_model} · {install.reference}</p>
+          <p className="font-semibold text-sm text-ink">{install.vehicle ?? install.tier_label}</p>
+          <p className="text-xs text-ink-muted">{t("fetDevice")}: {install.device_model} · {install.reference}</p>
         </div>
         {s.has_enough_data && (
-          <span className="inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-full shrink-0" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}>
+          <span className="inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-full shrink-0 bg-paper-deep text-ok-ink">
             <TrendingDown className="w-3.5 h-3.5" />{s.reduction_pct}%
           </span>
         )}
@@ -144,29 +143,29 @@ function InstallCard({ install, onLogged }: { install: Install; onLogged: () => 
           <Stat label={t("fetMoneySaved")} value={money(s.currency, s.money_saved)} hint={s.co2_saved_kg != null ? t("fetCo2", { kg: s.co2_saved_kg }) : ""} />
         </div>
       ) : (
-        <div className="px-5 py-4 flex items-center gap-2 text-sm" style={{ color: "#999" }}>
-          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#999" }}>{t("fetCollecting")}</span>
+        <div className="px-5 py-4 flex items-center gap-2 text-sm text-ink-muted">
+          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-paper-deep text-ink-muted">{t("fetCollecting")}</span>
           {t("fetNoReadings")}
         </div>
       )}
 
       {/* Log a fill-up */}
       <div className="px-5 pb-5">
-        <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide mb-2.5" style={{ color: "#777" }}><Fuel className="w-3.5 h-3.5" />{t("fetLogTitle")}</p>
+        <p className="inline-flex items-center gap-1.5 t-label mb-2.5 text-ink-muted"><Fuel className="w-3.5 h-3.5" />{t("fetLogTitle")}</p>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-end">
-          <label className="text-[11px] flex flex-col gap-1" style={{ color: "#999" }}>{t("fetDate")}<input value={form.logged_on} onChange={(e) => setForm({ ...form, logged_on: e.target.value })} type="date" className={inp} style={inpStyle} /></label>
-          <label className="text-[11px] flex flex-col gap-1" style={{ color: "#999" }}>{t("fetOdometer")}<input value={form.odometer_km} onChange={(e) => setForm({ ...form, odometer_km: e.target.value })} type="number" className={inp} style={inpStyle} /></label>
-          <label className="text-[11px] flex flex-col gap-1" style={{ color: "#999" }}>{t("fetLitres")}<input value={form.litres} onChange={(e) => setForm({ ...form, litres: e.target.value })} type="number" step="0.1" className={inp} style={inpStyle} /></label>
-          <label className="text-[11px] flex flex-col gap-1" style={{ color: "#999" }}>{t("fetCost")} ({install.currency})<input value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} type="number" className={inp} style={inpStyle} /></label>
-          <button onClick={submit} disabled={busy} className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-xl" style={{ background: "#1E1E1E", color: "#fff", opacity: busy ? 0.7 : 1 }}>{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}{t("fetAdd")}</button>
+          <label className="t-label text-[0.6875rem] flex flex-col gap-1.5 text-ink-muted">{t("fetDate")}<input value={form.logged_on} onChange={(e) => setForm({ ...form, logged_on: e.target.value })} type="date" className={inp} /></label>
+          <label className="t-label text-[0.6875rem] flex flex-col gap-1.5 text-ink-muted">{t("fetOdometer")}<input value={form.odometer_km} onChange={(e) => setForm({ ...form, odometer_km: e.target.value })} type="number" className={inp} /></label>
+          <label className="t-label text-[0.6875rem] flex flex-col gap-1.5 text-ink-muted">{t("fetLitres")}<input value={form.litres} onChange={(e) => setForm({ ...form, litres: e.target.value })} type="number" step="0.1" className={inp} /></label>
+          <label className="t-label text-[0.6875rem] flex flex-col gap-1.5 text-ink-muted">{t("fetCost")} ({install.currency})<input value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} type="number" className={inp} /></label>
+          <button onClick={submit} disabled={busy} className="q-btn min-h-11 px-4 bg-ink text-paper hover:bg-black disabled:opacity-70">{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}{t("fetAdd")}</button>
         </div>
-        {msg && <p className="text-sm mt-2" style={{ color: "#16A34A" }}>{msg}</p>}
+        {msg && <p className="text-sm mt-2 text-ok-ink">{msg}</p>}
 
         {install.logs.length > 0 && (
           <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-xs" style={{ color: "#aaa" }}>{install.logs.length} {t("fetReadings").toLowerCase()} · {fmtDate(install.logs[install.logs.length - 1].logged_on)}</p>
+            <p className="text-xs text-ink-muted">{install.logs.length} {t("fetReadings").toLowerCase()} · {fmtDate(install.logs[install.logs.length - 1].logged_on)}</p>
             {s.has_enough_data && (
-              <button onClick={cert} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><FileDown className="w-3.5 h-3.5" />{t("fetCertificate")}</button>
+              <button onClick={cert} className="q-btn min-h-10 px-4 border border-line-strong text-ink hover:border-ink"><FileDown className="w-3.5 h-3.5" />{t("fetCertificate")}</button>
             )}
           </div>
         )}
@@ -177,10 +176,10 @@ function InstallCard({ install, onLogged }: { install: Install; onLogged: () => 
 
 function Stat({ label, value, hint, highlight }: { label: string; value: string; hint?: string; highlight?: boolean }) {
   return (
-    <div className="rounded-2xl p-3.5" style={{ background: highlight ? "rgba(197,178,122,0.1)" : "#F7F7F5" }}>
-      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>{label}</p>
-      <p className="font-bold" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "20px", color: highlight ? "#7A6020" : "#1E1E1E" }}>{value}</p>
-      {hint && <p className="text-[11px] mt-0.5" style={{ color: "#aaa" }}>{hint}</p>}
+    <div className={`rounded-frame p-4 border ${highlight ? "border-gold bg-paper" : "border-line bg-paper-deep"}`}>
+      <p className="t-label text-[0.6875rem] mb-1 text-ink-muted">{label}</p>
+      <p className={`font-display text-[1.375rem] leading-none mt-1 [font-variant-numeric:lining-nums_tabular-nums] ${highlight ? "text-gold-ink" : "text-ink"}`}>{value}</p>
+      {hint && <p className="text-[11px] mt-0.5 text-ink-muted">{hint}</p>}
     </div>
   );
 }

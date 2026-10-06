@@ -1,10 +1,12 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Check, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
-/* Premium split auth layout — dark cinematic brand panel (aurora + grain, like
-   the site's heroes) on the left, the form on a clean ivory canvas on the right. */
+/* ─── Sign-in / sign-up shell — Quiet Authority ───────────────────────────────
+   The real head-office reception on one side (the Vitorra sign), a calm paper
+   form on the other. On phones the photograph becomes a short band above the
+   form so the brand is still the first thing seen. */
 
 export default function AuthShell({
   lead,
@@ -16,66 +18,47 @@ export default function AuthShell({
   children: React.ReactNode;
 }) {
   const t = useTranslations("account");
+  const alt = useTranslations("imageAlt");
   const PERKS = [t("perk1"), t("perk2"), t("perk3")];
-  return (
-    <section className="grid lg:grid-cols-2 min-h-dvh">
-      {/* ── Left — dark brand panel ──────────────────────────────────────── */}
-      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden p-12 xl:p-16" style={{ backgroundColor: "#121212" }}>
-        <div aria-hidden="true" className="hero-aurora-right" />
-        <div aria-hidden="true" className="hero-grain" />
 
-        <div className="relative z-10 flex items-center justify-between">
-          <Link href="/" aria-label="Vitorra Holdings, home">
-            <Image src="/logo.png" alt="Vitorra Holdings Limited" width={120} height={120} className="h-16 w-auto" />
+  return (
+    <section className="q-scope grid lg:grid-cols-2 min-h-dvh bg-paper">
+      {/* ── Photograph panel ─────────────────────────────────────────────── */}
+      <div className="relative isolate overflow-hidden bg-ink text-ink-fg min-h-[34svh] lg:min-h-0 flex flex-col">
+        <Image src="/hero/brand-wall.jpg" alt={alt("reception")} fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="-z-10 object-cover q-settle" />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,rgba(20,20,20,0.96)_0%,rgba(20,20,20,0.86)_48%,rgba(20,20,20,0.4)_75%,rgba(20,20,20,0.3)_100%)]" />
+
+        <div className="flex items-center justify-between p-6 lg:p-12">
+          <Link href="/" aria-label="Vitorra Holdings Limited, home" className="flex items-center gap-3">
+            <Image src="/logo.png" alt="" width={36} height={36} />
+            <span className="flex flex-col leading-none">
+              <span className="font-display text-[1.375rem] text-ink-fg">Vitorra</span>
+              <span className="t-label text-[0.625rem] tracking-[0.22em] text-ink-fg-muted mt-1">Holdings Limited</span>
+            </span>
           </Link>
-          <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold transition-opacity hover:opacity-70" style={{ color: "rgba(255,255,255,0.55)" }}>
-            {t("backToSite")}<ArrowUpRight className="w-3.5 h-3.5" />
+          <Link href="/" className="q-link t-small text-ink-fg">
+            {t("backToSite")}<ArrowUpRight aria-hidden="true" className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <div className="relative z-10 max-w-md">
-          <span className="eyebrow-light mb-6 inline-flex">{t("shellEyebrow")}</span>
-          <h2
-            style={{
-              fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-              fontSize: "clamp(36px, 4vw, 56px)",
-              fontWeight: 700,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.05,
-              color: "#FFFFFF",
-            }}
-          >
-            {lead} <span className="text-gold-gradient">{accent}</span>
-          </h2>
-          <ul className="mt-10 space-y-4">
-            {PERKS.map((p) => (
-              <li key={p} className="flex items-start gap-3.5">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full shrink-0 mt-0.5" style={{ background: "rgba(197,178,122,0.16)", border: "1px solid rgba(197,178,122,0.3)" }}>
-                  <Check className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />
-                </span>
-                <span style={{ fontSize: "15px", lineHeight: 1.6, color: "rgba(255,255,255,0.6)" }}>{p}</span>
+        <div className="mt-auto p-6 lg:p-12 hidden lg:block max-w-[30rem]">
+          <p className="t-label text-ink-fg-muted mb-6">{t("shellEyebrow")}</p>
+          <h2 className="t-display text-ink-fg">{lead} {accent}</h2>
+          <ul className="mt-10 border-t border-ink-fg/15">
+            {PERKS.map((p, i) => (
+              <li key={p} className="grid grid-cols-[2.5rem_1fr] gap-3 py-4 border-b border-ink-fg/15">
+                <span className="t-label font-numeric text-gold pt-0.5">{String(i + 1).padStart(2, "0")}</span>
+                <span className="t-small text-ink-fg/85">{p}</span>
               </li>
             ))}
           </ul>
-        </div>
-
-        <div className="relative z-10">
-          <p style={{ fontSize: "12px", lineHeight: 1.7, color: "rgba(255,255,255,0.32)", maxWidth: "320px" }}>
-            {t("shellTagline")}
-          </p>
+          <p className="t-small text-ink-fg-muted mt-8">{t("shellTagline")}</p>
         </div>
       </div>
 
-      {/* ── Right — form ─────────────────────────────────────────────────── */}
-      <div className="relative flex items-center justify-center px-6 py-16" style={{ backgroundColor: "#F2F2F2" }}>
-        <div className="w-full max-w-[400px]">
-          <div className="lg:hidden mb-8 flex justify-center">
-            <Link href="/" aria-label="Vitorra Holdings, home">
-              <Image src="/logo.png" alt="Vitorra" width={56} height={56} className="h-12 w-auto mix-blend-multiply" />
-            </Link>
-          </div>
-          {children}
-        </div>
+      {/* ── Form ─────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-center px-5 py-14 lg:py-20 bg-paper">
+        <div className="w-full max-w-[26rem]">{children}</div>
       </div>
     </section>
   );

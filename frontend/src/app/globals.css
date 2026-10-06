@@ -934,6 +934,7 @@
   --color-line-strong:    #C9C2AF;   /* control borders, emphasised rules       */
   --color-gold-ink:       #7A6020;   /* gold that can be read on paper — 5.9:1  */
   --color-alert-ink:      #9B2C2C;   /* form errors — 7.4:1 on paper            */
+  --color-ok-ink:         #2F6B3A;   /* positive status (paid, confirmed) — 6.6:1 on paper */
 
   /* on ink */
   --color-ink-fg:         #F3F1EC;

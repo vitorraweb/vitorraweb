@@ -1136,7 +1136,22 @@ and Unsubscribe are now on the same system. Every form keeps its logic
 - **Still in the old style:** the customer portal (`/account`), the order,
   invoice and payment pages, and the gated shop catalogue/cart/checkout.
 
-**Still to redesign:** the customer portal (`/account`), the order / invoice / payment pages, and the gated shop catalogue, cart and checkout.
+### Fourth pass (6 October 2026): sign-in, sign-up and the customer portal
+
+- **Sign-in / sign-up:** one shell with the real head-office reception photo and
+  a calm paper form; browser autocomplete hints added so password managers and
+  phone keyboards fill the fields. "In real time" removed from the account perks.
+- **Portal:** paper header with the customer's name, underlined tabs that scroll
+  sideways on phones, a dashboard of figures plus shortcuts (new enquiry, fuel
+  estimate, contact). Orders, order detail and timeline, enquiries, messages,
+  documents, fuel savings and profile all moved onto the design system.
+- **One status style:** the five bright pill colours (blue, purple, green, red,
+  gold) are replaced by a quiet chip with a coloured dot and four tones; a muted
+  green token (`ok-ink`) added for paid / confirmed.
+- The two-factor and active-sessions panels are shared with the staff and admin
+  profiles, so they pick up the same look there.
+
+**Still to redesign:** the order / invoice / payment pages reached from links we send customers, and the gated shop catalogue, cart and checkout.
 Suppliers, legal, Shop. Until then those pages carry the old styling.
 
 ## ⏳ Remaining / pending

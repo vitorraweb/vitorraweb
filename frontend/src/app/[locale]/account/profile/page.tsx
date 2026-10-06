@@ -7,7 +7,7 @@ import { apiCustomer, customerAuth, changeCustomerPassword } from "@/lib/custome
 
 type Profile = { name: string; email: string; company: string | null; phone: string | null; country: string | null };
 
-const inputCls = "w-full h-12 rounded-2xl px-4 text-[15px] bg-white outline-none border border-black/10 focus:border-[#C5B27A] transition-colors";
+const inputCls = "w-full h-12 rounded-frame px-4 text-[15px] bg-paper outline-none border border-black/10 focus:border-ink transition-colors";
 const labelCls = "block text-[11px] font-bold uppercase tracking-[0.14em] mb-2";
 
 export default function AccountProfile() {
@@ -38,30 +38,30 @@ export default function AccountProfile() {
     finally { setSaving(false); }
   };
 
-  if (error && !p) return <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>;
-  if (!p) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
+  if (error && !p) return <p className="text-sm text-alert-ink">{error}</p>;
+  if (!p) return <div className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />{t("loading")}</div>;
 
   return (
     <div className="max-w-2xl">
-      <div className="bg-white rounded-[28px] border border-black/[0.05] shadow-card p-7 md:p-9">
-        <h2 className="mb-6" style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "26px", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }}>
+      <div className="bg-paper rounded-frame border border-line p-7 md:p-9">
+        <h2 className="mb-6 t-h3 text-ink">
           {t("yourDetails")}
         </h2>
         <div className="space-y-5">
           <Field label={t("fullName")}><input value={p.name} onChange={(e) => set("name", e.target.value)} className={inputCls} /></Field>
-          <Field label={t("email")} hint={t("emailHint")}><input value={p.email} disabled className={`${inputCls} cursor-not-allowed`} style={{ background: "#F2F2F2", color: "#999" }} /></Field>
+          <Field label={t("email")} hint={t("emailHint")}><input value={p.email} disabled className={`${inputCls} cursor-not-allowed bg-paper-deep text-ink-muted`} /></Field>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label={t("company")}><input value={p.company ?? ""} onChange={(e) => set("company", e.target.value)} placeholder={t("optional")} className={inputCls} /></Field>
             <Field label={t("phone")}><input value={p.phone ?? ""} onChange={(e) => set("phone", e.target.value)} placeholder={t("optional")} className={inputCls} /></Field>
           </div>
           <Field label={t("country")}><input value={p.country ?? ""} onChange={(e) => set("country", e.target.value)} className={inputCls} /></Field>
 
-          {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
-          <div className="flex items-center gap-3 pt-3 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-            <button onClick={save} disabled={saving} className="btn-primary" style={{ height: "46px", opacity: saving ? 0.7 : 1 }}>
+          {error && <p className="text-sm text-alert-ink">{error}</p>}
+          <div className="flex items-center gap-3 pt-3 border-t border-line">
+            <button onClick={save} disabled={saving} className="q-btn bg-ink text-paper hover:bg-black disabled:opacity-70">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}{t("saveChanges")}
             </button>
-            {saved && <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#16A34A" }}><Check className="w-4 h-4" />{t("saved")}</span>}
+            {saved && <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-ok-ink"><Check className="w-4 h-4" />{t("saved")}</span>}
           </div>
         </div>
       </div>
@@ -97,9 +97,9 @@ function PasswordCard({ t }: { t: ReturnType<typeof useTranslations> }) {
   };
 
   return (
-    <form onSubmit={submit} className="bg-white rounded-[28px] border border-black/[0.05] shadow-card p-7 md:p-9 mt-6">
-      <h2 className="flex items-center gap-2 mb-6" style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "26px", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }}>
-        <ShieldCheck className="w-5 h-5" style={{ color: "#C5B27A" }} />{t("changePassword")}
+    <form onSubmit={submit} className="bg-paper rounded-frame border border-line p-7 md:p-9 mt-6">
+      <h2 className="flex items-center gap-2 mb-6 t-h3 text-ink">
+        <ShieldCheck className="w-5 h-5 text-gold" />{t("changePassword")}
       </h2>
       <div className="space-y-5">
         <Field label={t("currentPassword")}>
@@ -112,18 +112,18 @@ function PasswordCard({ t }: { t: ReturnType<typeof useTranslations> }) {
           <PwInput value={confirm} onChange={setConfirm} show={show} autoComplete="new-password" />
         </Field>
 
-        <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#777" }}>
-          <input type="checkbox" checked={show} onChange={() => setShow((s) => !s)} className="w-3.5 h-3.5 rounded accent-[#C5B27A]" />
+        <label className="flex items-center gap-2 text-xs cursor-pointer text-ink-muted">
+          <input type="checkbox" checked={show} onChange={() => setShow((s) => !s)} className="w-3.5 h-3.5 rounded accent-ink" />
           {t("showPasswords")}
         </label>
-        <p className="text-xs" style={{ color: "#aaa" }}>{t("passwordOtherDevices")}</p>
+        <p className="text-xs text-ink-muted">{t("passwordOtherDevices")}</p>
 
-        {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
-        <div className="flex items-center gap-3 pt-3 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-          <button type="submit" disabled={saving || !current || !next || !confirm} className="btn-primary" style={{ height: "46px", opacity: saving || !current || !next || !confirm ? 0.6 : 1 }}>
+        {error && <p className="text-sm text-alert-ink">{error}</p>}
+        <div className="flex items-center gap-3 pt-3 border-t border-line">
+          <button type="submit" disabled={saving || !current || !next || !confirm} className="q-btn bg-ink text-paper hover:bg-black disabled:opacity-60">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}{t("updatePassword")}
           </button>
-          {done && <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#16A34A" }}><Check className="w-4 h-4" />{t("passwordChanged")}</span>}
+          {done && <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-ok-ink"><Check className="w-4 h-4" />{t("passwordChanged")}</span>}
         </div>
       </div>
     </form>
@@ -141,7 +141,7 @@ function PwInput({ value, onChange, show, autoComplete }: { value: string; onCha
         autoComplete={autoComplete}
         className={`${inputCls} pr-11`}
       />
-      <button type="button" onClick={() => setReveal((r) => !r)} className="absolute right-4 top-1/2 -translate-y-1/2" style={{ color: "#bbb" }} tabIndex={-1}>
+      <button type="button" onClick={() => setReveal((r) => !r)} className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-muted" tabIndex={-1}>
         {show || reveal ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
       </button>
     </div>
@@ -151,9 +151,9 @@ function PwInput({ value, onChange, show, autoComplete }: { value: string; onCha
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className={labelCls} style={{ color: "#8a8a8a" }}>{label}</label>
+      <label className={`${labelCls} text-ink-muted`}>{label}</label>
       {children}
-      {hint && <p className="mt-1.5 text-xs" style={{ color: "#999" }}>{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs text-ink-muted">{hint}</p>}
     </div>
   );
 }

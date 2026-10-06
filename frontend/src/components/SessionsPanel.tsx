@@ -50,40 +50,40 @@ export function SessionsPanel({ api }: { api: Api }) {
   const hasOthers = (sessions ?? []).some((s) => !s.current);
 
   return (
-    <div className="bg-white rounded-[20px] border border-black/[0.06] p-6 mt-5">
+    <div className="bg-paper rounded-frame border border-line p-6 mt-5">
       <div className="flex items-center gap-2 mb-1">
-        <MonitorSmartphone className="w-4 h-4" style={{ color: "#C5B27A" }} />
-        <h2 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "#1E1E1E" }}>Active sessions</h2>
+        <MonitorSmartphone className="w-4 h-4 text-gold" />
+        <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-ink">Active sessions</h2>
         {hasOthers && (
-          <button onClick={revokeOthers} disabled={busy} className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full disabled:opacity-50" style={{ background: "#F2F2F2", color: "#C0392B" }}>
+          <button onClick={revokeOthers} disabled={busy} className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full disabled:opacity-50 bg-paper-deep text-alert-ink">
             <LogOut className="w-3.5 h-3.5" />Sign out other devices
           </button>
         )}
       </div>
-      <p className="text-xs mb-4" style={{ color: "#999" }}>Devices currently signed in to your account. If you don&apos;t recognise one, sign it out.</p>
+      <p className="text-xs mb-4 text-ink-muted">Devices currently signed in to your account. If you don&apos;t recognise one, sign it out.</p>
 
-      {error && <p className="text-sm mb-3" style={{ color: "#C0392B" }}>{error}</p>}
+      {error && <p className="text-sm mb-3 text-alert-ink">{error}</p>}
 
       {sessions === null ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : sessions.length === 0 ? (
-        <p className="text-sm" style={{ color: "#999" }}>No active sessions.</p>
+        <p className="text-sm text-ink-muted">No active sessions.</p>
       ) : (
         <div className="space-y-2">
           {sessions.map((s) => (
-            <div key={s.id} className="flex items-center gap-3 rounded-[14px] border border-black/[0.05] p-3.5">
-              <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: "#FAFAF8" }}>
-                <MonitorSmartphone className="w-4 h-4" style={{ color: "#7A6020" }} />
+            <div key={s.id} className="flex items-center gap-3 rounded-frame border border-line p-3.5">
+              <span className="flex items-center justify-center w-9 h-9 rounded-edge shrink-0 bg-paper">
+                <MonitorSmartphone className="w-4 h-4 text-gold-ink" />
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-semibold truncate" style={{ color: "#1E1E1E" }}>{s.name}</span>
-                  {s.current && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}>This device</span>}
+                  <span className="text-sm font-semibold truncate text-ink">{s.name}</span>
+                  {s.current && <span className="t-label text-[0.6875rem] px-2 py-0.5 rounded-full bg-paper-deep text-ok-ink">This device</span>}
                 </div>
-                <p className="text-xs" style={{ color: "#999" }}>{s.last_used_at ? `Last active ${rel(s.last_used_at)}` : "Not used yet"}{s.expires_at ? ` · expires ${rel(s.expires_at)}` : ""}</p>
+                <p className="text-xs text-ink-muted">{s.last_used_at ? `Last active ${rel(s.last_used_at)}` : "Not used yet"}{s.expires_at ? ` · expires ${rel(s.expires_at)}` : ""}</p>
               </div>
               {!s.current && (
-                <button onClick={() => revoke(s.id)} disabled={busy} className="p-1.5 rounded-lg shrink-0 disabled:opacity-50" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }} title="Sign out this device">
+                <button onClick={() => revoke(s.id)} disabled={busy} className="p-1.5 rounded-edge shrink-0 border border-line-strong text-alert-ink hover:border-alert-ink disabled:opacity-50" title="Sign out this device">
                   <X className="w-4 h-4" />
                 </button>
               )}

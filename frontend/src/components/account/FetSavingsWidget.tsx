@@ -44,27 +44,27 @@ export default function FetSavingsWidget({
     rates ? formatMoney(convert(eur, "EUR", "UGX", rates), "UGX", { roundUgxTo: 1000 }) : `€${eur.toFixed(0)}`;
 
   return (
-    <div className="mt-7 pt-6 border-t" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-4 flex items-center gap-1.5" style={{ color: "#8a8a8a" }}>
-        <TrendingDown className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />
+    <div className="mt-7 pt-6 border-t border-line">
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-4 flex items-center gap-1.5 text-ink-muted">
+        <TrendingDown className="w-3.5 h-3.5 text-gold" />
         {t("savingsTitle")}
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div>
-          <p className="text-[11px] mb-1" style={{ color: "#999" }}>{t("savingsFleetSize")}</p>
-          <p className="font-numeric" style={{ fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{quantity}</p>
+          <p className="text-[11px] mb-1 text-ink-muted">{t("savingsFleetSize")}</p>
+          <p className="font-numeric font-display text-[1.375rem] leading-tight text-ink">{quantity}</p>
         </div>
         <div>
-          <p className="text-[11px] mb-1" style={{ color: "#999" }}>{t("savingsSinceInstall")}</p>
-          <p className="font-numeric" style={{ fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{fmt(savedSoFarEur)}</p>
+          <p className="text-[11px] mb-1 text-ink-muted">{t("savingsSinceInstall")}</p>
+          <p className="font-numeric font-display text-[1.375rem] leading-tight text-ink">{fmt(savedSoFarEur)}</p>
         </div>
         <div>
-          <p className="text-[11px] mb-1" style={{ color: "#999" }}>{t("savingsAnnualProjection")}</p>
-          <p className="font-numeric" style={{ fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{fmt(savings.annualSavingEurFleet)}</p>
+          <p className="text-[11px] mb-1 text-ink-muted">{t("savingsAnnualProjection")}</p>
+          <p className="font-numeric font-display text-[1.375rem] leading-tight text-ink">{fmt(savings.annualSavingEurFleet)}</p>
         </div>
         <div>
-          <p className="text-[11px] mb-1" style={{ color: "#999" }}>{t("savingsCo2")}</p>
-          <p className="font-numeric" style={{ fontSize: "20px", fontWeight: 700, color: "#1E1E1E" }}>{co2SoFarKg.toFixed(0)} kg</p>
+          <p className="text-[11px] mb-1 text-ink-muted">{t("savingsCo2")}</p>
+          <p className="font-numeric font-display text-[1.375rem] leading-tight text-ink">{co2SoFarKg.toFixed(0)} kg</p>
         </div>
       </div>
     </div>
