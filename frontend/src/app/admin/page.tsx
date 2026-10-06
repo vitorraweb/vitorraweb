@@ -1,598 +1,147 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { MessageSquare, Mail, ShoppingCart, Loader2, ArrowRight, Target, Inbox, Clock, Globe, AlertTriangle } from "lucide-react";
-import { apiAdmin } from "@/lib/auth";
-import { Sparkline, LiveDot, formatRelativeTime } from "@/components/admin/admin-ui";
+import { ArrowRight, Check, Loader2 } from "lucide-react";
+import { apiAdmin, auth, canAccess, type AdminUser } from "@/lib/auth";
+import { APP_AREAS, visibleApps } from "@/lib/admin-apps";
 
-type Money = { UGX: number; USD: number };
+/* ─── Console home: the app launcher ──────────────────────────────────────────
+   Two things, in order: what needs someone today (counts pulled from the
+   existing endpoints, each shown only to people who can act on it), then
+   every app the user may open, grouped by what it is for. The old KPI
+   dashboard lives on as Insights → Overview.                               */
 
-type ActivityItem = {
-  type: "enquiry" | "order" | "message";
-  title: string;
-  meta: string;
-  created_at: string;
-  href: string;
-};
+type Attention = { key: string; app: string; count: number; label: string; href: string };
 
 type Stats = {
-  messages_unread: number;
-  enquiries: {
-    total: number; open: number; converted: number; conversion_rate: number;
-    this_month: number; last_month: number;
-    by_product: Record<string, number>;
-    by_status: Record<string, number>;
-    avg_response_hours: number | null;
-  };
-  orders: {
-    total: number; pending: number;
-    by_status: Record<string, number>;
-    this_month: number; last_month: number;
-    pending_value: Money; revenue: Money;
-  };
-  prospects: {
-    total: number; reached: number; converted: number; needs_fixing: number;
-    by_status: Record<string, number>;
-    by_category: Record<string, number>;
-  };
-  lead_sources?: {
-    by_source: { source: string; count: number; converted: number }[];
-    by_campaign: { campaign: string; count: number }[];
-    tracked_from: string | null;
-  };
-  trends?: {
-    labels: string[];
-    enquiries: number[];
-    orders: number[];
-  };
-  recent_activity?: ActivityItem[];
+  messages_unread?: number;
+  enquiries?: { by_status?: Record<string, number> };
+  orders?: { pending?: number };
+  prospects?: { needs_fixing?: number };
 };
+type Alerts = { stale_contacts?: { count: number }; overdue_tasks?: { count: number } };
 
-type Alerts = {
-  stale_contacts: {
-    count: number;
-    items: { email: string; name: string; stage: string; owner: { id: number; name: string } | null; last_activity: string; days_idle: number }[];
-  };
-  overdue_tasks: {
-    count: number;
-    items: { id: number; title: string; due_date: string; assignee: { id: number; name: string } | null }[];
-  };
-  unactioned_enquiries: {
-    count: number;
-    items: { id: number; name: string; product_category: string | null; created_at: string }[];
-  };
-};
+const list = <T,>(p: Promise<{ data: T[] }>) => p.then((r) => r.data.length).catch(() => 0);
 
-type Analytics = {
-  connected: boolean;
-  error?: boolean;
-  visitors_today?: number;
-  pageviews_today?: number;
-  visitors_7d?: number;
-  pageviews_7d?: number;
-  bounce_rate_7d?: number;
-  top_pages?: { page: string; visitors: number }[];
-  top_sources?: { source: string; visitors: number }[];
-};
-
-const POLL_MS = 45_000;
-const ANALYTICS_POLL_MS = 5 * 60_000;
-
-const ACTIVITY_ICON: Record<ActivityItem["type"], typeof Mail> = {
-  enquiry: MessageSquare,
-  order: ShoppingCart,
-  message: Mail,
-};
-
-const PRODUCTS: [string, string][] = [
-  ["FET", "Fuel Eco Tech"],
-  ["SEAL", "SEAL Wound Spray"],
-  ["COFFEE", "Coffee (wholesale/export)"],
-  ["LOGISTICS", "Logistics"],
-  ["GENERAL", "General"],
-];
-
-const PIPELINE: [string, string][] = [
-  ["new", "New"],
-  ["in_progress", "In progress"],
-  ["quoted", "Quoted"],
-  ["converted", "Converted"],
-  ["closed", "Closed"],
-];
-
-const fmtUGX = (n: number) => `UGX ${n.toLocaleString("en-US")}`;
-const fmtUSD = (n: number) => `$${(n / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-/** Show both currencies, or a dash when there's nothing yet. */
-function money(m: Money): string {
-  const parts: string[] = [];
-  if (m.UGX) parts.push(fmtUGX(m.UGX));
-  if (m.USD) parts.push(fmtUSD(m.USD));
-  return parts.length ? parts.join("  ·  ") : "—";
+function greeting(d: Date) {
+  const h = d.getHours();
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 }
 
-export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [alerts, setAlerts] = useState<Alerts | null>(null);
-  const [error, setError] = useState("");
-  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
-  const [now, setNow] = useState<number | null>(null);
-  const [analytics, setAnalytics] = useState<Analytics | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      const res = await apiAdmin<{ data: Stats }>("/admin/stats");
-      setStats(res.data);
-      setLastUpdated(Date.now());
-      setError("");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load");
-    }
-    try {
-      const res = await apiAdmin<{ data: Alerts }>("/admin/alerts");
-      setAlerts(res.data);
-    } catch {
-      setAlerts(null);
-    }
-  }, []);
-
-  const loadAnalytics = useCallback(async () => {
-    try {
-      const res = await apiAdmin<{ data: Analytics }>("/admin/analytics");
-      setAnalytics(res.data);
-    } catch {
-      setAnalytics({ connected: false, error: true });
-    }
-  }, []);
+export default function ConsoleHome() {
+  const [user] = useState<AdminUser | null>(() => auth.getUser());
+  const [items, setItems] = useState<Attention[] | null>(null);
+  const [now] = useState(() => new Date());
 
   useEffect(() => {
-    load();
-    const id = setInterval(load, POLL_MS);
-    return () => clearInterval(id);
-  }, [load]);
+    if (!user) return;
+    const can = (module?: string) => canAccess(user, { module });
+    (async () => {
+      const [stats, alerts, leave, suppliers, drafts] = await Promise.all([
+        apiAdmin<{ data: Stats }>("/admin/stats").then((r) => r.data).catch(() => ({} as Stats)),
+        apiAdmin<{ data: Alerts }>("/admin/alerts").then((r) => r.data).catch(() => ({} as Alerts)),
+        can("people") ? list(apiAdmin("/admin/leave?status=pending")) : Promise.resolve(0),
+        can("suppliers") ? list(apiAdmin("/admin/suppliers?status=pending")) : Promise.resolve(0),
+        can("accounting") ? list(apiAdmin("/admin/accounting/transactions?status=draft")) : Promise.resolve(0),
+      ]);
+      const all: (Attention & { module?: string })[] = [
+        { key: "enq", app: "sales", module: "enquiries", count: stats.enquiries?.by_status?.new ?? 0, label: "new enquiries waiting for a first reply", href: "/admin/enquiries" },
+        { key: "quiet", app: "sales", module: "customers", count: alerts.stale_contacts?.count ?? 0, label: "customers with no contact in two weeks or more", href: "/admin/pipeline" },
+        { key: "fix", app: "sales", module: "prospects", count: stats.prospects?.needs_fixing ?? 0, label: "prospects with missing or broken contact details", href: "/admin/prospects" },
+        { key: "orders", app: "orders", module: "orders", count: stats.orders?.pending ?? 0, label: "orders waiting on payment or confirmation", href: "/admin/orders" },
+        { key: "drafts", app: "accounting", module: "accounting", count: drafts, label: "book entries waiting for approval", href: "/admin/accounting" },
+        { key: "tasks", app: "operations", module: "tasks", count: alerts.overdue_tasks?.count ?? 0, label: "tasks past their due date", href: "/admin/tasks" },
+        { key: "suppliers", app: "operations", module: "suppliers", count: suppliers, label: "supplier applications to review", href: "/admin/suppliers" },
+        { key: "leave", app: "people", module: "people", count: leave, label: "leave requests waiting for a signature", href: "/admin/leave" },
+        { key: "msgs", app: "website", module: "messages", count: stats.messages_unread ?? 0, label: "unread website messages", href: "/admin/messages" },
+      ];
+      setItems(all.filter((a) => a.count > 0 && can(a.module)));
+    })();
+  }, [user]);
 
-  useEffect(() => {
-    loadAnalytics();
-    const id = setInterval(loadAnalytics, ANALYTICS_POLL_MS);
-    return () => clearInterval(id);
-  }, [loadAnalytics]);
+  const apps = useMemo(() => visibleApps(user), [user]);
+  const badge = (appId: string) => (items ?? []).filter((i) => i.app === appId).reduce((n, i) => n + i.count, 0);
 
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
+  if (!user) return null;
+  const first = user.name.split(/\s+/)[0];
 
   return (
-    <div>
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
-        <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "28px", fontWeight: 700, color: "#1E1E1E" }}>
-          Dashboard
-        </h1>
-        {lastUpdated && (
-          <div className="flex items-center gap-2 text-xs" style={{ color: "#999" }}>
-            <LiveDot />
-            Live · updated {now ? formatRelativeTime(new Date(lastUpdated).toISOString(), now) : "just now"}
-          </div>
-        )}
+    <div className="max-w-[1180px] mx-auto">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+        <div>
+          <p className="text-[12px] text-ink-muted">
+            {now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          </p>
+          <h1 className="c-title text-[30px] mt-1">{greeting(now)}, {first}.</h1>
+        </div>
+        <p className="text-[12.5px] text-ink-muted">
+          Press <kbd className="c-kbd">⌘K</kbd> to jump to any screen, customer or prospect.
+        </p>
       </div>
-      <p className="text-sm mb-8" style={{ color: "#777777" }}>Enquiry funnel, conversion, and orders at a glance. Refreshes automatically.</p>
 
-      {error && (
-        <div className="rounded-2xl p-5 mb-6" style={{ background: "rgba(192,57,43,0.08)", border: "1px solid rgba(192,57,43,0.25)" }}>
-          <p className="text-sm" style={{ color: "#C0392B" }}>Couldn&apos;t load stats: {error}. Is the backend running?</p>
+      {/* ══ Needs attention ═════════════════════════════════════════════════ */}
+      <section aria-labelledby="attention" className="c-panel mb-10">
+        <div className="c-panel-head">
+          <h2 id="attention" className="c-panel-title">Needs attention</h2>
+          {items && items.length > 0 && <span className="text-[12px] text-ink-muted">{items.length} {items.length === 1 ? "item" : "items"}</span>}
         </div>
-      )}
+        {items === null ? (
+          <div className="flex items-center gap-2 px-4 py-5 text-[13px] text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Checking every app…</div>
+        ) : items.length === 0 ? (
+          <div className="flex items-center gap-2 px-4 py-5 text-[13px] text-ok-ink"><Check className="w-4 h-4" />Nothing is waiting on you. Everything is up to date.</div>
+        ) : (
+          <ul className="divide-y divide-line">
+            {items.map((a) => (
+              <li key={a.key}>
+                <Link href={a.href} className="group flex items-center gap-4 px-4 py-2.5 hover:bg-paper-deep transition-colors">
+                  <span className="w-12 text-right font-serif text-[20px] leading-none text-ink [font-variant-numeric:lining-nums_tabular-nums]">{a.count.toLocaleString("en-GB")}</span>
+                  <span className="text-[13.5px] text-ink-soft">{a.label}</span>
+                  <span className="ml-auto text-[11px] uppercase tracking-[0.12em] text-ink-muted hidden sm:inline">{apps.find((x) => x.id === a.app)?.name}</span>
+                  <ArrowRight className="w-4 h-4 text-ink-muted group-hover:text-ink transition-colors" aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
-      {!stats && !error && (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777777" }}>
-          <Loader2 className="w-4 h-4 animate-spin" />Loading…
-        </div>
-      )}
-
-      {stats && (
-        <div className="space-y-6">
-          {/* ── Headline KPIs ─────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <Kpi
-              icon={MessageSquare}
-              value={stats.enquiries.total}
-              label="Total enquiries"
-              sub={deltaLabel(stats.enquiries.this_month, stats.enquiries.last_month)}
-              href="/admin/enquiries"
-              trend={stats.trends?.enquiries}
-              trendColor="#C5B27A"
-            />
-            <Kpi
-              icon={Target}
-              value={`${stats.enquiries.conversion_rate}%`}
-              label="Conversion rate"
-              sub={`${stats.enquiries.converted} converted to order`}
-            />
-            <Kpi
-              icon={Inbox}
-              value={stats.enquiries.open}
-              label="Open enquiries"
-              sub="New + in progress"
-              href="/admin/enquiries"
-            />
-            <Kpi
-              icon={Clock}
-              value={stats.enquiries.avg_response_hours != null ? `${stats.enquiries.avg_response_hours}h` : "—"}
-              label="Avg first response"
-              sub={stats.enquiries.avg_response_hours != null ? "Submission → first reply" : "No replies yet"}
-            />
-          </div>
-
-          {/* ── Needs attention ───────────────────────────────────────────── */}
-          {alerts && (alerts.stale_contacts.count > 0 || alerts.overdue_tasks.count > 0 || alerts.unactioned_enquiries.count > 0) && (
-            <Card title="Needs attention">
-              <div className="space-y-4">
-                {alerts.stale_contacts.count > 0 && (
-                  <AlertRow
-                    href="/admin/pipeline"
-                    label={`${alerts.stale_contacts.count} contact${alerts.stale_contacts.count === 1 ? "" : "s"} going cold`}
-                    items={alerts.stale_contacts.items.map((c) => c.name || c.email)}
-                  />
-                )}
-                {alerts.overdue_tasks.count > 0 && (
-                  <AlertRow
-                    href="/admin/tasks"
-                    label={`${alerts.overdue_tasks.count} overdue task${alerts.overdue_tasks.count === 1 ? "" : "s"}`}
-                    items={alerts.overdue_tasks.items.map((t) => t.title)}
-                  />
-                )}
-                {alerts.unactioned_enquiries.count > 0 && (
-                  <AlertRow
-                    href="/admin/enquiries"
-                    label={`${alerts.unactioned_enquiries.count} new enquir${alerts.unactioned_enquiries.count === 1 ? "y" : "ies"} unactioned (24h+)`}
-                    items={alerts.unactioned_enquiries.items.map((e) => e.name)}
-                  />
-                )}
-              </div>
-            </Card>
-          )}
-
-          {/* ── Enquiries by product + pipeline ──────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card title="Enquiries by product">
-              {(() => {
-                const max = Math.max(1, ...PRODUCTS.map(([k]) => stats.enquiries.by_product[k] ?? 0));
-                return (
-                  <div className="space-y-3.5">
-                    {PRODUCTS.map(([key, label]) => {
-                      const n = stats.enquiries.by_product[key] ?? 0;
-                      return (
-                        <div key={key}>
-                          <div className="flex items-baseline justify-between mb-1.5">
-                            <span className="text-xs font-medium" style={{ color: "#555" }}>{label}</span>
-                            <span className="text-xs font-bold" style={{ color: "#1E1E1E" }}>{n}</span>
-                          </div>
-                          <div style={{ height: "8px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${(n / max) * 100}%`, borderRadius: "999px", background: "linear-gradient(90deg, #C5B27A, #D4C49A)", transition: "width .4s" }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </Card>
-
-            <Card title="Enquiry pipeline">
-              <div className="grid grid-cols-5 gap-2">
-                {PIPELINE.map(([key, label]) => (
-                  <div key={key} className="text-center rounded-xl py-4" style={{ background: "#F8F7F5" }}>
-                    <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "28px", fontWeight: 700, lineHeight: 1, color: "#1E1E1E" }}>
-                      {stats.enquiries.by_status[key] ?? 0}
-                    </p>
-                    <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#999" }}>{label}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-4 text-xs" style={{ color: "#999" }}>
-                Quote-based products (FET, SEAL, Logistics) and coffee wholesale move through this pipeline.
-              </p>
-            </Card>
-          </div>
-
-          {/* ── Where enquiries come from ────────────────────────────────
-              The channel breakdown. Added after the August operations review,
-              where "how much are we spending on Google Ads and what did it
-              produce?" turned out to be unanswerable. `converted` is shown
-              beside every channel because volume on its own is what made the
-              ad spend look like it was working. */}
-          {stats.lead_sources && stats.lead_sources.by_source.length > 0 && (
-            <Card title="Where enquiries come from">
-              {(() => {
-                const rows = stats.lead_sources!.by_source;
-                const max = Math.max(1, ...rows.map((r) => r.count));
-                return (
-                  <>
-                    <div className="space-y-3.5">
-                      {rows.map((r) => (
-                        <div key={r.source}>
-                          <div className="flex items-baseline justify-between mb-1.5 gap-3">
-                            <span className="text-xs font-medium truncate" style={{ color: r.source === "unknown" ? "#AAA" : "#555" }}>
-                              {r.source}
-                            </span>
-                            <span className="text-xs shrink-0" style={{ color: "#999" }}>
-                              <span className="font-bold" style={{ color: "#1E1E1E" }}>{r.count}</span>
-                              {r.converted > 0 && <> · {r.converted} won</>}
-                            </span>
-                          </div>
-                          <div style={{ height: "8px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
-                            <div style={{
-                              height: "100%",
-                              width: `${(r.count / max) * 100}%`,
-                              borderRadius: "999px",
-                              background: r.source === "unknown"
-                                ? "#E2E2E2"
-                                : "linear-gradient(90deg, #C5B27A, #D4C49A)",
-                              transition: "width .4s",
-                            }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="mt-4 text-xs leading-relaxed" style={{ color: "#999" }}>
-                      &ldquo;Unknown&rdquo; is every enquiry taken before source tracking was added
-                      &mdash; not the same thing as &ldquo;direct&rdquo;. &ldquo;Direct&rdquo; means no campaign tag and
-                      no referring site, which also covers links opened from WhatsApp,
-                      a PDF, or a typed address.
-                    </p>
-                  </>
-                );
-              })()}
-            </Card>
-          )}
-
-          {/* ── Orders & revenue ─────────────────────────────────────────── */}
-          <Card title="Orders & revenue" href="/admin/orders">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <Metric label="Orders this month" value={String(stats.orders.this_month)} sub={`${stats.orders.total} all-time`} trend={stats.trends?.orders} trendColor="#7A6020" />
-              <Metric label="Awaiting fulfilment" value={String(stats.orders.pending)} sub={money(stats.orders.pending_value)} />
-              <Metric label="Revenue (paid)" value={money(stats.orders.revenue)} sub="UGX & USD shown separately" />
-            </div>
-            <p className="mt-5 text-xs leading-relaxed" style={{ color: "#999" }}>
-              Coffee retail checkout is currently switched off pending confirmed prices, so order volume is light by design.
-              Quote-based sales (FET, SEAL, Logistics) are tracked through enquiries above.
-            </p>
-          </Card>
-
-          {/* ── FET prospect outreach ────────────────────────────────────── */}
-          <Card title="FET prospect outreach" href="/admin/prospects">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-              <Metric label="Total prospects" value={String(stats.prospects.total)} sub="Across all industries" />
-              <Metric label="Reached" value={String(stats.prospects.reached)} sub="Contacted / responded" />
-              <Metric label="Converted" value={String(stats.prospects.converted)} sub="Became enquiries" />
-              <Metric label="Need fixing" value={String(stats.prospects.needs_fixing)} sub="Bad / missing contact" />
-            </div>
-            {(() => {
-              const top = Object.entries(stats.prospects.by_category).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
-              const max = Math.max(1, ...top.map(([, n]) => n));
-              const LABEL: Record<string, string> = { CARGO: "Cargo", DISTRIBUTOR: "Distributors", CONSTRUCTION: "Construction", MANUFACTURING: "Manufacturing", PUBLIC_TRANSPORT: "Public transport", SCHOOL: "Schools", FARMER: "Farmers", SPARE_PARTS: "Spare parts", CAR_BOND: "Car bonds", FUNERAL: "Funeral" };
-              return (
-                <div className="mt-6 space-y-2.5">
-                  <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: "#999" }}>Top industries</p>
-                  {top.map(([k, n]) => (
-                    <div key={k}>
-                      <div className="flex items-baseline justify-between mb-1"><span className="text-xs" style={{ color: "#555" }}>{LABEL[k] ?? k}</span><span className="text-xs font-bold" style={{ color: "#1E1E1E" }}>{n}</span></div>
-                      <div style={{ height: "6px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}><div style={{ height: "100%", width: `${(n / max) * 100}%`, background: "linear-gradient(90deg,#C5B27A,#D4C49A)" }} /></div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
-          </Card>
-
-          {/* ── Website traffic ──────────────────────────────────────────── */}
-          <Card title="Website traffic">
-            {!analytics || !analytics.connected ? (
-              <div className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-                  <Globe className="w-4 h-4" />
-                </span>
-                <p className="text-sm" style={{ color: "#999" }}>
-                  Not connected yet. Set <code>PLAUSIBLE_API_KEY</code> (and <code>PLAUSIBLE_SITE_ID</code> if the site isn&apos;t <code>vitorra.org</code>) on the server to show live visitor stats here.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-                  <Metric label="Visitors today" value={String(analytics.visitors_today ?? 0)} sub={`${analytics.pageviews_today ?? 0} pageviews`} />
-                  <Metric label="Visitors (7d)" value={String(analytics.visitors_7d ?? 0)} sub={`${analytics.pageviews_7d ?? 0} pageviews`} />
-                  <Metric label="Bounce rate (7d)" value={`${analytics.bounce_rate_7d ?? 0}%`} sub="Single-page visits" />
-                  <Metric
-                    label="Pages / visit (7d)"
-                    value={(analytics.visitors_7d ? (analytics.pageviews_7d ?? 0) / analytics.visitors_7d : 0).toFixed(1)}
-                    sub="Engagement depth"
-                  />
-                </div>
-
-                {(() => {
-                  const pages = analytics.top_pages ?? [];
-                  const sources = analytics.top_sources ?? [];
-                  const maxPages = Math.max(1, ...pages.map((p) => p.visitors));
-                  const maxSources = Math.max(1, ...sources.map((s) => s.visitors));
+      {/* ══ Apps ════════════════════════════════════════════════════════════ */}
+      <div className="space-y-8">
+        {APP_AREAS.map((area) => {
+          const inArea = apps.filter((a) => a.area === area);
+          if (inArea.length === 0) return null;
+          return (
+            <section key={area} aria-label={area}>
+              <h2 className="c-panel-title mb-3">{area}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {inArea.map((app) => {
+                  const n = badge(app.id);
                   return (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wide mb-3" style={{ color: "#999" }}>Top pages (7d)</p>
-                        {pages.length === 0 ? (
-                          <p className="text-xs" style={{ color: "#999" }}>No data yet.</p>
-                        ) : (
-                          <div className="space-y-2.5">
-                            {pages.map((p) => (
-                              <div key={p.page}>
-                                <div className="flex items-baseline justify-between mb-1 gap-2">
-                                  <span className="text-xs truncate" style={{ color: "#555" }}>{p.page}</span>
-                                  <span className="text-xs font-bold shrink-0" style={{ color: "#1E1E1E" }}>{p.visitors}</span>
-                                </div>
-                                <div style={{ height: "6px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
-                                  <div style={{ height: "100%", width: `${(p.visitors / maxPages) * 100}%`, background: "linear-gradient(90deg,#C5B27A,#D4C49A)" }} />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wide mb-3" style={{ color: "#999" }}>Top referrers (7d)</p>
-                        {sources.length === 0 ? (
-                          <p className="text-xs" style={{ color: "#999" }}>No data yet.</p>
-                        ) : (
-                          <div className="space-y-2.5">
-                            {sources.map((s) => (
-                              <div key={s.source}>
-                                <div className="flex items-baseline justify-between mb-1 gap-2">
-                                  <span className="text-xs truncate" style={{ color: "#555" }}>{s.source}</span>
-                                  <span className="text-xs font-bold shrink-0" style={{ color: "#1E1E1E" }}>{s.visitors}</span>
-                                </div>
-                                <div style={{ height: "6px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
-                                  <div style={{ height: "100%", width: `${(s.visitors / maxSources) * 100}%`, background: "linear-gradient(90deg,#C5B27A,#D4C49A)" }} />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                <p className="text-xs flex items-center gap-1.5" style={{ color: "#999" }}>
-                  <Globe className="w-3 h-3" /> Visitor data via Plausible Analytics, updated every 5 minutes.
-                </p>
-              </div>
-            )}
-          </Card>
-
-          {/* ── Recent activity ──────────────────────────────────────────── */}
-          <Card title="Recent activity">
-            {!stats.recent_activity || stats.recent_activity.length === 0 ? (
-              <p className="text-sm" style={{ color: "#999" }}>Nothing yet — new enquiries, orders, and messages will appear here.</p>
-            ) : (
-              <div className="space-y-1">
-                {stats.recent_activity.map((a, i) => {
-                  const Icon = ACTIVITY_ICON[a.type];
-                  return (
-                    <Link
-                      key={`${a.type}-${i}-${a.created_at}`}
-                      href={a.href}
-                      className="flex items-center gap-3 -mx-2 px-2 py-2.5 rounded-xl transition-colors hover:bg-black/[0.02]"
-                    >
-                      <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-                        <Icon className="w-4 h-4" />
+                    <Link key={app.id} href={app.items[0].href} className="group c-panel flex items-start gap-4 p-4 hover:border-line-strong transition-colors">
+                      <span className="flex items-center justify-center w-10 h-10 shrink-0 rounded-frame bg-ink text-gold">
+                        <app.icon className="w-5 h-5" aria-hidden="true" />
                       </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate" style={{ color: "#1E1E1E" }}>{a.title}</p>
-                        <p className="text-xs" style={{ color: "#999" }}>{a.meta}</p>
-                      </div>
-                      <span className="text-xs shrink-0" style={{ color: "#BBBBBB" }}>
-                        {now ? formatRelativeTime(a.created_at, now) : "—"}
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="font-serif text-[18px] leading-tight text-ink">{app.name}</span>
+                          {n > 0 && <span className="c-chip" data-tone="gold" data-plain>{n.toLocaleString("en-GB")}</span>}
+                        </span>
+                        <span className="block text-[12.5px] text-ink-muted mt-1 leading-snug">{app.blurb}</span>
+                        <span className="flex flex-wrap gap-x-3 gap-y-1 mt-3">
+                          {app.items.map((i) => (
+                            <span key={i.href} className="text-[12px] text-ink-soft">{i.label}</span>
+                          ))}
+                        </span>
                       </span>
                     </Link>
                   );
                 })}
               </div>
-            )}
-          </Card>
-
-          {/* ── Quick links ──────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <QuickLink href="/admin/enquiries" icon={MessageSquare} label="Enquiries" sub={`${stats.enquiries.open} open`} />
-            <QuickLink href="/admin/messages" icon={Mail} label="Messages" sub={`${stats.messages_unread} unread`} />
-            <QuickLink href="/admin/orders" icon={ShoppingCart} label="Orders" sub={`${stats.orders.pending} pending`} />
-          </div>
-        </div>
-      )}
+            </section>
+          );
+        })}
+      </div>
     </div>
-  );
-}
-
-/* ─── Bits ──────────────────────────────────────────────────────────────── */
-
-function deltaLabel(thisMonth: number, lastMonth: number): string {
-  const d = thisMonth - lastMonth;
-  const arrow = d > 0 ? "▲" : d < 0 ? "▼" : "•";
-  return `${thisMonth} this month  ${arrow} ${d >= 0 ? "+" : ""}${d} vs last`;
-}
-
-function Kpi({ icon: Icon, value, label, sub, href, trend, trendColor }: { icon: typeof Target; value: string | number; label: string; sub: string; href?: string; trend?: number[]; trendColor?: string }) {
-  const inner = (
-    <>
-      <div className="flex items-center justify-between mb-4">
-        <span className="flex items-center justify-center w-11 h-11 rounded-xl" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-          <Icon className="w-5 h-5" />
-        </span>
-        {href && <ArrowRight className="w-4 h-4 arrow-nudge" style={{ color: "#CCCCCC" }} />}
-      </div>
-      <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "40px", fontWeight: 700, lineHeight: 1, color: "#1E1E1E" }}>{value}</p>
-      <p className="mt-2 text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
-      <p className="text-xs" style={{ color: "#999999" }}>{sub}</p>
-      {trend && <Sparkline data={trend} color={trendColor} />}
-    </>
-  );
-  const cls = "block bg-white rounded-[24px] p-6 border border-black/[0.05]";
-  return href ? <Link href={href} className={`group ${cls} hover-lift`}>{inner}</Link> : <div className={cls}>{inner}</div>;
-}
-
-function Card({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-white rounded-[24px] p-6 border border-black/[0.05]">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#777" }}>{title}</h2>
-        {href && <Link href={href} className="text-xs font-semibold inline-flex items-center gap-1 hover:underline" style={{ color: "#7A6020" }}>View<ArrowRight className="w-3 h-3" /></Link>}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function Metric({ label, value, sub, trend, trendColor }: { label: string; value: string; sub: string; trend?: number[]; trendColor?: string }) {
-  return (
-    <div className="rounded-xl p-5" style={{ background: "#F8F7F5" }}>
-      <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "26px", fontWeight: 700, lineHeight: 1.1, color: "#1E1E1E" }}>{value}</p>
-      <p className="mt-2 text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
-      <p className="text-xs" style={{ color: "#999" }}>{sub}</p>
-      {trend && <Sparkline data={trend} color={trendColor} />}
-    </div>
-  );
-}
-
-function AlertRow({ href, label, items }: { href: string; label: string; items: string[] }) {
-  const shown = items.slice(0, 3).filter(Boolean);
-  const extra = items.length - shown.length;
-  return (
-    <Link href={href} className="flex items-start gap-3 -mx-2 px-2 py-2.5 rounded-xl transition-colors hover:bg-black/[0.02]">
-      <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: "rgba(192,57,43,0.1)", color: "#C0392B" }}>
-        <AlertTriangle className="w-4 h-4" />
-      </span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
-        {shown.length > 0 && (
-          <p className="text-xs truncate" style={{ color: "#999" }}>
-            {shown.join(", ")}{extra > 0 ? `, +${extra} more` : ""}
-          </p>
-        )}
-      </div>
-      <ArrowRight className="w-4 h-4 arrow-nudge shrink-0 mt-2.5" style={{ color: "#CCCCCC" }} />
-    </Link>
-  );
-}
-
-function QuickLink({ href, icon: Icon, label, sub }: { href: string; icon: typeof Mail; label: string; sub: string }) {
-  return (
-    <Link href={href} className="group flex items-center gap-3 bg-white rounded-[20px] p-4 border border-black/[0.05] hover-lift">
-      <span className="flex items-center justify-center w-10 h-10 rounded-xl" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-        <Icon className="w-5 h-5" />
-      </span>
-      <div className="flex-1">
-        <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
-        <p className="text-xs" style={{ color: "#999" }}>{sub}</p>
-      </div>
-      <ArrowRight className="w-4 h-4 arrow-nudge" style={{ color: "#CCCCCC" }} />
-    </Link>
   );
 }

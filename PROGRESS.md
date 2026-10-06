@@ -1395,3 +1395,27 @@ Then close the departed staff account (prompts for confirmation):
 > ⚠ After deploying, tick **"Accounting — approve"** in `/admin/staff` for the
 > Senior Finance Officer — until someone holds it, no leave request can be
 > approved (see item 8).
+
+### Fifth pass (6 October 2026): the admin panel becomes a console
+
+The back office was reorganised the way Odoo organises a large business tool: a set of apps, each with its own short menu, instead of one 25-link sidebar.
+
+- **App launcher at `/admin`.** Apps grouped by purpose: Sell (Sales, Orders, Fuel Eco Tech), Money (Accounting, Insights), Run the company (Operations, People), Publish (Website), Administer (Settings). Each person sees only the apps their permissions allow. The registry is `frontend/src/lib/admin-apps.ts`.
+- **"Needs attention" panel** on the launcher: new enquiries, customers gone quiet, prospects with broken contact details, orders waiting, book entries awaiting approval, overdue tasks, supplier applications, leave awaiting signatures and unread messages. It uses existing endpoints, and each line shows only to people who can act on it.
+- **Top bar:** an apps button, the current app and its menu, notifications and the profile menu.
+- **⌘K / Ctrl K command palette:** jump to any screen, run common actions, or type two letters to search customers and prospects live.
+- **The old dashboard** moved to Insights → Overview (`/admin/overview`).
+- **Console styling:**
+  - New `c-` primitives in `globals.css`: toolbar, inputs and selects, buttons, dense tables, status chips, section tabs.
+  - Older screens are squared off and brought into line through scoped rules, so every app reads the same.
+  - `PageHeader` takes an `actions` slot, and `StatusBadge` uses one shared colour map.
+- **Sales tools:**
+  - **Prospects:**
+    - Three rows of filter pills became one toolbar with an owner filter.
+    - Cards became a dense table (about 15 rows per screen instead of 5).
+    - New bulk actions to set status and assign an owner across selected rows.
+  - **Customers:** a dense table, with the full record opening in a side panel beside the list (Esc closes it).
+  - **Enquiries:**
+    - **Fixed:** the screen only ever showed the newest 25. It now pages.
+    - New search by name, email or company. This needs the backend `q` filter (`AdminController::enquiries`, tested in `EnquirySearchTest`), so it works once the API is redeployed.
+  - **Accounting and Careers:** section tabs became an underline bar. Accounting accepts `?tab=` deep links.

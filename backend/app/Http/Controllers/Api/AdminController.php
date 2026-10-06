@@ -283,6 +283,12 @@ class AdminController extends Controller
         if ($request->filled('category')) {
             $query->where('product_category', strtoupper($request->category));
         }
+        if ($request->filled('q')) {
+            $q = '%'.addcslashes((string) $request->string('q'), '%_\\').'%';
+            $query->where(fn ($w) => $w->where('name', 'like', $q)
+                ->orWhere('email', 'like', $q)
+                ->orWhere('company', 'like', $q));
+        }
 
         return response()->json($query->paginate(25));
     }

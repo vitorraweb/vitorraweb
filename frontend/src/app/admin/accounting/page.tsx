@@ -13,7 +13,15 @@ const st = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1
 type Tab = "overview" | "invoices" | "transactions" | "accounts" | "bills" | "budgets" | "recurring";
 
 export default function AccountingPage() {
-  const [tab, setTab] = useState<Tab>("overview");
+  // ?tab= deep-links straight to a section (command palette, emails).
+  const [tab, setTabState] = useState<Tab>(() => {
+    const t = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null;
+    return (t && ["overview", "invoices", "transactions", "accounts", "bills", "budgets", "recurring"].includes(t) ? t : "overview") as Tab;
+  });
+  const setTab = (t: Tab) => {
+    setTabState(t);
+    try { window.history.replaceState(null, "", t === "overview" ? window.location.pathname : `?tab=${t}`); } catch { /* */ }
+  };
   const canApprove = canAccess(auth.getUser(), { module: "accounting_approve" });
 
   const tabs: [Tab, string][] = [["overview", "Overview"], ["invoices", "Invoices"], ["transactions", "Transactions"], ["accounts", "Accounts"], ["bills", "Bills"], ["budgets", "Budgets"], ["recurring", "Recurring"]];
@@ -21,9 +29,9 @@ export default function AccountingPage() {
   return (
     <div className="pb-12">
       <PageHeader title="Accounting" subtitle={canApprove ? "Money in, money out, and where the business stands." : "Record transactions and bills — a senior officer approves them."} />
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div role="tablist" aria-label="Accounting sections" className="c-tabs mb-5">
         {tabs.map(([t, label]) => (
-          <button key={t} onClick={() => setTab(t)} className="text-sm font-semibold px-4 py-2 rounded-full" style={tab === t ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{label}</button>
+          <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className="c-tab">{label}</button>
         ))}
       </div>
       {tab === "overview" && <Overview />}

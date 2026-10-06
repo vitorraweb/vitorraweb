@@ -1150,3 +1150,121 @@
 /* A link inside running text: ink, with a gold hairline beneath. */
 .q-inline-link { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-gold); text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .q-inline-link:hover { color: var(--color-gold-ink); }
+
+/* ═══ Admin console ════════════════════════════════════════════════════════════
+   The back office is a work tool, not a brochure: dense, quiet, fast to scan.
+   Same palette and type as the public site, tighter rhythm. The `c-` classes
+   are the console's primitives; the scoped rules below bring older screens
+   (soft 20px cards, pill buttons) into the same flat, squared language
+   without rewriting each one.                                               */
+@layer components {
+  .c-icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2.25rem; height: 2.25rem; border-radius: var(--radius-frame);
+    color: var(--color-ink-soft); transition: background-color .15s, color .15s;
+  }
+  .c-icon-btn:hover, .c-icon-btn[aria-current="page"] { background: var(--color-paper-deep); color: var(--color-ink); }
+
+  .c-menu-link {
+    display: inline-flex; align-items: center; padding: 0 .75rem;
+    font-size: 13px; color: var(--color-ink-soft);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+  }
+  .c-menu-link:hover { color: var(--color-ink); }
+  .c-menu-link[aria-current="page"] { color: var(--color-ink); border-bottom-color: var(--color-gold); font-weight: 500; }
+
+  .c-search-trigger {
+    display: inline-flex; align-items: center; gap: .5rem; height: 2rem; padding: 0 .625rem;
+    border: 1px solid var(--color-line); border-radius: var(--radius-frame);
+    background: var(--color-paper-deep); color: var(--color-ink-muted); font-size: 12.5px;
+    transition: border-color .15s, color .15s;
+  }
+  .c-search-trigger:hover { border-color: var(--color-line-strong); color: var(--color-ink); }
+  @media (min-width: 1024px) { .c-search-trigger { min-width: 15rem; } .c-search-trigger .c-kbd { margin-left: auto; } }
+
+  .c-kbd {
+    display: inline-flex; align-items: center; height: 1.25rem; padding: 0 .35rem;
+    border: 1px solid var(--color-line); border-radius: var(--radius-edge);
+    background: var(--color-paper); font: 500 10.5px/1 var(--font-sans, inherit); color: var(--color-ink-muted);
+  }
+
+  /* Page furniture */
+  .c-page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .75rem 1.5rem; margin-bottom: 1.25rem; }
+  .c-title { font-family: var(--font-playfair), Georgia, serif; font-size: 24px; line-height: 1.15; font-weight: 400; color: var(--color-ink); letter-spacing: -0.01em; }
+  .c-subtitle { font-size: 13px; color: var(--color-ink-muted); margin-top: .25rem; }
+
+  .c-panel { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-frame); }
+  .c-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; border-bottom: 1px solid var(--color-line); }
+  .c-panel-title { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--color-ink-muted); }
+
+  .c-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .5rem; background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-frame); margin-bottom: .75rem; }
+
+  .c-input, .c-select {
+    height: 2rem; padding: 0 .625rem; font-size: 13px; color: var(--color-ink);
+    background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-edge);
+    outline: none; transition: border-color .15s;
+  }
+  .c-input:focus, .c-select:focus { border-color: var(--color-ink); }
+  .c-select { padding-right: 1.75rem; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%236B6B6B' stroke-width='1.5'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .6rem center; }
+  .c-select[data-active="true"] { border-color: var(--color-gold); background-color: color-mix(in oklab, var(--color-gold) 10%, var(--color-paper)); }
+
+  .c-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem; height: 2rem; padding: 0 .75rem;
+    font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--color-ink);
+    background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-edge);
+    transition: background-color .15s, border-color .15s, color .15s;
+  }
+  .c-btn:hover { border-color: var(--color-line-strong); background: var(--color-paper-deep); }
+  .c-btn:disabled { opacity: .55; cursor: not-allowed; }
+  .c-btn-primary { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-paper); }
+  .c-btn-primary:hover { background: #000; border-color: #000; }
+  .c-btn-ghost { border-color: transparent; background: transparent; }
+
+  .c-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+  .c-table thead th {
+    position: sticky; top: 0; z-index: 1; background: var(--color-paper-deep);
+    text-align: left; font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-ink-muted);
+    padding: .5rem .75rem; border-bottom: 1px solid var(--color-line); white-space: nowrap;
+  }
+  .c-table tbody td { padding: .5rem .75rem; border-bottom: 1px solid var(--color-line); vertical-align: middle; color: var(--color-ink-soft); }
+  .c-table tbody tr:last-child td { border-bottom: 0; }
+  .c-table tbody tr.c-row { cursor: pointer; }
+  .c-table tbody tr.c-row:hover td { background: color-mix(in oklab, var(--color-paper-deep) 70%, var(--color-paper)); }
+  .c-table tbody tr[data-open="true"] td { background: color-mix(in oklab, var(--color-gold) 7%, var(--color-paper)); }
+
+  .c-chip {
+    display: inline-flex; align-items: center; gap: .3rem; height: 1.25rem; padding: 0 .45rem;
+    font-size: 11px; font-weight: 500; white-space: nowrap; border-radius: var(--radius-edge);
+    border: 1px solid var(--color-line); color: var(--color-ink-soft); background: var(--color-paper);
+  }
+  .c-chip::before { content: ""; width: 6px; height: 6px; border-radius: 9999px; background: currentColor; opacity: .9; }
+  .c-chip[data-tone="gold"]  { color: var(--color-gold-ink); border-color: color-mix(in oklab, var(--color-gold) 45%, transparent); background: color-mix(in oklab, var(--color-gold) 9%, var(--color-paper)); }
+  .c-chip[data-tone="blue"]  { color: #2B5797; border-color: #C9D6EA; background: #F3F6FB; }
+  .c-chip[data-tone="violet"]{ color: #5B3E96; border-color: #DCD2EE; background: #F7F4FC; }
+  .c-chip[data-tone="ok"]    { color: var(--color-ok-ink); border-color: #C9DECB; background: #F3F8F3; }
+  .c-chip[data-tone="alert"] { color: var(--color-alert-ink); border-color: #E8CACA; background: #FBF4F4; }
+  .c-chip[data-tone="muted"] { color: var(--color-ink-muted); }
+  .c-chip[data-plain]::before { display: none; }
+}
+
+/* Older screens: square off the soft cards and pills so every app speaks the
+   same language. Scoped to the console so the public site is untouched. */
+.admin-console main :is(.rounded-\[24px\], .rounded-\[20px\], .rounded-\[18px\], .rounded-\[16px\], .rounded-3xl, .rounded-2xl) { border-radius: var(--radius-frame); }
+.admin-console main :is(.rounded-\[14px\], .rounded-xl) { border-radius: var(--radius-edge); }
+.admin-console main :is(button, a).rounded-full:not(.w-8, .w-7, .w-6, .w-9, .w-10) { border-radius: var(--radius-edge); }
+.admin-console main .bg-white { background-color: var(--color-paper); }
+.admin-console main :is(.shadow-sm, .shadow-md, .shadow-lg) { box-shadow: 0 1px 0 rgba(0,0,0,0.02); }
+.admin-console main .border-black\/\[0\.05\], .admin-console main .border-black\/\[0\.06\] { border-color: var(--color-line); }
+/* Serif figures and titles in older screens were set at 700; Fraunces reads
+   best light at console sizes. */
+.admin-console main [style*="font-playfair"] { font-weight: 400 !important; letter-spacing: -0.01em; }
+/* In-page section tabs (Accounting, Settings…): an underline bar, the same
+   gesture as the app menu in the top bar. */
+.c-tabs { display: flex; gap: .25rem; overflow-x: auto; border-bottom: 1px solid var(--color-line); scrollbar-width: none; }
+.c-tab { flex-shrink: 0; padding: .5rem .75rem; font-size: 13px; color: var(--color-ink-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; }
+.c-tab:hover { color: var(--color-ink); }
+.c-tab[aria-selected="true"] { color: var(--color-ink); font-weight: 500; border-bottom-color: var(--color-gold); }
+/* Small uppercase labels written as headings should not pick up the serif. */
+.admin-console main :is(h2, h3, h4, h5)[class*="uppercase"] { font-family: var(--font-inter), system-ui, sans-serif; font-weight: 600; letter-spacing: .12em; }
+.admin-console main :is(input, select, textarea).rounded-full { border-radius: var(--radius-edge); }

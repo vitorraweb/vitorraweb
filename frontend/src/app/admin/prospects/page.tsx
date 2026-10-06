@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { Fragment, useEffect, useState, useCallback, useRef } from "react";
 import {
   Loader2, ChevronDown, Mail, Phone, MapPin, AlertTriangle, Upload,
-  ChevronLeft, ChevronRight, UserCheck, Download, Send, X, ArrowRightCircle,
+  ChevronLeft, ChevronRight, Download, Send, X, ArrowRightCircle,
   Paperclip, Save, CheckCircle2,
 } from "lucide-react";
 import { apiAdmin, uploadAdmin, downloadCsv } from "@/lib/auth";
@@ -55,20 +55,18 @@ const STATUSES: [string, string][] = [
   ["bounced", "Bounced"], ["responded", "Responded"], ["qualified", "Qualified"],
   ["converted", "Converted"], ["not_interested", "Not interested"],
 ];
-const STATUS_COLOR: Record<string, { bg: string; fg: string }> = {
-  not_contacted:  { bg: "rgba(0,0,0,0.06)",         fg: "#777" },
-  contacted:      { bg: "rgba(197,178,122,0.16)",   fg: "#7A6020" },
-  delivered:      { bg: "rgba(59,130,246,0.12)",    fg: "#2563EB" },
-  bounced:        { bg: "rgba(192,57,43,0.1)",      fg: "#C0392B" },
-  responded:      { bg: "rgba(139,92,246,0.12)",    fg: "#7C3AED" },
-  qualified:      { bg: "rgba(59,130,246,0.12)",    fg: "#2563EB" },
-  converted:      { bg: "rgba(34,197,94,0.12)",     fg: "#16A34A" },
-  not_interested: { bg: "rgba(0,0,0,0.06)",         fg: "#777" },
-};
 const ASSIGNEES = ["Thurayya Nakayima", "Sarah Nuwamanya", "John Oluwaseyi"];
 
 const MAX_FILES = 5;
 const MAX_FILE_MB = 8;
+
+/** ?q= on arrival — the command palette links straight to a match. */
+const initialQ = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("q") ?? "" : "";
+
+const STATUS_TONE: Record<string, string> = {
+  not_contacted: "muted", contacted: "gold", delivered: "blue", bounced: "alert",
+  responded: "violet", qualified: "blue", converted: "ok", not_interested: "muted",
+};
 
 const fmtSize = (bytes: number) =>
   bytes >= 1_048_576 ? `${(bytes / 1_048_576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -80,8 +78,9 @@ export default function ProspectsPage() {
   const [product, setProduct] = useState("");
   const [cat, setCat]         = useState("");
   const [status, setStatus]   = useState("");
-  const [q, setQ]             = useState("");
-  const [appliedQ, setAppliedQ] = useState("");
+  const [q, setQ]             = useState(initialQ);
+  const [appliedQ, setAppliedQ] = useState(initialQ);
+  const [assigned, setAssigned] = useState("");
   const [page, setPage]       = useState(1);
   const [open, setOpen]       = useState<number | null>(null);
 
@@ -128,13 +127,14 @@ export default function ProspectsPage() {
       if (cat) params.set("category", cat);
       if (status) params.set("status", status);
       if (appliedQ) params.set("q", appliedQ);
+      if (assigned) params.set("assigned", assigned);
       params.set("page", String(page));
       const res = await apiAdmin<Paginated<Prospect>>(`/admin/prospects?${params.toString()}`);
       setList(res.data);
       setMeta({ current_page: res.current_page, last_page: res.last_page, total: res.total });
     } catch { setList([]); }
     finally { setLoading(false); }
-  }, [product, cat, status, appliedQ, page]);
+  }, [product, cat, status, appliedQ, assigned, page]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -153,6 +153,9 @@ export default function ProspectsPage() {
   };
   const selCat    = (c: string) => { reset(); setCat(c); };
   const selStatus = (s: string) => { reset(); setStatus(s); };
+  const selAssigned = (a: string) => { reset(); setAssigned(a); };
+  const clearFilters = () => { reset(); setProduct(""); setCat(""); setStatus(""); setAssigned(""); setQ(""); setAppliedQ(""); };
+  const filtered = !!(product || cat || status || assigned || appliedQ);
   const search    = () => { reset(); setAppliedQ(q.trim()); };
   const goPage    = (p: number) => { setLoading(true); setPage(p); setSelected(new Set()); };
 
@@ -181,6 +184,17 @@ export default function ProspectsPage() {
   };
 
   const clearSelection = () => setSelected(new Set());
+
+  /* Bulk edits: one PATCH per selected row (the API has no batch endpoint),
+     sent in parallel, then a reload so the list reflects the server. */
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const bulkPatch = async (body: Record<string, unknown>) => {
+    setBulkBusy(true);
+    await Promise.allSettled([...selected].map((id) =>
+      apiAdmin(`/admin/prospects/${id}`, { method: "PATCH", body: JSON.stringify(body) })));
+    setBulkBusy(false);
+    load();
+  };
 
   const convertToEnquiry = async (id: number) => {
     setConverting(id);
@@ -322,208 +336,209 @@ export default function ProspectsPage() {
 
   return (
     <div className="pb-24">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <PageHeader title="Prospects" subtitle="Outreach database — segmented by product, then by industry." />
-        <div className="flex items-center gap-2 shrink-0">
-          <button onClick={handleExport} disabled={exporting}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-sm font-semibold disabled:opacity-50"
-            style={{ background: "#F2F2F2", color: "#555" }}>
+      <PageHeader
+        title="Prospects"
+        subtitle="Outreach list, by product then industry. Select rows to send a campaign."
+        actions={<>
+          <button onClick={handleExport} disabled={exporting} className="c-btn">
             {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}Export
           </button>
-          <button onClick={() => setImportOpen((o) => !o)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold"
-            style={{ background: "#1E1E1E", color: "#fff" }}>
-            <Upload className="w-4 h-4" /> Import CSV
+          <button onClick={() => setImportOpen((o) => !o)} className="c-btn c-btn-primary">
+            <Upload className="w-4 h-4" />Import CSV
           </button>
-        </div>
-      </div>
+        </>}
+      />
 
       {/* Import panel */}
       {importOpen && (
-        <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">
-          <p className="text-sm font-semibold mb-1" style={{ color: "#1E1E1E" }}>Import a prospect list (CSV)</p>
-          <p className="text-xs mb-4" style={{ color: "#888" }}>
+        <div className="c-panel p-4 mb-3">
+          <p className="text-[13px] font-medium text-ink mb-1">Import a prospect list (CSV)</p>
+          <p className="text-[12px] text-ink-muted mb-3">
             Pick the product this list sells, then its industry. Columns matched by header: name, location, phone, email
-            (status &amp; feedback optional). Duplicates are skipped.
-            Tip: in Excel use <strong>Save As → CSV</strong>.
+            (status and feedback optional). Duplicates are skipped. In Excel use <strong>Save As → CSV</strong>.
           </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <select value={importProduct} onChange={(e) => selImportProduct(e.target.value)} className="text-sm rounded-xl px-3 py-2 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }}>
+          <div className="flex flex-wrap items-center gap-2">
+            <select value={importProduct} onChange={(e) => selImportProduct(e.target.value)} className="c-select">
               {PRODUCTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
-            <select value={importCat} onChange={(e) => setImportCat(e.target.value)} className="text-sm rounded-xl px-3 py-2 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }}>
+            <select value={importCat} onChange={(e) => setImportCat(e.target.value)} className="c-select">
               {importCategories.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
-            <input ref={fileRef} type="file" accept=".csv,text/csv" className="text-sm" />
-            <button onClick={doImport} disabled={importing} className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: importing ? 0.7 : 1 }}>
+            <input ref={fileRef} type="file" accept=".csv,text/csv" className="text-[13px]" />
+            <button onClick={doImport} disabled={importing} className="c-btn c-btn-primary">
               {importing ? <><Loader2 className="w-4 h-4 animate-spin" />Importing…</> : "Upload"}
             </button>
           </div>
-          {importMsg && <p className="text-sm mt-3" style={{ color: "#7A6020" }}>{importMsg}</p>}
+          {importMsg && <p className="text-[13px] mt-3 text-gold-ink">{importMsg}</p>}
         </div>
       )}
 
-      {/* Product segmentation — the primary filter */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        <span className="text-[10px] font-bold uppercase tracking-[0.1em] mr-1" style={{ color: "#bbb" }}>Product</span>
-        <Chip active={product === ""} onClick={() => selProduct("")}>All products</Chip>
-        {PRODUCTS.map(([v, l]) => <Chip key={v} active={product === v} onClick={() => selProduct(v)}>{l}</Chip>)}
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-3">
-        <Chip active={cat === ""} onClick={() => selCat("")}>All industries</Chip>
-        {categories.map(([v, l]) => <Chip key={v} active={cat === v} onClick={() => selCat(v)}>{l}</Chip>)}
-      </div>
-      <div className="flex flex-wrap items-center gap-2 mb-5">
-        <Chip active={status === ""} onClick={() => selStatus("")}>All statuses</Chip>
-        {STATUSES.map(([v, l]) => <Chip key={v} active={status === v} onClick={() => selStatus(v)}>{l}</Chip>)}
-        <div className="flex items-center gap-2 ml-auto">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") search(); }}
-            placeholder="Search name, email, location…"
-            className="text-sm rounded-full px-4 py-2 border w-64 max-w-full outline-none"
-            style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }}
-          />
-          <button onClick={search} className="text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>Search</button>
-        </div>
+      {/* Toolbar: search + filters as compact selects */}
+      <div className="c-toolbar">
+        <form onSubmit={(e) => { e.preventDefault(); search(); }} className="flex items-center gap-1 flex-1 min-w-[14rem]">
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, location…" className="c-input flex-1" aria-label="Search prospects" />
+          <button type="submit" className="c-btn">Search</button>
+        </form>
+        <select aria-label="Product" value={product} onChange={(e) => selProduct(e.target.value)} className="c-select" data-active={!!product}>
+          <option value="">All products</option>
+          {PRODUCTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+        <select aria-label="Industry" value={cat} onChange={(e) => selCat(e.target.value)} className="c-select" data-active={!!cat}>
+          <option value="">All industries</option>
+          {categories.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+        <select aria-label="Status" value={status} onChange={(e) => selStatus(e.target.value)} className="c-select" data-active={!!status}>
+          <option value="">All statuses</option>
+          {STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+        <select aria-label="Owner" value={assigned} onChange={(e) => selAssigned(e.target.value)} className="c-select" data-active={!!assigned}>
+          <option value="">Any owner</option>
+          {ASSIGNEES.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+        {filtered && <button onClick={clearFilters} className="c-btn c-btn-ghost text-ink-muted"><X className="w-3.5 h-3.5" />Clear</button>}
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-[13px] text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : list.length === 0 ? (
         <Empty label="No prospects match these filters." />
       ) : (
         <>
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <p className="text-xs" style={{ color: "#999" }}>{meta.total} prospect{meta.total === 1 ? "" : "s"}</p>
-            <button onClick={selectAllOnPage} className="text-xs font-semibold" style={{ color: "#7A6020" }}>
-              {list.every((p) => selected.has(p.id)) ? "Clear this page" : "Select all on this page"}
-            </button>
-          </div>
-          <div className="space-y-2.5">
-            {list.map((p) => {
-              const sc = STATUS_COLOR[p.outreach_status] ?? STATUS_COLOR.not_contacted;
-              const isSelected = selected.has(p.id);
-              return (
-                <div key={p.id} className="bg-white rounded-[18px] border overflow-hidden" style={{ borderColor: isSelected ? "#C5B27A" : "rgba(0,0,0,0.05)" }}>
-                  <div className="flex items-center">
-                    {/* Checkbox */}
-                    <label className="flex items-center justify-center w-10 h-full cursor-pointer shrink-0 pl-3"
-                      onClick={(e) => e.stopPropagation()}>
-                      <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(p.id)}
-                        className="w-4 h-4 rounded accent-[#C5B27A]" />
-                    </label>
-                    <button onClick={() => setOpen(open === p.id ? null : p.id)} className="flex-1 flex items-center gap-3 p-4 text-left min-w-0">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                          <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{p.name}</span>
-                          {p.product && (
-                            <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
-                              style={{ background: "rgba(197,178,122,0.18)", color: "#7A6020" }}>{p.product}</span>
-                          )}
-                          <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>{CAT_LABEL[p.category] ?? p.category}</span>
-                          {p.flags && p.flags.length > 0 && (
-                            <span title={p.flags.join(", ")} className="inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: "#C0392B" }}>
-                              <AlertTriangle className="w-3 h-3" />{p.flags.includes("no_contact") ? "no contact" : "check email"}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs truncate" style={{ color: "#999" }}>
-                          {[p.email, p.phone, p.location].filter(Boolean).join("  ·  ") || "—"}
-                        </p>
-                      </div>
-                      {p.assigned_to && <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}><UserCheck className="w-3 h-3" />{p.assigned_to.split(" ")[0]}</span>}
-                      <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0" style={{ background: sc.bg, color: sc.fg }}>{p.outreach_status.replace(/_/g, " ")}</span>
-                      <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === p.id ? "rotate-180" : ""}`} style={{ color: "#BBB" }} />
-                    </button>
-                  </div>
+          <div className="c-panel overflow-x-auto">
+            <table className="c-table min-w-[820px]">
+              <thead>
+                <tr>
+                  <th className="w-10">
+                    <input type="checkbox" aria-label="Select all on this page" checked={list.every((p) => selected.has(p.id))} onChange={selectAllOnPage} className="w-3.5 h-3.5 accent-[#7A6020]" />
+                  </th>
+                  <th>Company</th>
+                  <th>Product</th>
+                  <th>Industry</th>
+                  <th>Contact</th>
+                  <th>Location</th>
+                  <th>Owner</th>
+                  <th>Status</th>
+                  <th className="w-8" />
+                </tr>
+              </thead>
+              <tbody>
+                {list.map((p) => {
+                  const isSelected = selected.has(p.id);
+                  const isOpen = open === p.id;
+                  return (
+                    <Fragment key={p.id}>
+                      <tr className="c-row" data-open={isOpen || isSelected} onClick={() => setOpen(isOpen ? null : p.id)}>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <input type="checkbox" aria-label={`Select ${p.name}`} checked={isSelected} onChange={() => toggleSelect(p.id)} className="w-3.5 h-3.5 accent-[#7A6020]" />
+                        </td>
+                        <td className="max-w-[16rem]">
+                          <span className="flex items-center gap-1.5">
+                            <span className="font-medium text-ink truncate">{p.name}</span>
+                            {p.flags && p.flags.length > 0 && (
+                              <span title={p.flags.join(", ")} className="text-alert-ink shrink-0"><AlertTriangle className="w-3.5 h-3.5" aria-label={p.flags.includes("no_contact") ? "No contact details" : "Check email"} /></span>
+                            )}
+                          </span>
+                        </td>
+                        <td><span className="text-[12px] font-medium text-gold-ink">{p.product}</span></td>
+                        <td className="whitespace-nowrap">{CAT_LABEL[p.category] ?? p.category}</td>
+                        <td className="max-w-[15rem]">
+                          <span className="block truncate">{p.email ?? <span className="text-ink-muted">No email</span>}</span>
+                          {p.phone && <span className="block text-[12px] text-ink-muted truncate">{p.phone}</span>}
+                        </td>
+                        <td className="max-w-[10rem] truncate">{p.location ?? "—"}</td>
+                        <td className="whitespace-nowrap">{p.assigned_to ? p.assigned_to.split(" ")[0] : <span className="text-ink-muted">—</span>}</td>
+                        <td><span className="c-chip" data-tone={STATUS_TONE[p.outreach_status] ?? "muted"}>{p.outreach_status.replace(/_/g, " ")}</span></td>
+                        <td><ChevronDown className={`w-4 h-4 text-ink-muted transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" /></td>
+                      </tr>
 
-                  {open === p.id && (
-                    <div className="px-4 pb-4 pt-1 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-                      <div className="flex flex-wrap gap-x-5 gap-y-1.5 my-3 text-xs" style={{ color: "#555" }}>
-                        {p.email && <a href={`mailto:${p.email}`} className="flex items-center gap-1.5 hover:underline"><Mail className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{p.email}</a>}
-                        {p.phone && <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{p.phone}</span>}
-                        {p.location && <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{p.location}</span>}
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                        <Labelled label="Outreach status">
-                          <select value={p.outreach_status} onChange={(e) => patch(p.id, { outreach_status: e.target.value })} className="w-full text-sm rounded-xl px-3 py-2 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }}>
-                            {STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                          </select>
-                        </Labelled>
-                        <Labelled label="Assigned to">
-                          <select value={p.assigned_to ?? ""} onChange={(e) => patch(p.id, { assigned_to: e.target.value || null })} className="w-full text-sm rounded-xl px-3 py-2 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }}>
-                            <option value="">— Unassigned —</option>
-                            {p.assigned_to && !ASSIGNEES.includes(p.assigned_to) && <option value={p.assigned_to}>{p.assigned_to}</option>}
-                            {ASSIGNEES.map((a) => <option key={a} value={a}>{a}</option>)}
-                          </select>
-                        </Labelled>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                        <Labelled label="Feedback / notes">
-                          <textarea defaultValue={p.feedback ?? ""} onBlur={(e) => { const v = e.target.value.trim() || null; if (v !== p.feedback) patch(p.id, { feedback: v }); }} placeholder="Call notes, response, next steps…" className="w-full text-sm rounded-xl px-3 py-2 border min-h-16" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-                        </Labelled>
-                        <Labelled label="Follow-up">
-                          <input defaultValue={p.follow_up ?? ""} onBlur={(e) => { const v = e.target.value.trim() || null; if (v !== p.follow_up) patch(p.id, { follow_up: v }); }} placeholder="e.g. Call back next week" className="w-full text-sm rounded-xl px-3 py-2 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-                        </Labelled>
-                      </div>
-
-                      {/* Convert to enquiry */}
-                      {p.outreach_status !== "converted" && (
-                        <button onClick={() => convertToEnquiry(p.id)} disabled={converting === p.id}
-                          className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50"
-                          style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A", border: "1px solid rgba(34,197,94,0.25)" }}>
-                          {converting === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRightCircle className="w-3.5 h-3.5" />}
-                          Convert to enquiry
-                        </button>
+                      {isOpen && (
+                        <tr>
+                          <td colSpan={9} className="!bg-paper-deep !py-4">
+                            <div className="flex flex-wrap gap-x-5 gap-y-1.5 mb-3 text-[12.5px] text-ink-soft">
+                              {p.email && <a href={`mailto:${p.email}`} className="flex items-center gap-1.5 hover:underline"><Mail className="w-3.5 h-3.5 text-gold-ink" />{p.email}</a>}
+                              {p.phone && <a href={`tel:${p.phone}`} className="flex items-center gap-1.5 hover:underline"><Phone className="w-3.5 h-3.5 text-gold-ink" />{p.phone}</a>}
+                              {p.location && <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-gold-ink" />{p.location}</span>}
+                              {p.source && <span className="text-ink-muted">Source: {p.source}</span>}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                              <Labelled label="Outreach status">
+                                <select value={p.outreach_status} onChange={(e) => patch(p.id, { outreach_status: e.target.value })} className="c-select w-full">
+                                  {STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                                </select>
+                              </Labelled>
+                              <Labelled label="Owner">
+                                <select value={p.assigned_to ?? ""} onChange={(e) => patch(p.id, { assigned_to: e.target.value || null })} className="c-select w-full">
+                                  <option value="">Unassigned</option>
+                                  {p.assigned_to && !ASSIGNEES.includes(p.assigned_to) && <option value={p.assigned_to}>{p.assigned_to}</option>}
+                                  {ASSIGNEES.map((a) => <option key={a} value={a}>{a}</option>)}
+                                </select>
+                              </Labelled>
+                              <Labelled label="Follow-up">
+                                <input defaultValue={p.follow_up ?? ""} onBlur={(e) => { const v = e.target.value.trim() || null; if (v !== p.follow_up) patch(p.id, { follow_up: v }); }} placeholder="e.g. Call back next week" className="c-input w-full" />
+                              </Labelled>
+                              <div className="flex items-end">
+                                {p.outreach_status !== "converted" ? (
+                                  <button onClick={() => convertToEnquiry(p.id)} disabled={converting === p.id} className="c-btn w-full">
+                                    {converting === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRightCircle className="w-3.5 h-3.5 text-ok-ink" />}
+                                    Convert to enquiry
+                                  </button>
+                                ) : (
+                                  <span className="c-chip" data-tone="ok">Converted to enquiry</span>
+                                )}
+                              </div>
+                              <div className="md:col-span-4">
+                                <Labelled label="Notes">
+                                  <textarea defaultValue={p.feedback ?? ""} onBlur={(e) => { const v = e.target.value.trim() || null; if (v !== p.feedback) patch(p.id, { feedback: v }); }} placeholder="Call notes, response, next steps…" className="c-input w-full !h-auto min-h-16 py-2" />
+                                </Labelled>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                      {p.outreach_status === "converted" && (
-                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full"
-                          style={{ background: "rgba(34,197,94,0.1)", color: "#16A34A" }}>
-                          ✓ Converted to enquiry
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
 
-          {/* Pagination */}
-          {meta.last_page > 1 && (
-            <div className="flex items-center justify-center gap-3 mt-6">
-              <button disabled={meta.current_page <= 1} onClick={() => goPage(meta.current_page - 1)} className="inline-flex items-center gap-1 text-sm font-semibold px-3 py-2 rounded-full disabled:opacity-40" style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}><ChevronLeft className="w-4 h-4" />Prev</button>
-              <span className="text-xs" style={{ color: "#777" }}>Page {meta.current_page} of {meta.last_page}</span>
-              <button disabled={meta.current_page >= meta.last_page} onClick={() => goPage(meta.current_page + 1)} className="inline-flex items-center gap-1 text-sm font-semibold px-3 py-2 rounded-full disabled:opacity-40" style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>Next<ChevronRight className="w-4 h-4" /></button>
-            </div>
-          )}
+          {/* Pager */}
+          <div className="flex items-center justify-between gap-3 mt-3 text-[12px] text-ink-muted">
+            <span>
+              {(meta.current_page - 1) * 25 + 1}–{(meta.current_page - 1) * 25 + list.length} of {meta.total.toLocaleString("en-GB")}
+              {selected.size > 0 && <> · <span className="text-gold-ink">{selected.size} selected</span></>}
+            </span>
+            {meta.last_page > 1 && (
+              <span className="flex items-center gap-1">
+                <button aria-label="Previous page" disabled={meta.current_page <= 1} onClick={() => goPage(meta.current_page - 1)} className="c-btn !px-2"><ChevronLeft className="w-4 h-4" /></button>
+                <span className="px-2">Page {meta.current_page} of {meta.last_page}</span>
+                <button aria-label="Next page" disabled={meta.current_page >= meta.last_page} onClick={() => goPage(meta.current_page + 1)} className="c-btn !px-2"><ChevronRight className="w-4 h-4" /></button>
+              </span>
+            )}
+          </div>
         </>
       )}
 
       {/* Sticky bulk action bar */}
       {selected.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-3 px-6 py-4"
-          style={{ background: "#1E1E1E", boxShadow: "0 -4px 24px rgba(0,0,0,0.18)" }}>
-          <span className="text-sm font-semibold" style={{ color: "#fff" }}>{selected.size} selected</span>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setComposerOpen(true)}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full"
-              style={{ background: "#C5B27A", color: "#1E1E1E" }}>
-              <Send className="w-3.5 h-3.5" />
-              Email campaign ({selectedWithEmail} with email)
-            </button>
-            <button onClick={clearSelection}
-              className="inline-flex items-center gap-1.5 text-sm px-3.5 py-2 rounded-full"
-              style={{ background: "rgba(255,255,255,0.12)", color: "#fff" }}>
-              <X className="w-3.5 h-3.5" />Clear
-            </button>
-          </div>
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4 pl-4 pr-2 py-2 rounded-frame bg-ink shadow-[0_12px_40px_rgba(0,0,0,0.25)] max-w-[calc(100%-2rem)]">
+          <span className="text-[13px] font-medium text-paper whitespace-nowrap">{selected.size} selected</span>
+          {bulkBusy && <Loader2 className="w-4 h-4 animate-spin text-ink-fg-muted" />}
+          <select aria-label="Set status for selected" value="" disabled={bulkBusy} onChange={(e) => e.target.value && bulkPatch({ outreach_status: e.target.value })} className="c-select !bg-transparent !text-paper !border-ink-line hidden sm:block">
+            <option value="">Set status…</option>
+            {STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+          <select aria-label="Assign selected" value="" disabled={bulkBusy} onChange={(e) => e.target.value && bulkPatch({ assigned_to: e.target.value === "-" ? null : e.target.value })} className="c-select !bg-transparent !text-paper !border-ink-line hidden sm:block">
+            <option value="">Assign to…</option>
+            {ASSIGNEES.map((a) => <option key={a} value={a}>{a}</option>)}
+            <option value="-">Unassign</option>
+          </select>
+          <button onClick={() => setComposerOpen(true)} className="c-btn !bg-gold !border-gold !text-ink">
+            <Send className="w-3.5 h-3.5" />Email campaign ({selectedWithEmail})
+          </button>
+          <button onClick={clearSelection} aria-label="Clear selection" className="c-btn c-btn-ghost !text-paper hover:!bg-white/10">
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
@@ -737,18 +752,10 @@ function Stat({ label, value, tone }: { label: string; value: number; tone: stri
   );
 }
 
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button onClick={onClick} className="text-xs font-semibold px-3.5 py-2 rounded-full transition-colors" style={{ background: active ? "#1E1E1E" : "#FFFFFF", color: active ? "#FFFFFF" : "#777777", border: "1px solid rgba(0,0,0,0.06)" }}>
-      {children}
-    </button>
-  );
-}
-
 function Labelled({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "#999" }}>{label}</p>
+      <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] mb-1 text-ink-muted">{label}</p>
       {children}
     </div>
   );

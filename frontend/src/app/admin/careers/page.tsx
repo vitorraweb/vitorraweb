@@ -31,9 +31,9 @@ export default function AdminCareersPage() {
   return (
     <div className="pb-12">
       <PageHeader title="Careers" subtitle="Post roles and review applicants. CVs are auto-read to pre-fill applicant details." />
-      <div className="flex gap-2 mb-5">
+      <div role="tablist" aria-label="Careers sections" className="c-tabs mb-5">
         {(["openings", "applicants"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className="text-sm font-semibold px-4 py-2 rounded-full capitalize" style={tab === t ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{t}</button>
+          <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className="c-tab capitalize">{t}</button>
         ))}
       </div>
       {tab === "openings" ? <Openings /> : <Applicants />}

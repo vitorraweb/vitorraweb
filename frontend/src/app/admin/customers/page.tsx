@@ -41,6 +41,9 @@ type ThreadItem = {
   channel?: "email" | "portal"; communicationId?: number; attachments?: Attachment[];
 };
 
+/** ?q= on arrival — the command palette links straight to a match. */
+const initialQ = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("q") ?? "" : "";
+
 const money = (currency: string, total: number) =>
   currency === "USD"
     ? `$${(total / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -50,8 +53,8 @@ export default function CustomersPage() {
   const [list, setList]       = useState<Contact[]>([]);
   const [meta, setMeta]       = useState({ current_page: 1, last_page: 1, total: 0 });
   const [loading, setLoading] = useState(true);
-  const [q, setQ]             = useState("");
-  const [appliedQ, setApplied] = useState("");
+  const [q, setQ]             = useState(initialQ);
+  const [appliedQ, setApplied] = useState(initialQ);
   const [page, setPage]       = useState(1);
   const [open, setOpen]       = useState<string | null>(null);
   const [detail, setDetail]   = useState<Detail | null>(null);
@@ -108,6 +111,13 @@ export default function CustomersPage() {
 
   const search = () => { setLoading(true); setPage(1); setApplied(q.trim()); };
   const goPage = (p: number) => { setLoading(true); setOpen(null); setPage(p); };
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !(e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement)) setOpen(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const expand = async (email: string) => {
     if (open === email) { setOpen(null); return; }
@@ -227,55 +237,107 @@ export default function CustomersPage() {
     setCcList((l) => (l.includes(email) ? l.filter((e) => e !== email) : [...l, email]));
   };
 
+  const openContact = open ? list.find((x) => x.email === open) ?? null : null;
+
   return (
     <div>
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <PageHeader title="Customers" subtitle="Everyone who's engaged — aggregated from enquiries, orders, and messages." />
-        <div className="flex items-center gap-2">
-          <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") search(); }}
-            placeholder="Search name, email, company…"
-            className="text-sm rounded-full px-4 py-2 border w-64 max-w-full outline-none"
-            style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-          <button onClick={search} className="text-sm font-semibold px-3.5 py-2 rounded-full"
-            style={{ background: "#F2F2F2", color: "#555" }}>Search</button>
-          <button onClick={handleExport} disabled={exporting}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full disabled:opacity-50"
-            style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+      <PageHeader
+        title="Customers"
+        subtitle="Everyone who has enquired, ordered or written in, one row per email."
+        actions={
+          <button onClick={handleExport} disabled={exporting} className="c-btn">
             {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}Export
           </button>
-        </div>
+        }
+      />
+
+      <div className="c-toolbar">
+        <form onSubmit={(e) => { e.preventDefault(); search(); }} className="flex items-center gap-1 flex-1 min-w-[14rem]">
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, company…" className="c-input flex-1" aria-label="Search customers" />
+          <button type="submit" className="c-btn">Search</button>
+        </form>
+        {appliedQ && <button onClick={() => { setQ(""); setLoading(true); setPage(1); setApplied(""); }} className="c-btn c-btn-ghost text-ink-muted"><X className="w-3.5 h-3.5" />Clear</button>}
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-[13px] text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : list.length === 0 ? (
-        <Empty label="No customers yet." />
+        <Empty label={appliedQ ? `No customers match “${appliedQ}”.` : "No customers yet."} />
       ) : (
         <>
-          <p className="text-xs mb-3" style={{ color: "#999" }}>{meta.total} contact{meta.total === 1 ? "" : "s"}</p>
-          <div className="space-y-2.5">
-            {list.map((c) => (
-              <div key={c.email} className="bg-white rounded-[18px] border border-black/[0.05] overflow-hidden">
-                <button onClick={() => expand(c.email)} className="w-full flex items-center gap-3 p-4 text-left">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      {c.has_unread && <Circle className="w-2 h-2 shrink-0" style={{ fill: "#C5B27A", color: "#C5B27A" }} />}
-                      <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{c.name || c.email}</span>
-                      {c.company && <span className="text-[11px]" style={{ color: "#999" }}>· {c.company}</span>}
-                      {c.has_note && <StickyNote className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />}
-                    </div>
-                    <p className="text-xs truncate" style={{ color: "#999" }}>{c.email} · last active {formatDate(c.last_activity)}</p>
-                  </div>
-                  <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-                    {c.enquiries > 0 && <CountChip icon={MessageSquare} n={c.enquiries} />}
-                    {c.orders > 0    && <CountChip icon={ShoppingCart}   n={c.orders} />}
-                    {c.messages > 0  && <CountChip icon={FileText}       n={c.messages} />}
-                  </div>
-                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === c.email ? "rotate-180" : ""}`} style={{ color: "#BBB" }} />
-                </button>
+          <div className="c-panel overflow-x-auto">
+            <table className="c-table min-w-[760px]">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Company</th>
+                  <th>Email</th>
+                  <th className="text-right">Enquiries</th>
+                  <th className="text-right">Orders</th>
+                  <th className="text-right">Messages</th>
+                  <th>Last active</th>
+                </tr>
+              </thead>
+              <tbody>
+                {list.map((c) => (
+                  <tr key={c.email} className="c-row" data-open={open === c.email} onClick={() => expand(c.email)}>
+                    <td className="max-w-[15rem]">
+                      <span className="flex items-center gap-1.5">
+                        {c.has_unread && <Circle className="w-2 h-2 shrink-0 fill-gold text-gold" aria-label="Unread" />}
+                        <span className="font-medium text-ink truncate">{c.name || c.email}</span>
+                        {c.has_note && <StickyNote className="w-3.5 h-3.5 shrink-0 text-gold-ink" aria-label="Has a note" />}
+                      </span>
+                      {c.tags?.length > 0 && <span className="block text-[11px] text-ink-muted truncate">{c.tags.join(", ")}</span>}
+                    </td>
+                    <td className="max-w-[12rem] truncate">{c.company ?? <span className="text-ink-muted">—</span>}</td>
+                    <td className="max-w-[16rem] truncate">{c.email}</td>
+                    <td className="text-right tabular-nums">{c.enquiries || <span className="text-ink-muted">0</span>}</td>
+                    <td className="text-right tabular-nums">{c.orders || <span className="text-ink-muted">0</span>}</td>
+                    <td className="text-right tabular-nums">{c.messages || <span className="text-ink-muted">0</span>}</td>
+                    <td className="whitespace-nowrap text-ink-muted">{new Date(c.last_activity).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-                {open === c.email && (
-                  <div className="px-4 pb-4 pt-1 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+          <div className="flex items-center justify-between gap-3 mt-3 text-[12px] text-ink-muted">
+            <span>{meta.total.toLocaleString("en-GB")} contact{meta.total === 1 ? "" : "s"}</span>
+            {meta.last_page > 1 && (
+              <span className="flex items-center gap-1">
+                <button aria-label="Previous page" disabled={meta.current_page <= 1} onClick={() => goPage(meta.current_page - 1)} className="c-btn !px-2"><ChevronLeft className="w-4 h-4" /></button>
+                <span className="px-2">Page {meta.current_page} of {meta.last_page}</span>
+                <button aria-label="Next page" disabled={meta.current_page >= meta.last_page} onClick={() => goPage(meta.current_page + 1)} className="c-btn !px-2"><ChevronRight className="w-4 h-4" /></button>
+              </span>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Record panel: the full customer opens beside the list, Odoo-style,
+          so you keep your place in the table. */}
+      {openContact && (() => {
+        const c = openContact;
+        return (
+          <>
+            <div className="fixed inset-0 top-12 z-30 bg-ink/20 lg:bg-transparent lg:pointer-events-none" onClick={() => expand(c.email)} />
+            <aside aria-label={`Customer ${c.name || c.email}`} className="fixed right-0 top-12 bottom-0 z-30 w-full sm:w-[620px] bg-paper border-l border-line shadow-[-12px_0_40px_rgba(0,0,0,0.08)] flex flex-col">
+              <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-line shrink-0">
+                <div className="min-w-0">
+                  <p className="font-serif text-[20px] leading-tight text-ink truncate">{c.name || c.email}</p>
+                  <p className="text-[12px] text-ink-muted truncate mt-0.5">
+                    {[c.company, `first seen ${new Date(c.first_seen).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {c.enquiries > 0 && <CountChip icon={MessageSquare} n={c.enquiries} />}
+                  {c.orders > 0    && <CountChip icon={ShoppingCart}   n={c.orders} />}
+                  {c.messages > 0  && <CountChip icon={FileText}       n={c.messages} />}
+                  <button onClick={() => expand(c.email)} aria-label="Close" className="c-icon-btn"><X className="w-4 h-4" /></button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                  <div className="px-5 pb-6 pt-1">
 
                     {/* Contact info row + edit */}
                     <div className="flex items-start justify-between gap-2 my-3">
@@ -531,35 +593,18 @@ export default function CustomersPage() {
                       </div>
                     ) : null}
                   </div>
-                )}
               </div>
-            ))}
-          </div>
-
-          {meta.last_page > 1 && (
-            <div className="flex items-center justify-center gap-3 mt-6">
-              <button disabled={meta.current_page <= 1} onClick={() => goPage(meta.current_page - 1)}
-                className="inline-flex items-center gap-1 text-sm font-semibold px-3 py-2 rounded-full disabled:opacity-40"
-                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>
-                <ChevronLeft className="w-4 h-4" />Prev
-              </button>
-              <span className="text-xs" style={{ color: "#777" }}>Page {meta.current_page} of {meta.last_page}</span>
-              <button disabled={meta.current_page >= meta.last_page} onClick={() => goPage(meta.current_page + 1)}
-                className="inline-flex items-center gap-1 text-sm font-semibold px-3 py-2 rounded-full disabled:opacity-40"
-                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>
-                Next<ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </>
-      )}
+            </aside>
+          </>
+        );
+      })()}
     </div>
   );
 }
 
 function CountChip({ icon: Icon, n }: { icon: typeof Mail; n: number }) {
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#777" }}>
+    <span className="c-chip" data-plain>
       <Icon className="w-3 h-3" />{n}
     </span>
   );
