@@ -1,27 +1,35 @@
 import type { Metadata } from "next";
-import { useTranslations } from "next-intl";
-import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
 import Image from "next/image";
+import { getLocale, getTranslations } from "next-intl/server";
+import { ArrowUpRight } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import Hero from "@/components/sections/Hero";
-import TrustMarquee from "@/components/sections/TrustMarquee";
-import StatsBand from "@/components/sections/StatsBand";
-import Testimonials from "@/components/sections/Testimonials";
-import BlogPreview from "@/components/sections/BlogPreview";
 import { Reveal } from "@/components/ui/reveal";
-import { ParallaxImage } from "@/components/ui/parallax-image";
-import TeamTeaser from "@/components/sections/TeamTeaser";
-import Certifications from "@/components/sections/Certifications";
-import FinalCTA from "@/components/sections/FinalCTA";
-import FetCalculatorWidget from "@/components/sections/FetCalculatorWidget";
 import {
-  ArrowRight, ArrowUpRight, ShieldCheck,
-  Truck, Tractor, Bus, Ship, Factory, Building2,
-} from "lucide-react";
+  Section, Container, Label, Heading, Text, ButtonLink, TextLink, Figure,
+} from "@/components/system";
+import { ContactBand, CredentialGroups } from "@/components/system/blocks";
+import { getBlogPosts } from "@/lib/api";
+import { CONTACT_ADDRESS, COMPANY_REG_NO } from "@/lib/constants";
+import type { BlogPost } from "@/types";
 
-/* ─── Metadata ──────────────────────────────────────────────────────────── */
+/* ─── Homepage — Quiet Authority ──────────────────────────────────────────────
+   Rebuilt October 2026. The old page ran nine sections on one formula — a gold
+   eyebrow, a headline split black-then-gold, a fade-in, a rounded card — over
+   aurora glows and film grain, behind an auto-rotating hero. It read as a
+   premium template rather than a company.
+
+   This page has one job per section, in the order a buyer needs them:
+     1. Who we are — a stable statement, over our real head office.
+     2. Four doors — each business, and the one thing a client does next.
+     3. The evidence — the measured FET result, stated with its limits.
+     4. Credentials — separated by what each one actually covers.
+     5. The company — registration, people, address.
+     6. News — real launch photography until posts are published.
+     7. Contact — a brief, a call or a message, no detour.
+
+   Only real photographs appear, each captioned.                              */
 
 export async function generateMetadata({
   params,
@@ -33,700 +41,287 @@ export async function generateMetadata({
   return { title: { absolute: t("title") }, description: t("description") };
 }
 
-/* ─── Page ──────────────────────────────────────────────────────────────── */
+export default async function HomePage() {
+  const t = await getTranslations("homeQA");
+  const tp = await getTranslations("products");
+  const locale = await getLocale();
 
-export default function HomePage() {
-  const t = useTranslations("home");
-  const tp = useTranslations("products");
+  let posts: BlogPost[] = [];
+  try {
+    posts = (await getBlogPosts(1, locale)).data.slice(0, 3);
+  } catch {
+    posts = []; // backend unreachable — the news block falls back to press photos
+  }
 
-  /* Certification codes are brand terms (kept literal); labels translate. */
-  const certBadges = [
-    { code: "ISO 9001:2015",    label: t("authority.qualityManagement")   },
-    { code: "ISO 14001:2015",   label: t("authority.environmental")        },
-    { code: "ISO 27001",        label: t("authority.informationSecurity")  },
-    { code: "AVL Technologies", label: t("authority.labValidated")         },
-    { code: "Zurich Insurance", label: t("authority.productLiability")     },
-    { code: "qm-solutions",     label: t("authority.germanCertified")      },
-  ];
-
-  const fetProofPoints = [t("fet.proof1"), t("fet.proof2"), t("fet.proof3")];
-
-  const otherProducts = [
+  const doors = [
     {
-      label:       tp("seal.name"),
-      badge:       t("suite.sealBadge"),
-      image:       "/products/seal/trauma-tray.png",
-      tagline:     t("suite.sealTagline"),
-      description: t("suite.sealDescription"),
-      href:        "/products/seal-wound-spray",
-      cta:         t("suite.sealCta"),
+      key: "fet",
+      href: "/products/fuel-eco-tech",
+      body: t("door1Body"),
+      action: { label: t("door1Action"), href: "/products/fuel-eco-tech#fet-calculator" },
+      second: { label: t("door1Second"), href: "/enquire?sector=FET" },
     },
     {
-      label:       tp("coffee.name"),
-      badge:       t("suite.coffeeBadge"),
-      image:       "/products/coffee/lifestyle.png",
-      tagline:     t("suite.coffeeTagline"),
-      description: t("suite.coffeeDescription"),
-      href:        "/products/coffee",
-      cta:         t("suite.coffeeCta"),
+      key: "seal",
+      href: "/products/seal-wound-spray",
+      body: t("door2Body"),
+      action: { label: t("door2Action"), href: "/enquire?sector=SEAL" },
     },
     {
-      label:       tp("logistics.name"),
-      badge:       t("suite.logisticsBadge"),
-      image:       "/products/logistics/truck-day.png",
-      tagline:     t("suite.logisticsTagline"),
-      description: t("suite.logisticsDescription"),
-      href:        "/products/logistics",
-      cta:         t("suite.logisticsCta"),
+      key: "coffee",
+      href: "/products/coffee",
+      body: t("door3Body"),
+      action: { label: t("door3Action"), href: "/products/coffee#coffee-export" },
+    },
+    {
+      key: "logistics",
+      href: "/products/logistics",
+      body: t("door4Body"),
+      action: { label: t("door4Action"), href: "/enquire?sector=LOGISTICS" },
     },
   ];
 
-  const sectors = [
-    { icon: Truck,     label: t("sectors.fleetOperators")  },
-    { icon: Tractor,   label: t("sectors.agriculture")     },
-    { icon: Bus,       label: t("sectors.publicTransport") },
-    { icon: Factory,   label: t("sectors.construction")    },
-    { icon: Ship,      label: t("sectors.marine")          },
-    { icon: Building2, label: t("sectors.healthcareNgos")  },
+  const evidenceRows: [string, string][] = [
+    [t("evidenceRowBefore"), `11.52 ${t("evidenceUnit")}`],
+    [t("evidenceRowAfter"), `9.92 ${t("evidenceUnit")}`],
+    [t("evidenceRowNoise"), "± 3–5%"],
   ];
 
-  const whyPoints = [
-    { headline: t("why.point1Headline"), body: t("why.point1Body") },
-    { headline: t("why.point2Headline"), body: t("why.point2Body") },
-    { headline: t("why.point3Headline"), body: t("why.point3Body") },
+  const credentials = [
+    {
+      group: t("credGroupProduct"),
+      items: [
+        { name: "CTI GmbH", what: t("credCti") },
+        { name: "AVL Technologies", what: t("credAvl") },
+        { name: "qm-solutions GmbH", what: t("credQm") },
+      ],
+    },
+    {
+      group: t("credGroupCompany"),
+      items: [
+        { name: "ISO 9001:2015", what: t("credIso9001") },
+        { name: "ISO 14001:2015", what: t("credIso14001") },
+        { name: "ISO 27001", what: t("credIso27001") },
+        { name: "Zurich Insurance", what: t("credZurich") },
+      ],
+    },
   ];
+
+  /* Until the team publishes articles, the news row shows real launch and
+     field photography rather than invented headlines. */
+  const fallbackNews = [
+    { tag: t("newsLaunchTag"), title: t("newsLaunchTitle"), caption: t("newsLaunchCaption"), image: "/press/launch-team.jpg", href: "/products/fuel-eco-tech", external: false },
+    {
+      tag: t("newsPressTag"), title: t("newsPressTitle"), caption: t("newsPressCaption"), image: "/press/launch-presenters.jpg",
+      href: "https://www.ugnewsline.com/german-fuel-saving-technology-launches-in-uganda-as-motorists-seek-relief-from-rising-fuel-costs/",
+      external: true,
+    },
+    { tag: t("newsFieldTag"), title: t("newsFieldTitle"), caption: t("newsFieldCaption"), image: "/products/fet/field-in-hand.jpg", href: "/products/fuel-eco-tech", external: false },
+  ];
+
+  const dateFmt = new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { day: "numeric", month: "long", year: "numeric" });
 
   return (
     <>
       <Header />
-      <main className="flex-1" style={{ backgroundColor: "#F2F2F2" }}>
+      <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
 
-        {/* ══════════════════════════════════════════════════════════════════
-            1. HERO  —  dark · aurora · grain
-        ══════════════════════════════════════════════════════════════════ */}
-        <Hero />
-
-        {/* Floating, minimizable entry point to the FET calculator — see
-            FetCalculatorWidget.tsx. Fixed-position, so placement in the tree
-            doesn't matter; kept near the top for visibility in the source. */}
-        <FetCalculatorWidget />
-
-        {/* ══════════════════════════════════════════════════════════════════
-            2. TRUST MARQUEE  —  gold strip
-        ══════════════════════════════════════════════════════════════════ */}
-        <TrustMarquee />
-
-        {/* ══════════════════════════════════════════════════════════════════
-            3. AUTHORITY  —  compact split panel · dark left / warm right
-            Option B: earn trust BEFORE showing the product.
-            Dark editorial statement left; certification evidence right.
-            Tight, no wasted space — authority sections should be confident,
-            not padded.
-        ══════════════════════════════════════════════════════════════════ */}
-        <section
-          className="relative overflow-hidden"
-          style={{ boxShadow: "inset 0 1px 0 rgba(0,0,0,0.07), inset 0 -1px 0 rgba(0,0,0,0.07)" }}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-
-            {/* ── LEFT: light editorial panel ──────────────────────────────── */}
-            <div
-              className="relative overflow-hidden flex flex-col justify-center px-8 md:px-14 lg:px-16 py-14 md:py-16"
-              style={{
-                /* Warm directional gradient — white core, ivory edge */
-                background:  "linear-gradient(145deg, #FFFFFF 0%, #FAF8F4 100%)",
-                minHeight:   "300px",
-              }}
-            >
-              {/* Very faint concentric rings — depth on light surface */}
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
-              >
-                {[220, 380, 540].map((d) => (
-                  <div
-                    key={d}
-                    className="absolute rounded-full"
-                    style={{ width: d, height: d, border: "1px solid rgba(197,178,122,0.07)" }}
-                  />
-                ))}
+        {/* ══ 1 · Opening ═══════════════════════════════════════════════════ */}
+        <Section tone="paper" className="!pt-12 lg:!pt-20" aria-labelledby="home-title">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-end">
+            <div className="lg:col-span-7 lg:pb-6">
+              <Label className="mb-8">{t("openLabel")}</Label>
+              <Heading as="h1" size="display" id="home-title" className="text-ink">
+                {t("openTitle1")}
+                <br />
+                {t("openTitle2")}
+              </Heading>
+              <Text size="lead" className="mt-8 max-w-[34rem]">{t("openLead")}</Text>
+              <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
+                <ButtonLink href="/enquire">{t("openCta")}</ButtonLink>
+                <TextLink href="/about">{t("openSecondary")}</TextLink>
               </div>
-
-              {/* Single corner bracket — top-left */}
-              <svg
-                aria-hidden="true"
-                className="absolute top-6 left-6 pointer-events-none"
-                width={44} height={44} fill="none"
-              >
-                <path
-                  d="M44 2 L2 2 L2 44"
-                  stroke="rgba(197,178,122,0.55)"
-                  strokeWidth="1.5"
-                  strokeLinecap="square"
-                />
-              </svg>
-
-              <Reveal>
-                {/* Large "6" — gold on white, establishes scale immediately */}
-                <div
-                  style={{
-                    fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-                    fontSize:      "clamp(52px, 6vw, 80px)",
-                    fontWeight:    700,
-                    letterSpacing: "-0.04em",
-                    lineHeight:    1,
-                    color:         "#C5B27A",
-                    marginBottom:  8,
-                  }}
-                >
-                  6
-                </div>
-
-                {/* Eyebrow — charcoal + gold dot (correct for light bg) */}
-                <span className="eyebrow mb-4 inline-flex">
-                  {t("authority.eyebrow")}
-                </span>
-
-                <h2
-                  style={{
-                    fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-                    fontSize:      "clamp(26px, 2.8vw, 40px)",
-                    fontWeight:    700,
-                    letterSpacing: "-0.02em",
-                    lineHeight:    1.15,
-                    color:         "#1E1E1E",
-                    maxWidth:      "380px",
-                  }}
-                >
-                  {t("authority.titleLead")}{" "}
-                  <span className="text-gold-gradient">{t("authority.titleAccent")}</span>
-                </h2>
-
-                <p
-                  className="mt-4"
-                  style={{
-                    fontSize:   "14px",
-                    lineHeight: 1.72,
-                    color:      "#777777",
-                    maxWidth:   "340px",
-                  }}
-                >
-                  {t("authority.body")}
-                </p>
-
-                <Link
-                  href="/trust/certifications"
-                  className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold group"
-                  style={{ color: "#7A6020" }}
-                >
-                  {t("authority.cta")}
-                  <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </Link>
-              </Reveal>
             </div>
-
-            {/* ── RIGHT: warm certification list ───────────────────────────── */}
-            <div
-              className="flex flex-col justify-center px-8 md:px-14 lg:px-16 py-14 md:py-16"
-              style={{
-                backgroundColor: "#FAFAF8",
-                borderLeft:      "1px solid rgba(0,0,0,0.06)",
-              }}
-            >
-              <Reveal className="mb-5">
-                <span className="eyebrow block">{t("authority.verifiedBy")}</span>
-              </Reveal>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0.5">
-                {certBadges.map((c, i) => (
-                  <Reveal key={c.code} delay={i * 55}>
-                    <div
-                      className="auth-cert flex items-start gap-3 px-3 py-3.5"
-                    >
-                      {/* Gold dot */}
-                      <div
-                        style={{
-                          width:           5,
-                          height:          5,
-                          borderRadius:    "50%",
-                          backgroundColor: "#C5B27A",
-                          marginTop:       7,
-                          flexShrink:      0,
-                        }}
-                      />
-                      <div>
-                        {/* Cert name */}
-                        <div
-                          style={{
-                            fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-                            fontSize:   "15px",
-                            fontWeight: 600,
-                            color:      "#1E1E1E",
-                            lineHeight: 1.3,
-                          }}
-                        >
-                          {c.code}
-                        </div>
-                        {/* Category label */}
-                        <div
-                          style={{
-                            fontSize:      "11px",
-                            fontWeight:    500,
-                            color:         "#AAAAAA",
-                            marginTop:     2,
-                            letterSpacing: "0.02em",
-                          }}
-                        >
-                          {c.label}
-                        </div>
-                      </div>
-                    </div>
-                  </Reveal>
-                ))}
-              </div>
-
-              {/* Subtle separator + note */}
-              <Reveal delay={360}>
-                <div
-                  className="mt-5 pt-5 flex items-center gap-3"
-                  style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}
-                >
-                  <div
-                    style={{
-                      width:           8,
-                      height:          8,
-                      borderRadius:    "50%",
-                      backgroundColor: "#C5B27A",
-                      flexShrink:      0,
-                    }}
-                  />
-                  <p style={{ fontSize: "12px", color: "#AAAAAA", lineHeight: 1.55 }}>
-                    {t("authority.footnote")}
-                  </p>
-                </div>
-              </Reveal>
+            <div className="lg:col-span-5">
+              <Figure
+                src="/hero/about-hq.jpg"
+                alt={t("openImageAlt")}
+                caption={t("openCaption")}
+                ratio="4/5"
+                priority
+                sizes="(min-width: 1024px) 38vw, 100vw"
+              />
             </div>
+          </Container>
+        </Section>
 
-          </div>
+        {/* ══ 2 · Four doors ════════════════════════════════════════════════ */}
+        <section aria-labelledby="doors-heading" className="q-scope bg-paper border-y border-line">
+          <h2 id="doors-heading" className="sr-only">{t("doorsHeading")}</h2>
+          <Container>
+            {/* Hairline grid: a 1px gap over the line colour draws every
+                divider at every breakpoint, with no per-column border rules. */}
+            <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-line md:-mx-8">
+              {doors.map((d, i) => (
+                <li key={d.key} className="flex flex-col bg-paper py-10 md:px-8 lg:py-14">
+                  <Label index={String(i + 1).padStart(2, "0")} className="mb-6">
+                    {tp(`${d.key}.tagline`)}
+                  </Label>
+                  <Heading as="h3" size="h3" className="text-ink">
+                    <Link href={d.href} className="hover:text-gold-ink transition-colors">{tp(`${d.key}.name`)}</Link>
+                  </Heading>
+                  <Text size="small" className="mt-3 mb-8 max-w-[22rem]">{d.body}</Text>
+                  <div className="mt-auto flex flex-col items-start gap-3">
+                    <TextLink href={d.action.href}>{d.action.label}</TextLink>
+                    {d.second && <TextLink href={d.second.href} className="text-ink-muted">{d.second.label}</TextLink>}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </Container>
         </section>
 
-        {/* ══════════════════════════════════════════════════════════════════
-            4. FET SPOTLIGHT  —  dark · gold aurora
-            Now seen AFTER the trust is established — the visitor already
-            knows FET is certified before they read the product pitch.
-        ══════════════════════════════════════════════════════════════════ */}
-        <section
-          className="section-padding relative overflow-hidden"
-          style={{ backgroundColor: "#121212" }}
-        >
-          {/* Gold aurora */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "radial-gradient(ellipse at 80% 35%, rgba(197,178,122,0.22) 0%, transparent 50%)," +
-                "radial-gradient(ellipse at 10% 90%, rgba(197,178,122,0.08) 0%, transparent 45%)",
-            }}
-          />
-          <div aria-hidden="true" className="hero-grain" />
-
-          <div className="container-max relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20 items-center">
-
-            {/* Left: content */}
-            <Reveal>
-              <span className="eyebrow-light mb-5 inline-flex">
-                {t("fet.eyebrow")}
-              </span>
-              <h2
-                style={{
-                  fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-                  fontSize:      "clamp(38px, 5vw, 68px)",
-                  fontWeight:    700,
-                  letterSpacing: "-0.025em",
-                  lineHeight:    1.06,
-                  color:         "#FFFFFF",
-                  maxWidth:      "520px",
-                }}
-              >
-                {t("fet.titleLead")}{" "}
-                <span className="text-gold-gradient">{t("fet.titleAccent")}</span>
-              </h2>
-
-              <p
-                className="mt-6 mb-8 max-w-[440px]"
-                style={{ fontSize: "16px", lineHeight: 1.8, color: "rgba(255,255,255,0.55)" }}
-              >
-                {t("fet.body")}
+        {/* ══ 3 · Evidence ══════════════════════════════════════════════════ */}
+        <Section tone="ink" aria-labelledby="evidence-heading">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+            <Reveal className="lg:col-span-6">
+              <Label onInk className="mb-10">{t("evidenceLabel")}</Label>
+              <p id="evidence-heading" className="t-figure text-ink-fg">
+                13.9<span className="text-gold">%</span>
               </p>
+              <Text size="lead" onInk className="mt-6 max-w-[30rem]">{t("evidenceFigureCaption")}</Text>
+            </Reveal>
 
-              <ul className="flex flex-col gap-3.5 mb-10">
-                {fetProofPoints.map((pt) => (
-                  <li key={pt} className="flex items-start gap-3">
-                    <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#C5B27A" }} />
-                    <span style={{ fontSize: "14px", lineHeight: 1.65, color: "rgba(255,255,255,0.60)" }}>
-                      {pt}
-                    </span>
+            <Reveal className="lg:col-span-6 lg:pt-16">
+              <dl className="border-t border-ink-line">
+                {evidenceRows.map(([k, v]) => (
+                  <div key={k} className="flex items-baseline justify-between gap-6 border-b border-ink-line py-5">
+                    <dt className="t-small text-ink-fg-muted">{k}</dt>
+                    <dd className="font-display text-[1.75rem] leading-none text-ink-fg whitespace-nowrap [font-variant-numeric:lining-nums_tabular-nums]">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+              <Text size="small" muted onInk className="mt-6">{t("evidenceSource")}</Text>
+              <Text size="small" onInk className="mt-4 max-w-[32rem]">{t("evidenceHonest")}</Text>
+              <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4">
+                <TextLink href="/products/fuel-eco-tech#fet-calculator" onInk>{t("evidenceLinkCalc")}</TextLink>
+                <TextLink href="/products/fuel-eco-tech" onInk>{t("evidenceLinkProduct")}</TextLink>
+              </div>
+            </Reveal>
+          </Container>
+        </Section>
+
+        {/* ══ 4 · Credentials, separated ════════════════════════════════════ */}
+        <Section tone="paper" aria-labelledby="cred-heading">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+            <div className="lg:col-span-4">
+              <Label className="mb-6">{t("credLabel")}</Label>
+              <Heading id="cred-heading" size="h2" className="text-ink">{t("credTitle")}</Heading>
+              <Text className="mt-6">{t("credBody")}</Text>
+              <div className="mt-8">
+                <TextLink href="/trust/certifications">{t("credCta")}</TextLink>
+              </div>
+            </div>
+            <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-10">
+              <div className="md:col-span-2">
+                <CredentialGroups groups={credentials.map((g) => ({ title: g.group, items: g.items }))} />
+              </div>
+              <Text size="small" muted className="md:col-span-2 -mt-4">{t("credNote")}</Text>
+            </div>
+          </Container>
+        </Section>
+
+        {/* ══ 5 · The company ═══════════════════════════════════════════════ */}
+        <Section tone="deep" aria-labelledby="company-heading">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            <div className="lg:col-span-5 lg:order-2">
+              <Figure
+                src="/hero/brand-wall.jpg"
+                alt=""
+                caption={CONTACT_ADDRESS.join(", ")}
+                ratio="4/3"
+                sizes="(min-width: 1024px) 38vw, 100vw"
+              />
+            </div>
+            <div className="lg:col-span-6 lg:order-1">
+              <Label className="mb-6">{t("companyLabel")}</Label>
+              <Heading id="company-heading" size="h2" className="text-ink">{t("companyTitle")}</Heading>
+              <Text className="mt-6 max-w-[34rem]">{t("companyBody", { reg: COMPANY_REG_NO })}</Text>
+              <div className="mt-8">
+                <TextLink href="/about">{t("companyCta")}</TextLink>
+              </div>
+            </div>
+          </Container>
+        </Section>
+
+        {/* ══ 6 · News ══════════════════════════════════════════════════════ */}
+        <Section tone="paper" aria-labelledby="news-heading">
+          <Container>
+            <div className="flex flex-wrap items-end justify-between gap-6 mb-12">
+              <div>
+                <Label className="mb-6">{t("newsLabel")}</Label>
+                <Heading id="news-heading" size="h2" className="text-ink">{t("newsTitle")}</Heading>
+              </div>
+              <TextLink href="/blog">{t("newsAll")}</TextLink>
+            </div>
+
+            {posts.length > 0 ? (
+              <ol className="border-t border-line-strong">
+                {posts.map((p) => (
+                  <li key={p.id} className="border-b border-line">
+                    <Link href={`/blog/${p.slug}`} className="group grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-8 py-7">
+                      <time dateTime={p.published_at} className="t-small text-ink-muted md:col-span-3 font-numeric">
+                        {dateFmt.format(new Date(p.published_at))}
+                      </time>
+                      <span className="md:col-span-8">
+                        <span className="t-h3 block text-ink group-hover:text-gold-ink transition-colors">{p.title}</span>
+                        {p.excerpt && <span className="t-small block text-ink-muted mt-2 max-w-[42rem]">{p.excerpt}</span>}
+                      </span>
+                      <ArrowUpRight aria-hidden="true" className="hidden md:block md:col-span-1 justify-self-end h-4 w-4 text-ink-muted mt-2" />
+                    </Link>
                   </li>
                 ))}
+              </ol>
+            ) : (
+              <ul className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+                {fallbackNews.map((n) => {
+                  const body = (
+                    <>
+                      <div className="relative overflow-hidden rounded-frame bg-paper-deep" style={{ aspectRatio: "4/3" }}>
+                        <Image
+                          src={n.image}
+                          alt={n.caption}
+                          fill
+                          sizes="(min-width: 768px) 30vw, 100vw"
+                          className="object-cover transition-transform duration-700 ease-quiet group-hover:scale-[1.02]"
+                        />
+                      </div>
+                      <p className="t-label text-ink-muted mt-5">{n.tag}</p>
+                      <p className="t-h3 text-ink mt-2 group-hover:text-gold-ink transition-colors">{n.title}</p>
+                    </>
+                  );
+                  return (
+                    <li key={n.title}>
+                      {n.external ? (
+                        <a href={n.href} target="_blank" rel="noopener noreferrer" className="group block">{body}</a>
+                      ) : (
+                        <Link href={n.href} className="group block">{body}</Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
+            )}
+          </Container>
+        </Section>
 
-              {/* Quick-fact pills */}
-              <div className="flex flex-wrap gap-2 mb-10">
-                {[t("fet.pill1"), t("fet.pill2"), t("fet.pill3")].map((f) => (
-                  <span
-                    key={f}
-                    style={{
-                      fontSize:      "11px",
-                      fontWeight:    600,
-                      letterSpacing: "0.04em",
-                      color:         "rgba(255,255,255,0.5)",
-                      border:        "1px solid rgba(255,255,255,0.12)",
-                      borderRadius:  "999px",
-                      padding:       "5px 14px",
-                    }}
-                  >
-                    {f}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Link href="/enquire?sector=FET" className="btn-primary">
-                  {t("fet.ctaPrimary")}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link href="/products/fuel-eco-tech" className="btn-ghost-dark">
-                  {t("fet.ctaSecondary")}
-                  <ArrowUpRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </Reveal>
-
-            {/* Right: floating product image */}
-            <Reveal direction="left" delay={150}>
-              <div className="relative float-element">
-                <div
-                  className="rounded-[40px] overflow-hidden"
-                  style={{
-                    border:     "1px solid rgba(255,255,255,0.09)",
-                    boxShadow:  "0 48px 96px rgba(0,0,0,0.55)",
-                  }}
-                >
-                  <ParallaxImage
-                    src="/products/fet/field-engine.jpg"
-                    alt="Fuel Eco Tech device, installed on a commercial engine"
-                    className="aspect-[4/3]"
-                  />
-                </div>
-
-                {/* Floating badge — bottom-left */}
-                <div
-                  className="absolute -bottom-5 -left-4 md:-bottom-6 md:-left-6 bg-white rounded-[18px] px-4 py-3"
-                  style={{ boxShadow: "0 12px 40px rgba(0,0,0,0.18)" }}
-                >
-                  <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#7A6020", marginBottom: "2px" }}>
-                    {t("fet.badgeAvlLabel")}
-                  </div>
-                  <div style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "15px", fontWeight: 600, color: "#1E1E1E" }}>
-                    {t("fet.badgeAvlValue")}
-                  </div>
-                </div>
-
-                {/* Floating badge — top-right */}
-                <div
-                  className="absolute -top-4 -right-3 md:-top-5 md:-right-4 bg-white rounded-[16px] px-4 py-2.5"
-                  style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.14)" }}
-                >
-                  <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#7A6020", marginBottom: "2px" }}>
-                    {t("fet.badgeCertified")}
-                  </div>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#1E1E1E" }}>
-                    ISO 9001 · 14001 · 27001
-                  </div>
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════════════════════════
-            5. PRODUCT SUITE  —  white
-            Three product cards. White after dark FET = breathing room.
-        ══════════════════════════════════════════════════════════════════ */}
-        <section className="section-padding" style={{ backgroundColor: "#FFFFFF" }}>
-          <div className="container-max">
-            <Reveal className="mb-12 lg:mb-16">
-              <span className="eyebrow block mb-3">{t("suite.eyebrow")}</span>
-              <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-10">
-                <h2
-                  style={{
-                    fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-                    fontSize:      "clamp(30px, 3.5vw, 48px)",
-                    fontWeight:    700,
-                    letterSpacing: "-0.025em",
-                    lineHeight:    1.1,
-                    color:         "#1E1E1E",
-                  }}
-                >
-                  {t("suite.title")}
-                </h2>
-                <Link
-                  href="/enquire"
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold shrink-0 pb-1"
-                  style={{ color: "#7A6020" }}
-                >
-                  {t("suite.cta")}
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </Reveal>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
-              {otherProducts.map((p, i) => (
-                <Reveal key={p.label} delay={i * 80}>
-                  <Link
-                    href={p.href}
-                    className="group block rounded-[28px] overflow-hidden h-full glow-card"
-                    style={{ backgroundColor: "#FAFAF8", border: "1px solid rgba(0,0,0,0.06)" }}
-                  >
-                    <div className="relative overflow-hidden" style={{ aspectRatio: "4/3" }}>
-                      <Image
-                        src={p.image}
-                        alt={p.label}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-                      />
-                      <div
-                        className="absolute inset-0"
-                        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.28) 0%, transparent 50%)" }}
-                      />
-                      <span
-                        className="absolute top-4 left-4"
-                        style={{
-                          fontSize:       "10px",
-                          fontWeight:     700,
-                          letterSpacing:  "0.06em",
-                          textTransform:  "uppercase",
-                          color:          "#1E1E1E",
-                          background:     "rgba(255,255,255,0.9)",
-                          backdropFilter: "blur(8px)",
-                          borderRadius:   "999px",
-                          padding:        "4px 12px",
-                        }}
-                      >
-                        {p.badge}
-                      </span>
-                    </div>
-                    <div className="p-6 lg:p-7">
-                      <h3
-                        className="mb-1"
-                        style={{
-                          fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-                          fontSize:      "22px",
-                          fontWeight:    600,
-                          letterSpacing: "-0.01em",
-                          color:         "#1E1E1E",
-                        }}
-                      >
-                        {p.label}
-                      </h3>
-                      <p className="mb-3" style={{ fontSize: "13px", fontWeight: 600, color: "#7A6020" }}>
-                        {p.tagline}
-                      </p>
-                      <p className="mb-6" style={{ fontSize: "13px", lineHeight: 1.7, color: "#666666" }}>
-                        {p.description}
-                      </p>
-                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#1E1E1E" }}>
-                        {p.cta}
-                        <ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
-                      </span>
-                    </div>
-                  </Link>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════════════════════════
-            6. TESTIMONIALS  —  white · client quotes
-            Placed after products so visitors see the range THEN hear from
-            real clients who use those products. Social proof confirms belief
-            already forming — not trying to create it from scratch.
-        ══════════════════════════════════════════════════════════════════ */}
-        <Testimonials />
-
-        {/* ══════════════════════════════════════════════════════════════════
-            7. STATS BAND  —  warm ivory · count-up + scramble
-            Stats land HERE — after the visitor has seen the certifications
-            and the products. Numbers now CONFIRM belief, not try to CREATE
-            it. See StatsBand.tsx.
-        ══════════════════════════════════════════════════════════════════ */}
-        <StatsBand />
-
-        {/* ══════════════════════════════════════════════════════════════════
-            7. SECTORS STRIP  —  ivory · centered
-        ══════════════════════════════════════════════════════════════════ */}
-        <section className="section-padding-sm" style={{ backgroundColor: "#F2F2F2" }}>
-          <div className="container-max text-center">
-            <Reveal>
-              <span className="eyebrow block mb-5">{t("sectors.eyebrow")}</span>
-              <h2
-                style={{
-                  fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-                  fontSize:      "clamp(28px, 3.8vw, 52px)",
-                  fontWeight:    700,
-                  letterSpacing: "-0.02em",
-                  lineHeight:    1.15,
-                }}
-              >
-                <span style={{ color: "#1E1E1E" }}>{t("sectors.titleLead")}</span>
-                <span style={{ color: "#AAAAAA" }}>{t("sectors.titleAccent")}</span>
-              </h2>
-            </Reveal>
-
-            <Reveal delay={120} className="mt-10 flex flex-wrap justify-center gap-3">
-              {sectors.map((s) => (
-                <div
-                  key={s.label}
-                  className="flex items-center gap-2 px-5 py-3 rounded-full bg-white"
-                  style={{ border: "1px solid rgba(0,0,0,0.07)" }}
-                >
-                  <s.icon className="w-4 h-4 shrink-0" style={{ color: "#C5B27A" }} />
-                  <span style={{ fontSize: "13px", fontWeight: 500, color: "#1E1E1E", whiteSpace: "nowrap" }}>
-                    {s.label}
-                  </span>
-                </div>
-              ))}
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════════════════════════
-            8. WHY VITORRA  —  dark · 3-panel glass grid + arc vectors
-        ══════════════════════════════════════════════════════════════════ */}
-        <section
-          className="section-padding relative overflow-hidden"
-          style={{ backgroundColor: "#141414" }}
-        >
-          {/* Semi-circle arcs rising from bottom */}
-          <div
-            aria-hidden="true"
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-none"
-          >
-            {[180, 340, 520, 700, 900].map((d) => (
-              <div
-                key={d}
-                className="absolute"
-                style={{
-                  width:         d,
-                  height:        d / 2,
-                  bottom:        0,
-                  left:          "50%",
-                  transform:     "translateX(-50%)",
-                  borderRadius:  `${d / 2}px ${d / 2}px 0 0`,
-                  border:        "1px solid rgba(197,178,122,0.065)",
-                  borderBottom:  "none",
-                }}
-              />
-            ))}
-          </div>
-
-          <div aria-hidden="true" className="hero-grain" style={{ opacity: 0.025 }} />
-
-          <div className="container-max relative z-10">
-            <Reveal className="text-center mb-14 md:mb-16">
-              <span className="eyebrow-light mb-4 inline-flex">{t("why.eyebrow")}</span>
-              <h2
-                className="max-w-2xl mx-auto"
-                style={{
-                  fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-                  fontSize:      "clamp(32px, 4.2vw, 58px)",
-                  fontWeight:    700,
-                  letterSpacing: "-0.025em",
-                  lineHeight:    1.08,
-                  color:         "#FFFFFF",
-                }}
-              >
-                {t("why.titleLead")}{" "}
-                <span style={{ color: "#C5B27A" }}>{t("why.titleAccent")}</span>
-              </h2>
-              <p
-                className="mt-5 max-w-lg mx-auto"
-                style={{ fontSize: "16px", lineHeight: 1.78, color: "rgba(255,255,255,0.42)" }}
-              >
-                {t("why.body")}
-              </p>
-            </Reveal>
-
-            <div
-              className="grid grid-cols-1 md:grid-cols-3 overflow-hidden rounded-[24px]"
-              style={{ border: "1px solid rgba(255,255,255,0.07)" }}
-            >
-              {whyPoints.map((pt, i) => (
-                <Reveal key={pt.headline} delay={i * 90}>
-                  <div
-                    className="p-8 md:p-10 h-full"
-                    style={{
-                      background:  "rgba(255,255,255,0.03)",
-                      borderRight: i < 2 ? "1px solid rgba(255,255,255,0.07)" : "none",
-                    }}
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full mb-7" style={{ backgroundColor: "#C5B27A" }} />
-                    <h3
-                      className="mb-3"
-                      style={{
-                        fontFamily:    "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-                        fontSize:      "clamp(18px, 1.8vw, 22px)",
-                        fontWeight:    600,
-                        letterSpacing: "-0.01em",
-                        lineHeight:    1.25,
-                        color:         "#FFFFFF",
-                      }}
-                    >
-                      {pt.headline}
-                    </h3>
-                    <p style={{ fontSize: "14px", lineHeight: 1.75, color: "rgba(255,255,255,0.42)" }}>
-                      {pt.body}
-                    </p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-
-            <Reveal className="mt-10 text-center">
-              <Link href="/about" className="btn-ghost-dark inline-flex">
-                {t("why.cta")}
-                <ArrowUpRight className="w-4 h-4" />
-              </Link>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════════════════════════
-            9. TEAM TEASER  —  lifted ivory
-        ══════════════════════════════════════════════════════════════════ */}
-        <TeamTeaser />
-
-        {/* ══════════════════════════════════════════════════════════════════
-            10. BLOG PREVIEW  —  lifted ivory · 3 recent posts
-            Server component — fetches from API, falls back to editorial
-            placeholders when backend is not yet live. See BlogPreview.tsx.
-        ══════════════════════════════════════════════════════════════════ */}
-        <BlogPreview />
-
-        {/* ══════════════════════════════════════════════════════════════════
-            11. CERTIFICATIONS  —  URSB incorporation credential card
-        ══════════════════════════════════════════════════════════════════ */}
-        <Certifications />
-
-        {/* ══════════════════════════════════════════════════════════════════
-            11. FINAL CTA  —  white · corner brackets · arc vectors
-        ══════════════════════════════════════════════════════════════════ */}
-        <FinalCTA />
-
+        {/* ══ 7 · Contact ═══════════════════════════════════════════════════ */}
+        <ContactBand
+          title={t("closeTitle")}
+          body={t("closeBody")}
+          briefLabel={t("closeBrief")}
+          labels={{ call: t("closeCall"), email: t("closeEmail"), visit: t("closeVisit"), whatsapp: t("closeWhatsApp") }}
+        />
       </main>
       <Footer />
     </>

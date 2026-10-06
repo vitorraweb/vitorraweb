@@ -3,17 +3,22 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { ArrowRight, Phone } from "lucide-react";
+import { ArrowRight, Phone, MessageCircle } from "lucide-react";
 import { CONTACT_PHONE } from "@/lib/constants";
 
-// Routes where a floating "Request a Quote" bar would be redundant or in the way.
-const HIDDEN_ON = ["/enquire", "/contact", "/account", "/shop/cart", "/shop/checkout", "/unsubscribe"];
-
+// Routes where a contact dock would be redundant or in the way.
+const HIDDEN_ON = ["/enquire", "/contact", "/account", "/shop/cart", "/shop/checkout", "/unsubscribe", "/display"];
 const telHref = `tel:${CONTACT_PHONE.replace(/\s+/g, "")}`;
+const waHref = `https://wa.me/${CONTACT_PHONE.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+  "Hi Vitorra Holdings, I'd like to know more about your products.",
+)}`;
 
-/* Mobile-only sticky CTA. Slides up once the visitor has scrolled past the
-   hero, giving a persistent path to a quote without nagging on first view.
-   Hidden on desktop and on routes that already centre on contacting us. */
+/* ─── Mobile contact dock — the one floating element on a phone ───────────────
+   Phones used to show three floating things at once: this bar, a WhatsApp
+   bubble hovering above it, and the cookie banner. Now quote, call and
+   WhatsApp share one bar, which slides up only after the visitor has scrolled
+   past the opening — so the first screen is the page, not the furniture.
+   Desktop keeps the WhatsApp button instead (see WhatsAppButton).           */
 export default function StickyQuoteBar() {
   const t = useTranslations("common");
   const pathname = usePathname();
@@ -26,36 +31,29 @@ export default function StickyQuoteBar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const hidden = HIDDEN_ON.some((p) => pathname === p || pathname.startsWith(p + "/"));
-  if (hidden) return null;
+  if (HIDDEN_ON.some((p) => pathname === p || pathname.startsWith(p + "/"))) return null;
+
+  const tab = visible ? 0 : -1;
 
   return (
     <div
       aria-hidden={!visible}
-      className="fixed inset-x-0 bottom-0 z-40 lg:hidden px-3 pt-3 transition-transform duration-300"
+      className="q-scope fixed inset-x-0 bottom-0 z-40 lg:hidden border-t border-line bg-paper transition-transform duration-300 ease-quiet"
       style={{
-        paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)",
-        transform: visible ? "translateY(0)" : "translateY(120%)",
-        background: "linear-gradient(to top, rgba(242,242,242,0.96) 60%, rgba(242,242,242,0))",
+        paddingBottom: "env(safe-area-inset-bottom)",
+        transform: visible ? "translateY(0)" : "translateY(110%)",
       }}
     >
-      <div className="flex items-center gap-2.5 max-w-md mx-auto">
-        <Link
-          href="/enquire"
-          className="btn-primary flex-1 justify-center"
-          tabIndex={visible ? 0 : -1}
-        >
+      <div className="flex items-stretch divide-x divide-line">
+        <Link href="/enquire" tabIndex={tab} className="flex flex-1 items-center justify-center gap-2 bg-ink text-paper min-h-14 t-small font-medium">
           {t("requestQuote")}
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight aria-hidden="true" className="h-4 w-4" />
         </Link>
-        <a
-          href={telHref}
-          aria-label={t("requestQuote")}
-          tabIndex={visible ? 0 : -1}
-          className="flex items-center justify-center w-12 h-12 rounded-full shrink-0"
-          style={{ background: "#1E1E1E", color: "#FFFFFF" }}
-        >
-          <Phone className="w-5 h-5" />
+        <a href={telHref} tabIndex={tab} aria-label={t("callUs")} className="flex w-16 items-center justify-center text-ink">
+          <Phone aria-hidden="true" className="h-5 w-5" />
+        </a>
+        <a href={waHref} tabIndex={tab} target="_blank" rel="noopener noreferrer" aria-label={t("chatOnWhatsapp")} className="flex w-16 items-center justify-center text-ink">
+          <MessageCircle aria-hidden="true" className="h-5 w-5" />
         </a>
       </div>
     </div>

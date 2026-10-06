@@ -1037,6 +1037,56 @@ and shows the choice currently on record.
 > ⚠ Swahili is mine, not a native speaker's.
 
 
+---
+
+## 🔨 Redesign — "Quiet Authority" (October 2026) — homepage + four product pages built, not yet deployed
+
+The site looked like a premium *template* rather than a company: every section
+ran the same formula (gold eyebrow, headline split black-then-gold, fade-in,
+rounded card) over glows, film grain and glass. Measured, not felt: 1,076
+hand-styled blocks and 50 different hex colours for a seven-colour palette.
+Rebuilt on a real design system, after studying Aesop, LVMH, Maersk and Temasek.
+
+**The system** — one paper canvas, ink type, gold only as a line or an accent,
+2–4px corners, one type scale, one motion curve; shared building blocks
+(`components/system/`). The admin, staff and customer portals are untouched.
+
+**Built so far:** homepage, header, footer, Fuel Eco Tech, SEAL, Coffee,
+Logistics. Each product page follows its own buying journey rather than one
+template — FET: evidence → how it works → which device fits (the
+manufacturer's table) → price → calculator → measured trial; SEAL: a
+procurement journey with its regulatory status stated plainly; Coffee: export
+terms first; Logistics: the five details needed to quote in one round.
+
+**Fixed along the way**
+- Content was invisible until JavaScript ran — on a slow phone whole sections
+  sat blank. Now visible from the first byte, on every page.
+- Phones showed three floating things at once; now one contact bar.
+- The cookie notice covered the main button on desktop and a fifth of a phone.
+- The homepage coffee card said "Shop Coffee" while the shop is closed.
+- Brand films no longer autoplay — a visitor on mobile data only downloads the
+  3–15 MB film if they press play.
+
+**Claims removed or corrected** (the honesty pass the external review asked for)
+- FET: "trusted by fleet operators across East Africa"; "your warranty is not
+  affected" → written, vehicle-specific guidance before fitting.
+- Logistics: "no delays at the border", "real-time tracking", "delivered on
+  schedule, every time" → what we do, and what depends on others.
+- Coffee: "every bag traces back to the farm by QR code" (bags not on sale).
+- Certificates are listed by what they cover, without implying who holds them.
+- SEAL: US FDA facts only; no Uganda NDA approval implied.
+- Generated imagery removed: the gold VITORRA-liveried truck, branded export
+  cartons, a generated "farmer", the generated warehouse and control room.
+
+**⏳ Needs the business before go-live**
+1. **Who holds the ISO certificates** — Vitorra or the FET manufacturer?
+2. **Brand sign-off (Olivia):** buttons are now black, not gold.
+3. **WhatsApp no longer pulses** — a labelled button instead; reverses July's call.
+4. **Real photography** for Logistics and Coffee — there is none yet.
+
+**Still to redesign:** About, Enquire, Contact, Blog, Certifications, Careers,
+Suppliers, legal, Shop. Until then those pages carry the old styling.
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**

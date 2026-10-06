@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useLocale } from "next-intl";
-import { Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { primaryLocales, type AppLocale } from "@/i18n/routing";
 import { SWAHILI_ENABLED } from "@/lib/config";
@@ -32,38 +32,34 @@ export default function LanguageSwitcher({ dark = false }: { dark?: boolean }) {
     });
   };
 
+  /* Quiet Authority: a plain "EN / SW" text toggle — the active language in
+     ink with a gold hairline beneath, the other muted. No pill, no fill. */
   return (
     <div
       role="group"
       aria-label="Select language"
-      className="inline-flex items-center rounded-full p-1 pl-2"
-      style={{
-        background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-        border: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.07)",
-        opacity: isPending ? 0.6 : 1,
-      }}
+      className={cn("inline-flex items-center gap-2 t-label", isPending && "opacity-60")}
     >
-      <Globe
-        className="w-3.5 h-3.5 mr-1 shrink-0"
-        style={{ color: dark ? "rgba(255,255,255,0.55)" : "#7A6020" }}
-        aria-hidden="true"
-      />
-      {primaryLocales.map((opt) => {
+      {primaryLocales.map((opt, i) => {
         const isActive = active === opt;
         return (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => change(opt)}
-            aria-pressed={isActive}
-            className="px-3 py-1 rounded-full text-xs font-bold tracking-wide transition-colors"
-            style={{
-              backgroundColor: isActive ? "#C5B27A" : "transparent",
-              color: isActive ? "#1E1E1E" : dark ? "rgba(255,255,255,0.6)" : "#666666",
-            }}
-          >
-            {LABELS[opt]}
-          </button>
+          <span key={opt} className="inline-flex items-center gap-2">
+            {i > 0 && <span aria-hidden="true" className={dark ? "text-ink-line" : "text-line-strong"}>/</span>}
+            <button
+              type="button"
+              onClick={() => change(opt)}
+              aria-pressed={isActive}
+              lang={opt}
+              className={cn(
+                "py-1 border-b transition-colors",
+                isActive
+                  ? cn("border-gold", dark ? "text-ink-fg" : "text-ink")
+                  : cn("border-transparent", dark ? "text-ink-fg-muted hover:text-ink-fg" : "text-ink-muted hover:text-ink"),
+              )}
+            >
+              {LABELS[opt]}
+            </button>
+          </span>
         );
       })}
     </div>

@@ -44,7 +44,7 @@ const EMPTY: Form = { customer_name: "", customer_email: "", customer_phone: "",
 
 /* Field styling mirrors the customer-portal profile form (Vitorra design
    system: rounded, gold focus ring) instead of the generic shadcn defaults. */
-const fieldCls = "w-full h-12 rounded-2xl px-3.5 text-[14px] bg-white outline-none border transition-all focus:border-[#C5B27A] focus:ring-[3px] focus:ring-[#C5B27A]/15";
+const fieldCls = "w-full h-12 rounded-[2px] px-3.5 text-[14px] bg-white outline-none border transition-all focus:border-[var(--color-ink)]";
 const fieldWithIconCls = `${fieldCls} pl-11`;
 const labelCls = "block text-[11px] font-bold uppercase tracking-[0.14em] mb-1.5";
 const errBorder = "#C0392B";
@@ -186,8 +186,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center gap-1.5 mt-3 w-full rounded-full px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
-        style={{ background: "#C5B27A", color: "#1E1E1E" }}
+        className="q-btn mt-5 w-full !whitespace-normal text-center leading-snug py-3 bg-ink text-paper hover:bg-black"
       >
         {online ? tr("reserveNowPay") : tr("reserveNow")}
       </button>
@@ -195,8 +194,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
       <button
         type="button"
         onClick={copyLink}
-        className="inline-flex items-center justify-center gap-1.5 mt-2 w-full text-xs font-semibold transition-opacity hover:opacity-80"
-        style={{ color: "rgba(255,255,255,0.55)" }}
+        className="inline-flex items-center justify-center gap-1.5 mt-3 w-full t-small text-ink-muted transition-colors hover:text-ink"
       >
         <Copy className="w-3 h-3" />
         {linkCopied ? tr("reserveLinkCopied") : tr("reserveCopyLink")}
@@ -214,8 +212,8 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
           {/* Bottom sheet on phones, centered dialog from sm: up */}
           <div className="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-4">
             <div
-              className="relative w-full sm:max-w-md bg-white rounded-t-[28px] sm:rounded-[24px] max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl animate-[reserve-in_0.3s_cubic-bezier(0.22,1,0.36,1)_both]"
-              style={{ border: "1px solid rgba(197,178,122,0.25)" }}
+              className="relative w-full sm:max-w-md bg-paper rounded-t-frame sm:rounded-frame max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl animate-[reserve-in_0.3s_cubic-bezier(0.22,1,0.36,1)_both]"
+              style={{ border: "1px solid var(--color-line)" }}
             >
               {/* Drag-handle affordance — mobile sheet only */}
               <div className="sm:hidden flex justify-center pt-3 pb-1" aria-hidden="true">
@@ -332,7 +330,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
 
                         <Field label={tr("reserveFieldQuantity")} error={errors.quantity}>
                           <div
-                            className="flex items-center h-12 rounded-2xl border overflow-hidden"
+                            className="flex items-center h-12 rounded-[2px] border overflow-hidden"
                             style={{ borderColor: errors.quantity ? errBorder : okBorder }}
                           >
                             <button
@@ -401,7 +399,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
                     type="button"
                     onClick={() => submit(online)}
                     disabled={status === "submitting"}
-                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-3 text-sm font-semibold transition-opacity"
+                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-[2px] px-4 py-3 text-sm font-semibold transition-opacity"
                     style={{ background: "#1E1E1E", color: "#FFFFFF", opacity: status === "submitting" ? 0.7 : 1 }}
                   >
                     {status === "submitting" ? (

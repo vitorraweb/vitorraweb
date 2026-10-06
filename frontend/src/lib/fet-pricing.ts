@@ -35,7 +35,9 @@ function spanFor(device: string): { engineMinL: number; engineMaxL: number } {
 /** "1.0–2.0L" — the tier's displacement span, formatted for display. */
 export function engineSpanLabel(device: string): string {
   const { engineMinL: min, engineMaxL: max } = spanFor(device);
-  const n = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
+  /* One decimal below 10 litres (1.0, 2.5, 9.0), whole litres above (10, 16),
+     the way the manufacturer's own tables write them. */
+  const n = (v: number) => (v >= 10 ? String(Math.round(v)) : v.toFixed(1));
   return min === max ? `${n(min)}L` : `${n(min)}–${n(max)}L`;
 }
 

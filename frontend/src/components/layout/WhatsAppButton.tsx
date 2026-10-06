@@ -18,28 +18,20 @@ const HREF = `https://wa.me/${NUMBER}?text=${encodeURIComponent(OPENER)}`;
 export default function WhatsAppButton() {
   const t = useTranslations("common");
 
+  /* Desktop only — on phones the contact dock (StickyQuoteBar) carries
+     WhatsApp, so the two never stack. A labelled button rather than a
+     pulsing bubble: a visible word is easier to notice than an animation,
+     and it doesn't compete with the page. */
   return (
     <a
       href={HREF}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={t("chatOnWhatsapp")}
-      className="whatsapp-launcher group fixed z-40 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 right-4 bottom-[calc(env(safe-area-inset-bottom)+96px)] lg:right-6 lg:bottom-6"
-      style={{
-        width: "52px",
-        height: "52px",
-        background: "#1E1E1E",
-        border: "1px solid rgba(197,178,122,0.35)",
-        color: "#C5B27A",
-      }}
+      className="q-scope hidden lg:inline-flex fixed z-40 right-6 bottom-6 items-center gap-2 rounded-edge border border-line-strong bg-paper px-4 min-h-11 t-small font-medium text-ink shadow-[0_8px_24px_rgba(30,30,30,0.08)] transition-colors hover:border-ink"
     >
-      <MessageCircle className="w-6 h-6" strokeWidth={2} />
-      <span
-        className="pointer-events-none absolute right-full mr-3 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold opacity-0 transition-opacity group-hover:opacity-100"
-        style={{ background: "#1E1E1E", color: "#FAFAF8" }}
-      >
-        {t("chatOnWhatsapp")}
-      </span>
+      <MessageCircle aria-hidden="true" className="h-4 w-4 text-gold-ink" />
+      {t("messageUs")}
+      <span className="sr-only">— {t("chatOnWhatsapp")}</span>
     </a>
   );
 }

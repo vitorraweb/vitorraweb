@@ -906,3 +906,185 @@
     display: none;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   QUIET AUTHORITY — public-site design system (October 2026)
+   ══════════════════════════════════════════════════════════════════════════
+   Replaces the effect-led "premium template" look (aurora glows, grain, glass,
+   gradient text, 24–40px stadium cards) with restraint: one paper canvas, ink
+   type, gold used only as a hairline or a small accent, small corners, one
+   type scale, one motion curve. Reference: Aesop, LVMH, Hermès.
+
+   Rules of the system:
+     • Colour comes from these tokens only — never a hex in a component.
+     • Type comes from the t-* utilities only — never a one-off clamp().
+     • Corners are `rounded-edge` (2px, controls) or `rounded-frame` (4px,
+       images and panels). Nothing rounder except avatars.
+     • Gold is a line, an index number or a focus ring. It is never a large
+       fill and never a gradient.
+     • Content is visible without JavaScript. Motion only ever adds.
+
+   Scoped by name (paper / ink / q-*), so the admin, staff and customer
+   portals — which use the shadcn tokens above — are unaffected.             */
+
+@theme inline {
+  --color-paper:          #FAFAF8;   /* canvas                                  */
+  --color-paper-deep:     #F2F2F2;   /* alternate band                          */
+  --color-ink:            #1E1E1E;   /* type, dark bands                        */
+  --color-ink-soft:       #454545;   /* body copy                               */
+  --color-ink-muted:      #6B6B6B;   /* captions — 5.2:1 on paper               */
+  --color-line:           #E3DFD5;   /* hairlines on paper                      */
+  --color-line-strong:    #C9C2AF;   /* control borders, emphasised rules       */
+  --color-gold-ink:       #7A6020;   /* gold that can be read on paper — 5.9:1  */
+  --color-alert-ink:      #9B2C2C;   /* form errors — 7.4:1 on paper            */
+
+  /* on ink */
+  --color-ink-fg:         #F3F1EC;
+  --color-ink-fg-muted:   #A8A398;   /* 7.0:1 on ink                            */
+  --color-ink-line:       #3B3934;
+
+  --radius-edge:  2px;
+  --radius-frame: 4px;
+
+  --font-display: var(--font-playfair), "Cormorant Garamond", Georgia, serif;
+
+  --ease-quiet: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ── Type scale — the only sizes the public site uses ───────────────────── */
+@utility t-display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.75rem, 1.6rem + 4.6vw, 5.75rem);
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+@utility t-h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.25rem, 1.5rem + 3vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+@utility t-h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.875rem, 1.4rem + 1.9vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+@utility t-h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+@utility t-figure {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(4rem, 2.4rem + 6.5vw, 8.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+@utility t-lead {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+@utility t-body {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+@utility t-small {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+@utility t-label {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ── Layout rhythm ─────────────────────────────────────────────────────── */
+@utility q-container {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 0.6rem + 2.8vw, 3rem);
+}
+@utility q-section {
+  padding-block: clamp(4.5rem, 2.8rem + 7vw, 9rem);
+}
+@utility q-section-tight {
+  padding-block: clamp(3rem, 2rem + 4vw, 5.5rem);
+}
+
+/* ── Controls ──────────────────────────────────────────────────────────── */
+@utility q-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  min-height: 3rem;
+  padding-inline: 1.5rem;
+  border-radius: var(--radius-edge);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: background-color 200ms var(--ease-quiet), color 200ms var(--ease-quiet),
+              border-color 200ms var(--ease-quiet);
+}
+
+/* Visible focus everywhere on the public site — gold ring, offset from the
+   element so it reads on both paper and ink. */
+.q-scope :focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 3px;
+}
+
+/* Underlined text link whose rule grows on hover — the site's one link idiom. */
+@utility q-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 3px;
+  transition: background-size 300ms var(--ease-quiet), color 200ms var(--ease-quiet);
+  &:hover { background-size: 0% 1px; background-position: 100% 100%; }
+}
+
+/* ── Reveal — visible by default, animated only where the browser can do it
+   natively. The old JS reveal rendered content at opacity 0 until hydration
+   and an IntersectionObserver fired, so on a slow phone whole sections sat
+   blank. Scroll-driven animation needs no JavaScript, and an element already
+   on screen at load simply shows. Browsers without support: no animation. */
+@keyframes q-reveal {
+  from { opacity: 0; translate: var(--q-reveal-x, 0) var(--q-reveal-y, 18px); }
+  to   { opacity: 1; translate: 0 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .q-reveal {
+      animation: q-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}

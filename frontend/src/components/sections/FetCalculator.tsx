@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight, Check, Fuel, Link2, ShieldCheck } from "lucide-react";
-import { Reveal } from "@/components/ui/reveal";
 import {
   FET_TIERS,
   SAVINGS,
@@ -244,8 +243,7 @@ export function FetCalculatorCard() {
 
   return (
       <div
-        className="rounded-[28px] p-6 md:p-8 shadow-card"
-        style={{ backgroundColor: "#FFFFFF", border: "1px solid rgba(0,0,0,0.06)" }}
+        className="rounded-frame border border-line bg-paper p-6 md:p-8"
       >
             {/* Currency */}
             <div className="flex items-center justify-between gap-3 mb-5">
@@ -269,16 +267,12 @@ export function FetCalculatorCard() {
                       type="button"
                       onClick={() => selectTier(t)}
                       aria-pressed={selected}
-                      className="text-left px-3.5 py-3 rounded-2xl border transition-all"
-                      style={{
-                        borderColor: selected ? "#C5B27A" : "rgba(0,0,0,0.10)",
-                        background: selected ? "rgba(197,178,122,0.10)" : "#FFFFFF",
-                      }}
+                      className={`text-left px-3.5 py-3 rounded-edge border transition-colors ${selected ? "border-ink bg-paper-deep" : "border-line-strong bg-paper hover:border-ink"}`}
                     >
-                      <span className="block text-sm font-semibold" style={{ color: "#1E1E1E" }}>
+                      <span className="block text-sm font-semibold text-ink">
                         {tt(`${t.id}.label`)}
                       </span>
-                      <span className="block text-[11px] mt-0.5" style={{ color: "#999999" }}>
+                      <span className="block text-[11px] mt-0.5 text-ink-muted">
                         {t.model} · {tt(`${t.id}.segment`).split("·").pop()?.trim()}
                       </span>
                     </button>
@@ -368,8 +362,7 @@ export function FetCalculatorCard() {
               </Field>
               <Field label={tc("device")}>
                 <div
-                  className="h-11 rounded-xl px-3.5 flex items-center text-sm font-semibold"
-                  style={{ background: "#F2F2F2", color: "#1E1E1E", border: "1px solid rgba(0,0,0,0.06)" }}
+                  className="h-11 rounded-edge px-3.5 flex items-center text-sm font-semibold bg-paper-deep text-ink border border-line"
                   title={currency === "EUR" ? undefined : tc("devicePriceEur", { price: money(tier.priceEur, "EUR") })}
                 >
                   {money(deviceCost, currency)}
@@ -381,7 +374,7 @@ export function FetCalculatorCard() {
             <div className="mt-6">
               <div className="flex items-baseline justify-between mb-2">
                 <Label>{tc("expectedSavings")}</Label>
-                <span className="font-numeric" style={{ fontSize: "20px", fontWeight: 700, color: "#7A6020" }}>
+                <span className="font-display text-[1.75rem] leading-none text-gold-ink [font-variant-numeric:lining-nums_tabular-nums]">
                   {savingsPct}%
                 </span>
               </div>
@@ -392,7 +385,7 @@ export function FetCalculatorCard() {
                   className="absolute -top-1.5 z-0"
                   style={{ left: `${VERIFIED_LEFT_PCT}%`, transform: "translateX(-50%)" }}
                 >
-                  <span style={{ display: "block", width: "2px", height: "10px", background: "#7A6020", borderRadius: "2px", opacity: 0.6 }} />
+                  <span className="block w-px h-2.5 bg-gold-ink" />
                 </span>
                 <input
                   type="range"
@@ -402,14 +395,14 @@ export function FetCalculatorCard() {
                   value={savingsPct}
                   onChange={(e) => setSavingsPct(Number(e.target.value))}
                   className="relative z-10 w-full"
-                  style={{ accentColor: "#C5B27A" }}
+                  style={{ accentColor: "var(--color-ink)" }}
                   aria-label={tc("expectedSavings")}
                 />
               </div>
 
               <div className="flex justify-between mt-1">
-                <span className="text-[11px]" style={{ color: "#999999" }}>{tc("noSaving")}</span>
-                <span className="text-[11px]" style={{ color: "#999999" }}>{tc("optimistic", { pct: SAVINGS.max })}</span>
+                <span className="text-[11px] text-ink-muted">{tc("noSaving")}</span>
+                <span className="text-[11px] text-ink-muted">{tc("optimistic", { pct: SAVINGS.max })}</span>
               </div>
 
               {/* Scenarios — including the one where it doesn't pay. */}
@@ -447,20 +440,20 @@ export function FetCalculatorCard() {
             </div>
 
             {fleet > 1 && (
-              <p className="mt-4 text-center text-[12px]" style={{ color: "#666666" }}>
+              <p className="mt-4 text-center text-[12px] text-ink-muted">
                 {tc("fleetInvestmentPrefix")}{" "}
-                <span style={{ color: "#1E1E1E", fontWeight: 600 }}>{money(result.deviceCostFleet, currency)}</span>
+                <span className="text-ink font-semibold">{money(result.deviceCostFleet, currency)}</span>
                 {" "}{tc("fleetInvestmentSuffix", { price: money(deviceCost, currency) })}
               </p>
             )}
 
             {/* The working, in full. */}
             {spendReady && (
-              <div className="mt-5 rounded-2xl p-4" style={{ background: "#FAF8F4", border: "1px solid rgba(197,178,122,0.18)" }}>
-                <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#7A6020" }}>
+              <div className="mt-5 rounded-frame p-5 bg-paper-deep border border-line">
+                <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] mb-2 text-gold-ink">
                   {tc("workingTitle")}
                 </p>
-                <p className="text-[12.5px] leading-relaxed" style={{ color: "#454545" }}>
+                <p className="text-[12.5px] leading-relaxed text-ink-soft">
                   {mode === "usage"
                     ? tc("workingUsage", {
                         km: num(annualKm).toLocaleString("en-US"),
@@ -491,13 +484,13 @@ export function FetCalculatorCard() {
 
                 {assumptions.length > 0 && (
                   <>
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] mt-3.5 mb-1.5" style={{ color: "#7A6020" }}>
+                    <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] mt-3.5 mb-1.5 text-gold-ink">
                       {tc("assumptionsTitle")}
                     </p>
                     <ul className="space-y-1">
                       {assumptions.map((a) => (
-                        <li key={a} className="flex gap-2 text-[12px] leading-relaxed" style={{ color: "#666666" }}>
-                          <span aria-hidden="true" className="mt-[7px] w-1 h-1 rounded-full shrink-0" style={{ background: "#C5B27A" }} />
+                        <li key={a} className="flex gap-2 text-[12px] leading-relaxed text-ink-muted">
+                          <span aria-hidden="true" className="mt-[0.7em] h-px w-3 shrink-0 bg-gold" />
                           {a}
                         </li>
                       ))}
@@ -508,7 +501,7 @@ export function FetCalculatorCard() {
             )}
 
             {/* CTA + share */}
-            <Link href={enquireHref} className="btn-primary w-full justify-center mt-5" style={{ borderRadius: "16px" }}>
+            <Link href={enquireHref} className="q-btn w-full mt-6 bg-ink text-paper hover:bg-black">
               <Fuel className="w-4 h-4" />
               {tc("requestQuote")}
               <ArrowRight className="w-4 h-4" />
@@ -517,8 +510,7 @@ export function FetCalculatorCard() {
             <button
               type="button"
               onClick={copyShare}
-              className="w-full mt-2.5 inline-flex items-center justify-center gap-1.5 text-[12.5px] font-semibold py-2 rounded-xl transition-colors"
-              style={{ color: "#7A6020", background: "transparent" }}
+              className="w-full mt-3 inline-flex items-center justify-center gap-1.5 t-small font-medium py-2 text-ink-soft hover:text-ink transition-colors"
             >
               {copyState === "copied" ? <Check className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
               {copyState === "copied" ? tc("shareCopied") : tc("shareCta")}
@@ -528,13 +520,12 @@ export function FetCalculatorCard() {
                 readOnly
                 value={shareUrl}
                 onFocus={(e) => e.currentTarget.select()}
-                className="w-full mt-1 text-[11px] px-3 py-2 rounded-lg"
-                style={{ background: "#F2F2F2", color: "#454545", border: "1px solid rgba(0,0,0,0.08)" }}
+                className="w-full mt-1 t-small px-3 py-2 rounded-edge bg-paper-deep text-ink-soft border border-line"
                 aria-label={tc("shareCta")}
               />
             )}
 
-            <p className="mt-3 text-center text-[11px] leading-relaxed" style={{ color: "#9A9A9A" }}>
+            <p className="mt-3 text-center text-[11px] leading-relaxed text-ink-muted">
               {tc("disclaimer")}
             </p>
       </div>
@@ -547,43 +538,20 @@ export default function FetCalculator() {
   const tc = useTranslations("fetCalculator");
 
   return (
-    <section id="fet-calculator" className="section-padding" style={{ backgroundColor: "#F2F2F2", scrollMarginTop: "96px" }}>
-      <div className="container-max grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-12 lg:gap-16 items-center">
-
-        {/* ── Left — intro ─────────────────────────────────────────────── */}
-        <Reveal>
-          <span className="eyebrow block mb-3">{tc("eyebrow")}</span>
-          <h2
-            className="mb-5"
-            style={{
-              fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)",
-              fontSize: "clamp(28px, 3.5vw, 48px)",
-              fontWeight: 700,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.1,
-              color: "#1E1E1E",
-              maxWidth: "440px",
-            }}
-          >
-            {tc("title")}
-          </h2>
-          <p className="mb-7" style={{ fontSize: "16px", lineHeight: 1.78, color: "#555555", maxWidth: "420px" }}>
-            {tc("body")}
-          </p>
-          <a
-            href="#fet-pricing"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold"
-            style={{ color: "#7A6020" }}
-          >
+    <section id="fet-calculator" aria-labelledby="fet-calculator-heading" className="q-scope q-section bg-paper scroll-mt-24">
+      <div className="q-container grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+        <div className="lg:col-span-4 lg:sticky lg:top-28">
+          <p className="t-label text-ink-muted mb-6">{tc("eyebrow")}</p>
+          <h2 id="fet-calculator-heading" className="t-h2 text-ink">{tc("title")}</h2>
+          <p className="t-body text-ink-soft mt-6">{tc("body")}</p>
+          <a href="#fet-pricing" className="q-link t-small text-ink mt-8">
             {tc("seePricing")}
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
           </a>
-        </Reveal>
-
-        {/* ── Right — calculator card ──────────────────────────────────── */}
-        <Reveal delay={120}>
+        </div>
+        <div className="lg:col-span-8">
           <FetCalculatorCard />
-        </Reveal>
+        </div>
       </div>
     </section>
   );
@@ -593,7 +561,7 @@ export default function FetCalculator() {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: "#999999" }}>
+    <span className="block t-label text-[0.6875rem] text-ink-muted">
       {children}
     </span>
   );
@@ -616,8 +584,8 @@ function Field({
           <Label>{label}</Label>
           {hint && (
             <span
-              className="text-[9.5px] font-bold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded"
-              style={{ color: "#7A6020", background: "rgba(197,178,122,0.16)" }}
+              className="t-label text-[0.625rem] tracking-[0.1em] px-1.5 py-0.5 rounded-edge text-gold-ink border border-line-strong"
+              
             >
               {hint}
             </span>
@@ -644,8 +612,7 @@ function Segmented({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className={`inline-flex rounded-xl p-0.5 ${full ? "w-full" : ""}`}
-      style={{ background: "#F2F2F2", border: "1px solid rgba(0,0,0,0.06)" }}
+      className={`inline-flex rounded-edge p-0.5 bg-paper-deep border border-line ${full ? "w-full" : ""}`}
     >
       {options.map((o) => {
         const on = o.value === value;
@@ -656,12 +623,7 @@ function Segmented({
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.value)}
-            className={`${full ? "flex-1" : ""} rounded-[10px] font-semibold transition-all ${small ? "text-[10px] px-2 py-1" : "text-[12px] px-3 py-2"}`}
-            style={{
-              background: on ? "#FFFFFF" : "transparent",
-              color: on ? "#1E1E1E" : "#888888",
-              boxShadow: on ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-            }}
+            className={`${full ? "flex-1" : ""} rounded-[1px] font-medium transition-colors ${small ? "text-[10px] px-2 py-1" : "text-[12px] px-3 py-2"} ${on ? "bg-ink text-paper" : "text-ink-muted hover:text-ink"}`}
           >
             {o.label}
           </button>
@@ -684,12 +646,7 @@ function ScenarioChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors"
-      style={{
-        background: active ? "#C5B27A" : verified ? "rgba(197,178,122,0.12)" : "#FFFFFF",
-        color: active ? "#1E1E1E" : verified ? "#7A6020" : "#666666",
-        border: `1px solid ${verified || active ? "rgba(197,178,122,0.4)" : "rgba(0,0,0,0.12)"}`,
-      }}
+      className={`inline-flex items-center gap-1.5 px-3 min-h-8 rounded-edge text-[11.5px] font-medium border transition-colors ${active ? "bg-ink text-paper border-ink" : verified ? "text-gold-ink border-line-strong hover:border-ink" : "text-ink-soft border-line-strong hover:border-ink"}`}
     >
       {children}
     </button>
@@ -720,10 +677,7 @@ function NumberInput({
       inputMode={inputMode}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-11 w-full rounded-xl px-3.5 text-sm font-medium outline-none transition-colors"
-      style={{ background: "#FFFFFF", color: "#1E1E1E", border: "1px solid rgba(0,0,0,0.12)" }}
-      onFocus={(e) => (e.currentTarget.style.borderColor = "#C5B27A")}
-      onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)")}
+      className="h-11 w-full rounded-edge px-3.5 text-sm font-medium outline-none transition-colors bg-white text-ink border border-line-strong focus:border-ink"
     />
   );
 }
@@ -731,25 +685,17 @@ function NumberInput({
 function Result({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
     <div
-      className="rounded-2xl p-5 text-center"
-      style={{ backgroundColor: "#161616" }}
+      className="rounded-frame p-5 text-center bg-ink"
     >
-      <p className="text-[10px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "rgba(255,255,255,0.45)" }}>
+      <p className="t-label text-[0.6875rem] text-ink-fg-muted mb-3" >
         {label}
       </p>
       <p
-        className="font-numeric"
-        style={{
-          fontSize: "clamp(24px, 3.4vw, 34px)",
-          fontWeight: 700,
-          letterSpacing: "-0.01em",
-          lineHeight: 1,
-          color: "#C5B27A",
-        }}
+        className="font-display text-[clamp(1.75rem,1.4rem+1.2vw,2.25rem)] leading-none text-ink-fg [font-variant-numeric:lining-nums_tabular-nums]"
       >
         {value}
       </p>
-      <p className="text-[11px] mt-2" style={{ color: "rgba(255,255,255,0.4)" }}>{sub}</p>
+      <p className="t-small text-[0.75rem] mt-2 text-ink-fg-muted">{sub}</p>
     </div>
   );
 }

@@ -34,48 +34,42 @@ export default function NewsletterSignup() {
     }
   }
 
+  /* Quiet Authority: a hairline field and an ink button on the paper footer. */
   if (state === "done") {
     return (
-      <div className="flex items-center gap-3 text-sm" style={{ color: "rgba(255,255,255,0.8)" }}>
-        <span
-          className="flex items-center justify-center w-7 h-7 rounded-full shrink-0"
-          style={{ background: "rgba(197,178,122,0.2)", color: "#C5B27A" }}
-        >
-          <Check className="w-4 h-4" />
-        </span>
+      <p role="status" className="flex items-center gap-3 t-small text-ink">
+        <Check aria-hidden="true" className="h-4 w-4 text-gold-ink" />
         {t("success")}
-      </div>
+      </p>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="w-full lg:w-auto">
-      <div
-        className="flex items-center gap-2 rounded-full p-1.5 w-full lg:w-[380px]"
-        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
-      >
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder={t("placeholder")}
-          aria-label={t("placeholder")}
-          className="flex-1 bg-transparent px-4 py-2 text-sm outline-none text-white placeholder:text-white/40"
-        />
+    <form onSubmit={onSubmit} className="w-full lg:w-[420px]">
+      <div className="flex items-end gap-3">
+        <label className="flex-1">
+          <span className="sr-only">{t("placeholder")}</span>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t("placeholder")}
+            autoComplete="email"
+            className="w-full bg-transparent border-0 border-b border-line-strong rounded-none px-0 py-3 t-body text-ink placeholder:text-ink-muted outline-none focus:border-ink transition-colors"
+          />
+        </label>
         <button
           type="submit"
           disabled={state === "loading"}
-          aria-label={t("button")}
-          className="flex items-center gap-1.5 shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-60"
-          style={{ background: "#C5B27A", color: "#1E1E1E" }}
+          className="q-btn bg-ink text-paper hover:bg-black disabled:opacity-60"
         >
           {state === "loading" ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
           ) : (
             <>
-              <span className="hidden sm:inline">{t("button")}</span>
-              <ArrowRight className="w-4 h-4" />
+              {t("button")}
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
             </>
           )}
         </button>
@@ -87,10 +81,8 @@ export default function NewsletterSignup() {
         onExpire={() => setTurnstileToken("")}
         className="mt-3"
       />
-      {state === "error" && (
-        <p className="mt-2 px-2 text-xs" style={{ color: "#E5A3A3" }}>{error}</p>
-      )}
-      <p className="mt-2 px-2 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{t("consent")}</p>
+      {state === "error" && <p role="alert" className="mt-3 t-small text-alert-ink">{error}</p>}
+      <p className="mt-3 t-small text-ink-muted">{t("consent")}</p>
     </form>
   );
 }

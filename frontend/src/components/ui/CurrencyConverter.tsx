@@ -22,22 +22,20 @@ export default function CurrencyConverter({ className = "" }: { className?: stri
 
   const swap = () => { setFrom(to); setTo(from); };
 
-  const selectStyle = "h-11 rounded-xl px-3 text-sm font-semibold bg-white border outline-none focus:border-[#C5B27A] transition-colors";
-  const selectBorder = { borderColor: "rgba(0,0,0,0.14)", color: "#1E1E1E" } as const;
+  const selectStyle = "h-11 rounded-edge px-3 text-sm font-semibold bg-white border border-line-strong text-ink outline-none focus:border-ink transition-colors";
 
   return (
     <div
-      className={`rounded-[24px] p-6 md:p-7 ${className}`}
-      style={{ background: "#FAFAF8", border: "1px solid rgba(197,178,122,0.35)" }}
+      className={`rounded-frame border border-line bg-paper p-6 md:p-7 ${className}`}
     >
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-4" style={{ color: "#7A6020" }}>
+      <p className="t-label text-gold-ink mb-4">
         {t("converterTitle")}
       </p>
 
       <div className="flex flex-col sm:flex-row sm:items-end gap-3">
         {/* Amount + from */}
         <div className="flex-1">
-          <label className="block text-xs mb-1.5" style={{ color: "#999" }}>{t("amountLabel")}</label>
+          <label className="block t-label text-ink-muted mb-2">{t("amountLabel")}</label>
           <div className="flex gap-2">
             <input
               type="number"
@@ -45,10 +43,10 @@ export default function CurrencyConverter({ className = "" }: { className?: stri
               min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full h-11 rounded-xl px-3 text-sm bg-white border outline-none focus:border-[#C5B27A] transition-colors"
-              style={selectBorder}
+              className="w-full h-11 rounded-edge px-3 text-sm bg-white border border-line-strong text-ink outline-none focus:border-ink transition-colors"
+             
             />
-            <select value={from} onChange={(e) => setFrom(e.target.value as Money)} className={selectStyle} style={selectBorder}>
+            <select value={from} onChange={(e) => setFrom(e.target.value as Money)} className={selectStyle}>
               {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -59,30 +57,30 @@ export default function CurrencyConverter({ className = "" }: { className?: stri
           type="button"
           onClick={swap}
           aria-label={t("swap")}
-          className="shrink-0 h-11 w-11 rounded-xl flex items-center justify-center transition-colors hover:bg-white"
-          style={{ border: "1px solid rgba(0,0,0,0.14)", color: "#7A6020" }}
+          className="shrink-0 h-11 w-11 rounded-edge border border-line-strong text-gold-ink flex items-center justify-center transition-colors hover:border-ink"
+          
         >
           <ArrowRightLeft className="w-4 h-4" />
         </button>
 
         {/* To */}
         <div className="flex-1">
-          <label className="block text-xs mb-1.5" style={{ color: "#999" }}>{t("toLabel")}</label>
+          <label className="block t-label text-ink-muted mb-2">{t("toLabel")}</label>
           <div className="flex items-center gap-2">
             <div
-              className="w-full h-11 rounded-xl px-3 flex items-center text-sm font-semibold"
-              style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)", color: "#1E1E1E" }}
+              className="w-full h-11 rounded-edge px-3 flex items-center text-sm font-semibold bg-paper-deep text-ink"
+              
             >
               {result === null ? "…" : formatMoney(result, to, { roundUgxTo: to === "UGX" ? 10 : 1 })}
             </div>
-            <select value={to} onChange={(e) => setTo(e.target.value as Money)} className={selectStyle} style={selectBorder}>
+            <select value={to} onChange={(e) => setTo(e.target.value as Money)} className={selectStyle}>
               {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
         </div>
       </div>
 
-      <p className="mt-4 text-xs" style={{ color: "#999" }}>{t("indicativeNote")}</p>
+      <p className="mt-4 t-small text-ink-muted">{t("indicativeNote")}</p>
     </div>
   );
 }

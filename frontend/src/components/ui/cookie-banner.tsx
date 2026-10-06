@@ -43,42 +43,46 @@ export function CookieBanner() {
 
   if (!visible) return null;
 
+  /* Quiet Authority: one slim paper strip along the bottom edge, on every
+     screen. It used to take about a fifth of a phone screen, and as a desktop
+     card it sat on top of the page's main call to action. */
   return (
     <div
       role="dialog"
       aria-label={t("ariaLabel")}
       aria-live="polite"
-      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-sm z-50 rounded-2xl p-4 md:p-5"
-      style={{ backgroundColor: "#1E1E1E", boxShadow: "0 20px 60px rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.08)", marginBottom: "env(safe-area-inset-bottom)" }}
+      className="q-scope fixed z-50 inset-x-0 bottom-0 border-t border-line bg-paper shadow-[0_-8px_24px_rgba(30,30,30,0.06)]"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
-          {t("message")}{" "}
-          <Link href="/legal/cookie-policy" className="underline hover:opacity-70 transition-opacity" style={{ color: "#C5B27A" }}>
-            {t("policyLink")}
-          </Link>
-        </p>
-        <button
-          onClick={() => (current ? setVisible(false) : decline())}
-          aria-label={t("dismiss")}
-          className="shrink-0 hover:opacity-60 transition-opacity"
-          style={{ color: "rgba(255,255,255,0.4)" }}
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-      {current && (
-        <p className="text-[11.5px] mb-2.5" style={{ color: "rgba(255,255,255,0.45)" }}>
-          {t(current === "accepted" ? "currentAccepted" : "currentDeclined")}
-        </p>
-      )}
-      <div className="flex gap-2">
-        <button onClick={decline} className="btn-ghost-dark text-xs px-4 py-2" style={{ borderRadius: "12px" }}>
-          {t("decline")}
-        </button>
-        <button onClick={accept} className="btn-primary text-xs px-4 py-2 flex-1" style={{ borderRadius: "12px", justifyContent: "center" }}>
-          {t("acceptAll")}
-        </button>
+      <div className="q-container py-4 md:flex md:items-center md:gap-8">
+        <div className="flex items-start justify-between gap-4 md:flex-1 md:items-center">
+          <p className="t-small text-ink-soft">
+            {t("message")}{" "}
+            <Link href="/legal/cookie-policy" className="text-ink underline underline-offset-2 hover:text-gold-ink">
+              {t("policyLink")}
+            </Link>
+          </p>
+          <button
+            onClick={() => (current ? setVisible(false) : decline())}
+            aria-label={t("dismiss")}
+            className="shrink-0 -mr-1 -mt-0.5 p-1 text-ink-muted hover:text-ink transition-colors"
+          >
+            <X aria-hidden="true" className="h-4 w-4" />
+          </button>
+        </div>
+        {current && (
+          <p className="t-small text-ink-muted mt-2">
+            {t(current === "accepted" ? "currentAccepted" : "currentDeclined")}
+          </p>
+        )}
+        <div className="mt-3.5 md:mt-0 flex gap-2 md:shrink-0 md:w-[280px]">
+          <button onClick={decline} className="q-btn flex-1 min-h-10 border border-line-strong text-ink hover:border-ink">
+            {t("decline")}
+          </button>
+          <button onClick={accept} className="q-btn flex-1 min-h-10 bg-ink text-paper hover:bg-black">
+            {t("acceptAll")}
+          </button>
+        </div>
       </div>
     </div>
   );
