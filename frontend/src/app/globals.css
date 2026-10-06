@@ -437,38 +437,35 @@
   .group:hover .arrow-nudge { transform: translateX(3px); }
 
   /* ── Blog post prose ─────────────────────────────────────────────────── */
-  .blog-content { color: #454545; font-size: 16px; line-height: 1.8; }
+  /* Article prose — Quiet Authority. Editorial reading measure (~66ch), the
+     display serif for headings and pull quotes, hairlines, small corners. */
+  .blog-content { color: var(--color-ink-soft); font-size: 1.125rem; line-height: 1.75; max-width: 40rem; }
+  .blog-content > * + * { margin-top: 1.25em; }
   .blog-content h2, .blog-content h3, .blog-content h4 {
-    font-family: var(--font-playfair, Georgia, serif);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: #1E1E1E;
-    margin-top: 2em;
-    margin-bottom: 0.6em;
-    line-height: 1.15;
+    font-family: var(--font-display); font-weight: 400; letter-spacing: -0.015em; color: var(--color-ink);
+    margin-top: 2.2em; line-height: 1.15;
   }
-  .blog-content h2 { font-size: clamp(22px, 2.5vw, 28px); }
-  .blog-content h3 { font-size: clamp(18px, 2vw, 22px); }
-  .blog-content p  { margin-bottom: 1.4em; }
-  .blog-content ul, .blog-content ol { padding-left: 1.5em; margin-bottom: 1.4em; }
-  .blog-content li { margin-bottom: 0.5em; }
+  .blog-content h2 { font-size: clamp(1.75rem, 1.4rem + 1vw, 2.25rem); }
+  .blog-content h3 { font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.625rem); }
+  .blog-content ul, .blog-content ol { padding-left: 1.25em; }
+  .blog-content li + li { margin-top: 0.5em; }
   .blog-content ul { list-style-type: disc; }
   .blog-content ol { list-style-type: decimal; }
-  .blog-content a  { color: #7A6020; text-decoration: underline; text-underline-offset: 3px; }
-  .blog-content a:hover { opacity: 0.7; }
+  .blog-content li::marker { color: var(--color-gold-ink); }
+  .blog-content a  { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-gold); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  .blog-content a:hover { color: var(--color-gold-ink); }
   .blog-content blockquote {
-    border-left: 3px solid #C5B27A;
-    padding-left: 1.2em;
-    margin: 1.6em 0;
-    color: #666666;
-    font-style: italic;
+    font-family: var(--font-display); font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); line-height: 1.3; color: var(--color-ink);
+    border-left: 2px solid var(--color-gold); padding-left: 1em; margin: 2em 0;
   }
-  .blog-content strong { color: #1E1E1E; font-weight: 600; }
-  .blog-content img   { border-radius: 16px; width: 100%; height: auto; margin: 1.6em 0; }
-  .blog-content hr    { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 2em 0; }
-  .blog-content pre   { background: #1E1E1E; color: #F2F2F2; padding: 1.2em; border-radius: 12px; overflow-x: auto; margin-bottom: 1.4em; font-size: 14px; }
-  .blog-content code  { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.9em; background: rgba(0,0,0,0.06); padding: 0.15em 0.4em; border-radius: 4px; }
+  .blog-content strong { color: var(--color-ink); font-weight: 600; }
+  .blog-content img   { border-radius: var(--radius-frame); width: 100%; height: auto; margin: 2em 0; }
+  .blog-content hr    { border: none; border-top: 1px solid var(--color-line); margin: 2.5em 0; }
+  .blog-content pre   { background: var(--color-ink); color: var(--color-ink-fg); padding: 1.2em; border-radius: var(--radius-frame); overflow-x: auto; font-size: 0.875rem; }
+  .blog-content code  { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.9em; background: var(--color-paper-deep); padding: 0.15em 0.4em; border-radius: var(--radius-edge); }
   .blog-content pre code { background: none; padding: 0; }
+  /* A first paragraph that reads like an editor wrote it. */
+  .blog-content > p:first-child { font-size: 1.25rem; color: var(--color-ink); }
 
   /* ── Hide scrollbars on horizontal scroll rows (keeps scrollability) ──── */
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -1148,3 +1145,7 @@
 /* Header steps out of the way while reading down, returns on scroll up. */
 .q-header { transition: translate 500ms var(--ease-cinematic), background-color 300ms ease; }
 .q-header[data-hidden="true"] { translate: 0 -100%; }
+
+/* A link inside running text: ink, with a gold hairline beneath. */
+.q-inline-link { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-gold); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.q-inline-link:hover { color: var(--color-gold-ink); }

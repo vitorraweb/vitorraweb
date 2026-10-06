@@ -1,44 +1,27 @@
 import { useTranslations } from "next-intl";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { Link } from "@/i18n/navigation";
+import { LegalNav } from "@/components/ui/legal-nav";
 
+/* Legal pages — Quiet Authority. A side menu of the four documents and a calm
+   reading column. */
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations("footer");
-  const legalLinks = [
+  const links = [
     { label: t("privacy"), href: "/legal/privacy-policy" },
-    { label: t("terms"),   href: "/legal/terms-and-conditions" },
+    { label: t("terms"), href: "/legal/terms-and-conditions" },
     { label: t("returns"), href: "/legal/returns-and-warranty" },
     { label: t("cookies"), href: "/legal/cookie-policy" },
   ];
   return (
     <>
       <Header />
-      <main className="flex-1" style={{ backgroundColor: "#F2F2F2" }}>
-        <div className="px-6 md:px-12 lg:px-20 pb-20 md:pb-28" style={{ paddingTop: "clamp(128px, 12vh, 168px)" }}>
-          <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-10 lg:gap-16 items-start">
-
-            {/* Sidebar nav */}
-            <nav className="lg:sticky lg:top-28" aria-label="Legal">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-4" style={{ color: "#999999" }}>{t("colLegal")}</p>
-              <ul className="space-y-1">
-                {legalLinks.map((l) => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      className="block px-3 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-white"
-                      style={{ color: "#555555" }}
-                    >
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-
-            {/* Page content */}
-            <div>{children}</div>
+      <main id="main" className="q-scope flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
+        <div className="q-container q-section !pt-14 lg:!pt-20 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          <div className="lg:col-span-3">
+            <LegalNav heading={t("colLegal")} links={links} />
           </div>
+          <div className="lg:col-span-8 lg:col-start-5">{children}</div>
         </div>
       </main>
       <Footer />

@@ -13,9 +13,9 @@ export async function generateMetadata({
   return { title: t("title"), description: t("description") };
 }
 
-const bold = (c: React.ReactNode) => <strong style={{ color: "#1E1E1E" }}>{c}</strong>;
+const bold = (c: React.ReactNode) => <strong className="text-ink font-semibold">{c}</strong>;
 const mailLink = () => (
-  <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "#7A6020", textDecoration: "underline" }}>{CONTACT_EMAIL}</a>
+  <a href={`mailto:${CONTACT_EMAIL}`} className="q-inline-link">{CONTACT_EMAIL}</a>
 );
 
 export default async function CookiePolicyPage() {

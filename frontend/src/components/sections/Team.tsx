@@ -1,280 +1,75 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
 import Image from "next/image";
-import { ArrowUpRight, User } from "lucide-react";
-import { Reveal } from "@/components/ui/reveal";
+import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils";
 
-/* ─── Team constellation (hierarchical) ───────────────────────────────────────
-   Mastercard-adapted: CEO featured on top, a leadership tier joined by a gold
-   orbital arc that draws on scroll, then the officers. Each photo is grayscale
-   until hovered (→ full colour + gold ring + satellite CTA) and carries a
-   cursor-magnetic tilt. Placeholder slots (photo pending) render an elegant
-   gold-tinted avatar. Honours reduced-motion; cursor effect is desktop-only.
-   ─────────────────────────────────────────────────────────────────────────── */
+/* ─── The team — editorial portraits ──────────────────────────────────────────
+   Replaces the hover-tilt "constellation" (grayscale photos, a gold orbital arc,
+   a magnetic cursor). Plain portraits, a consistent crop, names in the display
+   serif and roles as quiet labels: the way a serious firm introduces its
+   people. CEO first, then leadership, then officers. Server component.      */
 
-type Member = { name?: string; roleKey: string; file?: string; placeholder?: boolean };
-type Size = "ceo" | "lead" | "officer";
+type Member = { name: string; roleKey: string; file: string };
 
+const ceo: Member = { name: "Solomon Okello", roleKey: "ceo", file: "Solomon Okello - CEO.jpg" };
 const leadership: Member[] = [
-  { name: "Joseph Rwabu",      roleKey: "seniorFinance",    file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
-  { name: "Victor Lojum",      roleKey: "headOfOperations", file: "Victor Lojum - Head of Operations.jpg" },
-  { name: "Thurayya Nakayima", roleKey: "seniorMarketing",  file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
+  { name: "Victor Lojum", roleKey: "headOfOperations", file: "Victor Lojum - Head of Operations.jpg" },
+  { name: "Joseph Rwabu", roleKey: "seniorFinance", file: "Joseph Rwabu - Senior Finance Officer.jpeg" },
+  { name: "Thurayya Nakayima", roleKey: "seniorMarketing", file: "Thurayya Nakayima - Senior Marketing Officer.jpg" },
 ];
-
 const officers: Member[] = [
-  { name: "John Oluwaseyi",   roleKey: "itOfficer",        file: "John Oluwaseyi - IT Officer.jpeg" },
-  { name: "Sarah Nuwamanya",  roleKey: "marketingOfficer", file: "Sarah Nuwamanya - Marketing Officer.jpg" },
-  { name: "Olivia Sandra",    roleKey: "brandDesigner",    file: "Olivia Sandra - Brand Designer.jpeg" },
-  { name: "Daniel Tuke",      roleKey: "financeOfficer",   file: "Daniel Tuke - Finance Officer.jpeg" },
+  { name: "Daniel Tuke", roleKey: "financeOfficer", file: "Daniel Tuke - Finance Officer.jpeg" },
+  { name: "Sarah Nuwamanya", roleKey: "marketingOfficer", file: "Sarah Nuwamanya - Marketing Officer.jpg" },
+  { name: "Olivia Sandra", roleKey: "brandDesigner", file: "Olivia Sandra - Brand Designer.jpeg" },
+  { name: "John Oluwaseyi", roleKey: "itOfficer", file: "John Oluwaseyi - IT Officer.jpeg" },
 ];
 
-export default function Team() {
-  const t = useTranslations("team");
-  const secRef = useRef<HTMLElement>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    const el = secRef.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setInView(true);
-      return;
-    }
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.2 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
+function Portrait({ m, role, large = false }: { m: Member; role: string; large?: boolean }) {
   return (
-    <section ref={secRef} className="section-padding relative overflow-hidden" style={{ backgroundColor: "#F2F2F2" }}>
-      {/* Ghost watermark */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 flex items-center overflow-hidden pointer-events-none select-none z-0"
-      >
-        <span
-          style={{
-            fontFamily: "var(--font-playfair, Georgia, serif)",
-            fontSize: "clamp(80px, 12vw, 160px)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            lineHeight: 1,
-            color: "rgba(30,30,30,0.04)",
-            paddingLeft: "clamp(24px, 5vw, 80px)",
-            whiteSpace: "nowrap",
-          }}
-        >
-          Team
-        </span>
-      </div>
-
-      <div className="container-max relative z-10">
-        <Reveal className="mb-14 lg:mb-16 text-center">
-          <span className="eyebrow justify-center mb-3">{t("eyebrow")}</span>
-          <h2
-            className="mx-auto"
-            style={{
-              fontFamily: "var(--font-playfair, Georgia, serif)",
-              fontSize: "clamp(28px, 3.2vw, 44px)",
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.12,
-              color: "#1E1E1E",
-              maxWidth: "520px",
-            }}
-          >
-            {t("sectionTitle")}
-          </h2>
-        </Reveal>
-
-        {/* ── Tier 1 — Leadership (gold arc) ───────────────────────────────── */}
-        <div className="relative mt-10 lg:mt-0">
-          <svg
-            className="hidden lg:block absolute inset-0 w-full h-full z-0"
-            viewBox="0 0 1000 200"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M40,120 C 250,30 400,30 500,110 S 760,190 960,90"
-              pathLength={1}
-              className="team-arc"
-              style={{ strokeDashoffset: inView ? 0 : 1 }}
-            />
-          </svg>
-
-          <div className="relative z-10 flex flex-wrap justify-center lg:flex-nowrap items-center gap-x-12 gap-y-12 lg:gap-x-24">
-            {leadership.map((m, i) => (
-              <div key={m.name ?? `lead-${i}`} className={i % 2 === 0 ? "team-down" : "team-up"}>
-                <Reveal delay={i * 90}>
-                  <TeamPortrait member={m} size="lead" />
-                </Reveal>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Tier 2 — Officers ────────────────────────────────────────────── */}
-        <div className="mt-16 lg:mt-24 flex flex-wrap justify-center items-start gap-x-10 gap-y-12">
-          {officers.map((m, i) => (
-            <Reveal key={m.name ?? `officer-${i}`} delay={i * 70}>
-              <TeamPortrait member={m} size="officer" />
-            </Reveal>
-          ))}
-
-          {/* Meet-the-team node */}
-          <Reveal delay={officers.length * 70}>
-            <div className="team-portrait flex flex-col items-center text-center">
-              <Link
-                href="/about"
-                className="flex flex-col items-center justify-center text-center w-28 md:w-32 aspect-square rounded-full border-2 border-dashed hover:opacity-70 transition-opacity mb-4"
-                style={{ borderColor: "rgba(197,178,122,0.45)" }}
-              >
-                <span style={{ color: "#C5B27A", fontSize: "24px", lineHeight: 1 }}>+</span>
-                <span className="mt-1.5 px-3" style={{ fontSize: "11px", color: "#888888", fontWeight: 500 }}>
-                  {t("meetTeam")}
-                </span>
-              </Link>
-            </div>
-          </Reveal>
+    <figure className="m-0 group">
+      <div className={cn("relative overflow-hidden rounded-frame bg-paper-deep q-unveil q-zoom", large ? "aspect-[4/5]" : "aspect-[3/4]")}>
+        <div className="q-inner absolute inset-0">
+          <Image
+            src={`/team/${encodeURIComponent(m.file)}`}
+            alt={m.name}
+            fill
+            sizes={large ? "(min-width: 1024px) 34vw, 100vw" : "(min-width: 1024px) 18vw, 45vw"}
+            className="object-cover object-top"
+          />
         </div>
       </div>
-    </section>
+      <figcaption className="mt-4">
+        <span className={cn("block font-display text-ink leading-tight", large ? "text-[1.75rem]" : "text-[1.25rem]")}>{m.name}</span>
+        <span className="block t-label text-ink-muted mt-2">{role}</span>
+      </figcaption>
+    </figure>
   );
 }
 
-/* ─── Single portrait ─────────────────────────────────────────────────────── */
-
-const SIZE_CLASS: Record<Size, string> = {
-  ceo: "w-40 md:w-44 lg:w-48",
-  lead: "w-32 md:w-36",
-  officer: "w-28 md:w-32",
-};
-
-function TeamPortrait({ member, size, featured = false }: { member: Member; size: Size; featured?: boolean }) {
-  const t = useTranslations("team");
-  const role = t(`roles.${member.roleKey}`);
-  const ref = useRef<HTMLDivElement>(null);
-  const cur = useRef({ x: 0, y: 0 });
-  const target = useRef({ x: 0, y: 0 });
-  const hover = useRef(false);
-  const raf = useRef(0);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || member.placeholder) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (!window.matchMedia("(pointer: fine)").matches) return;
-
-    const apply = () => {
-      const { x, y } = cur.current;
-      const lift = hover.current ? 6 : 0;
-      el.style.transform = `translate3d(${(x * 7).toFixed(2)}px, ${(y * 7 - lift).toFixed(2)}px, 0) rotateX(${(-y * 6).toFixed(2)}deg) rotateY(${(x * 6).toFixed(2)}deg)`;
-    };
-    const loop = () => {
-      const t = target.current;
-      const c = cur.current;
-      c.x += (t.x - c.x) * 0.15;
-      c.y += (t.y - c.y) * 0.15;
-      apply();
-      if (Math.abs(t.x - c.x) > 0.001 || Math.abs(t.y - c.y) > 0.001) {
-        raf.current = requestAnimationFrame(loop);
-      } else {
-        raf.current = 0;
-      }
-    };
-    const start = () => {
-      if (!raf.current) raf.current = requestAnimationFrame(loop);
-    };
-    const move = (e: PointerEvent) => {
-      const r = el.getBoundingClientRect();
-      target.current = {
-        x: Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)),
-        y: Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1)),
-      };
-      start();
-    };
-    const enter = () => {
-      hover.current = true;
-      start();
-    };
-    const leave = () => {
-      hover.current = false;
-      target.current = { x: 0, y: 0 };
-      start();
-    };
-
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerenter", enter);
-    el.addEventListener("pointerleave", leave);
-    return () => {
-      if (raf.current) cancelAnimationFrame(raf.current);
-      el.removeEventListener("pointermove", move);
-      el.removeEventListener("pointerenter", enter);
-      el.removeEventListener("pointerleave", leave);
-    };
-  }, [member.placeholder]);
-
+export default async function Team({ labels }: { labels: { leadership: string; officers: string } }) {
+  const t = await getTranslations("team");
   return (
-    <div className={cn("team-portrait flex flex-col items-center text-center", featured && "is-featured")} style={{ perspective: "700px" }}>
-      <div ref={ref} className={cn("relative aspect-square mb-4 will-change-transform", SIZE_CLASS[size])}>
-        {member.placeholder ? (
-          <div
-            className="t-ring w-full h-full flex items-center justify-center"
-            style={{ background: "linear-gradient(160deg, #EFE9DA 0%, #E2D8BE 100%)" }}
-          >
-            <User className="w-1/3 h-1/3" style={{ color: "#B9A876" }} strokeWidth={1.5} />
-          </div>
-        ) : (
-          <>
-            <div className="t-ring w-full h-full">
-              <Image
-                src={`/team/${encodeURIComponent(member.file!)}`}
-                alt={member.name ?? role}
-                fill
-                className="object-cover t-img"
-                sizes={size === "ceo" ? "192px" : "144px"}
-              />
-            </div>
-            <Link
-              href="/about"
-              className="satellite-cta t-cta"
-              style={{ width: "38px", height: "38px" }}
-              aria-label={`About ${member.name ?? role}`}
-            >
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
-          </>
-        )}
+    <div className="space-y-20">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-end">
+        <div className="lg:col-span-5">
+          <Portrait m={ceo} role={t(`roles.${ceo.roleKey}`)} large />
+        </div>
+        <div className="lg:col-span-7">
+          <p className="t-label text-ink-muted mb-6 pb-4 border-b border-line-strong">{labels.leadership}</p>
+          <ul className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+            {leadership.map((m) => (
+              <li key={m.name}><Portrait m={m} role={t(`roles.${m.roleKey}`)} /></li>
+            ))}
+          </ul>
+        </div>
       </div>
-
-      <span className="eyebrow mb-1" style={{ fontSize: size === "ceo" ? "10px" : "9px" }}>
-        {role}
-      </span>
-      <p
-        style={{
-          fontFamily: "var(--font-playfair, Georgia, serif)",
-          fontSize: size === "ceo" ? "17px" : "14px",
-          fontWeight: 600,
-          letterSpacing: "-0.01em",
-          color: member.placeholder ? "#9A9A9A" : "#1E1E1E",
-          fontStyle: member.placeholder ? "italic" : "normal",
-        }}
-      >
-        {member.name ?? "Joining soon"}
-      </p>
+      <div>
+        <p className="t-label text-ink-muted mb-6 pb-4 border-b border-line-strong">{labels.officers}</p>
+        <ul className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          {officers.map((m) => (
+            <li key={m.name}><Portrait m={m} role={t(`roles.${m.roleKey}`)} /></li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

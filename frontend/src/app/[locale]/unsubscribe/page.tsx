@@ -25,7 +25,7 @@ export default async function UnsubscribePage({
   return (
     <>
       <Header />
-      <main className="flex-1 flex items-center justify-center px-6 py-24" style={{ backgroundColor: "#F2F2F2" }}>
+      <main id="main" className="flex-1 flex items-center justify-center px-5 pt-32 pb-24 bg-paper-deep">
         <UnsubscribeClient token={token ?? null} />
       </main>
       <Footer />

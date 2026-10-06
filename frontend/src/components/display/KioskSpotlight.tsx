@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRotation } from "@/lib/kiosk";
 
@@ -80,11 +80,24 @@ const SECTORS: Sector[] = [
 ];
 
 const ROTATE_MS = 9000;
+const CROSSFADE_MS = 1400;
 
-/* Films are hoisted out so their <video> elements keep a stable identity
-   across rotations — remounting one would restart the download. */
-const FILMS = SECTORS.flatMap((s) => (s.media.kind === "film" ? [s.media] : []));
-const STILLS = SECTORS.flatMap((s) => (s.media.kind === "still" ? [s.media] : []));
+/* Media is hoisted out so the <video> elements keep a stable identity across
+   rotations — remounting one would restart the download.
+
+   Each layer carries the index of the sector it belongs to. It used to be
+   matched by file path instead, which worked only because every sector happens
+   to hold a film today: the moment one is a still, `flatMap` shortens the list
+   and every layer after it answers to the wrong sector. Carrying the index
+   removes that trap rather than relying on nobody tripping it. */
+type Layer<T> = { media: T; sector: number };
+
+const FILMS: Layer<Extract<Media, { kind: "film" }>>[] = SECTORS.flatMap((s, i) =>
+  s.media.kind === "film" ? [{ media: s.media, sector: i }] : []
+);
+const STILLS: Layer<Extract<Media, { kind: "still" }>>[] = SECTORS.flatMap((s, i) =>
+  s.media.kind === "still" ? [{ media: s.media, sector: i }] : []
+);
 
 /* One rotation index, shared. The media bed and the headline are rendered in
    different places in the layout — the bed is a full-bleed backdrop, the
@@ -99,45 +112,113 @@ export function KioskStageProvider({ children }: { children: React.ReactNode }) 
 }
 
 export function KioskSpotlight() {
-  const active = SECTORS[useContext(RotationContext)];
+  const index = useContext(RotationContext);
   const videos = useRef<(HTMLVideoElement | null)[]>([]);
 
-  const activeFilm = active.media.kind === "film" ? active.media.src : null;
+  /* The incoming film has to be the layer on top, and that cannot come from
+     document order.
 
-  /* Play only the film on screen; leave the rest paused and ready. */
+     The films are stacked siblings with no z-index, so paint order was fixed by
+     the order they are written: Fuel Eco Tech at the bottom, Logistics on top.
+     Only the active layer was opaque, so each dissolve ran the incoming film up
+     from zero while the outgoing one ran down — and which of the two you
+     actually saw depended on the direction of travel. Going forward the
+     incoming film is written later, so it covers the one it replaces. On the
+     wrap from Logistics back to Fuel Eco Tech it is written *first*, so it
+     faded in underneath, and Logistics held the screen while the caption,
+     index and dwell bar had all already moved on to Fuel Eco Tech. That is the
+     one transition in the loop that shows the previous sector's footage under
+     the next sector's words.
+
+     So the stage keeps two layers and promotes by state, not by position: the
+     sector coming in sits above the one going out and fades over it, whichever
+     direction the loop travels. The outgoing layer stays fully opaque
+     underneath for the length of the fade rather than fading out, so the two
+     are never both part-transparent at once — previously that let a third
+     sector show through from below, and it is why a layer is given its own
+     poster as a background further down. Every other layer is parked at zero,
+     so the film on screen is the only one that can be seen. */
+  const [stage, setStage] = useState({ incoming: index, outgoing: index });
+  if (stage.incoming !== index) {
+    setStage({ incoming: index, outgoing: stage.incoming });
+  }
+
+  const depth = (sector: number) =>
+    sector === stage.incoming ? 2 : sector === stage.outgoing ? 1 : 0;
+
   useEffect(() => {
-    videos.current.forEach((el) => {
+    /* The outgoing film keeps running while it is still visible beneath the
+       incoming one — pausing it on the spot freezes a still mid-dissolve. */
+    const stopOutgoing = window.setTimeout(() => {
+      const el = videos.current[stage.outgoing];
+      if (el && stage.outgoing !== stage.incoming) el.pause();
+    }, CROSSFADE_MS);
+
+    FILMS.forEach(({ sector }) => {
+      const el = videos.current[sector];
       if (!el) return;
-      if (el.getAttribute("data-src") === activeFilm) {
+
+      if (sector === stage.incoming) {
+        /* Open on the first frame. A film resumed from wherever it was paused
+           shows its middle, and a long-paused layer may have had its buffer
+           reclaimed — seeking to zero re-primes it instead of waiting on a
+           frame that is no longer held. */
+        try {
+          if (el.currentTime > 0) el.currentTime = 0;
+        } catch {
+          /* Seeking before metadata lands throws; it plays from the top anyway. */
+        }
         void el.play().catch(() => {
           /* Autoplay blocked — the poster still shows the brand. */
         });
-      } else {
+      } else if (sector !== stage.outgoing) {
         el.pause();
       }
     });
-  }, [activeFilm]);
+
+    return () => window.clearTimeout(stopOutgoing);
+  }, [stage]);
 
   return (
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
-      {/* ── Media bed ─────────────────────────────────────────────────── */}
-      {FILMS.map((film, i) => (
+      {/* ── Media bed ──────────────────────────────────────────────────────
+          Held in its own stacking context. The layers below order themselves
+          with z-index, and without `isolate` a positive z-index would outrank
+          every scrim after it — the footage would sit on top of the gradient
+          that makes the headline readable. Contained here, the scrims still win
+          on document order.                                                */}
+      <div className="absolute inset-0" style={{ zIndex: 0, isolation: "isolate" }}>
+      {FILMS.map(({ media: film, sector }) => (
         <video
           key={film.src}
           ref={(el) => {
-            videos.current[i] = el;
+            videos.current[sector] = el;
           }}
           data-src={film.src}
           src={film.src}
           poster={film.poster}
-          autoPlay={i === 0}
+          autoPlay={sector === 0}
           muted
           loop
           playsInline
           preload="auto"
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[1400ms] ease-in-out"
           style={{
-            opacity: activeFilm === film.src ? 1 : 0,
+            /* Opaque while incoming or outgoing; the z-index decides which of
+               the two is seen, so the one going out never dissolves to reveal a
+               sector below it. */
+            opacity: depth(sector) > 0 ? 1 : 0,
+            zIndex: depth(sector),
+            /* Parked layers are hidden outright, not merely transparent. A
+               playing video gets its own compositing layer, and a layer left at
+               `opacity: 0` is still a layer the compositor owns — on hardware
+               we do not control, and cannot watch, that is a thing that can go
+               on being drawn. `hidden` takes it out of the picture altogether
+               while leaving the element, its buffer and its position intact, so
+               the only films that can reach the screen are the two in the
+               dissolve. It is not transitioned, but it never needs to be: a
+               layer only parks underneath one that is already opaque. */
+            visibility: depth(sector) > 0 ? "visible" : "hidden",
             filter: film.grade,
             /* The poster is also painted behind the element, not just set as the
                `poster` attribute. A browser drops decoded video for a hidden tab,
@@ -151,13 +232,17 @@ export function KioskSpotlight() {
           }}
         />
       ))}
-      {STILLS.map((still) => {
-        const on = active.media.kind === "still" && active.media.src === still.src;
+      {STILLS.map(({ media: still, sector }) => {
+        const on = sector === stage.incoming;
         return (
           <div
             key={still.src}
             className="absolute inset-0 transition-opacity duration-[1400ms] ease-in-out"
-            style={{ opacity: on ? 1 : 0 }}
+            style={{
+              opacity: depth(sector) > 0 ? 1 : 0,
+              zIndex: depth(sector),
+              visibility: depth(sector) > 0 ? "visible" : "hidden",
+            }}
           >
             <Image
               src={still.src}
@@ -175,6 +260,7 @@ export function KioskSpotlight() {
           </div>
         );
       })}
+      </div>
 
       {/* ── Cinematic scrim ────────────────────────────────────────────────
           Three layers rather than one flat wash: a left-weighted ramp that

@@ -1109,7 +1109,34 @@ houses layer on top of restraint, without bringing the template effects back.
 - **Copy:** every em dash removed from the site text in both languages (68 per
   language), each sentence repunctuated by hand rather than replaced blindly.
 
-**Still to redesign:** About, Enquire, Contact, Blog, Certifications, Careers,
+### Third pass (6 October 2026): every other public page
+
+Enquire, Contact, About, Certifications, Blog (list + article), the four legal
+pages, Careers (EN/SW/FR), Suppliers, the shop's "coming soon", the 404 page
+and Unsubscribe are now on the same system. Every form keeps its logic
+(validation, bot check, AI CV read, attribution); only the presentation changed.
+
+- **Certifications is now an evidence centre** (external review, point 1): one
+  record per credential with who issued it, what it covers, what it does NOT
+  establish, and how to get the document. Data in `frontend/src/lib/evidence.ts`.
+  ⚠ Operations: fill in certificate numbers, expiry dates, the legal holder
+  (still unknown for the ISO certificates) and mark which documents may be
+  published. Blank fields stay hidden; never guess.
+- **Enquiry prefill:** "Request a sample" on the coffee page now arrives with
+  export and "send a sample" already answered.
+- **About:** claims removed with no evidence on record ("clients in Kenya,
+  Tanzania, Rwanda", "Uganda + 5 regions", "food-safety certification",
+  "every time"). Team shown as editorial portraits, CEO first.
+- **Real 404:** unknown addresses used to show the framework's bare black
+  screen; they now show the site's own page with the four businesses.
+- **Cleanup:** 10 unused old components (≈2,100 lines) and 11 dead translation
+  sections removed, plus 251 retired lines from the old product copy. The
+  removed claims ("no delays at the border", "trusted by fleet operators",
+  "farm-to-cup") no longer ship in the page source at all.
+- **Still in the old style:** the customer portal (`/account`), the order,
+  invoice and payment pages, and the gated shop catalogue/cart/checkout.
+
+**Still to redesign:** the customer portal (`/account`), the order / invoice / payment pages, and the gated shop catalogue, cart and checkout.
 Suppliers, legal, Shop. Until then those pages carry the old styling.
 
 ## ⏳ Remaining / pending

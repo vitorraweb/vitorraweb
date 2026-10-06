@@ -9,22 +9,23 @@ export const metadata: Metadata = {
 
 export default function SuppliersLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F2F2F2" }}>
-      <header className="sticky top-0 z-20 bg-white/85 border-b" style={{ backdropFilter: "blur(8px)", borderColor: "rgba(0,0,0,0.07)" }}>
-        <div className="max-w-3xl mx-auto px-5 h-16 flex items-center justify-between">
+    <div className="q-scope min-h-screen flex flex-col bg-paper text-ink">
+      <header className="sticky top-0 z-20 bg-paper border-b border-line">
+        <div className="q-container h-16 flex items-center justify-between gap-4">
           <Link href="/suppliers" className="flex items-center gap-3">
-            <Image src="/logo.png" alt="Vitorra" width={32} height={32} />
-            <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "18px", fontWeight: 600, color: "#1E1E1E" }}>
-              Vitorra<span style={{ color: "#C5B27A" }}> Suppliers</span>
+            <Image src="/logo.png" alt="" width={32} height={32} className="mix-blend-multiply" />
+            <span className="flex flex-col leading-none">
+              <span className="font-display text-[1.375rem] tracking-[-0.01em] text-ink">Vitorra</span>
+              <span className="t-label text-[0.625rem] tracking-[0.22em] text-ink-muted mt-1">Suppliers</span>
             </span>
           </Link>
-          <a href="https://vitorra.org" className="text-sm font-semibold" style={{ color: "#7A6020" }}>vitorra.org →</a>
+          <a href="https://vitorra.org" className="q-link t-small text-ink">vitorra.org</a>
         </div>
       </header>
-      <main className="flex-1 max-w-3xl w-full mx-auto px-5 py-10 md:py-14">{children}</main>
-      <footer className="border-t py-6" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
-        <p className="max-w-3xl mx-auto px-5 text-xs" style={{ color: "#999" }}>
-          © {new Date().getFullYear()} Vitorra Holdings Limited. Your details and bank information are stored securely and used only for supplier review.
+      <main id="main" className="flex-1 w-full q-container py-14 md:py-20">{children}</main>
+      <footer className="border-t border-line bg-paper-deep">
+        <p className="q-container py-6 t-small text-ink-muted">
+          © {new Date().getFullYear()} Vitorra Holdings Limited. Supplier details are handled confidentially; bank details are encrypted.
         </p>
       </footer>
     </div>

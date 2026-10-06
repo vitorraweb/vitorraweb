@@ -32,30 +32,31 @@ export default async function CareersLayout({ children }: { children: React.Reac
   // the same locale from the provider below).
   const t = await getTranslations({ locale, namespace: "careersPortal" });
 
+  /* Quiet Authority shell for the careers mini-site: paper, a hairline
+     header with the wordmark, a quiet footer. */
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <div lang={locale} className="min-h-screen flex flex-col" style={{ backgroundColor: "#F2F2F2" }}>
-        <header className="sticky top-0 z-20 bg-white/85 border-b" style={{ backdropFilter: "blur(8px)", borderColor: "rgba(0,0,0,0.07)" }}>
-          <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between gap-3">
+      <div lang={locale} className="q-scope min-h-screen flex flex-col bg-paper text-ink">
+        <header className="sticky top-0 z-20 bg-paper border-b border-line">
+          <div className="q-container h-16 flex items-center justify-between gap-4">
             <Link href="/careers" className="flex items-center gap-3">
-              <Image src="/logo.png" alt="Vitorra" width={32} height={32} />
-              <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "18px", fontWeight: 600, color: "#1E1E1E" }}>
-                Vitorra<span style={{ color: "#C5B27A" }}> {t("brandSuffix")}</span>
+              <Image src="/logo.png" alt="" width={32} height={32} className="mix-blend-multiply" />
+              <span className="flex flex-col leading-none">
+                <span className="font-display text-[1.375rem] tracking-[-0.01em] text-ink">Vitorra</span>
+                <span className="t-label text-[0.625rem] tracking-[0.22em] text-ink-muted mt-1">{t("brandSuffix")}</span>
               </span>
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <CareersLocaleSwitcher />
-              <a href="https://vitorra.org" className="hidden sm:inline text-sm font-semibold" style={{ color: "#7A6020" }}>{t("backToSite")}</a>
+              <a href="https://vitorra.org" className="hidden sm:inline q-link t-small text-ink">{t("backToSite")}</a>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 max-w-5xl w-full mx-auto px-5 py-10 md:py-14">{children}</main>
+        <main id="main" className="flex-1 w-full q-container py-14 md:py-20">{children}</main>
 
-        <footer className="border-t py-6" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
-          <p className="max-w-5xl mx-auto px-5 text-xs" style={{ color: "#999" }}>
-            © {new Date().getFullYear()} {t("footerRights")}
-          </p>
+        <footer className="border-t border-line bg-paper-deep">
+          <p className="q-container py-6 t-small text-ink-muted">© {new Date().getFullYear()} {t("footerRights")}</p>
         </footer>
       </div>
     </NextIntlClientProvider>

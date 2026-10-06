@@ -15,7 +15,7 @@ export async function generateMetadata({
 }
 
 const mailLink = () => (
-  <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "#7A6020", textDecoration: "underline" }}>{CONTACT_EMAIL}</a>
+  <a href={`mailto:${CONTACT_EMAIL}`} className="q-inline-link">{CONTACT_EMAIL}</a>
 );
 
 export default async function PrivacyPolicyPage() {
@@ -43,7 +43,7 @@ export default async function PrivacyPolicyPage() {
       </Section>
 
       <Section title={t("cookiesTitle")}>
-        <P>{t.rich("cookies1", { clink: (c) => <Link href="/legal/cookie-policy" style={{ color: "#7A6020", textDecoration: "underline" }}>{c}</Link> })}</P>
+        <P>{t.rich("cookies1", { clink: (c) => <Link href="/legal/cookie-policy" className="q-inline-link">{c}</Link> })}</P>
       </Section>
 
       <Section title={t("sharingTitle")}>

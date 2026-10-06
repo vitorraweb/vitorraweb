@@ -136,22 +136,22 @@ export default function EnquiryForm({
   /* ── Success state ──────────────────────────────────────────────────────── */
   if (status === "success") {
     return (
-      <div className="bg-white rounded-[28px] border border-black/[0.06] p-8 md:p-12 text-center shadow-card">
-        <div className="mx-auto mb-6 flex items-center justify-center w-16 h-16 rounded-full" style={{ background: "rgba(197,178,122,0.15)", border: "1px solid rgba(197,178,122,0.5)" }}>
-          <Check className="w-7 h-7" style={{ color: "#7A6020" }} strokeWidth={2.5} />
+      <div className="bg-paper rounded-frame border border-line p-8 md:p-12 text-center">
+        <div className="mx-auto mb-6 flex items-center justify-center w-14 h-14 rounded-full border border-gold">
+          <Check aria-hidden="true" className="w-6 h-6 text-gold-ink" strokeWidth={1.75} />
         </div>
-        <h2 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "clamp(24px,3vw,32px)", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }} className="mb-3">
+        <h2 className="t-h2 text-ink mb-3">
           {t("successTitle")}
         </h2>
-        <p className="max-w-sm mx-auto mb-6" style={{ fontSize: "15px", lineHeight: 1.7, color: "#555555" }}>
+        <p className="max-w-sm mx-auto mb-6 t-body text-ink-soft">
           {t("successBody", { name: form.name.split(" ")[0] || t("fallbackName"), email: form.email })}
         </p>
-        <p className="max-w-sm mx-auto mb-7 text-sm" style={{ color: "#777777" }}>
+        <p className="max-w-sm mx-auto mb-7 t-small text-ink-muted">
           {t("successTrack")}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/" className="btn-secondary">{t("backHome")}</Link>
-          <Link href="/account/register" className="btn-primary">{t("createAccount")}<ArrowRight className="w-4 h-4" /></Link>
+          <Link href="/" className="q-btn border border-line-strong text-ink hover:border-ink">{t("backHome")}</Link>
+          <Link href="/account/register" className="q-btn bg-ink text-paper hover:bg-black">{t("createAccount")}<ArrowRight className="w-4 h-4" /></Link>
         </div>
       </div>
     );
@@ -159,46 +159,38 @@ export default function EnquiryForm({
 
   /* ── Form ───────────────────────────────────────────────────────────────── */
   return (
-    <div className="bg-white rounded-[28px] border border-black/[0.06] p-6 md:p-9 shadow-card">
-      {/* Stepper */}
-      <div className="flex items-center mb-8">
+    <div className="q-scope bg-paper rounded-frame border border-line p-6 md:p-10">
+      {/* Stepper — numbered like the rest of the site, gold rule fills as you go */}
+      <ol className="flex items-center mb-10" aria-label={t("stepInterest")}>
         {STEPS.map((label, i) => {
           const done = i < step;
           const current = i === step;
           return (
-            <div key={label} className={cn("flex items-center", i < STEPS.length - 1 && "flex-1")}>
-              <div className="flex items-center gap-2.5 shrink-0">
-                <span
-                  className="flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-colors"
-                  style={{
-                    background: done || current ? "#C5B27A" : "#F2F2F2",
-                    color: done || current ? "#1E1E1E" : "#999999",
-                  }}
-                >
-                  {done ? <Check className="w-4 h-4" strokeWidth={3} /> : i + 1}
+            <li key={label} aria-current={current ? "step" : undefined} className={cn("flex items-center", i < STEPS.length - 1 && "flex-1")}>
+              <span className="flex items-baseline gap-2.5 shrink-0">
+                <span className={cn("t-label font-numeric", done || current ? "text-gold-ink" : "text-ink-muted")}>
+                  {done ? <Check aria-hidden="true" className="inline w-3.5 h-3.5 -mt-0.5" strokeWidth={2} /> : String(i + 1).padStart(2, "0")}
                 </span>
-                <span className="hidden sm:block text-sm font-semibold" style={{ color: current ? "#1E1E1E" : "#999999" }}>
-                  {label}
-                </span>
-              </div>
+                <span className={cn("hidden sm:block t-small", current ? "text-ink" : "text-ink-muted")}>{label}</span>
+              </span>
               {i < STEPS.length - 1 && (
-                <span className="flex-1 h-px mx-3" style={{ background: "rgba(0,0,0,0.08)" }}>
-                  <span className="block h-full transition-transform duration-500" style={{ background: "#C5B27A", transformOrigin: "left", transform: done ? "scaleX(1)" : "scaleX(0)" }} />
+                <span aria-hidden="true" className="flex-1 h-px mx-4 bg-line">
+                  <span className="block h-full bg-gold origin-left transition-transform duration-500 ease-quiet" style={{ transform: done ? "scaleX(1)" : "scaleX(0)" }} />
                 </span>
               )}
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ol>
 
       {/* Step content */}
       <div key={step} className="hero-enter">
         {step === 0 && (
           <div>
-            <h3 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "22px", fontWeight: 700, color: "#1E1E1E" }}>
+            <h3 className="t-h3 text-ink mb-1">
               {t("step0Heading")}
             </h3>
-            <p className="text-sm mb-6" style={{ color: "#777777" }}>{t("step0Sub")}</p>
+            <p className="t-small text-ink-muted mb-6">{t("step0Sub")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {CATEGORIES.map((c) => {
                 const selected = category === c.value;
@@ -208,34 +200,31 @@ export default function EnquiryForm({
                     key={c.value}
                     type="button"
                     onClick={() => { setCategory(c.value); setErrors((e) => ({ ...e, category: "" })); }}
-                    className="flex items-center gap-3 text-left p-4 rounded-2xl border transition-all hover-lift"
-                    style={{
-                      borderColor: selected ? "#C5B27A" : "rgba(0,0,0,0.08)",
-                      background: selected ? "rgba(197,178,122,0.08)" : "#FFFFFF",
-                    }}
+                    aria-pressed={selected}
+                    className={cn("flex items-center gap-4 text-left p-5 rounded-edge border transition-colors", selected ? "border-ink bg-paper-deep" : "border-line-strong bg-paper hover:border-ink")}
                   >
-                    <span className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0" style={{ background: selected ? "#C5B27A" : "#F2F2F2", color: selected ? "#1E1E1E" : "#888888" }}>
-                      <Icon className="w-5 h-5" />
+                    <span className="flex items-center justify-center w-10 h-10 shrink-0 text-gold-ink">
+                      <Icon aria-hidden="true" className="w-5 h-5" strokeWidth={1.5} />
                     </span>
                     <span>
-                      <span className="block text-sm font-semibold" style={{ color: "#1E1E1E" }}>{c.label}</span>
-                      <span className="block text-xs" style={{ color: "#888888" }}>{c.desc}</span>
+                      <span className="block font-display text-[1.125rem] leading-tight text-ink">{c.label}</span>
+                      <span className="block t-small text-ink-muted mt-0.5">{c.desc}</span>
                     </span>
                   </button>
                 );
               })}
             </div>
-            {errors.category && <p className="mt-3 text-sm" style={{ color: "#C0392B" }}>{errors.category}</p>}
+            {errors.category && <p role="alert" className="mt-3 t-small text-alert-ink">{errors.category}</p>}
           </div>
         )}
 
         {step === 1 && (
           <div className="space-y-5">
-            <h3 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "22px", fontWeight: 700, color: "#1E1E1E" }}>
+            <h3 className="t-h3 text-ink mb-1">
               {t("step1Heading")}
             </h3>
             {hasSchema && (
-              <p className="text-sm" style={{ color: "#777777" }}>
+              <p className="t-small text-ink-muted">
                 {t("step1Sub")}
               </p>
             )}
@@ -254,10 +243,10 @@ export default function EnquiryForm({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Field label={t("companyLabel")}>
-                <Input value={form.company} onChange={(e) => set("company", e.target.value)} placeholder={t("optional")} className="h-11 rounded-xl px-3.5" />
+                <Input value={form.company} onChange={(e) => set("company", e.target.value)} placeholder={t("optional")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" />
               </Field>
               <Field label={t("countryLabel")} required error={errors.country}>
-                <Input value={form.country} onChange={(e) => set("country", e.target.value)} className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.country} />
+                <Input value={form.country} onChange={(e) => set("country", e.target.value)} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.country} />
               </Field>
             </div>
 
@@ -270,7 +259,7 @@ export default function EnquiryForm({
                 value={form.message}
                 onChange={(e) => set("message", e.target.value)}
                 placeholder={hasSchema ? t("msgPlaceholderSchema") : t("msgPlaceholderGeneral")}
-                className="min-h-24 rounded-xl px-3.5 py-3"
+                className="min-h-28 rounded-edge px-3.5 py-3 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0"
                 aria-invalid={!!errors.message}
               />
             </Field>
@@ -279,23 +268,23 @@ export default function EnquiryForm({
 
         {step === 2 && (
           <div className="space-y-5">
-            <h3 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "22px", fontWeight: 700, color: "#1E1E1E" }}>
+            <h3 className="t-h3 text-ink mb-1">
               {t("step2Heading")}
             </h3>
             <Field label={t("fullName")} required error={errors.name}>
-              <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("namePlaceholder")} className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.name} />
+              <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("namePlaceholder")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.name} />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Field label={t("email")} required error={errors.email}>
-                <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder={t("emailPlaceholder")} className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.email} />
+                <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder={t("emailPlaceholder")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.email} />
               </Field>
               <Field label={t("phone")}>
-                <Input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder={t("optional")} className="h-11 rounded-xl px-3.5" />
+                <Input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder={t("optional")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" />
               </Field>
             </div>
             <Turnstile ref={turnstileRef} action="enquiry" onVerify={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
             {status === "error" && (
-              <p className="text-sm" style={{ color: "#C0392B" }}>{t("errorGeneric")} {""}
+              <p role="alert" className="t-small text-alert-ink">{t("errorGeneric")} {""}
                 <a href="mailto:support@vitorra.org" className="underline">support@vitorra.org</a>.
               </p>
             )}
@@ -304,15 +293,15 @@ export default function EnquiryForm({
       </div>
 
       {/* Nav */}
-      <div className="flex items-center justify-between mt-8 pt-6" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+      <div className="flex items-center justify-between mt-10 pt-6 border-t border-line">
         {step > 0 ? (
-          <button type="button" onClick={back} className="btn-secondary"><ArrowLeft className="w-4 h-4" />{t("back")}</button>
+          <button type="button" onClick={back} className="q-btn border border-line-strong text-ink hover:border-ink"><ArrowLeft className="w-4 h-4" />{t("back")}</button>
         ) : <span />}
 
         {step < 2 ? (
-          <button type="button" onClick={next} className="btn-primary">{t("continue")}<ArrowRight className="w-4 h-4" /></button>
+          <button type="button" onClick={next} className="q-btn bg-ink text-paper hover:bg-black">{t("continue")}<ArrowRight className="w-4 h-4" /></button>
         ) : (
-          <button type="button" onClick={handleSubmit} disabled={status === "submitting"} className="btn-primary" style={{ opacity: status === "submitting" ? 0.7 : 1 }}>
+          <button type="button" onClick={handleSubmit} disabled={status === "submitting"} className="q-btn bg-ink text-paper hover:bg-black disabled:opacity-70">
             {status === "submitting" ? <><Loader2 className="w-4 h-4 animate-spin" />{t("sending")}</> : <>{t("submit")}<ArrowRight className="w-4 h-4" /></>}
           </button>
         )}
@@ -326,13 +315,13 @@ export default function EnquiryForm({
 function Field({ label, required, error, help, children }: { label: string; required?: boolean; error?: string; help?: string; children: React.ReactNode }) {
   return (
     <div>
-      <Label className="mb-2" style={{ color: "#1E1E1E" }}>
+      <Label className="mb-2 t-label text-ink-muted">
         {label}
-        {required && <span style={{ color: "#C5B27A" }}> *</span>}
+        {required && <span className="text-gold-ink"> *</span>}
       </Label>
       {children}
-      {help && !error && <p className="mt-1.5 text-xs" style={{ color: "#7A6020" }}>{help}</p>}
-      {error && <p className="mt-1.5 text-sm" style={{ color: "#C0392B" }}>{error}</p>}
+      {help && !error && <p className="mt-2 t-small text-gold-ink">{help}</p>}
+      {error && <p role="alert" className="mt-2 t-small text-alert-ink">{error}</p>}
     </div>
   );
 }
@@ -377,14 +366,9 @@ function DynamicField({
                     onChange(opt.value);
                   }
                 }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-sm font-medium transition-all"
-                style={{
-                  borderColor: selected ? "#C5B27A" : "rgba(0,0,0,0.12)",
-                  background: selected ? "rgba(197,178,122,0.12)" : "#FFFFFF",
-                  color: selected ? "#1E1E1E" : "#555555",
-                }}
+                className={cn("inline-flex items-center gap-1.5 px-3.5 min-h-10 rounded-edge border text-sm transition-colors", selected ? "border-ink bg-ink text-paper" : "border-line-strong bg-paper text-ink-soft hover:border-ink")}
               >
-                {field.type === "multi" && selected && <Check className="w-3.5 h-3.5" style={{ color: "#7A6020" }} />}
+                {field.type === "multi" && selected && <Check aria-hidden="true" className="w-3.5 h-3.5" />}
                 {opt.label}
               </button>
             );
@@ -401,12 +385,12 @@ function DynamicField({
             value={typeof value === "string" ? value : ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder={field.placeholder}
-            className="h-11 rounded-xl px-3.5"
+            className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0"
             style={field.unit ? { paddingRight: "5.5rem" } : undefined}
             aria-invalid={!!error}
           />
           {field.unit && (
-            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs" style={{ color: "#999999" }}>
+            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 t-small text-ink-muted">
               {field.unit}
             </span>
           )}
@@ -418,7 +402,7 @@ function DynamicField({
           value={typeof value === "string" ? value : ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={field.placeholder}
-          className="h-11 rounded-xl px-3.5"
+          className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0"
           aria-invalid={!!error}
         />
       )}

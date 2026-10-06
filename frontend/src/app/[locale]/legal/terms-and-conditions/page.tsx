@@ -14,7 +14,7 @@ export async function generateMetadata({
 }
 
 const mailLink = () => (
-  <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "#7A6020", textDecoration: "underline" }}>{CONTACT_EMAIL}</a>
+  <a href={`mailto:${CONTACT_EMAIL}`} className="q-inline-link">{CONTACT_EMAIL}</a>
 );
 
 export default async function TermsPage() {

@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
-import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import Image from "next/image";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { Reveal } from "@/components/ui/reveal";
-import { ArrowRight, Calendar, User } from "lucide-react";
+import { Section, Container, Label, Heading, Text, TextLink } from "@/components/system";
 import { getBlogPosts } from "@/lib/api";
 import type { BlogPost } from "@/types";
+
+/* ─── Blog — Quiet Authority ──────────────────────────────────────────────────
+   The newest story, large and editorial; the rest in a quiet three-column grid.
+   Posts without a cover image get a typographic tile instead of a placeholder
+   logo. Dates are formatted per locale.                                     */
 
 export async function generateMetadata({
   params,
@@ -20,189 +23,96 @@ export async function generateMetadata({
   return { title: t("title"), description: t("description") };
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric", month: "long", year: "numeric",
-  });
-}
-
-function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
-  const t = useTranslations("blogPage");
+function Cover({ post, ratio, sizes }: { post: BlogPost; ratio: string; sizes: string }) {
   return (
-    <Link
-      href={`/blog/${post.slug}`}
-      className={`group flex flex-col bg-white border border-black/[0.05] hover-lift overflow-hidden ${featured ? "rounded-[32px]" : "rounded-[24px]"}`}
-    >
+    <div className="relative overflow-hidden rounded-frame bg-paper-deep q-unveil q-zoom" style={{ aspectRatio: ratio }}>
       {post.cover_image ? (
-        <div className={`relative w-full overflow-hidden ${featured ? "aspect-[16/9]" : "aspect-[16/10]"}`}>
-          <Image
-            src={post.cover_image}
-            alt={post.title}
-            fill
-            sizes={featured ? "100vw" : "(max-width:768px) 100vw, 50vw"}
-            className="object-cover transition-transform duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
-          />
+        <div className="q-inner absolute inset-0">
+          <Image src={post.cover_image} alt={post.title} fill sizes={sizes} className="object-cover" />
         </div>
       ) : (
-        <div
-          className={`w-full flex items-center justify-center ${featured ? "aspect-[16/9]" : "aspect-[16/10]"}`}
-          style={{ background: "linear-gradient(135deg, #1E1E1E 0%, #2A2A2A 100%)" }}
-        >
-          <span
-            style={{
-              fontFamily: "var(--font-playfair, Georgia, serif)",
-              fontSize: "clamp(40px, 8vw, 80px)",
-              fontWeight: 700,
-              color: "rgba(197,178,122,0.25)",
-              letterSpacing: "-0.03em",
-            }}
-          >
-            V
-          </span>
+        <div aria-hidden="true" className="absolute inset-0 flex items-end p-6 bg-ink">
+          <span className="font-display text-[clamp(1.5rem,1.2rem+1vw,2.25rem)] leading-tight text-ink-fg/90 line-clamp-3">{post.title}</span>
         </div>
       )}
-
-      <div className={`flex flex-col flex-1 ${featured ? "p-8 md:p-10" : "p-6 md:p-7"}`}>
-        <div className="flex items-center gap-4 mb-3">
-          {post.published_at && (
-            <span className="flex items-center gap-1.5 text-xs" style={{ color: "#999999" }}>
-              <Calendar className="w-3 h-3" />
-              {formatDate(post.published_at)}
-            </span>
-          )}
-          <span className="flex items-center gap-1.5 text-xs" style={{ color: "#999999" }}>
-            <User className="w-3 h-3" />
-            {post.author}
-          </span>
-        </div>
-
-        <h2
-          className={`mb-3 group-hover:opacity-75 transition-opacity ${featured ? "max-w-2xl" : ""}`}
-          style={{
-            fontFamily: "var(--font-playfair, Georgia, serif)",
-            fontSize: featured ? "clamp(24px, 2.8vw, 36px)" : "clamp(18px, 2vw, 22px)",
-            fontWeight: 700,
-            letterSpacing: "-0.02em",
-            lineHeight: 1.15,
-            color: "#1E1E1E",
-          }}
-        >
-          {post.title}
-        </h2>
-
-        {post.excerpt && (
-          <p
-            className={`flex-1 mb-5 ${featured ? "max-w-xl" : ""}`}
-            style={{ fontSize: "14px", lineHeight: 1.7, color: "#666666" }}
-          >
-            {post.excerpt}
-          </p>
-        )}
-
-        <span
-          className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto"
-          style={{ color: "#1E1E1E" }}
-        >
-          {t("readArticle")}
-          <ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
-        </span>
-      </div>
-    </Link>
+    </div>
   );
 }
 
-function EmptyState() {
-  const t = useTranslations("blogPage");
+function Meta({ post, date }: { post: BlogPost; date: string }) {
   return (
-    <div className="col-span-full py-20 text-center">
-      <span
-        aria-hidden="true"
-        style={{
-          fontFamily: "var(--font-playfair, Georgia, serif)",
-          fontSize: "clamp(60px, 10vw, 100px)",
-          fontWeight: 700,
-          color: "rgba(30,30,30,0.06)",
-          letterSpacing: "-0.03em",
-          display: "block",
-          marginBottom: "24px",
-        }}
-      >
-        {t("comingSoon")}
-      </span>
-      <p style={{ fontSize: "16px", color: "#666666", marginBottom: "24px" }}>
-        {t("comingSoonSub")}
-      </p>
-      <Link href="/contact" className="btn-secondary inline-flex items-center gap-2">
-        {t("getInTouch")}<ArrowRight className="w-4 h-4" />
-      </Link>
-    </div>
+    <p className="t-label text-ink-muted flex flex-wrap gap-x-3">
+      {date && <time dateTime={post.published_at} className="font-numeric">{date}</time>}
+      {post.author && <span>· {post.author}</span>}
+    </p>
   );
 }
 
 export default async function BlogPage() {
   const t = await getTranslations("blogPage");
   const locale = await getLocale();
+  const fmt = new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { day: "numeric", month: "long", year: "numeric" });
+
   let posts: BlogPost[] = [];
   try {
-    const res = await getBlogPosts(1, locale);
-    posts = res.data;
+    posts = (await getBlogPosts(1, locale)).data;
   } catch {
-    // Backend not yet running — render gracefully with empty state
     posts = [];
   }
-
   const [featured, ...rest] = posts;
 
   return (
     <>
       <Header />
-      <main className="flex-1" style={{ backgroundColor: "#F2F2F2" }}>
-        <section className="px-6 md:px-12 lg:px-20 pb-20 md:pb-28" style={{ paddingTop: "clamp(128px, 12vh, 168px)" }}>
-          <div className="container-max">
+      <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
+        <Section tone="paper" className="!pt-14 lg:!pt-20 !pb-12" aria-labelledby="blog-title">
+          <Container>
+            <Label className="mb-8 q-rise">{t("eyebrow")}</Label>
+            <Heading as="h1" size="display" id="blog-title" className="text-ink max-w-[40rem] q-rise">{t("title")}</Heading>
+          </Container>
+        </Section>
 
-            {/* Header */}
-            <Reveal className="mb-12 lg:mb-16">
-              <span className="eyebrow block mb-3">{t("eyebrow")}</span>
-              <h1
-                className="max-w-xl gold-underline"
-                style={{
-                  fontFamily: "var(--font-playfair, Georgia, serif)",
-                  fontSize: "clamp(32px, 4vw, 52px)",
-                  fontWeight: 700,
-                  letterSpacing: "-0.025em",
-                  lineHeight: 1.08,
-                  color: "#1E1E1E",
-                }}
-              >
-                {t("title")}
-              </h1>
-            </Reveal>
-
+        <Section tone="paper" rule className="!pt-14">
+          <Container>
             {posts.length === 0 ? (
-              <div className="grid"><EmptyState /></div>
+              <div className="py-16 max-w-[32rem]">
+                <p className="t-h2 text-ink">{t("comingSoon")}</p>
+                <Text className="mt-4">{t("comingSoonSub")}</Text>
+                <div className="mt-8"><TextLink href="/contact">{t("getInTouch")}</TextLink></div>
+              </div>
             ) : (
               <>
-                {/* Featured post */}
                 {featured && (
-                  <Reveal className="mb-8">
-                    <PostCard post={featured} featured />
-                  </Reveal>
+                  <Link href={`/blog/${featured.slug}`} className="group grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-end">
+                    <div className="lg:col-span-7">
+                      <Cover post={featured} ratio="16/10" sizes="(min-width: 1024px) 58vw, 100vw" />
+                    </div>
+                    <div className="lg:col-span-5 lg:pb-4">
+                      <Meta post={featured} date={featured.published_at ? fmt.format(new Date(featured.published_at)) : ""} />
+                      <h2 className="t-h1 text-ink mt-5 group-hover:text-gold-ink transition-colors">{featured.title}</h2>
+                      {featured.excerpt && <p className="t-lead text-ink-soft mt-5">{featured.excerpt}</p>}
+                      <span className="q-link t-small text-ink mt-8">{t("readArticle")}</span>
+                    </div>
+                  </Link>
                 )}
-
-                {/* Grid of remaining posts */}
                 {rest.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {rest.map((post, i) => (
-                      <Reveal key={post.id} delay={i * 70}>
-                        <PostCard post={post} />
-                      </Reveal>
+                  <ul className="mt-24 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 border-t border-line-strong pt-16">
+                    {rest.map((post) => (
+                      <li key={post.id}>
+                        <Link href={`/blog/${post.slug}`} className="group block">
+                          <Cover post={post} ratio="4/3" sizes="(min-width: 1024px) 30vw, (min-width: 768px) 46vw, 100vw" />
+                          <div className="mt-6"><Meta post={post} date={post.published_at ? fmt.format(new Date(post.published_at)) : ""} /></div>
+                          <h3 className="t-h3 text-ink mt-3 group-hover:text-gold-ink transition-colors">{post.title}</h3>
+                          {post.excerpt && <p className="t-small text-ink-soft mt-3 line-clamp-3">{post.excerpt}</p>}
+                        </Link>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
               </>
             )}
-          </div>
-        </section>
+          </Container>
+        </Section>
       </main>
       <Footer />
     </>

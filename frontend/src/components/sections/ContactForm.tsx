@@ -52,46 +52,46 @@ export default function ContactForm() {
 
   if (status === "success") {
     return (
-      <div className="bg-white rounded-[28px] border border-black/[0.06] p-8 md:p-12 text-center shadow-card">
-        <div className="mx-auto mb-6 flex items-center justify-center w-16 h-16 rounded-full" style={{ background: "rgba(197,178,122,0.15)", border: "1px solid rgba(197,178,122,0.5)" }}>
-          <Check className="w-7 h-7" style={{ color: "#7A6020" }} strokeWidth={2.5} />
+      <div className="bg-paper rounded-frame border border-line p-8 md:p-12 text-center">
+        <div className="mx-auto mb-6 flex items-center justify-center w-14 h-14 rounded-full border border-gold">
+          <Check aria-hidden="true" className="w-6 h-6 text-gold-ink" strokeWidth={1.75} />
         </div>
-        <h2 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "clamp(24px,3vw,32px)", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E" }} className="mb-3">
+        <h2 className="t-h2 text-ink mb-3">
           {t("successTitle")}
         </h2>
-        <p className="max-w-sm mx-auto mb-8" style={{ fontSize: "15px", lineHeight: 1.7, color: "#555555" }}>
+        <p className="max-w-sm mx-auto mb-8 t-body text-ink-soft">
           {t("successBody", { name: form.name.split(" ")[0] || t("fallbackName"), email: form.email })}
         </p>
-        <Link href="/" className="btn-secondary">{t("backHome")}</Link>
+        <Link href="/" className="q-btn border border-line-strong text-ink hover:border-ink">{t("backHome")}</Link>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-[28px] border border-black/[0.06] p-6 md:p-9 shadow-card">
-      <h2 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "22px", fontWeight: 700, color: "#1E1E1E" }}>
+    <div className="q-scope bg-paper rounded-frame border border-line p-6 md:p-10">
+      <h2 className="t-h3 text-ink mb-1">
         {t("heading")}
       </h2>
-      <p className="text-sm mb-6" style={{ color: "#777777" }}>{t("subheading")}</p>
+      <p className="t-small text-ink-muted mb-8">{t("subheading")}</p>
 
       <div className="space-y-5">
         <Field label={t("fullName")} required error={errors.name}>
-          <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("fullNamePlaceholder")} className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.name} />
+          <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("fullNamePlaceholder")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.name} />
         </Field>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Field label={t("email")} required error={errors.email}>
-            <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder={t("emailPlaceholder")} className="h-11 rounded-xl px-3.5" aria-invalid={!!errors.email} />
+            <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder={t("emailPlaceholder")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.email} />
           </Field>
           <Field label={t("subject")}>
-            <Input value={form.subject} onChange={(e) => set("subject", e.target.value)} placeholder={t("subjectPlaceholder")} className="h-11 rounded-xl px-3.5" />
+            <Input value={form.subject} onChange={(e) => set("subject", e.target.value)} placeholder={t("subjectPlaceholder")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" />
           </Field>
         </div>
         <Field label={t("message")} required error={errors.message}>
-          <Textarea value={form.message} onChange={(e) => set("message", e.target.value)} placeholder={t("messagePlaceholder")} className="min-h-32 rounded-xl px-3.5 py-3" aria-invalid={!!errors.message} />
+          <Textarea value={form.message} onChange={(e) => set("message", e.target.value)} placeholder={t("messagePlaceholder")} className="min-h-36 rounded-edge px-3.5 py-3 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.message} />
         </Field>
 
         {status === "error" && (
-          <p className="text-sm" style={{ color: "#C0392B" }}>
+          <p role="alert" className="t-small text-alert-ink">
             {t("errorGeneric")}{" "}
             <a href="mailto:support@vitorra.org" className="underline">support@vitorra.org</a>.
           </p>
@@ -99,7 +99,7 @@ export default function ContactForm() {
 
         <Turnstile ref={turnstileRef} action="contact" onVerify={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
 
-        <button type="button" onClick={submit} disabled={status === "submitting"} className="btn-primary w-full sm:w-auto" style={{ opacity: status === "submitting" ? 0.7 : 1, justifyContent: "center" }}>
+        <button type="button" onClick={submit} disabled={status === "submitting"} className="q-btn w-full sm:w-auto bg-ink text-paper hover:bg-black disabled:opacity-70">
           {status === "submitting" ? <><Loader2 className="w-4 h-4 animate-spin" />{t("sending")}</> : <>{t("send")}<ArrowRight className="w-4 h-4" /></>}
         </button>
       </div>
@@ -110,12 +110,12 @@ export default function ContactForm() {
 function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
   return (
     <div>
-      <Label className="mb-2" style={{ color: "#1E1E1E" }}>
+      <Label className="mb-2 t-label text-ink-muted">
         {label}
-        {required && <span style={{ color: "#C5B27A" }}> *</span>}
+        {required && <span className="text-gold-ink"> *</span>}
       </Label>
       {children}
-      {error && <p className="mt-1.5 text-sm" style={{ color: "#C0392B" }}>{error}</p>}
+      {error && <p role="alert" className="mt-2 t-small text-alert-ink">{error}</p>}
     </div>
   );
 }

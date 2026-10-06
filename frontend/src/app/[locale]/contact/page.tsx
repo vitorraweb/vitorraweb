@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ContactForm from "@/components/sections/ContactForm";
-import { Reveal } from "@/components/ui/reveal";
-import { Mail, Phone, MessageCircle, MapPin, Clock, ArrowRight } from "lucide-react";
+import { Section, Container, Label, Heading, Text, TextLink } from "@/components/system";
+import { Picture } from "@/components/system/imagery";
 import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_ALT, CONTACT_ADDRESS } from "@/lib/constants";
+
+/* ─── Contact — Quiet Authority ───────────────────────────────────────────────
+   Calm and direct: who we are and where, every way to reach a person (with
+   hours), a short message form, and the map. The photograph is the real head
+   office — on a contact page, the actual building is the useful image.      */
 
 export async function generateMetadata({
   params,
@@ -22,161 +25,79 @@ export async function generateMetadata({
 const tel = `tel:${CONTACT_PHONE.replace(/\s+/g, "")}`;
 const telAlt = `tel:${CONTACT_PHONE_ALT.replace(/\s+/g, "")}`;
 const wa = `https://wa.me/${CONTACT_PHONE.replace(/[^0-9]/g, "")}`;
-const mapQuery = encodeURIComponent(`${CONTACT_ADDRESS.join(", ")}`);
-const mapSrc = `https://www.google.com/maps?q=${mapQuery}&output=embed`;
+const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(CONTACT_ADDRESS.join(", "))}&output=embed`;
 
-export default function ContactPage() {
-  const t = useTranslations("contact");
+export default async function ContactPage() {
+  const t = await getTranslations("contact");
+  const alt = await getTranslations("imageAlt");
 
-  const methods = [
-    { icon: Mail, label: t("emailUs"), value: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
-    { icon: Phone, label: t("callUs"), value: CONTACT_PHONE, href: tel, alt: { value: CONTACT_PHONE_ALT, href: telAlt } },
-    { icon: MessageCircle, label: t("whatsapp"), value: t("whatsappValue"), href: wa },
-  ];
-
-  const chips = [
-    { icon: Mail, label: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
-    { icon: Phone, label: CONTACT_PHONE, href: tel },
-    { icon: MessageCircle, label: t("whatsapp"), href: wa },
+  const methods: { k: string; v: React.ReactNode }[] = [
+    { k: t("emailUs"), v: <a href={`mailto:${CONTACT_EMAIL}`} className="q-link">{CONTACT_EMAIL}</a> },
+    {
+      k: t("callUs"),
+      v: (
+        <span className="flex flex-col gap-1.5">
+          <a href={tel} className="q-link w-fit font-numeric">{CONTACT_PHONE}</a>
+          <a href={telAlt} className="q-link w-fit font-numeric">{CONTACT_PHONE_ALT}</a>
+        </span>
+      ),
+    },
+    { k: t("whatsapp"), v: <a href={wa} target="_blank" rel="noopener noreferrer" className="q-link">{t("whatsappValue")}</a> },
+    { k: t("visitLabel"), v: <span className="text-ink-soft">{CONTACT_ADDRESS.join(", ")}</span> },
+    { k: t("hoursLabel"), v: <span className="flex flex-col gap-1 text-ink-soft"><span>{t("hoursWeekday")}</span><span>{t("hoursSaturday")}</span></span> },
   ];
 
   return (
     <>
       <Header />
-      <main className="flex-1">
+      <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
+        <Section tone="paper" className="!pt-14 lg:!pt-20" aria-labelledby="contact-title">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-end">
+            <div className="lg:col-span-6 lg:pb-8">
+              <Label className="mb-8 q-rise">{t("eyebrow")}</Label>
+              <Heading as="h1" size="display" id="contact-title" className="text-ink q-rise">{t("title")}</Heading>
+              <Text size="lead" className="mt-8 max-w-[32rem] q-rise">{t("subtitle")}</Text>
+            </div>
+            <div className="lg:col-span-5 lg:col-start-8">
+              <Picture src="/hero/about-hq.jpg" alt={alt("hq")} caption={CONTACT_ADDRESS.join(", ")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 38vw, 100vw" />
+            </div>
+          </Container>
+        </Section>
 
-        {/* ══ HERO — dark cinematic, gold aurora + grain (matches the site) ══ */}
-        <section
-          className="relative overflow-hidden"
-          style={{
-            backgroundColor: "#111111",
-            paddingTop: "clamp(128px, 15vh, 188px)",
-            paddingBottom: "clamp(56px, 8vh, 96px)",
-            paddingLeft: "clamp(24px, 5vw, 80px)",
-            paddingRight: "clamp(24px, 5vw, 80px)",
-          }}
-        >
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute", inset: 0, pointerEvents: "none",
-              background:
-                "radial-gradient(ellipse at 82% 24%, rgba(197,178,122,0.18) 0%, transparent 52%)," +
-                "radial-gradient(ellipse at 8% 88%, rgba(197,178,122,0.07) 0%, transparent 46%)",
-            }}
-          />
-          <div aria-hidden="true" className="hero-grain" />
-
-          <div className="container-max relative z-10">
-            <Reveal>
-              <span className="eyebrow-light mb-5 inline-flex">{t("eyebrow")}</span>
-              <h1 style={{ fontFamily: "var(--font-playfair, 'Cormorant Garamond', Georgia, serif)", fontSize: "clamp(40px, 6vw, 76px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.02, color: "#FFFFFF", maxWidth: "720px" }}>
-                {t("title")}
-              </h1>
-              <p className="mt-6 max-w-xl" style={{ fontSize: "clamp(15px, 1.5vw, 18px)", lineHeight: 1.7, color: "rgba(255,255,255,0.5)" }}>
-                {t("subtitle")}
-              </p>
-
-              {/* Quick-contact chips */}
-              <div className="mt-9 flex flex-wrap gap-3">
-                {chips.map((c) => (
-                  <a
-                    key={c.label}
-                    href={c.href}
-                    className="inline-flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full text-sm font-medium transition-colors"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(197,178,122,0.28)", color: "rgba(255,255,255,0.82)" }}
-                  >
-                    <c.icon className="w-4 h-4" style={{ color: "#C5B27A" }} />
-                    {c.label}
-                  </a>
+        <Section tone="deep" aria-labelledby="contact-direct">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+            <div className="lg:col-span-5">
+              <h2 id="contact-direct" className="t-h2 text-ink mb-10">{t("directTitle")}</h2>
+              <dl className="border-t border-line-strong">
+                {methods.map((m) => (
+                  <div key={m.k} className="grid grid-cols-[7rem_1fr] gap-4 py-5 border-b border-line">
+                    <dt className="t-label text-ink-muted pt-0.5">{m.k}</dt>
+                    <dd className="t-body text-ink">{m.v}</dd>
+                  </div>
                 ))}
+              </dl>
+              <div className="mt-12 border-l-2 border-gold pl-6">
+                <p className="font-display text-[1.375rem] text-ink">{t("quoteTitle")}</p>
+                <p className="t-small text-ink-muted mt-2 mb-5">{t("quoteBody")}</p>
+                <TextLink href="/enquire">{t("quoteCta")}</TextLink>
               </div>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ══ DETAILS + FORM ══════════════════════════════════════════════ */}
-        <section className="px-6 md:px-12 lg:px-20 py-16 md:py-24" style={{ backgroundColor: "#F2F2F2" }}>
-          <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-12 lg:gap-20">
-
-            {/* Left — details */}
-            <div className="lg:sticky lg:top-28 self-start">
-              <Reveal>
-                <span className="eyebrow block mb-6">{t("directTitle")}</span>
-
-                {/* Methods */}
-                <ul className="space-y-3 mb-8">
-                  {methods.map((m) => (
-                    <li key={m.label}>
-                      <div className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-black/[0.05] hover-lift">
-                        <span className="flex items-center justify-center w-11 h-11 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-                          <m.icon className="w-5 h-5" />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: "#999999" }}>{m.label}</span>
-                          <a href={m.href} className="block text-sm font-medium transition-colors hover:text-[#7A6020]" style={{ color: "#1E1E1E" }}>{m.value}</a>
-                          {m.alt && (
-                            <a href={m.alt.href} className="block text-[13px] mt-0.5 transition-colors hover:text-[#7A6020]" style={{ color: "#999999" }}>
-                              {t("alsoOn")} {m.alt.value}
-                            </a>
-                          )}
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Address + hours */}
-                <div className="pt-6 space-y-5" style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}>
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#C5B27A" }} />
-                    <span className="text-sm leading-relaxed" style={{ color: "#555555" }}>
-                      {CONTACT_ADDRESS.map((line, i) => <span key={i} className="block">{line}</span>)}
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#C5B27A" }} />
-                    <span className="text-sm leading-relaxed" style={{ color: "#555555" }}>
-                      <span className="block">{t("hoursWeekday")}</span>
-                      <span className="block">{t("hoursSaturday")}</span>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Quote nudge */}
-                <div className="mt-8 p-5 rounded-2xl" style={{ background: "rgba(197,178,122,0.1)", border: "1px solid rgba(197,178,122,0.3)" }}>
-                  <p className="text-sm font-semibold mb-1" style={{ color: "#1E1E1E" }}>{t("quoteTitle")}</p>
-                  <p className="text-sm mb-3" style={{ color: "#666666" }}>{t("quoteBody")}</p>
-                  <Link href="/enquire" className="inline-flex items-center gap-1.5 text-sm font-semibold hover:opacity-60 transition-opacity group" style={{ color: "#7A6020" }}>
-                    {t("quoteCta")}<ArrowRight className="w-3.5 h-3.5 arrow-nudge" />
-                  </Link>
-                </div>
-              </Reveal>
             </div>
-
-            {/* Right — form */}
-            <Reveal delay={120}>
+            <div className="lg:col-span-7">
               <ContactForm />
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ══ MAP ═════════════════════════════════════════════════════════ */}
-        <section className="px-6 md:px-12 lg:px-20 pb-20 md:pb-28" style={{ backgroundColor: "#F2F2F2" }}>
-          <Reveal className="container-max">
-            <div className="card-stadium shadow-card overflow-hidden" style={{ aspectRatio: "21/9", maxHeight: "56vh" }}>
-              <iframe
-                src={mapSrc}
-                title={t("mapTitle")}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="w-full h-full"
-                style={{ border: 0 }}
-              />
             </div>
-          </Reveal>
-        </section>
+          </Container>
+        </Section>
 
+        {/* The map, toned to sit with the page instead of Google's colours. */}
+        <figure className="q-scope m-0 bg-paper-deep border-t border-line">
+          <iframe
+            title={t("mapTitle")}
+            src={mapSrc}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="block w-full h-[52svh] border-0 [filter:grayscale(1)_contrast(1.05)_opacity(0.92)]"
+          />
+        </figure>
       </main>
       <Footer />
     </>

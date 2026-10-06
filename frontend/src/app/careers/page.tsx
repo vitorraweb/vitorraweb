@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { Loader2, MapPin, Briefcase, ArrowRight } from "lucide-react";
+import { Loader2, ArrowRight } from "lucide-react";
 import { API_BASE_URL as API } from "@/lib/constants";
+
+/* Careers board — Quiet Authority. The real launch-team photograph beside the
+   heading, then openings as hairline rows: title in the display serif,
+   department · location · type as quiet labels. */
 
 type Opening = {
   title: string; slug: string; department: string | null; location: string | null;
@@ -24,39 +29,50 @@ export default function CareersPage() {
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.18em] mb-3" style={{ color: "#C5B27A" }}>{t("joinTeam")}</p>
-      <h1 className="mb-3" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "40px", fontWeight: 700, letterSpacing: "-0.02em", color: "#1E1E1E", lineHeight: 1.1 }}>
-        {t("heroTitle")}
-      </h1>
-      <p className="text-base max-w-2xl mb-10" style={{ color: "#555", lineHeight: 1.7 }}>
-        {t("heroBody")}
-      </p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-end mb-20">
+        <div className="lg:col-span-6">
+          <p className="t-label text-ink-muted mb-8 q-rise">{t("joinTeam")}</p>
+          <h1 className="t-display text-ink q-rise">{t("heroTitle")}</h1>
+          <p className="t-lead text-ink-soft mt-8 max-w-[34rem] q-rise">{t("heroBody")}</p>
+        </div>
+        <figure className="lg:col-span-6 m-0">
+          <div className="relative overflow-hidden rounded-frame bg-paper-deep q-unveil" style={{ aspectRatio: "3/2" }}>
+            <div className="q-inner absolute inset-0">
+              <Image src="/press/launch-team.jpg" alt={t("teamPhotoAlt")} fill priority sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover" />
+            </div>
+          </div>
+          <figcaption className="t-small text-ink-muted mt-3 flex gap-3">
+            <span aria-hidden="true" className="mt-[0.7em] h-px w-4 shrink-0 bg-line-strong" />
+            {t("teamPhotoCaption")}
+          </figcaption>
+        </figure>
+      </div>
+
+      <h2 className="t-label text-ink-muted pb-4 border-b border-line-strong">{t("openRoles")}</h2>
 
       {!openings ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />{t("loadingRoles")}</div>
+        <p className="flex items-center gap-2 t-small text-ink-muted py-10"><Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" />{t("loadingRoles")}</p>
       ) : openings.length === 0 ? (
-        <div className="bg-white rounded-[24px] border border-black/[0.06] p-10 text-center">
-          <p className="text-base font-semibold mb-1" style={{ color: "#1E1E1E" }}>{t("noRolesTitle")}</p>
-          <p className="text-sm" style={{ color: "#999" }}>{t("noRolesBody")}</p>
+        <div className="py-14 max-w-[32rem]">
+          <p className="t-h3 text-ink">{t("noRolesTitle")}</p>
+          <p className="t-body text-ink-muted mt-3">{t("noRolesBody")}</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <ul>
           {openings.map((o) => (
-            <Link key={o.slug} href={`/careers/${o.slug}`}
-              className="group flex items-center gap-4 bg-white rounded-[20px] border p-5 transition-colors hover:border-[#C5B27A]"
-              style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold mb-1.5" style={{ color: "#1E1E1E" }}>{o.title}</h2>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs" style={{ color: "#999" }}>
-                  {o.department && <span className="inline-flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" />{o.department}</span>}
-                  {o.location && <span className="inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{o.location}</span>}
-                  <span className="px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(197,178,122,0.16)", color: "#7A6020" }}>{typeLabel(o.employment_type)}</span>
-                </div>
-              </div>
-              <ArrowRight className="w-5 h-5 shrink-0 transition-transform group-hover:translate-x-1" style={{ color: "#C5B27A" }} />
-            </Link>
+            <li key={o.slug} className="border-b border-line">
+              <Link href={`/careers/${o.slug}`} className="group grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-8 py-8 items-baseline">
+                <span className="md:col-span-6 t-h3 text-ink group-hover:text-gold-ink transition-colors">{o.title}</span>
+                <span className="md:col-span-5 t-label text-ink-muted flex flex-wrap gap-x-4 gap-y-1">
+                  {o.department && <span>{o.department}</span>}
+                  {o.location && <span>{o.location}</span>}
+                  <span className="text-gold-ink">{typeLabel(o.employment_type)}</span>
+                </span>
+                <ArrowRight aria-hidden="true" className="hidden md:block md:col-span-1 justify-self-end w-4 h-4 text-ink-muted transition-transform group-hover:translate-x-1" />
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
