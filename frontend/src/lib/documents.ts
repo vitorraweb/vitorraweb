@@ -64,6 +64,28 @@ export function formatMoney(currency: string, minor: number): string {
   return currency === "EUR" ? `€${n}` : currency === "USD" ? `$${n}` : `${currency} ${n}`;
 }
 
+/** Incoterms offered on coffee documents. EXW = Ex Works (collected at origin). */
+export const INCOTERMS = [
+  { code: "FOB", label: "FOB · Free on Board", place: "Mombasa" },
+  { code: "CIF", label: "CIF · Cost, Insurance & Freight", place: "Hamburg" },
+  { code: "EXW", label: "EXW · Ex Works", place: "Kampala" },
+] as const;
+const INCOTERM_SUFFIX = " (Incoterms® 2020)";
+
+/** "CIF Hamburg (Incoterms® 2020)" → { code: "CIF", place: "Hamburg" }; anything else is "other". */
+export function splitIncoterm(value: string): { code: string; place: string } {
+  const v = value.trim();
+  if (!v) return { code: "", place: "" };
+  const m = /^(FOB|CIF|EXW)\b\s*(.*?)\s*(\(Incoterms[^)]*\))?$/i.exec(v);
+  return m ? { code: m[1].toUpperCase(), place: m[2] } : { code: "OTHER", place: v };
+}
+
+export function joinIncoterm(code: string, place: string): string {
+  if (!code) return "";
+  if (code === "OTHER") return place;
+  return `${code}${place.trim() ? ` ${place.trim()}` : ""}${INCOTERM_SUFFIX}`;
+}
+
 /** The FET range (lib/fet-pricing.ts) as quick-add lines; the price is quoted per job. */
 export const FET_LINES: { name: string; fits: string }[] = [
   { name: "FET – PRO I", fits: "Compact and mid-range cars, mini-buses (1.4–2.0 L)" },

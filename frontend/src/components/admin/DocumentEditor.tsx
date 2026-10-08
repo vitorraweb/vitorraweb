@@ -7,7 +7,8 @@ import { ArrowLeft, Check, Download, FileText, Loader2, Plus, RefreshCw, Send, X
 import { apiAdmin, auth, canAccess, downloadFile, fetchPdf } from "@/lib/auth";
 import { PageHeader, StatusBadge } from "@/components/admin/admin-ui";
 import {
-  BUSINESS_LABEL, CURRENCIES, FET_DETAILS, FET_LINES, KIND_LABEL, blankForm, formatMoney, fromRecord, toMinor, toPayload,
+  BUSINESS_LABEL, CURRENCIES, FET_DETAILS, FET_LINES, INCOTERMS, KIND_LABEL, blankForm, formatMoney, fromRecord, joinIncoterm,
+  splitIncoterm, toMinor, toPayload,
   type Business, type DocForm, type DocType, type InvoiceKind,
 } from "@/lib/documents";
 
@@ -67,7 +68,7 @@ export default function DocumentEditor({
     setPreviewing(true);
     try {
       const blob = await fetchPdf("/admin/accounting/documents/preview", {
-        ...payload, type, number: docNumber,
+        ...payload, type, number: docNumber ?? "DRAFT",
         items: payload.items.map((it) => ({ ...it, name: (it as { name?: string }).name ?? (it as { description?: string }).description })),
       }, ctrl.signal);
       const url = URL.createObjectURL(blob);
@@ -260,7 +261,11 @@ export default function DocumentEditor({
             <div className="flex flex-wrap gap-1.5 mt-2">
               <button type="button" className="c-btn" onClick={() => { setForm({ ...form, lines: [...form.lines, { name: "", details: "", quantity: 1, unit: coffee ? "kg" : "pcs.", price: "" }] }); setDirty(true); }}><Plus className="w-4 h-4" />Add line</button>
               {coffee
-                ? [["Ocean Freight & Logistics", "Freight charges Port of Mombasa (KE) to\nport of destination including terminal handling"], ["Marine Cargo Insurance", "All-Risks Transit Coverage (110% CIF Value)"]].map(([n, d]) => (
+                ? [
+                    ["Ocean Freight & Logistics", "Freight charges Port of Mombasa (KE) to\nport of destination including terminal handling"],
+                    ["Air Freight & Logistics", "Air freight charges Entebbe International Airport (EBB) to\ndestination airport including handling"],
+                    ["Marine Cargo Insurance", "All-Risks Transit Coverage (110% CIF Value)"],
+                  ].map(([n, d]) => (
                     <button key={n} type="button" className="c-btn c-btn-ghost text-ink-muted" onClick={() => { setForm({ ...form, lines: [...form.lines, { name: n, details: d, quantity: 1, unit: "Lot", price: "" }] }); setDirty(true); }}>+ {n}</button>
                   ))
                 : FET_LINES.map((f) => (
@@ -272,7 +277,7 @@ export default function DocumentEditor({
           <Card title={coffee ? "Payment terms & export specifications" : isQuote ? "Commercial terms" : "Payment & terms"}>
             <Grid>
               {coffee && <>
-                <Field label="Incoterms"><input className="c-input w-full" value={form.incoterms} onChange={(e) => set("incoterms", e.target.value)} placeholder="CIF Hamburg (Incoterms® 2020)" /></Field>
+                <IncotermField value={form.incoterms} onChange={(v) => set("incoterms", v)} />
                 <Field label="Port of loading"><input className="c-input w-full" value={form.port_of_loading} onChange={(e) => set("port_of_loading", e.target.value)} /></Field>
               </>}
               <Field label="Payment terms (information box)" wide><textarea rows={2} className="c-input w-full !h-auto py-1.5" value={form.payment_terms} onChange={(e) => set("payment_terms", e.target.value)} /></Field>
@@ -313,6 +318,39 @@ export default function DocumentEditor({
         </div>
       </div>
     </div>
+  );
+}
+
+/* Incoterm as a dropdown (FOB / CIF / EXW) plus its named place; saved as
+   e.g. "CIF Hamburg (Incoterms® 2020)", which also names the total row. */
+function IncotermField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const parsed = splitIncoterm(value);
+  // "Other" has no wording yet when first picked, so remember the choice here.
+  const [other, setOther] = useState(parsed.code === "OTHER");
+  const code = other ? "OTHER" : parsed.code;
+  const place = parsed.place;
+  const preset = INCOTERMS.find((t) => t.code === code);
+  return (
+    <>
+      <Field label="Incoterms">
+        <select className="c-select w-full" value={code} onChange={(e) => {
+          const next = e.target.value;
+          setOther(next === "OTHER");
+          const nextPreset = INCOTERMS.find((t) => t.code === next);
+          onChange(joinIncoterm(next, next === "OTHER" ? "" : place || nextPreset?.place || ""));
+        }}>
+          <option value="">None</option>
+          {INCOTERMS.map((t) => <option key={t.code} value={t.code}>{t.label}</option>)}
+          <option value="OTHER">Other (type it)</option>
+        </select>
+      </Field>
+      {code && (
+        <Field label={code === "OTHER" ? "Incoterm wording" : code === "EXW" ? "Place of collection" : code === "FOB" ? "Port of shipment" : "Port of destination"}>
+          <input className="c-input w-full" value={place} onChange={(e) => onChange(joinIncoterm(code, e.target.value))}
+            placeholder={code === "OTHER" ? "e.g. DAP Rotterdam (Incoterms® 2020)" : preset?.place} />
+        </Field>
+      )}
+    </>
   );
 }
 
