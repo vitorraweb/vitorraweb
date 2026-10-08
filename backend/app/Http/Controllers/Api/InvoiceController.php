@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\ValidatesBrandedDocument;
 use App\Http\Controllers\Controller;
 use App\Mail\InvoiceMail;
 use App\Models\FinanceAccount;
@@ -9,7 +10,7 @@ use App\Models\FinanceCategory;
 use App\Models\FinanceTransaction;
 use App\Models\Invoice;
 use App\Models\Setting;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\BrandedDocument;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -19,6 +20,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class InvoiceController extends Controller
 {
+    use ValidatesBrandedDocument;
+
     public function index(Request $request): JsonResponse
     {
         $q = Invoice::latest('issue_date')->latest('id');
@@ -44,19 +47,10 @@ class InvoiceController extends Controller
     {
         $data = $this->validateInvoice($request);
 
-        $invoice = Invoice::create([
-            'number'           => Invoice::nextNumber(),
-            'customer_name'    => $data['customer_name'],
-            'customer_email'   => $data['customer_email'] ?? null,
-            'customer_address' => $data['customer_address'] ?? null,
-            'currency'         => $data['currency'],
-            'sector'           => $data['sector'] ?? null,
-            'issue_date'       => $data['issue_date'] ?? now()->toDateString(),
-            'due_date'         => $data['due_date'] ?? null,
-            'notes'            => $data['notes'] ?? null,
-            'terms'            => $data['terms'] ?? null,
-            'status'           => 'draft',
-            'created_by'       => $request->user()->id,
+        $invoice = Invoice::create($this->fields($data) + [
+            'number'     => Invoice::nextNumberFor($data['business'] ?? null, $data['kind'] ?? 'standard'),
+            'status'     => 'draft',
+            'created_by' => $request->user()->id,
         ]);
 
         $this->syncItems($invoice, $data['items']);
@@ -71,7 +65,8 @@ class InvoiceController extends Controller
         }
         $data = $this->validateInvoice($request);
 
-        $invoice->update(collect($data)->only(['customer_name', 'customer_email', 'customer_address', 'currency', 'sector', 'issue_date', 'due_date', 'notes', 'terms'])->all());
+        // The number is fixed once issued; business / kind stay as created.
+        $invoice->update(collect($this->fields($data))->except(['business', 'kind'])->all());
         $invoice->items()->delete();
         $this->syncItems($invoice, $data['items']);
 
@@ -88,7 +83,7 @@ class InvoiceController extends Controller
             return response()->json(['message' => 'This invoice is void.'], 422);
         }
 
-        $pdf = Pdf::loadView('documents.invoice', ['invoice' => $invoice->load('items')]);
+        $pdf = BrandedDocument::pdf($invoice->load('items'));
         Mail::to($invoice->customer_email)->send(new InvoiceMail($invoice, $pdf->output()));
 
         if ($invoice->status === 'draft') {
@@ -149,7 +144,7 @@ class InvoiceController extends Controller
 
     public function pdf(Invoice $invoice): Response
     {
-        $pdf = Pdf::loadView('documents.invoice', ['invoice' => $invoice->load('items')]);
+        $pdf = BrandedDocument::pdf($invoice->load('items'));
 
         return $pdf->download($invoice->number.'.pdf');
     }
@@ -158,34 +153,41 @@ class InvoiceController extends Controller
 
     private function validateInvoice(Request $request): array
     {
-        return $request->validate([
-            'customer_name'        => ['required', 'string', 'max:255'],
-            'customer_email'       => ['nullable', 'email', 'max:255'],
-            'customer_address'     => ['nullable', 'string', 'max:1000'],
-            'currency'             => ['required', Rule::in(['UGX', 'USD', 'EUR'])],
+        return $request->validate($this->brandedRules() + $this->itemRules('description') + [
+            'kind'                 => ['nullable', Rule::in(Invoice::KINDS)],
             'sector'               => ['nullable', Rule::in(FinanceTransaction::SECTORS)],
-            'issue_date'           => ['nullable', 'date'],
             'due_date'             => ['nullable', 'date'],
-            'notes'                => ['nullable', 'string', 'max:2000'],
             'terms'                => ['nullable', 'string', 'max:2000'],
-            'items'                => ['required', 'array', 'min:1', 'max:50'],
-            'items.*.description'  => ['required', 'string', 'max:500'],
-            'items.*.quantity'     => ['required', 'integer', 'min:1'],
-            'items.*.unit_price'   => ['required', 'integer', 'min:0'],
             'items.*.vat_rate'     => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
+    }
+
+    private function fields(array $data): array
+    {
+        $out = collect($data)->only([...Invoice::BRANDED_FIELDS, 'kind', 'sector', 'due_date', 'notes', 'terms'])->all();
+        $out['issue_date'] = $data['issue_date'] ?? now()->toDateString();
+        $out['tax_rate'] = $data['tax_rate'] ?? 0;
+        $out['kind'] = $data['kind'] ?? 'standard';
+        // Branded invoices file under their business line automatically.
+        $out['sector'] ??= match ($data['business'] ?? null) { 'coffee' => 'COFFEE', 'fet' => 'FET', default => null };
+
+        return $out;
     }
 
     private function syncItems(Invoice $invoice, array $items): void
     {
         foreach ($items as $row) {
+            // Branded templates carry one tax rate for the whole document.
+            $rate = $invoice->isBranded() ? (int) $invoice->tax_rate : (int) ($row['vat_rate'] ?? 0);
             $subtotal = $row['quantity'] * $row['unit_price'];
-            $vat = (int) round($subtotal * ($row['vat_rate'] ?? 0) / 100);
+            $vat = (int) round($subtotal * $rate / 100);
             $invoice->items()->create([
                 'description'   => $row['description'],
+                'details'       => $row['details'] ?? null,
+                'unit'          => $row['unit'] ?? null,
                 'quantity'      => $row['quantity'],
                 'unit_price'    => $row['unit_price'],
-                'vat_rate'      => $row['vat_rate'] ?? 0,
+                'vat_rate'      => $rate,
                 'line_subtotal' => $subtotal,
                 'vat_amount'    => $vat,
                 'line_total'    => $subtotal + $vat,
@@ -212,14 +214,18 @@ class InvoiceController extends Controller
             'balance'       => $i->balance(),
             'status'        => $i->status,
             'is_overdue'    => $i->isOverdue(),
+            'business'      => $i->business,
+            'kind'          => $i->kind,
         ];
         if ($full) {
             $out += [
                 'customer_address' => $i->customer_address,
                 'notes' => $i->notes,
                 'terms' => $i->terms,
+                'quotation' => $i->quotation_id ? optional($i->quotation)->only(['id', 'number']) : null,
+                ...$i->only(Invoice::BRANDED_FIELDS),
                 'items' => $i->items->map(fn (\App\Models\InvoiceItem $it) => [
-                    'description' => $it->description, 'quantity' => $it->quantity, 'unit_price' => $it->unit_price,
+                    'description' => $it->description, 'details' => $it->details, 'unit' => $it->unit, 'quantity' => $it->quantity, 'unit_price' => $it->unit_price,
                     'vat_rate' => $it->vat_rate, 'line_subtotal' => $it->line_subtotal, 'vat_amount' => $it->vat_amount, 'line_total' => $it->line_total,
                 ])->all(),
             ];

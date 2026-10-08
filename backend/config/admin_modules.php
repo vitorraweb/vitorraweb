@@ -36,6 +36,9 @@ return [
         'suppliers'  => 'Suppliers',
         'accounting'         => 'Accounting',
         'accounting_approve' => 'Accounting — approve',
+        // Granted per person, not by department (Finance's list, Oct 2026):
+        // php artisan staff:grant-module quotations <email> ...
+        'quotations'         => 'Quotations',
     ],
 
     // department key => human label

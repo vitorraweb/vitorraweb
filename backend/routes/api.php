@@ -22,7 +22,9 @@ use App\Http\Controllers\Api\FetTrialShareController;
 use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\InboundEmailController;
 use App\Http\Controllers\Api\InstallmentController;
+use App\Http\Controllers\Api\DocumentPreviewController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\QuotationController;
 use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\JobAdminController;
 use App\Http\Controllers\Api\LeaveController;
@@ -419,6 +421,22 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment']);
             Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
         });
+        // Quotations on the branded Coffee / FET templates — Finance, Marketing and
+        // Operations staff named by Finance hold the `quotations` module. Turning a
+        // quotation into an invoice touches the books, so it also needs `accounting`.
+        Route::middleware('perm:quotations')->prefix('accounting')->group(function () {
+            Route::get('/quotations', [QuotationController::class, 'index']);
+            Route::post('/quotations', [QuotationController::class, 'store']);
+            Route::get('/quotations/{quotation}', [QuotationController::class, 'show']);
+            Route::match(['put', 'patch'], '/quotations/{quotation}', [QuotationController::class, 'update']);
+            Route::get('/quotations/{quotation}/pdf', [QuotationController::class, 'pdf']);
+            Route::post('/quotations/{quotation}/send', [QuotationController::class, 'send']);
+            Route::post('/quotations/{quotation}/status', [QuotationController::class, 'status']);
+            Route::post('/quotations/{quotation}/convert', [QuotationController::class, 'convert'])->middleware('perm:accounting');
+        });
+        // The editor's live preview serves both quotations and invoices.
+        Route::post('/accounting/documents/preview', DocumentPreviewController::class)
+            ->middleware(['perm:quotations,accounting', 'throttle:60,1']);
         // Senior-finance-only actions (approval, account/category/budget management).
         Route::middleware('perm:accounting_approve')->prefix('accounting')->group(function () {
             Route::post('/accounts', [AccountingController::class, 'storeAccount']);

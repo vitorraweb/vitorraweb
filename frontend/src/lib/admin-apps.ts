@@ -2,7 +2,7 @@ import {
   Handshake, ShoppingCart, Gauge, Wallet, LineChart, Users, ListChecks, Globe, Settings,
   MessageSquare, Workflow, Contact, Target, LayoutTemplate, CreditCard, FlaskConical,
   TrendingUp, LayoutDashboard, CalendarCheck, Hourglass, Briefcase, CalendarDays,
-  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck,
+  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature,
 } from "lucide-react";
 import { canAccess, type AdminUser } from "@/lib/auth";
 
@@ -43,12 +43,13 @@ export const APP_AREAS: AppArea[] = ["Sell", "Money", "Run the company", "Publis
 
 export const ADMIN_APPS: AdminApp[] = [
   {
-    id: "sales", name: "Sales", blurb: "Enquiries, pipeline, customers and prospecting", icon: Handshake, area: "Sell",
+    id: "sales", name: "Sales", blurb: "Enquiries, pipeline, customers, prospecting and quotations", icon: Handshake, area: "Sell",
     items: [
       { label: "Enquiries", href: "/admin/enquiries", icon: MessageSquare, module: "enquiries", keywords: "leads quote requests inbox" },
       { label: "Pipeline",  href: "/admin/pipeline",  icon: Workflow,      module: "customers", keywords: "deals stages board kanban" },
       { label: "Customers", href: "/admin/customers", icon: Contact,       module: "customers", keywords: "contacts clients crm" },
       { label: "Prospects", href: "/admin/prospects", icon: Target,        module: "prospects", keywords: "outreach campaign leads list" },
+      { label: "Quotations", href: "/admin/quotations", icon: FileSignature, module: "quotations", keywords: "quote proforma coffee fet export offer" },
       { label: "Templates", href: "/admin/templates", icon: LayoutTemplate, module: "customers", keywords: "email replies" },
     ],
   },
@@ -118,6 +119,7 @@ export const ADMIN_APPS: AdminApp[] = [
 /* Pages that live outside any app menu but still belong to one. */
 const EXTRA_ROUTES: { href: string; app: string; label: string; module?: string; adminOnly?: boolean }[] = [
   { href: "/admin/users",   app: "settings", label: "Users", adminOnly: true },
+  { href: "/admin/invoices", app: "accounting", label: "Invoice", module: "accounting" },
   { href: "/admin/profile", app: "",         label: "Profile & security" },
 ];
 

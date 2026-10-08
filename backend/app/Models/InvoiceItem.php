@@ -9,7 +9,7 @@ class InvoiceItem extends Model
 {
     protected $fillable = [
         'invoice_id', 'description', 'quantity', 'unit_price', 'vat_rate',
-        'line_subtotal', 'vat_amount', 'line_total',
+        'line_subtotal', 'vat_amount', 'line_total', 'details', 'unit',
     ];
 
     protected $casts = [

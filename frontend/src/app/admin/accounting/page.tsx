@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { Loader2, Check, X, Plus, Download, Wallet, Landmark, Banknote, Sparkles, Send, FileText, Repeat, Trash2 } from "lucide-react";
 import { apiAdmin, uploadAdmin, downloadFile, auth, canAccess } from "@/lib/auth";
@@ -523,7 +524,7 @@ function Panel({ icon: Icon, title, children }: { icon: typeof Wallet; title: st
 
 /* ── Invoices (accounts receivable) ───────────────────────────────────── */
 
-type Inv = { id: number; number: string; customer_name: string; currency: string; total: number; amount_paid: number; balance: number; status: string; is_overdue: boolean; due_date: string | null };
+type Inv = { id: number; number: string; customer_name: string; currency: string; total: number; amount_paid: number; balance: number; status: string; is_overdue: boolean; due_date: string | null; business: string | null; kind: string };
 type Line = { description: string; quantity: number; unit_price: number; vat_rate: number };
 
 const INV_STATUS: Record<string, { bg: string; fg: string }> = {
@@ -585,7 +586,13 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
         {[["", "All"], ["sent", "Sent"], ["partial", "Partial"], ["paid", "Paid"], ["overdue", "Overdue"], ["draft", "Draft"]].map(([v, l]) => (
           <button key={v} onClick={() => setStatus(v)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={status === v ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{l}</button>
         ))}
-        <button onClick={() => { setCreating((c) => !c); setForm((f) => ({ ...f })); setLines((ls) => ls.map((l) => ({ ...l, vat_rate: l.vat_rate || defaultVat })) ); }} className="ml-auto inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#1E1E1E", color: "#fff" }}><Plus className="w-4 h-4" />New invoice</button>
+        {/* Coffee and FET invoices use the Finance team's branded templates (full editor
+            with live preview); "General" keeps the quick form for other business lines. */}
+        <span className="ml-auto flex flex-wrap items-center gap-1.5">
+          <Link href="/admin/invoices/new?business=coffee" className="c-btn c-btn-primary"><Plus className="w-4 h-4" />Coffee invoice</Link>
+          <Link href="/admin/invoices/new?business=fet" className="c-btn c-btn-primary"><Plus className="w-4 h-4" />FET invoice</Link>
+          <button onClick={() => { setCreating((c) => !c); setForm((f) => ({ ...f })); setLines((ls) => ls.map((l) => ({ ...l, vat_rate: l.vat_rate || defaultVat })) ); }} className="c-btn"><Plus className="w-4 h-4" />General invoice</button>
+        </span>
       </div>
 
       {creating && (
@@ -629,7 +636,10 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
               <div key={i.id} className="bg-white rounded-[14px] border border-black/[0.05] p-4 flex items-center gap-3 flex-wrap">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{i.number}</span>
+                    {i.business
+                      ? <Link href={`/admin/invoices/${i.id}`} className="text-sm font-semibold hover:underline" style={{ color: "#1E1E1E" }}>{i.number}</Link>
+                      : <span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{i.number}</span>}
+                    {i.business && <span className="text-[11px] text-ink-muted">{i.business === "coffee" ? "Coffee" : "FET"}{i.kind !== "standard" ? ` · ${i.kind}` : ""}</span>}
                     <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: sc.bg, color: sc.fg }}>{i.status}</span>
                     {i.is_overdue && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(192,57,43,0.1)", color: "#C0392B" }}>overdue</span>}
                   </div>

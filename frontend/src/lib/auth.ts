@@ -119,6 +119,19 @@ export async function downloadFile(path: string, filename: string): Promise<void
   await saveBlob(res, filename);
 }
 
+/** POST JSON and get a PDF back (the quotation / invoice live preview). */
+export async function fetchPdf(path: string, body: unknown, signal?: AbortSignal): Promise<Blob> {
+  const res = await authFetch(API_BASE_URL, path, auth.getToken(), {
+    method: "POST", body: JSON.stringify(body), headers: { Accept: "application/pdf" }, signal,
+  });
+  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Preview failed" }));
+    throw new Error(err.message ?? "Preview failed");
+  }
+  return res.blob();
+}
+
 /* Multipart upload — lets the browser set the Content-Type boundary (don't set it). */
 export async function uploadAdmin<T>(path: string, form: FormData): Promise<T> {
   const base = API_BASE_URL;

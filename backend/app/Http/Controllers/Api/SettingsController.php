@@ -33,6 +33,14 @@ class SettingsController extends Controller
             'staff_session_lifetime_hours' => ['sometimes', 'integer', 'min:1', 'max:168'],
             'exec_report_to'             => ['sometimes', 'nullable', 'email', 'max:255'],
             'exec_report_cc'             => ['sometimes', 'nullable', 'string', 'max:500'],
+            'company_tin'                => ['sometimes', 'nullable', 'string', 'max:40'],
+            'bank_name'                  => ['sometimes', 'nullable', 'string', 'max:120'],
+            'bank_account_name'          => ['sometimes', 'nullable', 'string', 'max:120'],
+            'bank_branch'                => ['sometimes', 'nullable', 'string', 'max:120'],
+            'bank_swift'                 => ['sometimes', 'nullable', 'string', 'max:20'],
+            'bank_account_ugx'           => ['sometimes', 'nullable', 'string', 'max:60'],
+            'bank_account_usd'           => ['sometimes', 'nullable', 'string', 'max:60'],
+            'bank_account_eur'           => ['sometimes', 'nullable', 'string', 'max:60'],
         ]);
 
         Setting::put($data);

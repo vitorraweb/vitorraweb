@@ -33,7 +33,18 @@ class Setting extends Model
         'staff_session_lifetime_hours' => 8,
         // Executive report — who the scheduled CEO summary is emailed to.
         'exec_report_to' => '',   // CEO inbox (To); falls back to notify_email when blank
-        'exec_report_cc' => '',   // comma-separated Ops/Finance addresses (CC)
+        'exec_report_cc' => '',
+
+        // Printed on the branded quotations / invoices (BrandedDocument).
+        'company_tin'       => '1055502376',
+        // From Finance's "VHL BANK INFOR" letter (Stanbic, Forest Mall branch).
+        'bank_name'         => 'Stanbic Bank',
+        'bank_account_name' => 'Vitorra Holdings Limited',
+        'bank_branch'       => 'Forest Mall',
+        'bank_swift'        => 'SBICUGKX',
+        'bank_account_ugx'  => '9030027300994',
+        'bank_account_usd'  => '9030027301575',
+        'bank_account_eur'  => '9030028047761',   // comma-separated Ops/Finance addresses (CC)
     ];
 
     /** Stored settings as key => decoded value (cached). */

@@ -83,6 +83,14 @@ export function CommandPalette({ user, open, onClose, onLogout }: {
     );
     const actions: Entry[] = [
       ...(canAccess(user, { module: "blog" }) ? [{ id: "new-post", group: "Actions", label: "Write a blog post", icon: Plus, run: () => go("/admin/blog/new"), match: "new blog post write article" }] : []),
+      ...(canAccess(user, { module: "quotations" }) ? [
+        { id: "new-q-coffee", group: "Actions", label: "New coffee quotation", icon: Plus, run: () => go("/admin/quotations/new?business=coffee"), match: "new coffee quotation quote export offer" },
+        { id: "new-q-fet", group: "Actions", label: "New FET quotation", icon: Plus, run: () => go("/admin/quotations/new?business=fet"), match: "new fet fuel eco tech quotation quote" },
+      ] : []),
+      ...(canAccess(user, { module: "accounting" }) ? [
+        { id: "new-i-coffee", group: "Actions", label: "New coffee invoice", icon: Plus, run: () => go("/admin/invoices/new?business=coffee&kind=commercial"), match: "new coffee commercial invoice bill" },
+        { id: "new-i-fet", group: "Actions", label: "New FET invoice", icon: Plus, run: () => go("/admin/invoices/new?business=fet"), match: "new fet invoice bill" },
+      ] : []),
       ...(canAccess(user, { module: "products" }) ? [{ id: "new-product", group: "Actions", label: "Add a product", icon: Plus, run: () => go("/admin/products/new"), match: "new product add catalogue" }] : []),
       { id: "profile", group: "Actions", label: "Profile & security", icon: ShieldCheck, run: () => go("/admin/profile"), match: "profile password two factor 2fa sessions security" },
       { id: "site", group: "Actions", label: "Open the website", icon: ExternalLink, run: () => { onClose(); window.open("/", "_blank", "noopener"); }, match: "view site website public" },

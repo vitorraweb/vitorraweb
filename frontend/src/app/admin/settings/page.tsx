@@ -12,6 +12,8 @@ type Settings = {
   notify_email: string; notify_whatsapp: string;
   staff_session_lifetime_hours: number;
   exec_report_to: string; exec_report_cc: string;
+  company_tin: string; bank_name: string; bank_account_name: string; bank_branch: string; bank_swift: string;
+  bank_account_ugx: string; bank_account_usd: string; bank_account_eur: string;
 };
 
 const inputCls = "w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none";
@@ -106,6 +108,34 @@ export default function SettingsPage() {
           </Row>
           <Row label="Copy to (CC)" hint="Comma-separated — e.g. Ops &amp; Finance.">
             <input value={form.exec_report_cc} onChange={(e) => set("exec_report_cc", e.target.value)} placeholder="ops@vitorra.org, finance@vitorra.org" className={inputCls} style={inputStyle} />
+          </Row>
+        </Section>
+
+        {/* Quotations & invoices */}
+        <Section title="Quotations & invoices" note="Printed on the branded Coffee and FET invoices. An invoice shows the bank block only when the bank name and the account for its currency are filled in.">
+          <Row label="Company TIN">
+            <input value={form.company_tin ?? ""} onChange={(e) => set("company_tin", e.target.value)} className={inputCls} style={inputStyle} />
+          </Row>
+          <Row label="Bank name">
+            <input value={form.bank_name ?? ""} onChange={(e) => set("bank_name", e.target.value)} placeholder="Stanbic Bank Uganda Limited" className={inputCls} style={inputStyle} />
+          </Row>
+          <Row label="Account name">
+            <input value={form.bank_account_name ?? ""} onChange={(e) => set("bank_account_name", e.target.value)} placeholder="Vitorra Holdings Ltd" className={inputCls} style={inputStyle} />
+          </Row>
+          <Row label="Branch">
+            <input value={form.bank_branch ?? ""} onChange={(e) => set("bank_branch", e.target.value)} placeholder="Forest Mall" className={inputCls} style={inputStyle} />
+          </Row>
+          <Row label="SWIFT code" hint="Printed for international (USD / EUR) payers.">
+            <input value={form.bank_swift ?? ""} onChange={(e) => set("bank_swift", e.target.value)} placeholder="SBICUGKX" className={inputCls} style={inputStyle} />
+          </Row>
+          <Row label="Account number (UGX)">
+            <input value={form.bank_account_ugx ?? ""} onChange={(e) => set("bank_account_ugx", e.target.value)} className={inputCls} style={inputStyle} />
+          </Row>
+          <Row label="Account number (USD)">
+            <input value={form.bank_account_usd ?? ""} onChange={(e) => set("bank_account_usd", e.target.value)} className={inputCls} style={inputStyle} />
+          </Row>
+          <Row label="Account number (EUR)">
+            <input value={form.bank_account_eur ?? ""} onChange={(e) => set("bank_account_eur", e.target.value)} className={inputCls} style={inputStyle} />
           </Row>
         </Section>
 

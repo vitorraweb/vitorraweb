@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Mail\InvoiceMail;
 use App\Models\Invoice;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -29,7 +28,7 @@ class RemindOverdueInvoices extends Command
             if ($invoice->balance() <= 0) {
                 continue;
             }
-            $pdf = Pdf::loadView('documents.invoice', ['invoice' => $invoice->load('items')]);
+            $pdf = \App\Support\BrandedDocument::pdf($invoice->load('items'));
             Mail::to($invoice->customer_email)->send(new InvoiceMail($invoice, $pdf->output(), reminder: true));
             $invoice->update(['last_reminded_at' => now()]);
             $sent++;

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Contracts\Payable;
+use App\Models\Concerns\HasBrandedFields;
 use App\Services\Payments\OnlineInvoiceSettlement;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,11 @@ use Illuminate\Support\Str;
 
 class Invoice extends Model implements Payable
 {
+    use HasBrandedFields;
+
+    /** standard = plain invoice; commercial / final are the export documents on the branded templates. */
+    public const KINDS = ['standard', 'commercial', 'final'];
+
     public const STATUSES = ['draft', 'sent', 'partial', 'paid', 'void'];
 
     /** Flutterwave settles UGX/USD for a Ugandan merchant — EUR invoices stay offline. */
@@ -21,6 +27,9 @@ class Invoice extends Model implements Payable
         'currency', 'sector', 'issue_date', 'due_date',
         'subtotal', 'vat_total', 'total', 'amount_paid', 'status', 'payment_method', 'payment_reference',
         'notes', 'terms', 'source', 'source_id', 'sent_at', 'last_reminded_at', 'created_by',
+        'kind', 'quotation_id', 'business', 'customer_attention', 'customer_tax_id', 'customer_phone',
+        'sales_contact', 'reference', 'incoterms', 'port_of_loading', 'payment_terms', 'payment_schedule',
+        'inspection', 'shipment_schedule', 'deposit_percent', 'tax_rate', 'tax_label', 'total_label',
     ];
 
     protected static function booted(): void
@@ -40,11 +49,18 @@ class Invoice extends Model implements Payable
         'amount_paid'      => 'integer',
         'sent_at'          => 'datetime',
         'last_reminded_at' => 'datetime',
+        'tax_rate'         => 'integer',
+        'deposit_percent'  => 'integer',
     ];
 
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function quotation(): BelongsTo
+    {
+        return $this->belongsTo(Quotation::class);
     }
 
     public function creator(): BelongsTo
@@ -80,6 +96,24 @@ class Invoice extends Model implements Payable
     {
         $year = now()->year;
         $prefix = "INV-{$year}-";
+        $last = static::where('number', 'like', $prefix.'%')->orderByDesc('number')->value('number');
+        $seq = $last ? ((int) substr($last, strlen($prefix))) + 1 : 1;
+
+        return $prefix.str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Number for a new invoice. General invoices keep INV-2026-0007; the
+     * branded ones follow the Finance team's scheme: VHL-CF-INV-2026-0001,
+     * VHL-FET-CI-2026-0001 (CI = commercial invoice).
+     */
+    public static function nextNumberFor(?string $business, string $kind = 'standard'): string
+    {
+        if (! in_array($business, self::BUSINESSES, true)) {
+            return static::nextNumber();
+        }
+        $year = now()->year;
+        $prefix = ($business === 'coffee' ? 'VHL-CF' : 'VHL-FET').'-'.($kind === 'commercial' ? 'CI' : 'INV')."-{$year}-";
         $last = static::where('number', 'like', $prefix.'%')->orderByDesc('number')->value('number');
         $seq = $last ? ((int) substr($last, strlen($prefix))) + 1 : 1;
 

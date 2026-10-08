@@ -1419,3 +1419,33 @@ The back office was reorganised the way Odoo organises a large business tool: a 
     - **Fixed:** the screen only ever showed the newest 25. It now pages.
     - New search by name, email or company. This needs the backend `q` filter (`AdminController::enquiries`, tested in `EnquirySearchTest`), so it works once the API is redeployed.
   - **Accounting and Careers:** section tabs became an underline bar. Accounting accepts `?tab=` deep links.
+
+## Quotations & branded invoices (8 October 2026)
+
+Finance's "Quote & Invoice Manager" design (`Vitorra_Quote_Invoice_Manager_DESIGN.html` + the three PNGs) is built into Accounting.
+
+- **Templates:**
+  - The Coffee and FET quotation and invoice designs are rebuilt as real PDF layouts (`resources/views/documents/branded.blade.php`, data from `App\Support\BrandedDocument`). They are not text pasted over a picture, so any number of lines works and pages break cleanly.
+  - Only the artwork comes from the designs: logo, product photography, title band, section bars, totals panel.
+  - `scripts/generate_document_art.py` cuts the artwork from `scripts/document-art-src/` into `backend/resources/document-art/`. Titles (QUOTATION / INVOICE / COMMERCIAL INVOICE / FINAL INVOICE) are set in Cinzel; body text is Open Sans, embedded (OFL).
+  - Each sample from the PNGs renders on one A4 page.
+- **Quotations (`/admin/quotations`):**
+  - Numbered `VHL-CF-Q-2026-0001` / `VHL-FET-Q-…`; statuses draft → sent → accepted / declined (plus void); expiry is shown, not stored.
+  - Email to the customer with the PDF attached.
+  - One click turns a quotation into a **commercial** (`VHL-CF-CI-…`) or **final** (`VHL-CF-INV-…`) invoice, copying every field and line.
+- **Editor:**
+  - The form sits beside a live preview, which is the real PDF re-rendered by the server (`POST /admin/accounting/documents/preview`), so what staff see is what the customer gets.
+  - Prices are typed in normal amounts. The old quick form needed cents for EUR/USD; it remains only for "General invoice".
+  - Deposit % fills `{deposit}` and `{balance}` in the payment wording.
+- **Invoices:**
+  - Books → Invoices has new **Coffee invoice** / **FET invoice** buttons.
+  - Branded invoices open in the same editor and use the branded PDF for download, email and overdue reminders.
+  - General invoices keep the plain layout and `INV-YYYY-####` numbering.
+- **Bank details** from Finance's "VHL BANK INFOR" letter (Stanbic Bank, Forest Mall, SWIFT SBICUGKX).
+  - Accounts: UGX 9030027300994 · EUR 9030028047761 · USD 9030027301575.
+  - They are the defaults in `Setting`, editable in Settings → Quotations & invoices, along with the company TIN 1055502376.
+  - Every invoice prints a Payment Instructions block in the account for its currency. Coffee invoices carry it too: overseas buyers need the SWIFT code to pay the advance, although the original coffee design had no bank block.
+- **Who can quote:** a new `quotations` module, granted per person, not by department. Finance's list is Thurayya, Sarah, Victor, Joseph and Daniel; admins have it automatically.
+  - Grant it with `php artisan staff:grant-module quotations <email>…` (`--revoke` to remove). The command keeps everything else the person has and writes to the activity log.
+  - Quotations sits in the **Sales** app. Turning a quotation into an invoice also needs `accounting`; others see "Finance turns this quotation into an invoice".
+- **Database:** `quotations`, `quotation_items`; new columns on `invoices` / `invoice_items` (migration `2026_10_08_000001`). Tests: `QuotationTest` (10).
