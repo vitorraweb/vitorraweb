@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 6 October 2026
+**Last updated:** 9 October 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -1420,7 +1420,7 @@ The back office was reorganised the way Odoo organises a large business tool: a 
     - New search by name, email or company. This needs the backend `q` filter (`AdminController::enquiries`, tested in `EnquirySearchTest`), so it works once the API is redeployed.
   - **Accounting and Careers:** section tabs became an underline bar. Accounting accepts `?tab=` deep links.
 
-## Quotations & branded invoices (8 October 2026)
+## Quotations & branded invoices (8 October 2026) — ✅ live
 
 Finance's "Quote & Invoice Manager" design (`Vitorra_Quote_Invoice_Manager_DESIGN.html` + the three PNGs) is built into Accounting.
 
@@ -1449,3 +1449,29 @@ Finance's "Quote & Invoice Manager" design (`Vitorra_Quote_Invoice_Manager_DESIG
   - Grant it with `php artisan staff:grant-module quotations <email>…` (`--revoke` to remove). The command keeps everything else the person has and writes to the activity log.
   - Quotations sits in the **Sales** app. Turning a quotation into an invoice also needs `accounting`; others see "Finance turns this quotation into an invoice".
 - **Database:** `quotations`, `quotation_items`; new columns on `invoices` / `invoice_items` (migration `2026_10_08_000001`). Tests: `QuotationTest` (10).
+
+**Deployed 8 October 2026:**
+- Migration run on production.
+- `quotations` granted to Thurayya, Sarah, Victor, Joseph and Daniel with `staff:grant-module`. Joseph and Daniel also hold `accounting`, so only they (and admins) turn quotations into invoices.
+- PDF rendering checked on the live server.
+- Staff sign out and back in once for Quotations to appear in their menu.
+
+**Follow-ups (8 October 2026), live:**
+- **Incoterms dropdown:** FOB (Free on Board), CIF (Cost, Insurance & Freight) or EXW (Ex Works), plus the named place, or "Other" for free wording. Saved as e.g. "CIF Hamburg (Incoterms® 2020)", so the total row follows ("TOTAL (CIF HAMBURG)").
+- **Air Freight & Logistics** quick-add line (Entebbe EBB to destination airport), alongside Ocean Freight and Marine Cargo Insurance.
+- New, unsaved documents preview with "DRAFT" as the number.
+
+**Still to do:** Joseph or Daniel send one real quotation to their own inbox before the first customer send.
+
+## Admin sign-in in the console's style (8 October 2026) — ✅ live
+
+- Sign in, forgot password and reset password share `components/admin/ConsoleAuthShell.tsx`. It gives them the console's top bar, flat squared panel, compact fields and ink button, replacing the old dark marketing-style screens.
+- Two-step verification has its own step, showing the account being signed in, with a "Use a different account" way back. Sign-in logic, throttling and token scope are unchanged.
+- Known, left as is: the public site's cookie banner also shows on the admin sign-in pages.
+
+## Server operations note (October 2026)
+
+- `ssh namecheap` reaches the cPanel box (`business194.web-hosting.com`, port 21098, user `okelvaxj`).
+- The default `php` there is 8.2 and the app refuses to run on it. Use `/opt/alt/php83/usr/bin/php artisan …` and `/opt/alt/php83/usr/bin/php /opt/alt/php83/usr/bin/composer.phar …` (also in CLAUDE.md).
+- The box picks up new commits by itself; migrations and seeders are run by hand.
+- **SEO articles:** the four were published on production with `LaunchArticlesSeeder` (6 October 2026).
