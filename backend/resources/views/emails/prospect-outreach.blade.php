@@ -51,8 +51,15 @@
 
       @unless($ownSignOff)
         <p style="margin:8px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#454545;">Kind regards,</p>
-        <p style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.5;color:#1E1E1E;">The Vitorra team</p>
+        @unless($signatureHtml)
+          <p style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.5;color:#1E1E1E;">The Vitorra team</p>
+        @endunless
       @endunless
+
+      {{-- The sender's own signature (Thurayya's, Sarah's…), as saved in their profile. --}}
+      @if($signatureHtml)
+        <div style="margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#454545;">{!! $signatureHtml !!}</div>
+      @endif
     </td></tr>
 
     {{-- Attachments, named so the reader knows what to open --}}

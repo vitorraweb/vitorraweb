@@ -4,9 +4,12 @@
 {!! $bodyText !!}
 
 @unless($ownSignOff)Kind regards,
-The Vitorra team
-
+@unless($signatureText)The Vitorra team
 @endunless
+@endunless
+@if($signatureText){!! $signatureText !!}
+@endif
+
 @if(count($attachmentNames))Attached: {{ implode(', ', $attachmentNames) }}
 
 @endif

@@ -243,7 +243,7 @@ class ProspectCampaignController extends Controller
             'attachment_names.*' => ['string', 'max:255'],
         ]);
 
-        $mail = $this->composed($data, array_map(fn ($n) => ['name' => $n, 'path' => ''], $data['attachment_names'] ?? []));
+        $mail = $this->composed($data, array_map(fn ($n) => ['name' => $n, 'path' => ''], $data['attachment_names'] ?? []), signature: $request->user()->email_signature);
 
         return response()->json(['data' => [
             'subject' => $mail->subjectLine,
@@ -293,7 +293,7 @@ class ProspectCampaignController extends Controller
         }
 
         foreach ($recipients as $to) {
-            Mail::to($to)->send($this->composed($data, $files, isTest: true));
+            Mail::to($to)->send($this->composed($data, $files, isTest: true, signature: $request->user()->email_signature));
         }
 
         return response()->json([
@@ -303,7 +303,7 @@ class ProspectCampaignController extends Controller
     }
 
     /** One campaign email built from the composer's fields, personalised with a sample name. */
-    private function composed(array $data, array $files, bool $isTest = false): ProspectOutreach
+    private function composed(array $data, array $files, bool $isTest = false, ?string $signature = null): ProspectOutreach
     {
         $name = trim($data['sample_name'] ?? '') ?: 'Sample Company Ltd';
 
@@ -314,6 +314,7 @@ class ProspectCampaignController extends Controller
             $files,
             $data['product'] ?? null,
             $isTest,
+            $signature,
         );
     }
 }

@@ -769,8 +769,8 @@ export default function ProspectsPage() {
                   <p className="text-xs rounded-xl px-3.5 py-2.5" style={{ background: "#FAFAF8", color: "#777" }}>
                     Sent from <strong style={{ color: "#7A6020" }}>support@vitorra.org</strong> with support copied, so every
                     reply comes back to the shared inbox, not a personal mailbox. Use <code>{"{name}"}</code> to drop in each
-                    company&apos;s name. Just type the message: the Vitorra letterhead, greeting, sign-off and contact
-                    details are added for you. Blank lines start new paragraphs, lines starting &ldquo;-&rdquo; become bullet points.
+                    company&apos;s name. Just type the message: the Vitorra letterhead, greeting, sign-off, <strong>your own
+                    email signature</strong> (from your profile) and contact details are added for you. Blank lines start new paragraphs, lines starting &ldquo;-&rdquo; become bullet points.
                   </p>
 
                   {/* Template picker */}

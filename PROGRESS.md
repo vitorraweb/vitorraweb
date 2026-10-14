@@ -1209,6 +1209,23 @@ inbox clear. `MAIL_CAMPAIGN_CC` changes or (empty) turns off the copy.
 > `POST …/test` (attachments in memory, never stored). Tests:
 > `CampaignEmailTest` (8). **431 backend tests passing.**
 
+### Signed by whoever sends it (added later the same day)
+- A campaign sent from Thurayya's or Sarah's account ends with **their own email
+  signature**, the one saved in their profile (`/admin/profile`), under "Kind
+  regards,". The customer can see who is writing and following up. With no
+  signature saved, it signs off as "The Vitorra team".
+- The email is still **from** support@vitorra.org, with support **copied** and
+  replies going to support.
+- Test sends and the preview use the tester's own signature, so a test shows
+  exactly what customers will get.
+- ⚠ Thurayya and Sarah should paste their Outlook signature into their profile
+  before the first campaign.
+
+### Dropdowns in the selection bar are readable again
+The Status / Assign to / Follow up menus in the dark bar at the bottom showed
+white words on a white menu. Every console dropdown's menu is now dark text on
+a light background.
+
 ### Deploy
 No database change and no new dependency: the standard pull plus
 `config:cache` and `route:cache` (three new routes). Ride it with the previous

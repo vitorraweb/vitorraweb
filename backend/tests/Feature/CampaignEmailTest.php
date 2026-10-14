@@ -160,4 +160,50 @@ class CampaignEmailTest extends TestCase
             ->assertJsonPath('data.2.email', 'john@vitorra.org')
             ->assertJsonPath('data.2.me', true);
     }
+
+    /* ── The sender's signature ─────────────────────────────────────────── */
+
+    public function test_a_campaign_is_signed_with_the_senders_own_signature_and_still_copies_support(): void
+    {
+        Mail::fake();
+        $thurayya = User::create([
+            'name' => 'Thurayya Nakayima', 'email' => 'thurayya@vitorra.org', 'password' => 'x', 'role' => 'admin',
+            'email_signature' => '<p><strong>Thurayya Nakayima</strong><br>Senior Marketing Officer</p>',
+        ]);
+        $p = Prospect::create(['name' => 'Java House', 'category' => 'CAFE_RESTAURANT', 'product' => 'COFFEE', 'email' => 'java@buyer.test']);
+
+        $this->withHeader('Authorization', 'Bearer '.$thurayya->createToken('t')->plainTextToken)
+            ->postJson('/api/admin/prospect-campaigns', ['ids' => [$p->id], 'subject' => 'S', 'body' => 'A note.'])
+            ->assertCreated();
+
+        Mail::assertSent(ProspectOutreach::class, function (ProspectOutreach $mail) {
+            $html = $mail->previewHtml();
+            $this->assertStringContainsString('Senior Marketing Officer', $html);
+            $this->assertStringNotContainsString('The Vitorra team', $html); // her name replaces the generic one
+            $this->assertSame('support@vitorra.org', $mail->envelope()->cc[0]->address);
+            $this->assertSame('support@vitorra.org', $mail->envelope()->from->address);
+
+            return true;
+        });
+    }
+
+    public function test_without_a_signature_the_email_signs_off_as_the_team(): void
+    {
+        $html = (new ProspectOutreach('Java House', 'S', 'A note.', [], 'COFFEE'))->previewHtml();
+
+        $this->assertStringContainsString('The Vitorra team', $html);
+    }
+
+    public function test_the_test_send_and_preview_use_the_testers_signature(): void
+    {
+        $sarah = User::create([
+            'name' => 'Sarah Nuwamanya', 'email' => 'sarah@vitorra.org', 'password' => 'x', 'role' => 'admin',
+            'email_signature' => '<p>Sarah Nuwamanya<br>Marketing Officer</p>',
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer '.$sarah->createToken('t')->plainTextToken)
+            ->postJson('/api/admin/prospect-campaigns/preview', ['subject' => 'S', 'body' => 'A note.'])
+            ->assertOk()
+            ->assertSee('Marketing Officer', false);
+    }
 }

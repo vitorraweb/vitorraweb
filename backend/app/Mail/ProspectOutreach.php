@@ -40,6 +40,12 @@ class ProspectOutreach extends Mailable
         public readonly ?string $product = null,
         /** A test send to our own team — marked as such and not copied to support. */
         public readonly bool $isTest = false,
+        /**
+         * The sender's own email signature (HTML, already sanitised by
+         * SignatureHtml when they saved it), so the customer can see which of
+         * the team wrote to them. Support is still the sender and is copied.
+         */
+        public readonly ?string $signature = null,
     ) {}
 
     public const PRODUCT_LABELS = [
@@ -57,6 +63,7 @@ class ProspectOutreach extends Mailable
             self::personalise($campaign->body, $prospectName),
             $campaign->attachments ?? [],
             $campaign->product,
+            signature: $campaign->creator?->email_signature,
         );
     }
 
@@ -106,6 +113,10 @@ class ProspectOutreach extends Mailable
             // "Kind regards" don't get a second one stacked on top.
             'ownGreeting'     => EmailBody::hasGreeting($this->body),
             'ownSignOff'      => EmailBody::hasSignOff($this->body),
+            'signatureHtml'   => filled($this->signature) ? $this->signature : null,
+            'signatureText'   => filled($this->signature)
+                ? trim(preg_replace("/\n{3,}/", "\n\n", html_entity_decode(strip_tags(preg_replace('/<br\s*\/?>|<\/(p|div|tr)>/i', "\n", $this->signature)))))
+                : null,
             'productLabel'    => self::PRODUCT_LABELS[$this->product] ?? 'Vitorra Holdings',
             'preheader'       => mb_strimwidth(preg_replace('/\s+/', ' ', strip_tags($this->body)), 0, 110, '…'),
             'attachmentNames' => array_map(fn ($f) => $f['name'], $this->files),

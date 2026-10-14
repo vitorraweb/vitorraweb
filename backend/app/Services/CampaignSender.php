@@ -41,6 +41,7 @@ class CampaignSender
         $failed = 0;
 
         try {
+            $campaign->loadMissing('creator'); // their signature signs every email
             $batch = $campaign->recipients()
                 ->where('status', 'pending')
                 ->orderBy('id')
