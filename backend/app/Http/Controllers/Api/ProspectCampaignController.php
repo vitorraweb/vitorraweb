@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ProspectOutreach;
 use App\Models\Prospect;
 use App\Models\ProspectCampaign;
+use App\Models\User;
 use App\Services\CampaignSender;
 use App\Support\Audit;
 use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 
 /**
  * Bulk outreach campaigns to the prospect database.
@@ -207,5 +211,109 @@ class ProspectCampaignController extends Controller
             'skipped'   => (int) ($counts['skipped'] ?? 0),
             'duplicate' => (int) ($counts['duplicate'] ?? 0),
         ];
+    }
+
+    /** People who may receive a test send: marketing's list, plus whoever is asking. */
+    public function testRecipients(Request $request): JsonResponse
+    {
+        $emails = collect(config('campaigns.test_recipients', []))
+            ->push($request->user()->email)
+            ->map(fn ($e) => mb_strtolower($e))
+            ->unique()
+            ->values();
+
+        $names = User::whereIn('email', $emails)->pluck('name', 'email');
+
+        return response()->json(['data' => $emails->map(fn ($e) => [
+            'email' => $e,
+            'name'  => $names[$e] ?? $e,
+            'me'    => $e === mb_strtolower($request->user()->email),
+        ])->all()]);
+    }
+
+    /** The email exactly as a recipient will see it, for the composer's preview. */
+    public function preview(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'subject'            => ['nullable', 'string', 'max:255'],
+            'body'               => ['nullable', 'string', 'max:20000'],
+            'product'            => ['nullable', Rule::in(Prospect::PRODUCTS)],
+            'sample_name'        => ['nullable', 'string', 'max:255'],
+            'attachment_names'   => ['nullable', 'array', 'max:10'],
+            'attachment_names.*' => ['string', 'max:255'],
+        ]);
+
+        $mail = $this->composed($data, array_map(fn ($n) => ['name' => $n, 'path' => ''], $data['attachment_names'] ?? []));
+
+        return response()->json(['data' => [
+            'subject' => $mail->subjectLine,
+            'html'    => $mail->previewHtml(),
+        ]]);
+    }
+
+    /**
+     * Send the campaign as it stands to our own team first — attachments and
+     * all, subject marked [TEST], not copied to support, and nothing recorded
+     * against any prospect.
+     */
+    public function test(Request $request): JsonResponse
+    {
+        $maxKb = (int) config('campaigns.max_attachment_mb', 8) * 1024;
+
+        $data = $request->validate([
+            'subject'       => ['required', 'string', 'max:255'],
+            'body'          => ['required', 'string', 'max:20000'],
+            'product'       => ['nullable', Rule::in(Prospect::PRODUCTS)],
+            'sample_name'   => ['nullable', 'string', 'max:255'],
+            'recipients'    => ['required', 'array', 'min:1', 'max:10'],
+            'recipients.*'  => ['email'],
+            'attachments'   => ['nullable', 'array', 'max:'.(int) config('campaigns.max_attachment_count', 5)],
+            'attachments.*' => ['file', 'max:'.$maxKb, 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,png,jpg,jpeg,csv,txt'],
+        ]);
+
+        // Tests only ever go to our own people — never a way to email outsiders.
+        $allowed = collect(config('campaigns.test_recipients', []))
+            ->push($request->user()->email)
+            ->map(fn ($e) => mb_strtolower($e));
+        $recipients = collect($data['recipients'])->map(fn ($e) => mb_strtolower($e))->unique();
+        $refused = $recipients->diff($allowed);
+        if ($refused->isNotEmpty()) {
+            return response()->json(['message' => 'Test emails can only go to the marketing team or yourself.'], 422);
+        }
+
+        // Attach the files from memory: a test leaves nothing behind on disk.
+        $files = [];
+        foreach ($request->file('attachments') ?? [] as $file) {
+            $files[] = [
+                'path' => '',
+                'data' => $file->get(),
+                'name' => $file->getClientOriginalName(),
+                'mime' => $file->getClientMimeType(),
+            ];
+        }
+
+        foreach ($recipients as $to) {
+            Mail::to($to)->send($this->composed($data, $files, isTest: true));
+        }
+
+        return response()->json([
+            'sent_to' => $recipients->values()->all(),
+            'message' => 'Test sent to '.$recipients->implode(', ').'.',
+        ]);
+    }
+
+    /** One campaign email built from the composer's fields, personalised with a sample name. */
+    private function composed(array $data, array $files, bool $isTest = false): ProspectOutreach
+    {
+        $name = trim($data['sample_name'] ?? '') ?: 'Sample Company Ltd';
+
+        return new ProspectOutreach(
+            $name,
+            ProspectOutreach::personalise($data['subject'] ?? '', $name),
+            ProspectOutreach::personalise($data['body'] ?? '', $name),
+            $files,
+            $data['product'] ?? null,
+            $isTest,
+        );
     }
 }

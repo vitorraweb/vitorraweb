@@ -22,4 +22,10 @@ return [
     'max_attachment_mb'    => (int) env('CAMPAIGN_MAX_ATTACHMENT_MB', 8),
     'max_attachment_count' => (int) env('CAMPAIGN_MAX_ATTACHMENT_COUNT', 5),
 
+    // Who can receive a test send before a campaign goes out (marketing), as
+    // well as the person sending. Comma-separated.
+    'test_recipients' => array_values(array_filter(array_map('trim', explode(',',
+        (string) env('CAMPAIGN_TEST_RECIPIENTS', 'thurayya@vitorra.org,sarah@vitorra.org')
+    )))),
+
 ];

@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\ProspectCampaign;
+use App\Support\EmailBody;
 use App\Support\SecureFile;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -32,10 +33,20 @@ class ProspectOutreach extends Mailable
          * Campaign files to attach. Named $files, not $attachments — the parent
          * Mailable already owns a mutable $attachments property.
          *
-         * @var array<int, array{path: string, name: string, mime?: string}>
+         * @var array<int, array{path: string, name: string, mime?: string, data?: string}>
          */
         public readonly array $files = [],
+        /** Product line the campaign is for (FET / SEAL / COFFEE), labels the masthead. */
+        public readonly ?string $product = null,
+        /** A test send to our own team — marked as such and not copied to support. */
+        public readonly bool $isTest = false,
     ) {}
+
+    public const PRODUCT_LABELS = [
+        'FET'    => 'Fuel Eco Tech',
+        'SEAL'   => 'SEAL Wound Spray',
+        'COFFEE' => 'Vitorra Coffee',
+    ];
 
     /** Build for a campaign recipient — personalises the body's {name} tokens. */
     public static function forCampaign(ProspectCampaign $campaign, string $prospectName): self
@@ -45,6 +56,7 @@ class ProspectOutreach extends Mailable
             self::personalise($campaign->subject, $prospectName),
             self::personalise($campaign->body, $prospectName),
             $campaign->attachments ?? [],
+            $campaign->product,
         );
     }
 
@@ -58,23 +70,59 @@ class ProspectOutreach extends Mailable
     {
         $from = config('mail.campaign_from') ?: config('mail.team_address');
 
+        $cc = config('mail.campaign_cc');
+
         return new Envelope(
             from: new Address($from, config('mail.from.name')),
-            subject: $this->subjectLine,
+            subject: ($this->isTest ? '[TEST] ' : '').$this->subjectLine,
             replyTo: [new Address($from, config('mail.from.name'))],
+            // Support is copied on every real send; a test stays with the tester.
+            cc: $cc && ! $this->isTest ? [new Address($cc, config('mail.from.name'))] : [],
         );
     }
 
     public function content(): Content
     {
-        // The body is plain text typed into a textarea. If the writer supplied
-        // their own opening line, don't stack a second greeting on top of it.
-        $ownGreeting = (bool) preg_match('/^\s*(hi|hello|dear|good\s+(morning|afternoon|day))\b/i', $this->body);
-
         return new Content(
             view: 'emails.prospect-outreach',
-            with: ['ownGreeting' => $ownGreeting],
+            text: 'emails.prospect-outreach-text',
+            with: $this->viewData(),
         );
+    }
+
+    /** Everything the template needs — also used to preview the email in the composer. */
+    public function viewData(): array
+    {
+        $site = rtrim((string) config('services.frontend.url', 'https://vitorra.org'), '/');
+        if (! str_starts_with($site, 'https://')) {
+            $site = 'https://vitorra.org'; // a localhost link is no use in a customer's inbox
+        }
+        $sector = $this->product && isset(self::PRODUCT_LABELS[$this->product]) ? $this->product : null;
+
+        return [
+            'bodyHtml'        => EmailBody::toHtml($this->body),
+            'bodyText'        => trim($this->body),
+            // Writers who open with their own "Dear …" or close with their own
+            // "Kind regards" don't get a second one stacked on top.
+            'ownGreeting'     => EmailBody::hasGreeting($this->body),
+            'ownSignOff'      => EmailBody::hasSignOff($this->body),
+            'productLabel'    => self::PRODUCT_LABELS[$this->product] ?? 'Vitorra Holdings',
+            'preheader'       => mb_strimwidth(preg_replace('/\s+/', ' ', strip_tags($this->body)), 0, 110, '…'),
+            'attachmentNames' => array_map(fn ($f) => $f['name'], $this->files),
+            'siteUrl'         => $site,
+            'logoUrl'         => $site.'/logo.png',
+            'ctaUrl'          => $site.'/enquire'.($sector ? "?sector={$sector}" : ''),
+            'replyAddress'    => config('mail.campaign_from') ?: config('mail.team_address'),
+        ];
+    }
+
+    /** The rendered HTML, for the composer's preview. */
+    public function previewHtml(): string
+    {
+        return view('emails.prospect-outreach', [
+            'prospectName' => $this->prospectName,
+            'subjectLine'  => $this->subjectLine,
+        ] + $this->viewData())->render();
     }
 
     /** @return array<int, Attachment> */
@@ -84,7 +132,8 @@ class ProspectOutreach extends Mailable
             ->map(function (array $file) {
                 // Campaign files live encrypted on the private disk; decrypt in
                 // memory at send time so nothing is written back out in the clear.
-                $contents = SecureFile::read($file['path']);
+                // A test send carries its files in memory (`data`) — nothing stored.
+                $contents = $file['data'] ?? SecureFile::read($file['path']);
                 if ($contents === null) {
                     return null;
                 }

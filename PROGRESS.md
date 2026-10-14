@@ -1154,6 +1154,68 @@ and Unsubscribe are now on the same system. Every form keeps its logic
 **Still to redesign:** the order / invoice / payment pages reached from links we send customers, and the gated shop catalogue, cart and checkout.
 Suppliers, legal, Shop. Until then those pages carry the old styling.
 
+## Campaign emails: Vitorra letterhead, support copied, test before sending (14 October 2026)
+
+The last campaign arrived looking messy. **Why:** the email depended on
+formatting rules that Outlook and Gmail strip out. The whole message sat in
+one paragraph, and Outlook dropped its line breaks, so it read as one block of
+text.
+
+### A branded email, however it was written
+- The gold Vitorra logo at the top, with the product line under it (Vitorra
+  Coffee, Fuel Eco Tech or SEAL Wound Spray) and a thin gold rule.
+- **The message itself:**
+  - typed text becomes proper paragraphs;
+  - lines starting with "-" become bullet points, and "1." starts a numbered
+    list;
+  - web and email addresses become links;
+  - `**bold**` works.
+- **Added automatically:** "Dear {company}," at the top and "Kind regards, The
+  Vitorra team" at the end. Neither is added twice if the writer typed their
+  own.
+- Attachments are named in the email, so the reader knows what to open.
+- A **Request a quote** button (straight to that product's enquiry form) and
+  "or simply reply".
+- A dark footer with the address, phone, support email, website and the
+  unsubscribe line.
+- **Readable everywhere:** built the way Outlook needs (tables, inline styling)
+  and sent with a plain-text version as well.
+
+### Support is copied on every campaign email
+Every email goes out **from** support@vitorra.org, **replies to** support, and
+now also **CCs** support. The support mailbox keeps a copy of exactly what
+each customer received, and a customer pressing "Reply all" includes support
+too. ⚠ The support mailbox gets one copy per recipient: a 200-customer send
+puts 200 copies there. An Outlook rule filing them into a folder keeps the
+inbox clear. `MAIL_CAMPAIGN_CC` changes or (empty) turns off the copy.
+
+### Test before the full send
+- The composer has **Send test**, with Thurayya, Sarah and the person sending
+  ticked. The test is the real email:
+  - same layout and attachments, with a real company name dropped in;
+  - subject marked **[TEST]**;
+  - not copied to support, and nothing recorded against any customer.
+- **Preview** shows the finished email on screen without sending anything.
+- **Sending a version nobody has tested needs a second click** ("Not tested
+  yet. Send anyway?"). Changing the message after a test asks for a new test.
+- Tests can only go to the marketing list or the sender, never to customers.
+  Change the list with `CAMPAIGN_TEST_RECIPIENTS`.
+
+> Technical detail (engineering): `App\Support\EmailBody` (escaped
+> text → inline-styled paragraphs / lists / links); `emails.prospect-outreach`
+> rebuilt table-based + `prospect-outreach-text`; `ProspectOutreach` gains
+> `product`, `isTest`, CC from `mail.campaign_cc`, `previewHtml()`; new
+> `GET /admin/prospect-campaigns/test-recipients`, `POST …/preview`,
+> `POST …/test` (attachments in memory, never stored). Tests:
+> `CampaignEmailTest` (8). **431 backend tests passing.**
+
+### Deploy
+No database change and no new dependency: the standard pull plus
+`config:cache` and `route:cache` (three new routes). Ride it with the previous
+entry's `migrate --force` if that has not been run yet.
+
+---
+
 ## Coffee customers: campaigns, quotations, follow-ups and safe re-uploads (14 October 2026)
 
 Marketing can now work the coffee list end to end from `/admin/prospects`: email

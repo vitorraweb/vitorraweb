@@ -4,7 +4,7 @@ import { Fragment, useEffect, useState, useCallback, useRef } from "react";
 import {
   Loader2, ChevronDown, Mail, Phone, MapPin, AlertTriangle, Upload,
   ChevronLeft, ChevronRight, Download, Send, X, ArrowRightCircle,
-  Paperclip, Save, CheckCircle2, FileText, CalendarClock,
+  Paperclip, Save, CheckCircle2, FileText, CalendarClock, Eye, FlaskConical,
 } from "lucide-react";
 import Link from "next/link";
 import { apiAdmin, uploadAdmin, downloadCsv, auth, canAccess } from "@/lib/auth";
@@ -134,6 +134,16 @@ export default function ProspectsPage() {
   const [tplSaved, setTplSaved]         = useState(false);
   const attachRef = useRef<HTMLInputElement>(null);
 
+  // Preview + test send (to marketing) before a full release
+  const [testPeople, setTestPeople]   = useState<{ email: string; name: string; me: boolean }[]>([]);
+  const [testTo, setTestTo]           = useState<Set<string>>(new Set());
+  const [testing, setTesting]         = useState(false);
+  const [testMsg, setTestMsg]         = useState<{ ok: boolean; text: string } | null>(null);
+  const [testedKey, setTestedKey]     = useState("");
+  const [confirmUntested, setConfirmUntested] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [previewing, setPreviewing]   = useState(false);
+
   // Per-prospect convert state
   const [converting, setConverting] = useState<number | null>(null);
 
@@ -177,6 +187,12 @@ export default function ProspectsPage() {
   }, [filters, page]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    apiAdmin<{ data: { email: string; name: string; me: boolean }[] }>("/admin/prospect-campaigns/test-recipients")
+      .then((r) => { setTestPeople(r.data); setTestTo(new Set(r.data.map((p) => p.email))); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     apiAdmin<Template[]>("/admin/templates").then((r) => setTemplates(Array.isArray(r) ? r : [])).catch(() => {});
@@ -360,6 +376,60 @@ export default function ProspectsPage() {
     setComposerOpen(false); setSubject(""); setBody(""); setFiles([]);
     setCampaign(null); setTemplateOpen(false); setSendError(""); setFileError("");
     setTplName(""); setTplSaved(false);
+    setTestMsg(null); setTestedKey(""); setConfirmUntested(false); setPreviewHtml(null);
+  };
+
+  /* The product line and a real name to show in the preview / test, taken
+     from what is being sent to. */
+  const sendProduct = product || (() => {
+    const ps = [...new Set(list.filter((p) => selected.has(p.id)).map((p) => p.product))];
+    return ps.length === 1 ? ps[0] : "";
+  })();
+  const sampleName = list.find((p) => allMatching || selected.has(p.id))?.name ?? "";
+  /** What the test covered — editing the message after testing asks for a new test. */
+  const contentKey = JSON.stringify([subject.trim(), body.trim(), files.map((f) => `${f.name}:${f.size}`)]);
+  const tested = testedKey === contentKey;
+
+  const showPreview = async () => {
+    setPreviewing(true);
+    try {
+      const res = await apiAdmin<{ data: { html: string } }>("/admin/prospect-campaigns/preview", {
+        method: "POST",
+        body: JSON.stringify({
+          subject, body, product: sendProduct || null, sample_name: sampleName,
+          attachment_names: files.map((f) => f.name),
+        }),
+      });
+      setPreviewHtml(res.data.html);
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : "Could not build the preview.");
+    } finally { setPreviewing(false); }
+  };
+
+  const sendTest = async () => {
+    if (!subject.trim() || !body.trim() || testTo.size === 0) return;
+    setTesting(true); setTestMsg(null);
+    try {
+      const form = new FormData();
+      form.append("subject", subject.trim());
+      form.append("body", body.trim());
+      if (sendProduct) form.append("product", sendProduct);
+      if (sampleName) form.append("sample_name", sampleName);
+      [...testTo].forEach((e) => form.append("recipients[]", e));
+      files.forEach((f) => form.append("attachments[]", f));
+      const res = await uploadAdmin<{ message: string }>("/admin/prospect-campaigns/test", form);
+      setTestMsg({ ok: true, text: `${res.message} Check the inbox, then send to everyone.` });
+      setTestedKey(contentKey);
+      setConfirmUntested(false);
+    } catch (e) {
+      setTestMsg({ ok: false, text: e instanceof Error ? e.message : "The test could not be sent." });
+    } finally { setTesting(false); }
+  };
+
+  /** Full send — a version nobody has tested needs a second, deliberate click. */
+  const releaseCampaign = () => {
+    if (!tested && !confirmUntested) { setConfirmUntested(true); return; }
+    startCampaign();
   };
 
   const handleExport = async () => {
@@ -697,8 +767,10 @@ export default function ProspectsPage() {
               ) : (
                 <>
                   <p className="text-xs rounded-xl px-3.5 py-2.5" style={{ background: "#FAFAF8", color: "#777" }}>
-                    Sent from <strong style={{ color: "#7A6020" }}>support@vitorra.org</strong> — replies come back to the
-                    shared inbox, not a personal mailbox. Use <code>{"{name}"}</code> to drop in each company&apos;s name.
+                    Sent from <strong style={{ color: "#7A6020" }}>support@vitorra.org</strong> with support copied, so every
+                    reply comes back to the shared inbox, not a personal mailbox. Use <code>{"{name}"}</code> to drop in each
+                    company&apos;s name. Just type the message: the Vitorra letterhead, greeting, sign-off and contact
+                    details are added for you. Blank lines start new paragraphs, lines starting &ldquo;-&rdquo; become bullet points.
                   </p>
 
                   {/* Template picker */}
@@ -741,7 +813,7 @@ export default function ProspectsPage() {
                   <div>
                     <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1" style={{ color: "#bbb" }}>Message</label>
                     <textarea value={body} onChange={(e) => setBody(e.target.value)}
-                      placeholder="Hi {name}, …"
+                      placeholder={"Type the message itself. \"Dear {name},\", the sign-off and the Vitorra letterhead are added for you.\n\nBlank line = new paragraph.\n- Lines starting with a dash become bullet points"}
                       className="w-full text-sm rounded-xl px-3 py-2 border min-h-32 outline-none"
                       style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
                   </div>
@@ -774,6 +846,37 @@ export default function ProspectsPage() {
                       </ul>
                     )}
                     {fileError && <p className="text-xs mt-2" style={{ color: "#C0392B" }}>{fileError}</p>}
+                  </div>
+
+                  {/* Preview + test before the full release */}
+                  <div className="rounded-xl px-3.5 py-3 space-y-2.5" style={{ background: "#FAFAF8", border: "1px solid rgba(0,0,0,0.06)" }}>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#7A6020" }}>Check it before it goes out</p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                      {testPeople.map((p) => (
+                        <label key={p.email} className="flex items-center gap-1.5 text-xs" style={{ color: "#555" }}>
+                          <input type="checkbox" checked={testTo.has(p.email)}
+                            onChange={(e) => setTestTo((s) => { const n = new Set(s); if (e.target.checked) n.add(p.email); else n.delete(p.email); return n; })} />
+                          {p.me ? `Me (${p.email})` : p.name}
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button onClick={sendTest} disabled={testing || !subject.trim() || !body.trim() || testTo.size === 0}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full disabled:opacity-40"
+                        style={{ background: "#1E1E1E", color: "#fff" }}>
+                        {testing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FlaskConical className="w-3.5 h-3.5" />}Send test
+                      </button>
+                      <button onClick={showPreview} disabled={previewing || !body.trim()}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full disabled:opacity-40"
+                        style={{ background: "#F2F2F2", color: "#555" }}>
+                        {previewing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />}Preview
+                      </button>
+                      {tested && <span className="text-[11px] flex items-center gap-1" style={{ color: "#16A34A" }}><CheckCircle2 className="w-3.5 h-3.5" />Tested</span>}
+                    </div>
+                    {testMsg && <p className="text-[11px]" style={{ color: testMsg.ok ? "#16A34A" : "#C0392B" }}>{testMsg.text}</p>}
+                    <p className="text-[11px]" style={{ color: "#999" }}>
+                      The test is marked [TEST], uses {sampleName ? `“${sampleName}”` : "a sample company"} for {"{name}"}, and carries the attachments. Nothing is recorded against any customer.
+                    </p>
                   </div>
 
                   <label className="flex items-center gap-2 text-xs" style={{ color: "#555" }}>
@@ -817,14 +920,30 @@ export default function ProspectsPage() {
                 {campaign ? "Close" : "Cancel"}
               </button>
               {!campaign && (
-                <button onClick={startCampaign} disabled={sending || !subject.trim() || !body.trim() || (!allMatching && selectedWithEmail === 0)}
+                <button onClick={releaseCampaign} disabled={sending || !subject.trim() || !body.trim() || (!allMatching && selectedWithEmail === 0)}
                   className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50"
                   style={{ background: "#C5B27A", color: "#1E1E1E" }}>
                   {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                  {allMatching ? `Send to all ${meta.total}` : `Send to ${selectedWithEmail}`}
+                  {confirmUntested && !tested
+                    ? "Not tested yet. Send anyway?"
+                    : allMatching ? `Send to all ${meta.total}` : `Send to ${selectedWithEmail}`}
                 </button>
               )}
             </div>
+          </div>
+        </div>
+      )}
+      {/* Email preview — the real rendered email */}
+      {previewHtml && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setPreviewHtml(null)}>
+          <div className="bg-white w-full max-w-[680px] h-[90vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+              <p className="text-sm font-semibold text-ink">Preview · as {sampleName || "a sample company"} will see it</p>
+              <button onClick={() => setPreviewHtml(null)} aria-label="Close preview" className="p-1.5 rounded-full" style={{ background: "#F2F2F2" }}>
+                <X className="w-4 h-4" style={{ color: "#777" }} />
+              </button>
+            </div>
+            <iframe title="Email preview" srcDoc={previewHtml} sandbox="" className="flex-1 w-full border-0" />
           </div>
         </div>
       )}

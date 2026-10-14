@@ -309,6 +309,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/prospects/{prospect}', [ProspectController::class, 'update']);
 
             // Bulk outreach campaigns (sent in batches from the support address)
+            Route::get('/prospect-campaigns/test-recipients', [ProspectCampaignController::class, 'testRecipients']);
+            Route::post('/prospect-campaigns/preview', [ProspectCampaignController::class, 'preview']);
+            Route::post('/prospect-campaigns/test', [ProspectCampaignController::class, 'test']);
             Route::get('/prospect-campaigns', [ProspectCampaignController::class, 'index']);
             Route::post('/prospect-campaigns', [ProspectCampaignController::class, 'store']);
             Route::get('/prospect-campaigns/{campaign}', [ProspectCampaignController::class, 'show']);
