@@ -45,7 +45,7 @@ const CATEGORIES_BY_PRODUCT: Record<string, [string, string][]> = {
     ["INTERNAL_TEST", "Internal test"],
   ],
   COFFEE: [
-    ["CAFE_RESTAURANT", "Cafés & restaurants"], ["HOTEL", "Hotels"], ["SUPERMARKET", "Supermarkets & shops"],
+    ["GO4WORLD", "go4WorldBusiness buyers"], ["CAFE_RESTAURANT", "Cafés & restaurants"], ["HOTEL", "Hotels"], ["SUPERMARKET", "Supermarkets & shops"],
     ["CORPORATE_OFFICE", "Offices & corporates"], ["DISTRIBUTOR", "Distributors"],
     ["EXPORT_BUYER", "Export buyers"], ["INDIVIDUAL", "Individual customers"],
     ["INTERNAL_TEST", "Internal test"],

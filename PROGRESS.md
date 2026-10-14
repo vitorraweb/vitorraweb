@@ -1180,9 +1180,10 @@ details.
 Marketing can now load the coffee customer list into the system themselves, in
 `/admin/prospects` → **Import list**.
 
-- **Coffee is its own list**, beside FET and SEAL, with its own buyer types: cafés
-  & restaurants, hotels, supermarkets & shops, offices, distributors, export
-  buyers and individuals.
+- **Coffee is its own list**, beside FET and SEAL, with its own buyer types:
+  **go4WorldBusiness buyers** (listed first, as most coffee buyers come through
+  our listing there), cafés & restaurants, hotels, supermarkets & shops,
+  offices, distributors, export buyers and individuals.
 - **Upload the Excel file as it is** (.xlsx) or a CSV. No more "Save As CSV".
   Title rows above the header and a numbered "No." column are handled, and the
   name column is found from its heading.

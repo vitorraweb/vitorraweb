@@ -89,6 +89,16 @@ class CoffeeCustomerImportTest extends TestCase
         ])->assertJsonPath('imported', 0)->assertJsonPath('skipped', 1);
     }
 
+    public function test_go4worldbusiness_buyers_import_onto_the_coffee_list(): void
+    {
+        $this->admin()->post('/api/admin/prospects/import', [
+            'file' => $this->workbook([['Company', 'Email', 'Country'], ['Hamburg Roasters GmbH', 'buy@roasters.test', 'Germany']]),
+            'product' => 'COFFEE', 'category' => 'GO4WORLD',
+        ])->assertOk()->assertJsonPath('imported', 1);
+
+        $this->assertSame('GO4WORLD', Prospect::first()->category);
+    }
+
     public function test_a_coffee_list_cannot_be_filed_under_an_fet_industry(): void
     {
         $this->admin()->post('/api/admin/prospects/import', [
