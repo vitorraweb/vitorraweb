@@ -1211,7 +1211,7 @@
   }
   .c-input:focus, .c-select:focus { border-color: var(--color-ink); }
   .c-select { padding-right: 1.75rem; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%236B6B6B' stroke-width='1.5'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .6rem center; }
-  .c-select[data-active="true"] { border-color: var(--color-gold); background-color: color-mix(in oklab, var(--color-gold) 10%, var(--color-paper)); }
+  .c-select[data-active="true"], .c-btn[data-active="true"] { border-color: var(--color-gold); background-color: color-mix(in oklab, var(--color-gold) 10%, var(--color-paper)); }
 
   .c-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: .4rem; height: 2rem; padding: 0 .75rem;

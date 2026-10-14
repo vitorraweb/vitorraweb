@@ -4,15 +4,16 @@ import { Fragment, useEffect, useState, useCallback, useRef } from "react";
 import {
   Loader2, ChevronDown, Mail, Phone, MapPin, AlertTriangle, Upload,
   ChevronLeft, ChevronRight, Download, Send, X, ArrowRightCircle,
-  Paperclip, Save, CheckCircle2,
+  Paperclip, Save, CheckCircle2, FileText, CalendarClock,
 } from "lucide-react";
-import { apiAdmin, uploadAdmin, downloadCsv } from "@/lib/auth";
+import Link from "next/link";
+import { apiAdmin, uploadAdmin, downloadCsv, auth, canAccess } from "@/lib/auth";
 import { PageHeader, Empty, type Paginated } from "@/components/admin/admin-ui";
 
 type Prospect = {
   id: number; name: string; category: string; product: string; location: string | null;
   phone: string | null; email: string | null; outreach_status: string;
-  feedback: string | null; follow_up: string | null; assigned_to: string | null;
+  feedback: string | null; follow_up: string | null; follow_up_on: string | null; assigned_to: string | null;
   flags: string[] | null; source: string | null;
 };
 type Template = { id: number; name: string; subject: string; body: string; category: string | null };
@@ -62,7 +63,7 @@ const CAT_LABEL = Object.fromEntries(ALL_CATEGORIES);
 const STATUSES: [string, string][] = [
   ["not_contacted", "Not contacted"], ["contacted", "Contacted"], ["delivered", "Delivered"],
   ["bounced", "Bounced"], ["responded", "Responded"], ["qualified", "Qualified"],
-  ["converted", "Converted"], ["not_interested", "Not interested"],
+  ["quoted", "Quoted"], ["converted", "Converted"], ["not_interested", "Not interested"],
 ];
 const ASSIGNEES = ["Thurayya Nakayima", "Sarah Nuwamanya", "John Oluwaseyi"];
 
@@ -71,10 +72,23 @@ const MAX_FILE_MB = 8;
 
 /** ?q= on arrival — the command palette links straight to a match. */
 const initialQ = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("q") ?? "" : "";
+/** ?due=1 on arrival — the launcher's "follow-ups due" line links here. */
+const initialDue = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("due") === "1";
+
+/** Quotation templates exist for these lists; SEAL has none yet. */
+const QUOTE_BUSINESS: Record<string, string> = { COFFEE: "coffee", FET: "fet" };
+
+const isoDay = (offsetDays: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const FOLLOW_UP_IN: [string, number][] = [["Tomorrow", 1], ["In 3 days", 3], ["In a week", 7], ["In 2 weeks", 14], ["In a month", 30]];
+const fmtDay = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 const STATUS_TONE: Record<string, string> = {
   not_contacted: "muted", contacted: "gold", delivered: "blue", bounced: "alert",
-  responded: "violet", qualified: "blue", converted: "ok", not_interested: "muted",
+  responded: "violet", qualified: "blue", quoted: "gold", converted: "ok", not_interested: "muted",
 };
 
 const fmtSize = (bytes: number) =>
@@ -90,6 +104,14 @@ export default function ProspectsPage() {
   const [q, setQ]             = useState(initialQ);
   const [appliedQ, setAppliedQ] = useState(initialQ);
   const [assigned, setAssigned] = useState("");
+  const [due, setDue]           = useState(initialDue);
+  /* "Everyone on this list": every row the filters match, across all pages —
+     not just the 25 ticked on screen. */
+  const [allMatching, setAllMatching] = useState(false);
+  const [followUpAfterSend, setFollowUpAfterSend] = useState(true);
+  const [canQuote, setCanQuote] = useState(false);
+  // Read after mount: the signed-in user lives in the browser, not on the server.
+  useEffect(() => { setCanQuote(canAccess(auth.getUser(), { module: "quotations" })); }, []);
   const [page, setPage]       = useState(1);
   const [open, setOpen]       = useState<number | null>(null);
 
@@ -125,26 +147,34 @@ export default function ProspectsPage() {
   const [importing, setImporting]         = useState(false);
   const [importMsg, setImportMsg]         = useState("");
   const [importCustomers, setImportCustomers] = useState(false);
+  const [importReview, setImportReview] = useState<{ row: string; existing: string; by: string }[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const categories = product ? CATEGORIES_BY_PRODUCT[product] : ALL_CATEGORIES;
   const importCategories = CATEGORIES_BY_PRODUCT[importProduct] ?? ALL_CATEGORIES;
 
+  /** The current filters, as the API reads them (list, bulk edits, campaigns). */
+  const filters = useCallback((): Record<string, string> => {
+    const f: Record<string, string> = {};
+    if (product) f.product = product;
+    if (cat) f.category = cat;
+    if (status) f.status = status;
+    if (appliedQ) f.q = appliedQ;
+    if (assigned) f.assigned = assigned;
+    if (due) f.due = "1";
+    return f;
+  }, [product, cat, status, appliedQ, assigned, due]);
+
   const load = useCallback(async () => {
     try {
-      const params = new URLSearchParams();
-      if (product) params.set("product", product);
-      if (cat) params.set("category", cat);
-      if (status) params.set("status", status);
-      if (appliedQ) params.set("q", appliedQ);
-      if (assigned) params.set("assigned", assigned);
+      const params = new URLSearchParams(filters());
       params.set("page", String(page));
       const res = await apiAdmin<Paginated<Prospect>>(`/admin/prospects?${params.toString()}`);
       setList(res.data);
       setMeta({ current_page: res.current_page, last_page: res.last_page, total: res.total });
     } catch { setList([]); }
     finally { setLoading(false); }
-  }, [product, cat, status, appliedQ, assigned, page]);
+  }, [filters, page]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -152,7 +182,7 @@ export default function ProspectsPage() {
     apiAdmin<Template[]>("/admin/templates").then((r) => setTemplates(Array.isArray(r) ? r : [])).catch(() => {});
   }, []);
 
-  const reset = () => { setLoading(true); setPage(1); setSelected(new Set()); };
+  const reset = () => { setLoading(true); setPage(1); setSelected(new Set()); setAllMatching(false); };
 
   /** Switching product clears a vertical that doesn't exist on the new list. */
   const selProduct = (p: string) => {
@@ -164,10 +194,14 @@ export default function ProspectsPage() {
   const selCat    = (c: string) => { reset(); setCat(c); };
   const selStatus = (s: string) => { reset(); setStatus(s); };
   const selAssigned = (a: string) => { reset(); setAssigned(a); };
-  const clearFilters = () => { reset(); setProduct(""); setCat(""); setStatus(""); setAssigned(""); setQ(""); setAppliedQ(""); };
-  const filtered = !!(product || cat || status || assigned || appliedQ);
+  const toggleDue = () => { reset(); setDue((d) => !d); };
+  const clearFilters = () => { reset(); setProduct(""); setCat(""); setStatus(""); setAssigned(""); setQ(""); setAppliedQ(""); setDue(false); };
+  const filtered = !!(product || cat || status || assigned || appliedQ || due);
   const search    = () => { reset(); setAppliedQ(q.trim()); };
-  const goPage    = (p: number) => { setLoading(true); setPage(p); setSelected(new Set()); };
+  const goPage    = (p: number) => {
+    setLoading(true); setPage(p);
+    if (!allMatching) setSelected(new Set()); // "everyone on this list" survives paging
+  };
 
   const selImportProduct = (p: string) => {
     setImportProduct(p);
@@ -181,6 +215,7 @@ export default function ProspectsPage() {
   };
 
   const toggleSelect = (id: number) => {
+    setAllMatching(false);
     setSelected((s) => {
       const next = new Set(s);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -190,18 +225,26 @@ export default function ProspectsPage() {
 
   const selectAllOnPage = () => {
     const allSelected = list.every((p) => selected.has(p.id));
+    setAllMatching(false);
     setSelected(allSelected ? new Set() : new Set(list.map((p) => p.id)));
   };
 
-  const clearSelection = () => setSelected(new Set());
+  const clearSelection = () => { setSelected(new Set()); setAllMatching(false); };
 
-  /* Bulk edits: one PATCH per selected row (the API has no batch endpoint),
-     sent in parallel, then a reload so the list reflects the server. */
+  /** How many rows an action will touch. */
+  const targetCount = allMatching ? meta.total : selected.size;
+  /** The rows an action applies to, as the API reads them. */
+  const target = (): Record<string, unknown> =>
+    allMatching ? { all_matching: true, ...filters() } : { ids: [...selected] };
+
+  /* Bulk edits: one request for the ticked rows, or for everyone the
+     filters match, then a reload so the list reflects the server. */
   const [bulkBusy, setBulkBusy] = useState(false);
   const bulkPatch = async (body: Record<string, unknown>) => {
     setBulkBusy(true);
-    await Promise.allSettled([...selected].map((id) =>
-      apiAdmin(`/admin/prospects/${id}`, { method: "PATCH", body: JSON.stringify(body) })));
+    try {
+      await apiAdmin("/admin/prospects/bulk", { method: "PATCH", body: JSON.stringify({ ...target(), ...body }) });
+    } catch { /* the reload shows what landed */ }
     setBulkBusy(false);
     load();
   };
@@ -244,13 +287,25 @@ export default function ProspectsPage() {
     setSending(true); setSendError("");
     try {
       const form = new FormData();
-      [...selected].forEach((id) => form.append("ids[]", String(id)));
+      if (allMatching) {
+        form.append("all_matching", "1");
+        Object.entries(filters()).forEach(([k, v]) => form.append(k, v));
+      } else {
+        [...selected].forEach((id) => form.append("ids[]", String(id)));
+      }
       form.append("subject", subject.trim());
       form.append("body", body.trim());
       files.forEach((f) => form.append("attachments[]", f));
 
       const res = await uploadAdmin<{ data: Campaign }>("/admin/prospect-campaigns", form);
       setCampaign(res.data);
+      // Put the whole send on the follow-up list, a week out.
+      if (followUpAfterSend) {
+        apiAdmin("/admin/prospects/bulk", {
+          method: "PATCH",
+          body: JSON.stringify({ ...target(), follow_up_on: isoDay(7), follow_up: `Follow up: "${subject.trim()}"` }),
+        }).catch(() => { /* a reminder failing must not look like the send failed */ });
+      }
       drive(res.data);
     } catch (e) {
       setSendError(e instanceof Error ? e.message : "Could not start the campaign.");
@@ -272,7 +327,7 @@ export default function ProspectsPage() {
         setCampaign(current);
       }
       // Reflect the pipeline moves the send just made.
-      setSelected(new Set());
+      setSelected(new Set()); setAllMatching(false);
       load();
     } catch {
       // The scheduler will finish it; surface the last known state.
@@ -326,15 +381,16 @@ export default function ProspectsPage() {
   const doImport = async () => {
     const file = fileRef.current?.files?.[0];
     if (!file) { setImportMsg("Choose a file first."); return; }
-    setImporting(true); setImportMsg("");
+    setImporting(true); setImportMsg(""); setImportReview([]);
     try {
       const form = new FormData();
       form.append("file", file);
       form.append("product", importProduct);
       form.append("category", importCat);
       if (importCustomers) form.append("existing_customers", "1");
-      const res = await uploadAdmin<{ message: string }>("/admin/prospects/import", form);
+      const res = await uploadAdmin<{ message: string; matched_differently?: { row: string; existing: string; by: string }[] }>("/admin/prospects/import", form);
       setImportMsg(res.message);
+      setImportReview(res.matched_differently ?? []);
       if (fileRef.current) fileRef.current.value = "";
       setLoading(true); setPage(1); load();
     } catch (e) { setImportMsg(e instanceof Error ? e.message : "Upload failed."); }
@@ -366,8 +422,10 @@ export default function ProspectsPage() {
           <p className="text-[13px] font-medium text-ink mb-1">Import a prospect or customer list (Excel or CSV)</p>
           <p className="text-[12px] text-ink-muted mb-3">
             Pick the product this list belongs to, then its industry. Upload the Excel file as it is (.xlsx) or a CSV.
-            Columns matched by header: name, location, phone, email (status and feedback optional). Rows already on the
-            list are skipped, so uploading the same file twice is safe. One industry per upload: split a mixed list first.
+            Columns matched by header: name, location, phone, email (status and feedback optional).
+            <strong> Re-upload the same workbook whenever it grows:</strong> only new rows are added. A row is already on
+            the list if its name, email or phone matches, even retyped or under another industry. Existing rows are never
+            changed, only blank contact details filled in. The industry you pick applies to the new rows.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <select value={importProduct} onChange={(e) => selImportProduct(e.target.value)} className="c-select">
@@ -386,6 +444,16 @@ export default function ProspectsPage() {
             </button>
           </div>
           {importMsg && <p className="text-[13px] mt-3 text-gold-ink">{importMsg}</p>}
+          {importReview.length > 0 && (
+            <div className="mt-2 text-[12px] text-ink-soft">
+              <p className="text-ink-muted mb-1">Matched to an existing row under a different name. Check these are the same business:</p>
+              <ul className="space-y-0.5">
+                {importReview.map((m) => (
+                  <li key={`${m.row}-${m.existing}`}>&ldquo;{m.row}&rdquo; → kept as <strong>{m.existing}</strong> (same {m.by})</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
@@ -411,6 +479,9 @@ export default function ProspectsPage() {
           <option value="">Any owner</option>
           {ASSIGNEES.map((a) => <option key={a} value={a}>{a}</option>)}
         </select>
+        <button onClick={toggleDue} className="c-btn" data-active={due} aria-pressed={due}>
+          <CalendarClock className="w-3.5 h-3.5" />Follow-ups due
+        </button>
         {filtered && <button onClick={clearFilters} className="c-btn c-btn-ghost text-ink-muted"><X className="w-3.5 h-3.5" />Clear</button>}
       </div>
 
@@ -420,12 +491,25 @@ export default function ProspectsPage() {
         <Empty label="No prospects match these filters." />
       ) : (
         <>
+          {list.length > 0 && meta.total > list.length && (allMatching || list.every((p) => selected.has(p.id))) && (
+            <div className="c-panel px-4 py-2.5 mb-2 text-[13px] text-ink-soft flex flex-wrap items-center gap-2">
+              {allMatching ? (
+                <>All <strong>{meta.total.toLocaleString("en-GB")}</strong> on this list are selected.
+                  <button onClick={clearSelection} className="q-link text-gold-ink">Clear selection</button></>
+              ) : (
+                <>All {list.length} on this page are selected.
+                  <button onClick={() => setAllMatching(true)} className="q-link text-gold-ink font-medium">
+                    Select all {meta.total.toLocaleString("en-GB")} on this list
+                  </button></>
+              )}
+            </div>
+          )}
           <div className="c-panel overflow-x-auto">
             <table className="c-table min-w-[820px]">
               <thead>
                 <tr>
                   <th className="w-10">
-                    <input type="checkbox" aria-label="Select all on this page" checked={list.every((p) => selected.has(p.id))} onChange={selectAllOnPage} className="w-3.5 h-3.5 accent-[#7A6020]" />
+                    <input type="checkbox" aria-label="Select all on this page" checked={allMatching || list.every((p) => selected.has(p.id))} onChange={allMatching ? clearSelection : selectAllOnPage} className="w-3.5 h-3.5 accent-[#7A6020]" />
                   </th>
                   <th>Company</th>
                   <th>Product</th>
@@ -439,7 +523,7 @@ export default function ProspectsPage() {
               </thead>
               <tbody>
                 {list.map((p) => {
-                  const isSelected = selected.has(p.id);
+                  const isSelected = allMatching || selected.has(p.id);
                   const isOpen = open === p.id;
                   return (
                     <Fragment key={p.id}>
@@ -463,7 +547,14 @@ export default function ProspectsPage() {
                         </td>
                         <td className="max-w-[10rem] truncate">{p.location ?? "—"}</td>
                         <td className="whitespace-nowrap">{p.assigned_to ? p.assigned_to.split(" ")[0] : <span className="text-ink-muted">—</span>}</td>
-                        <td><span className="c-chip" data-tone={STATUS_TONE[p.outreach_status] ?? "muted"}>{p.outreach_status.replace(/_/g, " ")}</span></td>
+                        <td>
+                          <span className="c-chip" data-tone={STATUS_TONE[p.outreach_status] ?? "muted"}>{p.outreach_status.replace(/_/g, " ")}</span>
+                          {p.follow_up_on && (
+                            <span className={`block text-[11.5px] mt-1 whitespace-nowrap ${p.follow_up_on <= isoDay(0) ? "text-alert-ink font-medium" : "text-ink-muted"}`}>
+                              Follow up {p.follow_up_on <= isoDay(0) ? (p.follow_up_on < isoDay(0) ? "overdue" : "today") : fmtDay(p.follow_up_on)}
+                            </span>
+                          )}
+                        </td>
                         <td><ChevronDown className={`w-4 h-4 text-ink-muted transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" /></td>
                       </tr>
 
@@ -489,10 +580,27 @@ export default function ProspectsPage() {
                                   {ASSIGNEES.map((a) => <option key={a} value={a}>{a}</option>)}
                                 </select>
                               </Labelled>
-                              <Labelled label="Follow-up">
-                                <input defaultValue={p.follow_up ?? ""} onBlur={(e) => { const v = e.target.value.trim() || null; if (v !== p.follow_up) patch(p.id, { follow_up: v }); }} placeholder="e.g. Call back next week" className="c-input w-full" />
+                              <Labelled label="Next follow-up">
+                                <div className="flex gap-1.5">
+                                  <input type="date" value={p.follow_up_on ?? ""} onChange={(e) => patch(p.id, { follow_up_on: e.target.value || null })} className="c-input w-[9.5rem] shrink-0" aria-label="Follow-up date" />
+                                  <input defaultValue={p.follow_up ?? ""} onBlur={(e) => { const v = e.target.value.trim() || null; if (v !== p.follow_up) patch(p.id, { follow_up: v }); }} placeholder="What to do, e.g. call about the sample" className="c-input w-full" />
+                                </div>
                               </Labelled>
-                              <div className="flex items-end">
+                              <div className="flex items-end gap-2">
+                                {canQuote && QUOTE_BUSINESS[p.product] && (
+                                  <Link
+                                    href={`/admin/quotations/new?${new URLSearchParams({
+                                      business: QUOTE_BUSINESS[p.product],
+                                      name: p.name,
+                                      ...(p.email ? { email: p.email } : {}),
+                                      ...(p.phone ? { phone: p.phone } : {}),
+                                      ...(p.location ? { address: p.location } : {}),
+                                    }).toString()}`}
+                                    className="c-btn w-full"
+                                  >
+                                    <FileText className="w-3.5 h-3.5 text-gold-ink" />Create quotation
+                                  </Link>
+                                )}
                                 {p.outreach_status !== "converted" ? (
                                   <button onClick={() => convertToEnquiry(p.id)} disabled={converting === p.id} className="c-btn w-full">
                                     {converting === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRightCircle className="w-3.5 h-3.5 text-ok-ink" />}
@@ -522,7 +630,7 @@ export default function ProspectsPage() {
           <div className="flex items-center justify-between gap-3 mt-3 text-[12px] text-ink-muted">
             <span>
               {(meta.current_page - 1) * 25 + 1}–{(meta.current_page - 1) * 25 + list.length} of {meta.total.toLocaleString("en-GB")}
-              {selected.size > 0 && <> · <span className="text-gold-ink">{selected.size} selected</span></>}
+              {targetCount > 0 && <> · <span className="text-gold-ink">{targetCount} selected</span></>}
             </span>
             {meta.last_page > 1 && (
               <span className="flex items-center gap-1">
@@ -536,9 +644,9 @@ export default function ProspectsPage() {
       )}
 
       {/* Sticky bulk action bar */}
-      {selected.size > 0 && (
+      {(selected.size > 0 || allMatching) && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4 pl-4 pr-2 py-2 rounded-frame bg-ink shadow-[0_12px_40px_rgba(0,0,0,0.25)] max-w-[calc(100%-2rem)]">
-          <span className="text-[13px] font-medium text-paper whitespace-nowrap">{selected.size} selected</span>
+          <span className="text-[13px] font-medium text-paper whitespace-nowrap">{allMatching ? `All ${meta.total.toLocaleString("en-GB")}` : selected.size} selected</span>
           {bulkBusy && <Loader2 className="w-4 h-4 animate-spin text-ink-fg-muted" />}
           <select aria-label="Set status for selected" value="" disabled={bulkBusy} onChange={(e) => e.target.value && bulkPatch({ outreach_status: e.target.value })} className="c-select !bg-transparent !text-paper !border-ink-line hidden sm:block">
             <option value="">Set status…</option>
@@ -549,8 +657,13 @@ export default function ProspectsPage() {
             {ASSIGNEES.map((a) => <option key={a} value={a}>{a}</option>)}
             <option value="-">Unassign</option>
           </select>
+          <select aria-label="Follow up selected" value="" disabled={bulkBusy} onChange={(e) => e.target.value && bulkPatch({ follow_up_on: e.target.value === "-" ? null : e.target.value })} className="c-select !bg-transparent !text-paper !border-ink-line hidden sm:block">
+            <option value="">Follow up…</option>
+            {FOLLOW_UP_IN.map(([l, d]) => <option key={l} value={isoDay(d)}>{l}</option>)}
+            <option value="-">Clear follow-up</option>
+          </select>
           <button onClick={() => setComposerOpen(true)} className="c-btn !bg-gold !border-gold !text-ink">
-            <Send className="w-3.5 h-3.5" />Email campaign ({selectedWithEmail})
+            <Send className="w-3.5 h-3.5" />Email campaign ({allMatching ? targetCount : selectedWithEmail})
           </button>
           <button onClick={clearSelection} aria-label="Clear selection" className="c-btn c-btn-ghost !text-paper hover:!bg-white/10">
             <X className="w-3.5 h-3.5" />
@@ -568,7 +681,9 @@ export default function ProspectsPage() {
                 <p className="text-xs mt-0.5" style={{ color: "#999" }}>
                   {campaign
                     ? `Sending to ${campaign.total} recipient${campaign.total === 1 ? "" : "s"}`
-                    : `${selectedWithEmail} of ${selected.size} selected have an email address · ${productLabel}`}
+                    : allMatching
+                      ? `Everyone on this list with an email address (${meta.total} rows) · ${productLabel}`
+                      : `${selectedWithEmail} of ${selected.size} selected have an email address · ${productLabel}`}
                 </p>
               </div>
               <button onClick={closeComposer} className="p-1.5 rounded-full" style={{ background: "#F2F2F2" }}>
@@ -661,6 +776,11 @@ export default function ProspectsPage() {
                     {fileError && <p className="text-xs mt-2" style={{ color: "#C0392B" }}>{fileError}</p>}
                   </div>
 
+                  <label className="flex items-center gap-2 text-xs" style={{ color: "#555" }}>
+                    <input type="checkbox" checked={followUpAfterSend} onChange={(e) => setFollowUpAfterSend(e.target.checked)} />
+                    Remind us to follow up with everyone in a week (shows under <strong>Follow-ups due</strong>)
+                  </label>
+
                   {/* Save as a reusable template */}
                   <div className="pt-1">
                     <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1.5" style={{ color: "#bbb" }}>Save as template</label>
@@ -697,11 +817,11 @@ export default function ProspectsPage() {
                 {campaign ? "Close" : "Cancel"}
               </button>
               {!campaign && (
-                <button onClick={startCampaign} disabled={sending || !subject.trim() || !body.trim() || selectedWithEmail === 0}
+                <button onClick={startCampaign} disabled={sending || !subject.trim() || !body.trim() || (!allMatching && selectedWithEmail === 0)}
                   className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50"
                   style={{ background: "#C5B27A", color: "#1E1E1E" }}>
                   {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                  Send to {selectedWithEmail}
+                  {allMatching ? `Send to all ${meta.total}` : `Send to ${selectedWithEmail}`}
                 </button>
               )}
             </div>

@@ -24,13 +24,25 @@ type Meta = { id: number; number: string; status: string; is_expired?: boolean; 
 const API = { quotation: "/admin/accounting/quotations", invoice: "/admin/accounting/invoices" } as const;
 const ROUTE = { quotation: "/admin/quotations", invoice: "/admin/invoices" } as const;
 
+/** Customer details carried in from elsewhere (e.g. "Create quotation" on a prospect). */
+export type InitialCustomer = { name?: string; email?: string; phone?: string; address?: string };
+
 export default function DocumentEditor({
-  type, id, initialBusiness = "coffee", initialKind = "standard",
-}: { type: DocType; id?: number; initialBusiness?: Business; initialKind?: InvoiceKind }) {
+  type, id, initialBusiness = "coffee", initialKind = "standard", initialCustomer,
+}: { type: DocType; id?: number; initialBusiness?: Business; initialKind?: InvoiceKind; initialCustomer?: InitialCustomer }) {
   const router = useRouter();
-  const [form, setForm] = useState<DocForm | null>(() =>
-    id ? null : blankForm(initialBusiness, type, initialKind, auth.getUser()?.name ?? ""),
-  );
+  const [form, setForm] = useState<DocForm | null>(() => {
+    if (id) return null;
+    const blank = blankForm(initialBusiness, type, initialKind, auth.getUser()?.name ?? "");
+    const c = initialCustomer ?? {};
+    return {
+      ...blank,
+      customer_name: c.name ?? blank.customer_name,
+      customer_email: c.email ?? blank.customer_email,
+      customer_phone: c.phone ?? blank.customer_phone,
+      customer_address: c.address ?? blank.customer_address,
+    };
+  });
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loadError, setLoadError] = useState("");
   const [busy, setBusy] = useState<string | null>(null);

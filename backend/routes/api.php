@@ -305,6 +305,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/prospects/export', [ProspectController::class, 'export']);
             Route::post('/prospects/import', [ProspectController::class, 'import']);
             Route::post('/prospects/{prospect}/convert', [ProspectController::class, 'convert']);
+            Route::patch('/prospects/bulk', [ProspectController::class, 'bulk']);
             Route::patch('/prospects/{prospect}', [ProspectController::class, 'update']);
 
             // Bulk outreach campaigns (sent in batches from the support address)

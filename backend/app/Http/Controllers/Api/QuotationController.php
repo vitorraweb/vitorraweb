@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ValidatesBrandedDocument;
 use App\Http\Controllers\Controller;
 use App\Mail\QuotationMail;
 use App\Models\Invoice;
+use App\Models\Prospect;
 use App\Models\Quotation;
 use App\Support\BrandedDocument;
 use Illuminate\Http\JsonResponse;
@@ -107,7 +108,39 @@ class QuotationController extends Controller
             $quotation->update(['status' => 'sent', 'sent_at' => now()]);
         }
 
+        $this->scheduleFollowUp($quotation);
+
         return response()->json(['data' => $this->shape($quotation->fresh(['items', 'invoices']), full: true)]);
+    }
+
+    /**
+     * A quotation that is sent and never chased is a lost sale. The customer
+     * on the prospect list (matched by email) is marked "quoted" and given a
+     * follow-up date, so they show under "Follow-ups due" when it arrives.
+     * An existing customer keeps the "converted" status; an earlier
+     * follow-up the team set by hand is never pushed back.
+     */
+    private function scheduleFollowUp(Quotation $quotation): void
+    {
+        $product = match ($quotation->business) {
+            'coffee' => 'COFFEE',
+            'fet'    => 'FET',
+            default  => null,
+        };
+        $due = today()->addDays((int) config('pipeline.quotation_follow_up_days', 3));
+
+        Prospect::whereRaw('LOWER(email) = ?', [mb_strtolower(trim($quotation->customer_email))])
+            ->when($product, fn ($q) => $q->where('product', $product))
+            ->get()
+            ->each(function (Prospect $p) use ($quotation, $due) {
+                $p->update([
+                    'outreach_status' => $p->outreach_status === 'converted' ? 'converted' : 'quoted',
+                    'follow_up_on'    => $p->follow_up_on && $p->follow_up_on->lt($due) && $p->follow_up_on->gte(today())
+                        ? $p->follow_up_on
+                        : $due,
+                    'follow_up'       => "Chase quotation {$quotation->number}",
+                ]);
+            });
     }
 
     /** Record the customer's answer, or withdraw the quotation. */

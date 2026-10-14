@@ -18,7 +18,7 @@ type Stats = {
   messages_unread?: number;
   enquiries?: { by_status?: Record<string, number> };
   orders?: { pending?: number };
-  prospects?: { needs_fixing?: number };
+  prospects?: { needs_fixing?: number; follow_ups_due?: number };
 };
 type Alerts = { stale_contacts?: { count: number }; overdue_tasks?: { count: number } };
 
@@ -48,6 +48,7 @@ export default function ConsoleHome() {
       const all: (Attention & { module?: string })[] = [
         { key: "enq", app: "sales", module: "enquiries", count: stats.enquiries?.by_status?.new ?? 0, label: "new enquiries waiting for a first reply", href: "/admin/enquiries" },
         { key: "quiet", app: "sales", module: "customers", count: alerts.stale_contacts?.count ?? 0, label: "customers with no contact in two weeks or more", href: "/admin/pipeline" },
+        { key: "followups", app: "sales", module: "prospects", count: stats.prospects?.follow_ups_due ?? 0, label: "customers and prospects due a follow-up", href: "/admin/prospects?due=1" },
         { key: "fix", app: "sales", module: "prospects", count: stats.prospects?.needs_fixing ?? 0, label: "prospects with missing or broken contact details", href: "/admin/prospects" },
         { key: "orders", app: "orders", module: "orders", count: stats.orders?.pending ?? 0, label: "orders waiting on payment or confirmation", href: "/admin/orders" },
         { key: "drafts", app: "accounting", module: "accounting", count: drafts, label: "book entries waiting for approval", href: "/admin/accounting" },

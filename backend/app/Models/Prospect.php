@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Prospect extends Model
@@ -16,13 +17,15 @@ class Prospect extends Model
         'outreach_status',
         'feedback',
         'follow_up',
+        'follow_up_on',
         'assigned_to',
         'flags',
         'source',
     ];
 
     protected $casts = [
-        'flags' => 'array',
+        'flags'        => 'array',
+        'follow_up_on' => 'date:Y-m-d',
     ];
 
     /**
@@ -68,8 +71,30 @@ class Prospect extends Model
     /** Outreach pipeline stages. */
     public const STATUSES = [
         'not_contacted', 'contacted', 'delivered', 'bounced',
-        'responded', 'qualified', 'converted', 'not_interested',
+        'responded', 'qualified', 'quoted', 'converted', 'not_interested',
     ];
+
+    /**
+     * The list screen's filters, shared by the list itself, bulk edits and
+     * "email everyone on this list" — so a campaign reaches exactly the rows
+     * the screen was showing, across every page.
+     *
+     * @param  array<string, mixed>  $f  product, category, status, assigned, q, due
+     */
+    public function scopeFiltered(Builder $query, array $f): Builder
+    {
+        return $query
+            ->when($f['product'] ?? null, fn ($q, $v) => $q->where('product', strtoupper($v)))
+            ->when($f['category'] ?? null, fn ($q, $v) => $q->where('category', strtoupper($v)))
+            ->when($f['status'] ?? null, fn ($q, $v) => $q->where('outreach_status', $v))
+            ->when($f['assigned'] ?? null, fn ($q, $v) => $q->where('assigned_to', $v))
+            // Follow-ups due today or overdue.
+            ->when(! empty($f['due']), fn ($q) => $q->whereNotNull('follow_up_on')->whereDate('follow_up_on', '<=', today()))
+            ->when($f['q'] ?? null, fn ($q, $v) => $q->where(fn ($w) => $w
+                ->where('name', 'like', "%{$v}%")
+                ->orWhere('email', 'like', "%{$v}%")
+                ->orWhere('location', 'like', "%{$v}%")));
+    }
 
     /** Verticals valid for a product (falls back to the full list). */
     public static function categoriesFor(?string $product): array

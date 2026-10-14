@@ -5,39 +5,25 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Enquiry;
 use App\Models\Prospect;
+use App\Support\ProspectMatchIndex;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class ProspectController extends Controller
 {
+    /** The list filters a request carries (see Prospect::scopeFiltered). */
+    public static function filtersFrom(Request $request): array
+    {
+        return $request->only(['product', 'category', 'status', 'assigned', 'q', 'due']);
+    }
+
     /** Paginated, filterable prospect list. */
     public function index(Request $request): JsonResponse
     {
-        $query = Prospect::query()->orderBy('name');
-
-        // Lists are segmented per product line (FET, SEAL) — the team works one
-        // at a time, so an unscoped view would mix two unrelated sales motions.
-        if ($request->filled('product')) {
-            $query->where('product', strtoupper($request->product));
-        }
-        if ($request->filled('category')) {
-            $query->where('category', strtoupper($request->category));
-        }
-        if ($request->filled('status')) {
-            $query->where('outreach_status', $request->status);
-        }
-        if ($request->filled('assigned')) {
-            $query->where('assigned_to', $request->assigned);
-        }
-        if ($request->filled('q')) {
-            $q = $request->q;
-            $query->where(function ($w) use ($q) {
-                $w->where('name', 'like', "%{$q}%")
-                  ->orWhere('email', 'like', "%{$q}%")
-                  ->orWhere('location', 'like', "%{$q}%");
-            });
-        }
+        // Lists are segmented per product line (FET, SEAL, COFFEE) — the team
+        // works one at a time, so an unscoped view mixes unrelated sales motions.
+        $query = Prospect::query()->filtered(self::filtersFrom($request))->orderBy('name');
 
         return response()->json($query->paginate(25));
     }
@@ -49,12 +35,44 @@ class ProspectController extends Controller
             'outreach_status' => ['sometimes', 'required', Rule::in(Prospect::STATUSES)],
             'feedback'        => ['sometimes', 'nullable', 'string', 'max:2000'],
             'follow_up'       => ['sometimes', 'nullable', 'string', 'max:255'],
+            'follow_up_on'    => ['sometimes', 'nullable', 'date'],
             'assigned_to'     => ['sometimes', 'nullable', 'string', 'max:255'],
         ]);
 
         $prospect->update($data);
 
         return response()->json(['data' => $prospect]);
+    }
+
+    /**
+     * One change applied to many rows: the ticked rows (`ids`), or every row
+     * matching the screen's filters (`all_matching`) — so "set a follow-up for
+     * the whole coffee list" is one action, not one per page of 25.
+     */
+    public function bulk(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids'             => ['required_without:all_matching', 'array'],
+            'ids.*'           => ['integer'],
+            'all_matching'    => ['nullable', 'boolean'],
+            'outreach_status' => ['sometimes', 'required', Rule::in(Prospect::STATUSES)],
+            'assigned_to'     => ['sometimes', 'nullable', 'string', 'max:255'],
+            'follow_up_on'    => ['sometimes', 'nullable', 'date'],
+            'follow_up'       => ['sometimes', 'nullable', 'string', 'max:255'],
+        ]);
+
+        $changes = $request->only(['outreach_status', 'assigned_to', 'follow_up_on', 'follow_up']);
+        if ($changes === []) {
+            return response()->json(['message' => 'Nothing to change.'], 422);
+        }
+
+        $query = $request->boolean('all_matching')
+            ? Prospect::query()->filtered(self::filtersFrom($request))
+            : Prospect::whereIn('id', $request->input('ids', []));
+
+        $updated = $query->update($changes + ['updated_at' => now()]);
+
+        return response()->json(['updated' => $updated, 'message' => "Updated {$updated}."]);
     }
 
     /**
@@ -213,6 +231,15 @@ class ProspectController extends Controller
 
         $imported = 0;
         $skipped = 0;
+        $filled = 0;
+        $matchedDifferently = []; // matched on email/phone under another name — worth a look
+
+        // Everyone already on this product's list, indexed the three ways a
+        // re-uploaded sheet can name the same customer. Marketing keep one
+        // workbook and re-upload it as it grows: only genuinely new rows may be
+        // added, even if a name was retyped, a number reformatted or the row
+        // filed under another buyer type this time.
+        $index = new ProspectMatchIndex(Prospect::where('product', $product)->get());
 
         foreach ($dataRows as $r) {
             // Scan only the "contact block" (columns before any status column) so
@@ -272,28 +299,57 @@ class ProspectController extends Controller
                 $status = 'converted';
             }
 
-            $prospect = Prospect::firstOrCreate(
-                ['name' => $name, 'category' => $category, 'product' => $product],
-                [
-                    'location'        => $location,
-                    'phone'           => $phone,
-                    'email'           => $email,
-                    'outreach_status' => $status,
-                    'feedback'        => $feedback,
-                    'flags'           => $flags ?: null,
-                    'source'          => $customers ? 'customer list upload' : 'admin upload',
-                ]
-            );
+            [$existing, $how] = $index->find($name, $email, $phone);
 
-            $prospect->wasRecentlyCreated ? $imported++ : $skipped++;
+            if ($existing) {
+                $skipped++;
+                // Never overwrite what the team has edited — only fill blanks.
+                $fill = array_filter([
+                    'email'    => $existing->email ? null : $email,
+                    'phone'    => $existing->phone ? null : $phone,
+                    'location' => $existing->location ? null : $location,
+                ]);
+                if ($fill) {
+                    if (isset($fill['email']) || isset($fill['phone'])) {
+                        $fill['flags'] = array_values(array_diff($existing->flags ?? [], ['no_contact'])) ?: null;
+                    }
+                    $existing->update($fill);
+                    $index->add($existing);
+                    $filled++;
+                }
+                if ($how !== 'name' && count($matchedDifferently) < 20) {
+                    $matchedDifferently[] = ['row' => $name, 'existing' => $existing->name, 'by' => $how];
+                }
+
+                continue;
+            }
+
+            $prospect = Prospect::create([
+                'name'            => $name,
+                'category'        => $category,
+                'product'         => $product,
+                'location'        => $location,
+                'phone'           => $phone,
+                'email'           => $email,
+                'outreach_status' => $status,
+                'feedback'        => $feedback,
+                'flags'           => $flags ?: null,
+                'source'          => $customers ? 'customer list upload' : 'admin upload',
+            ]);
+            $index->add($prospect); // a row repeated within the same file is caught too
+            $imported++;
         }
 
         $noun = $customers ? 'customers' : 'prospects';
+        $message = "Added {$imported} new {$noun}. {$skipped} already on the list were left as they are";
+        $message .= $filled ? " ({$filled} had missing contact details filled in)." : '.';
 
         return response()->json([
-            'imported' => $imported,
-            'skipped'  => $skipped,
-            'message'  => "Imported {$imported} new {$noun}, skipped {$skipped} already on the list.",
+            'imported'            => $imported,
+            'skipped'             => $skipped,
+            'filled'              => $filled,
+            'matched_differently' => $matchedDifferently,
+            'message'             => $message,
         ]);
     }
 

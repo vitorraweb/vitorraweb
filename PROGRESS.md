@@ -1154,6 +1154,74 @@ and Unsubscribe are now on the same system. Every form keeps its logic
 **Still to redesign:** the order / invoice / payment pages reached from links we send customers, and the gated shop catalogue, cart and checkout.
 Suppliers, legal, Shop. Until then those pages carry the old styling.
 
+## Coffee customers: campaigns, quotations, follow-ups and safe re-uploads (14 October 2026)
+
+Marketing can now work the coffee list end to end from `/admin/prospects`: email
+it, quote a customer, and be reminded to chase. They can also keep re-uploading
+the same growing workbook.
+
+### Email the whole list in one go
+- Tick the box at the top of the table, then **"Select all N on this list"**.
+  The campaign goes to everyone the filters match (e.g. Coffee →
+  go4WorldBusiness buyers), across every page, not just the 25 rows on
+  screen. Until now a 200-row list needed eight separate sends.
+- Ticked by default when sending: **"Remind us to follow up with everyone in a
+  week"**. Everyone sent to appears under *Follow-ups due* seven days later.
+
+### Quote a customer from their row
+- Open a coffee (or FET) customer and press **Create quotation**. The quotation
+  form opens with their name, email, phone and location already filled in.
+- **Emailing the quotation marks that customer "Quoted"** and sets a follow-up
+  three days out ("Chase quotation VHL-CF-Q-…"). An existing customer keeps the
+  "Converted" status but still gets the reminder. An earlier follow-up someone
+  set by hand is never pushed back.
+- Only shown to people with the Quotations permission, and only for Coffee and
+  FET (SEAL has no quotation template yet).
+
+### Follow-ups with a date, not just a note
+- Each customer has a **Next follow-up** date beside the note. A **Follow-ups
+  due** filter shows everyone due today or overdue, and the list shows
+  "Follow up today / overdue / 21 Oct" under each status.
+- The launcher's **Needs attention** panel now counts "customers and prospects
+  due a follow-up" and links straight to them.
+- **Bulk "Follow up…"** for the ticked rows or the whole list: tomorrow, in 3
+  days, a week, 2 weeks, a month, or clear. Status and owner changes also apply
+  to the whole list now.
+
+### Re-uploading the updated workbook adds only the new customers
+- Upload the same workbook as often as it grows. **Only rows not already on the
+  list are added.** A row counts as already there if any of these match:
+  - the name, ignoring capitals, punctuation and "Ltd / Limited / Co";
+  - the email;
+  - the phone number, whether written 0772… or +256772….
+- This holds even if the row was filed under a different buyer type before.
+- **Nothing the team edited is overwritten.** If an existing row had no email or
+  phone and the sheet now has one, the blank is filled in.
+- A row that matched an existing customer on email or phone under a *different*
+  name is listed after the upload, so someone can confirm it is the same business
+  (two businesses can share one inbox).
+- A row repeated inside the same file is added once.
+
+> Technical detail (engineering): migration `2026_10_14_000001` (`follow_up_on`
+> on `prospects`); `Prospect::scopeFiltered()` shared by the list, the new
+> `PATCH /admin/prospects/bulk` and campaigns (`all_matching` + filters);
+> `quoted` status; `App\Support\ProspectMatchIndex` (name / email / last-9-digit
+> phone); `QuotationController::scheduleFollowUp()`; `stats.prospects.follow_ups_due`;
+> `DocumentEditor` `initialCustomer` + `/admin/quotations/new?name=&email=&phone=&address=`.
+> Tests: `CoffeeOutreachTest` (9). **423 backend tests passing.**
+
+### Deploy (backend, by hand): this one carries a database change
+```bash
+cd ~/vitorraweb && git pull origin master && cd backend
+/opt/alt/php83/usr/bin/php artisan migrate --force
+/opt/alt/php83/usr/bin/php artisan config:cache
+/opt/alt/php83/usr/bin/php artisan route:cache
+```
+⚠ The website half deploys itself on push. Until the backend is pulled and
+migrated, "Follow-ups due", bulk actions and "select all on this list" will fail.
+
+---
+
 ## Customer sign-in fix, coffee customer import, new FET prices (14 October 2026)
 
 ### Signing in with a new email opened the previous account — fixed

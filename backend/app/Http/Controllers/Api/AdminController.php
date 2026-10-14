@@ -194,6 +194,7 @@ class AdminController extends Controller
                     'reached'       => $prospectReached,
                     'converted'     => $prospectStatus['converted'],
                     'needs_fixing'  => Prospect::whereNotNull('flags')->count(),
+                    'follow_ups_due' => Prospect::whereNotNull('follow_up_on')->whereDate('follow_up_on', '<=', today())->count(),
                     'by_status'     => $prospectStatus,
                     'by_category'   => $prospectCat,
                 ],

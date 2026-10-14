@@ -56,8 +56,11 @@ class ProspectCampaignController extends Controller
         $maxFiles = (int) config('campaigns.max_attachment_count', 5);
 
         $data = $request->validate([
-            'ids'           => ['required', 'array', 'min:1'],
+            // The ticked rows, or — with all_matching — every row the list
+            // screen's filters match, across all pages.
+            'ids'           => ['required_without:all_matching', 'array', 'min:1'],
             'ids.*'         => ['integer'],
+            'all_matching'  => ['nullable', 'boolean'],
             'subject'       => ['required', 'string', 'max:255'],
             'body'          => ['required', 'string', 'max:20000'],
             'name'          => ['nullable', 'string', 'max:120'],
@@ -69,7 +72,9 @@ class ProspectCampaignController extends Controller
             ],
         ]);
 
-        $prospects = Prospect::whereIn('id', $data['ids'])->get();
+        $prospects = $request->boolean('all_matching')
+            ? Prospect::query()->filtered(ProspectController::filtersFrom($request))->get()
+            : Prospect::whereIn('id', $data['ids'])->get();
 
         if ($prospects->isEmpty()) {
             return response()->json(['message' => 'None of those prospects could be found.'], 422);
