@@ -154,7 +154,7 @@ export function FetCalculatorCard() {
 
   const fleet = Math.max(1, Math.floor(num(vehicles) || 1));
   const lPer100 = unit === "l100" ? num(consumption) : kmPerLitreToLPer100(num(consumption));
-  const deviceCost = convert(tier.priceEur, "EUR", currency, rates);
+  const deviceCost = convert(tier.priceUgx, "UGX", currency, rates);
   const verifiedActive = Math.abs(savingsPct - SAVINGS.verified) < 0.05;
 
   const result = useMemo(
@@ -237,7 +237,7 @@ export function FetCalculatorCard() {
   if (mode === "spend" && !touched.spend) assumptions.push(tc("assumeSpendMissing"));
   if (!touched.fuel) assumptions.push(tc("assumeFuel"));
   assumptions.push(tc("assumeSaving", { pct: SAVINGS.verified }));
-  if (currency !== "EUR") assumptions.push(ratesLive ? tc("assumeRateLive") : tc("assumeRateOffline"));
+  if (currency !== "UGX") assumptions.push(ratesLive ? tc("assumeRateLive") : tc("assumeRateOffline"));
 
   const spendReady = mode === "usage" || num(monthlySpend) > 0;
 
@@ -363,7 +363,7 @@ export function FetCalculatorCard() {
               <Field label={tc("device")}>
                 <div
                   className="h-11 rounded-edge px-3.5 flex items-center text-sm font-semibold bg-paper-deep text-ink border border-line"
-                  title={currency === "EUR" ? undefined : tc("devicePriceEur", { price: money(tier.priceEur, "EUR") })}
+                  title={currency === "UGX" ? undefined : tc("devicePriceEur", { price: money(tier.priceUgx, "UGX") })}
                 >
                   {money(deviceCost, currency)}
                 </div>

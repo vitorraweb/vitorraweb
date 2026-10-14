@@ -118,39 +118,51 @@ class ProspectController extends Controller
     }
 
     /**
-     * Import a CSV of prospects under a chosen category. Robust to the marketing
-     * workbook format: it locates the header row (skipping any title rows above
-     * it) and then extracts each prospect's name / email / phone / location by
-     * CONTENT, not by fixed column position — so inconsistent headers and column
-     * drift (e.g. a phone landing in the email column) still parse correctly.
-     * Idempotent (firstOrCreate by name+category) so re-uploads never overwrite
-     * edits. Mirrors scripts/import_prospects.py.
+     * Import a prospect list (CSV or Excel) under a chosen category. Robust to
+     * the marketing workbook format: it locates the header row (skipping any
+     * title rows above it) and then extracts each prospect's name / email /
+     * phone / location by CONTENT, not by fixed column position — so
+     * inconsistent headers and column drift (e.g. a phone landing in the email
+     * column) still parse correctly. A name-like header ("name", "company",
+     * "customer"…) is used for the name when present, and a leading row-number
+     * column is ignored. Idempotent (firstOrCreate by name+category+product) so
+     * re-uploads never overwrite edits. Mirrors scripts/import_prospects.py.
+     *
+     * `existing_customers` files the rows as already converted — for a list of
+     * people who already buy from us (the coffee customer book), as opposed to
+     * cold leads.
      */
     public function import(Request $request): JsonResponse
     {
         $request->validate([
-            'file'     => ['required', 'file', 'mimes:csv,txt', 'max:4096'],
-            'product'  => ['required', Rule::in(Prospect::PRODUCTS)],
-            'category' => ['required', Rule::in(Prospect::CATEGORIES)],
+            'file'               => ['required', 'file', 'extensions:csv,txt,xlsx,xls', 'max:8192'],
+            'product'            => ['required', Rule::in(Prospect::PRODUCTS)],
+            'category'           => ['required', Rule::in(Prospect::CATEGORIES)],
+            'existing_customers' => ['nullable', 'boolean'],
         ]);
 
-        $product  = $request->input('product');
-        $category = $request->input('category');
+        $product   = $request->input('product');
+        $category  = $request->input('category');
+        $customers = $request->boolean('existing_customers');
 
-        // Guard against a SEAL list being filed under an FET vertical (or the
-        // reverse) — the two lists only share MANUFACTURING.
+        // Guard against a list being filed under another product's vertical
+        // (e.g. a SEAL hospital list under an FET industry).
         if (! in_array($category, Prospect::categoriesFor($product), true)) {
             return response()->json([
                 'message' => "{$category} is not an industry on the {$product} list.",
             ], 422);
         }
-        $lines = file($request->file('file')->getRealPath(), FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if (empty($lines)) {
+
+        try {
+            $rows = $this->readRows($request->file('file'));
+        } catch (\Throwable) {
+            return response()->json([
+                'message' => 'That file could not be read. Upload a CSV or an Excel workbook (.xlsx).',
+            ], 422);
+        }
+        if (empty($rows)) {
             return response()->json(['imported' => 0, 'skipped' => 0, 'message' => 'The file was empty.']);
         }
-        $lines[0] = preg_replace('/^\xEF\xBB\xBF/', '', $lines[0]); // strip UTF-8 BOM
-
-        $rows = array_map('str_getcsv', $lines);
 
         // Find the header row (first near-top row mentioning location/email),
         // skipping any title rows above it. Everything below it is data.
@@ -160,7 +172,8 @@ class ProspectController extends Controller
                 break;
             }
             $joined = strtolower(implode(' ', array_map(fn ($c) => (string) $c, $r)));
-            if (str_contains($joined, 'location') || str_contains($joined, 'email') || str_contains($joined, 'e-mail')) {
+            if (str_contains($joined, 'location') || str_contains($joined, 'email') || str_contains($joined, 'e-mail')
+                || str_contains($joined, 'phone')) {
                 $headerIdx = $i;
                 break;
             }
@@ -180,6 +193,18 @@ class ProspectController extends Controller
             return null;
         };
         $iStat = $colByName(['status']);
+        // The name column: a name-like header that is not really the email,
+        // phone or status column ("customer email" must not become the name).
+        $iName = null;
+        foreach ($header as $i => $h) {
+            if (preg_match('/e-?mail|phone|tel|mobile|status|location|address/', $h)) {
+                continue;
+            }
+            if (preg_match('/name|company|organi[sz]ation|customer|business|client/', $h)) {
+                $iName = $i;
+                break;
+            }
+        }
         $iFb   = $colByName(['feedback', 'notes']);
 
         // A cell is "phone-like" if it has 7+ digits and no @ (handles 256.../0...
@@ -201,8 +226,19 @@ class ProspectController extends Controller
                 continue;
             }
 
-            $name = $cells[0];
-            $rest = array_slice($cells, 1);
+            // Prefer the name column when the header names one; otherwise the
+            // first cell, skipping a leading row number ("1", "2." …).
+            if (count($cells) > 1 && preg_match('/^\d{1,4}\.?$/', $cells[0])) {
+                array_shift($cells);
+            }
+            $named = $iName !== null ? trim((string) ($r[$iName] ?? '')) : '';
+            if ($named !== '') {
+                $name = $named;
+                $rest = array_values(array_filter($cells, fn ($c) => $c !== $named));
+            } else {
+                $name = $cells[0];
+                $rest = array_slice($cells, 1);
+            }
 
             $emails = array_values(array_filter($rest, fn ($c) => str_contains($c, '@')));
             $phones = array_values(array_filter($rest, $isPhone));
@@ -232,6 +268,9 @@ class ProspectController extends Controller
             $status = str_contains(strtolower($feedback ?? ''), 'not delivered') || str_contains($statusRaw, 'bounce')
                 ? 'bounced'
                 : (in_array($statusRaw, ['sent', 'delivered', 'contacted'], true) ? 'contacted' : 'not_contacted');
+            if ($customers && $status !== 'bounced') {
+                $status = 'converted';
+            }
 
             $prospect = Prospect::firstOrCreate(
                 ['name' => $name, 'category' => $category, 'product' => $product],
@@ -242,17 +281,62 @@ class ProspectController extends Controller
                     'outreach_status' => $status,
                     'feedback'        => $feedback,
                     'flags'           => $flags ?: null,
-                    'source'          => 'admin upload',
+                    'source'          => $customers ? 'customer list upload' : 'admin upload',
                 ]
             );
 
             $prospect->wasRecentlyCreated ? $imported++ : $skipped++;
         }
 
+        $noun = $customers ? 'customers' : 'prospects';
+
         return response()->json([
             'imported' => $imported,
             'skipped'  => $skipped,
-            'message'  => "Imported {$imported} new prospects, skipped {$skipped} existing.",
+            'message'  => "Imported {$imported} new {$noun}, skipped {$skipped} already on the list.",
         ]);
+    }
+
+    /**
+     * Every row of the upload as an array of cell strings. CSV is read as-is;
+     * a workbook is read from its first sheet that has data, with cells as
+     * displayed in Excel so a phone number is not turned into 2.56772E+11.
+     *
+     * @return array<int, array<int, string>>
+     */
+    private function readRows(\Illuminate\Http\UploadedFile $file): array
+    {
+        $ext = strtolower($file->getClientOriginalExtension());
+
+        if (in_array($ext, ['csv', 'txt'], true)) {
+            $lines = file($file->getRealPath(), FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+            if ($lines) {
+                $lines[0] = preg_replace('/^\xEF\xBB\xBF/', '', $lines[0]); // strip UTF-8 BOM
+            }
+
+            return array_map('str_getcsv', $lines);
+        }
+
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file->getRealPath());
+        $reader->setReadEmptyCells(false);
+        $book = $reader->load($file->getRealPath());
+
+        try {
+            foreach ($book->getWorksheetIterator() as $sheet) {
+                $rows = array_values(array_filter(
+                    $sheet->toArray(null, true, true, false),
+                    fn ($r) => implode('', array_map(fn ($c) => trim((string) $c), $r)) !== ''
+                ));
+                if ($rows) {
+                    return array_map(fn ($r) => array_map(fn ($c) => (string) $c, $r), $rows);
+                }
+            }
+
+            return [];
+        } finally {
+            // PhpSpreadsheet holds circular references; free them explicitly.
+            $book->disconnectWorksheets();
+            unset($book);
+        }
     }
 }

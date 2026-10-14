@@ -40,10 +40,15 @@ class Prospect extends Model
             'SPORTS_ASSOCIATION', 'BODA_BODA', 'BIKER_ASSOCIATION', 'TRAVEL_COMPANY',
             'INTERNAL_TEST',
         ],
+        // Coffee buyers — retail/hospitality at home, wholesale and export abroad.
+        'COFFEE' => [
+            'CAFE_RESTAURANT', 'HOTEL', 'SUPERMARKET', 'CORPORATE_OFFICE', 'DISTRIBUTOR',
+            'EXPORT_BUYER', 'INDIVIDUAL', 'INTERNAL_TEST',
+        ],
     ];
 
     /** Product lines with a prospect list. */
-    public const PRODUCTS = ['FET', 'SEAL'];
+    public const PRODUCTS = ['FET', 'SEAL', 'COFFEE'];
 
     /** Every vertical across all products (validation / legacy callers). */
     public const CATEGORIES = [
@@ -51,6 +56,7 @@ class Prospect extends Model
         'SCHOOL', 'FARMER', 'SPARE_PARTS', 'CAR_BOND', 'FUNERAL',
         'HOSPITAL', 'PHARMACY', 'FIRST_RESPONDER', 'MINING_QUARRY',
         'SPORTS_ASSOCIATION', 'BODA_BODA', 'BIKER_ASSOCIATION', 'TRAVEL_COMPANY',
+        'CAFE_RESTAURANT', 'HOTEL', 'SUPERMARKET', 'CORPORATE_OFFICE', 'EXPORT_BUYER', 'INDIVIDUAL',
         // Our own addresses, for previewing a campaign before it goes to real
         // prospects. Kept out of the real verticals so test rows never inflate
         // an industry's count or get swept into a live send.

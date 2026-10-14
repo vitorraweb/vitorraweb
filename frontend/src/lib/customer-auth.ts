@@ -82,6 +82,12 @@ export async function loginCustomer(email: string, password: string) {
   return data.user;
 }
 
+/** Sign out — revokes the token / session on the server, then forgets it here. */
+export async function logoutCustomer(): Promise<void> {
+  await authFetch(base(), "/auth/logout", customerAuth.getToken(), { method: "POST" }).catch(() => { /* best-effort */ });
+  customerAuth.clear();
+}
+
 export async function registerCustomer(payload: Record<string, unknown>) {
   const { data } = await postAuth("/auth/register", payload);
   customerAuth.save(data.token, data.user, data.expires_at);

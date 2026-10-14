@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { usePathname, useRouter, Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { apiCustomer, customerAuth, type CustomerUser } from "@/lib/customer-auth";
+import { apiCustomer, customerAuth, logoutCustomer, type CustomerUser } from "@/lib/customer-auth";
 import { LayoutDashboard, ShoppingBag, MessageSquare, Inbox, FileText, User, LogOut, Gauge } from "lucide-react";
 
 const TAB_META = [
@@ -38,7 +38,12 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       .catch(() => {});
   }, [pathname, isAuthPage, router]);
 
-  const logout = () => { customerAuth.clear(); router.push("/account/login"); };
+  /* End the session on the server too. Clearing only the browser left the old
+     sign-in alive, and it resurfaced when someone signed in with another email. */
+  const logout = async () => {
+    await logoutCustomer();
+    router.push("/account/login");
+  };
 
   if (!ready) return null;
 

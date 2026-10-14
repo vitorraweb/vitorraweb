@@ -1,12 +1,12 @@
 /* ─── Fuel Eco Tech — line pricing & savings model ────────────────────────────
-   Source: "FET FULL LINE PRICING (Kampala + Installation + 35% Margin)".
-   The pricing sheet maps every vehicle segment onto one of four device models.
-   We collapse it to those four public tiers — each tier is a single SKU with a
-   fixed selling price (EUR, landed in Kampala incl. installation).
+   Source: the "FET PRICE LIST" page of the printed Fuel Eco Tech product
+   catalogue (October 2026), which replaced the earlier EUR sheet "FET FULL LINE
+   PRICING (Kampala + Installation + 35% Margin)". Four device models, each a
+   single SKU with a fixed selling price in Uganda shillings.
 
-   Prices are shown in EUR as supplied by the business (the FET supply chain and
-   the German field-test data are EUR-denominated). All figures here trace
-   directly to the pricing sheet — do not invent values.
+   All prices here trace directly to that catalogue — do not invent values. The
+   catalogue's own engine ranges (1.4–2.0, 2.1–3.0, 3.1–6.7, 12–13) are NOT used;
+   see the engine-range note below.
 
    `baselineLPer100` and `defaultAnnualKm` drive the savings calculator only.
    They are representative assumptions for a typical vehicle in the segment, used
@@ -57,8 +57,8 @@ export interface FetTier {
   engineMaxL: number;
   /** Example vehicles in this class (from the FET application overview). */
   examples: string;
-  /** Selling price in EUR (Kampala landed + installation, 35% margin). */
-  priceEur: number;
+  /** Selling price in UGX, as printed in the product catalogue. */
+  priceUgx: number;
   /** Representative fuel use (l/100km) — calculator assumption only. */
   baselineLPer100: number;
   /** Representative annual distance (km) — calculator default only. */
@@ -75,7 +75,7 @@ export const FET_TIERS: FetTier[] = [
     fits: "Small, compact & mid-range cars, mini-buses & vans",
     segment: "Petrol / diesel · 1.0–2.0L",
     examples: "Corolla, Golf, Hiace, mini-buses & vans",
-    priceEur: 365.4,
+    priceUgx: 1_891_000,
     baselineLPer100: 7.5,
     defaultAnnualKm: 15000,
   },
@@ -87,7 +87,7 @@ export const FET_TIERS: FetTier[] = [
     fits: "SUVs, sports & upper-class cars, Sprinter-class vans to 5t",
     segment: "Petrol / diesel · 1.5–3.0L",
     examples: "Tiguan, RAV4, X5, GLE, Sprinter vans",
-    priceEur: 630.71,
+    priceUgx: 3_245_000,
     baselineLPer100: 10,
     defaultAnnualKm: 25000,
   },
@@ -99,7 +99,7 @@ export const FET_TIERS: FetTier[] = [
     fits: "Light & medium trucks to 18t, performance cars",
     segment: "Diesel / petrol · 3.0–9.0L",
     examples: "City & distribution trucks, 5–18t",
-    priceEur: 1028.69,
+    priceUgx: 5_276_000,
     baselineLPer100: 22,
     defaultAnnualKm: 40000,
   },
@@ -111,7 +111,7 @@ export const FET_TIERS: FetTier[] = [
     fits: "Heavy goods vehicles & haulage",
     segment: "Diesel · 10–16L",
     examples: "Long-haul trucks, up to 40t",
-    priceEur: 1957.3,
+    priceUgx: 10_015_000,
     baselineLPer100: 32,
     defaultAnnualKm: 60000,
   },
@@ -151,8 +151,8 @@ export const CO2_KG_PER_LITRE = 2.64;
                   payback      = installedDeviceCost ÷ annualSaving
                   CO₂ avoided  = litresSaved × emission factor (fuel-specific)
 
-   Money is in whatever currency the customer chose. The device price is EUR
-   (the business quotes it in EUR) and is converted for display only.          */
+   Money is in whatever currency the customer chose. The device price is UGX
+   (the catalogue price) and is converted for display only.                    */
 
 export type FuelType = "petrol" | "diesel";
 
@@ -243,16 +243,9 @@ export function estimateSavings(input: {
   };
 }
 
-/** Format an EUR amount the way the pricing guide and calculator display it. */
-export function formatEur(
-  value: number,
-  opts: { decimals?: number } = {}
-): string {
-  const { decimals = 2 } = opts;
-  return `€${value.toLocaleString("en-IE", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  })}`;
+/** Format a UGX catalogue price the way the pricing guide displays it. */
+export function formatUgx(value: number): string {
+  return `UGX ${Math.round(value).toLocaleString("en-US")}`;
 }
 
 /* ─── Savings maths ────────────────────────────────────────────────────────

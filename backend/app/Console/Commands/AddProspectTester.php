@@ -19,7 +19,7 @@ class AddProspectTester extends Command
     protected $signature = 'prospects:add-tester
         {email : Address to add (e.g. john@vitorra.org)}
         {--name= : Company name shown in the email; defaults to the address}
-        {--product=SEAL : Which product list to add it to (FET, SEAL)}
+        {--product=SEAL : Which product list to add it to (FET, SEAL, COFFEE)}
         {--category=INTERNAL_TEST : Vertical to file it under}';
 
     protected $description = "Add one of our own addresses as a prospect, to preview how a campaign arrives.";

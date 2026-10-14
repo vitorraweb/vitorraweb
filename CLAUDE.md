@@ -170,7 +170,7 @@ Dark → Gold strip → White → Dark → White → Ivory → Dark → Ivory �
 |------|-------|--------|-------|
 | Homepage | `/` | ✅ Complete | 11-section premium layout |
 | About | `/about` | ✅ Complete | 8-section, all 8 team members with photos |
-| Fuel Eco Tech | `/products/fuel-eco-tech` | ✅ Complete | VW T5 test data + **public 4-tier pricing guide + savings calculator** (EUR) |
+| Fuel Eco Tech | `/products/fuel-eco-tech` | ✅ Complete | VW T5 test data + **public 4-tier pricing guide + savings calculator** (UGX) |
 | SEAL Wound Spray | `/products/seal-wound-spray` | ✅ Complete | **Rebuilt from product deck** — chitosan/FDA story, 3 variants, how-it-works, specs, trust signals, safety |
 | Vitorra Coffee | `/products/coffee` | ✅ Complete | Aligned with design system |
 | Logistics | `/products/logistics` | ✅ Complete | Aligned with design system |
@@ -231,16 +231,16 @@ Dark → Gold strip → White → Dark → White → Ivory → Dark → Ivory �
 **FET Certifications (all independently issued):**
 ISO 9001:2015, ISO 14001:2015, ISO 27001, Zurich Product Liability, AVL Technologies (lab validated), qm-solutions GmbH (German certified)
 
-**FET Full-Line Pricing (from `FET_full_line_pricing.pdf` — Kampala landed + installation, 35% margin):**
+**FET Pricing — from the printed FET product catalogue (October 2026, UGX, installation included):**
 
-| Tier (model) | Fits | Price (EUR, from) |
+| Tier (model) | Fits (manufacturer ranges, `data/fet-applications.json`) | Price (UGX) |
 |--------------|------|-------------------|
-| FET-PRO-FI | Compact & mid-range cars, mini-buses (1.4–2.0L) | €365.40 |
-| FET-PRO-FII | SUVs, sports, upper-class & large cars (1.5–3.0L) | €630.71 |
-| FET-PRO-FIII | Light commercial trucks & vans (3.0–6.7L) | €1,028.69 |
-| FET-PRO-FIV | Heavy goods vehicles & haulage (12–13L) | €1,957.30 |
+| FET-PRO-FI | Small/compact/mid cars, mini-buses, vans (1.0–2.0L) | 1,891,000 |
+| FET-PRO-FII | SUVs, large cars, Sprinter-class vans (1.5–3.0L) | 3,245,000 |
+| FET-PRO-FIII | Light & medium trucks to 18t (3.0–9.0L) | 5,276,000 |
+| FET-PRO-FIV | Heavy goods vehicles & haulage (10–16L) | 10,015,000 |
 
-> Prices shown publicly in **EUR as supplied** (Director decision — overrides the BRD's UGX/USD-only rule). Sales motion stays enquiry → free assessment → quote; volume pricing applied at the quote stage. Data file: `frontend/src/lib/fet-pricing.ts`.
+> Replaced the earlier EUR sheet (`FET_full_line_pricing.pdf`, €365.40–€1,957.30) on 2026-10-14. Prices live in **three places that must agree**: `frontend/src/lib/fet-pricing.ts` (site), `backend/database/seeders/FetPriceListSeeder.php` (what reservations charge — run `--class=FetPriceListSeeder` on prod after a change), and `scripts/generate_fet_pdfs.py` (datasheet PDF; refuses to build if it disagrees with the site). The catalogue's own engine ranges are narrower than the manufacturer's and are deliberately not used. Sales motion stays enquiry → free assessment → quote.
 
 ---
 
@@ -368,7 +368,7 @@ Repo: `github.com/vitorraweb/vitorraweb`. Recover any old file: `git checkout <o
 | `frontend/src/lib/cart.tsx` | Cart context + `useCart` (localStorage, currency) |
 | `frontend/src/lib/config.ts` | Feature flags — `COFFEE_SHOP_ENABLED` (coffee shop gate) |
 | `frontend/src/lib/coffee-catalog.ts` | Shop catalogue: API-or-fallback, price formatting |
-| `frontend/src/lib/fet-pricing.ts` | FET 4-tier pricing (EUR) + savings-calculator model |
+| `frontend/src/lib/fet-pricing.ts` | FET 4-tier pricing (UGX) + savings-calculator model |
 | `frontend/src/lib/enquiry-schema.ts` | Product-aware enquiry question sets (edit here to add/change questions) |
 | `scripts/generate_fet_pdfs.py` | Regenerates the FET download PDFs (reportlab) — no RRP/PII |
 | `frontend/public/downloads/*` | Public FET PDFs — application guide + datasheet |

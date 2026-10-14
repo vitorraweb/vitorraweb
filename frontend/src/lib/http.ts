@@ -62,9 +62,13 @@ export async function authFetch(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  /* Token mode sends no cookies. The API is reached through the site's own
+     address, so a browser default would attach any old Laravel session cookie,
+     and the server let that session outrank the token: signing in with a new
+     email landed in the previous account. */
   return fetch(`${base}${path}`, {
     ...options,
     headers,
-    ...(cookieMode ? { credentials: "include" as RequestCredentials } : {}),
+    credentials: cookieMode ? "include" : "omit",
   });
 }

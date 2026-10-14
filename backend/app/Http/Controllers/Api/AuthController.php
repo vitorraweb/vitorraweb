@@ -92,11 +92,10 @@ class AuthController extends Controller
             }
         }
 
-        // Cookie/SPA mode: the request is stateful (came from a SANCTUM_STATEFUL
-        // domain), so the session cookie is the credential — establish it and
-        // return no token (nothing sensitive for JS to store). Otherwise fall
-        // back to a Bearer token for token-mode clients.
-        if ($request->hasSession()) {
+        // Cookie/SPA mode: the session cookie is the credential — establish it
+        // and return no token (nothing sensitive for JS to store). Otherwise
+        // fall back to a Bearer token for token-mode clients.
+        if ($this->wantsSessionAuth($request)) {
             $request->session()->regenerate();
 
             return response()->json(['data' => [
@@ -290,6 +289,18 @@ class AuthController extends Controller
      * are short-lived (admin-configurable, default 8h) to limit the window of
      * a hijacked token; customer portal sessions run longer for convenience.
      */
+    /**
+     * A request being stateful (from a SANCTUM_STATEFUL domain) is not enough:
+     * production lists the site as stateful while the site runs in token mode,
+     * and answering its logins with a session left the site holding no token
+     * at all. Only a cookie-mode client primes CSRF and sends X-XSRF-TOKEN, so
+     * that header is what marks a genuine cookie sign-in.
+     */
+    private function wantsSessionAuth(Request $request): bool
+    {
+        return $request->hasSession() && $request->hasHeader('X-XSRF-TOKEN');
+    }
+
     private function issueToken(User $user, ?string $scope = null): array
     {
         $token = $user->createToken(

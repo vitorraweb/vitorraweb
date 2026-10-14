@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // those domains become stateful (session cookie); everything else stays
         // token-based, so this is a no-op until that env var is set in prod.
         $middleware->statefulApi();
+        // A presented Bearer token outranks any leftover session cookie.
+        $middleware->prependToGroup('api', \App\Http\Middleware\PreferBearerToken::class);
         // Role-based access guard for admin routes
         $middleware->alias([
             'role'    => \App\Http\Middleware\RequireRole::class,

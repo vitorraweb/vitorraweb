@@ -9,7 +9,7 @@ class ImportProspects extends Command
 {
     protected $signature = 'prospects:import
         {file? : Path to the cleaned JSON (defaults to the product'."'".'s list)}
-        {--product=FET : Product line this list belongs to (FET, SEAL)}
+        {--product=FET : Product line this list belongs to (FET, SEAL, COFFEE)}
         {--fresh : Truncate the table first}';
 
     protected $description = 'Import prospects from a cleaned JSON file (idempotent — only adds new rows).';

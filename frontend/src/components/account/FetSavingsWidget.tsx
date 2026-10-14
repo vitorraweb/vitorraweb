@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { TrendingDown } from "lucide-react";
 import { FET_TIERS, SAVINGS, DEFAULT_FUEL_PRICE_EUR, computeSavings } from "@/lib/fet-pricing";
-import { useRates, convert, formatMoney } from "@/lib/currency";
+import { useRates, convert, formatMoney, FALLBACK_RATES } from "@/lib/currency";
 
 /* FET savings tracker — shown on a delivered order whose line item carries a
    `fet-{tier}` product_slug (set by both the self-serve reservation flow and
@@ -31,7 +31,7 @@ export default function FetSavingsWidget({
     fuelPriceEur: DEFAULT_FUEL_PRICE_EUR,
     savingsPct: SAVINGS.default,
     baselineLPer100: tier.baselineLPer100,
-    deviceCostEur: tier.priceEur,
+    deviceCostEur: convert(tier.priceUgx, "UGX", "EUR", rates ?? FALLBACK_RATES),
     vehicles: quantity,
   });
 

@@ -5,11 +5,11 @@ import CurrencyConverter from "@/components/ui/CurrencyConverter";
 import ReserveButton from "@/components/sections/ReserveButton";
 import { Section, Container, Figure, TextLink, Text } from "@/components/system";
 import { SectionHead } from "@/components/system/blocks";
-import { FET_TIERS, formatEur, engineSpanLabel } from "@/lib/fet-pricing";
+import { FET_TIERS, formatUgx, engineSpanLabel } from "@/lib/fet-pricing";
 
 /* ─── FET Full Line Pricing — Quiet Authority ─────────────────────────────────
    Public pricing guide, one column per device tier, with its exact selling
-   price (EUR, Kampala landed + installation). Prices are shown openly; the
+   price (UGX, from the product catalogue, installation included). Prices are shown openly; the
    sales motion stays assessment → quote, so every column also routes to the
    enquiry form. Engine spans come from the manufacturer application table via
    engineSpanLabel(), so this block can never disagree with "Which device fits".
@@ -51,11 +51,11 @@ export default function FetPricing() {
 
               <div className="mt-auto pt-8">
                 <p className="t-label text-ink-muted">{tr("from")}</p>
-                <p className="font-display text-[2.5rem] leading-none text-ink mt-2 [font-variant-numeric:lining-nums_tabular-nums]">
-                  {formatEur(t.priceEur)}
+                <p className="font-display text-[2rem] leading-none text-ink mt-2 [font-variant-numeric:lining-nums_tabular-nums]">
+                  {formatUgx(t.priceUgx)}
                 </p>
                 <p className="t-small text-ink-muted mt-2">{tr("perDevice")}</p>
-                <ApproxPrice eur={t.priceEur} className="block t-small text-ink-muted mt-1" />
+                <ApproxPrice ugx={t.priceUgx} className="block t-small text-ink-muted mt-1" />
 
                 <ReserveButton tier={t} />
                 <div className="mt-3 text-center">

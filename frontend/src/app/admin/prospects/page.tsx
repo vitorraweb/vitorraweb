@@ -24,7 +24,10 @@ type Campaign = {
 };
 
 /** Product lines with their own prospect list. Mirrors Prospect::PRODUCTS. */
-const PRODUCTS: [string, string][] = [["FET", "Fuel Eco Tech"], ["SEAL", "SEAL Wound Spray"]];
+const PRODUCTS: [string, string][] = [["FET", "Fuel Eco Tech"], ["SEAL", "SEAL Wound Spray"], ["COFFEE", "Vitorra Coffee"]];
+
+/** Reply templates file coffee under "Coffee", not the list code "COFFEE". */
+const TEMPLATE_CATEGORY: Record<string, string> = { FET: "FET", SEAL: "SEAL", COFFEE: "Coffee" };
 
 /** Industry verticals per product. Mirrors Prospect::CATEGORIES_BY_PRODUCT. */
 const CATEGORIES_BY_PRODUCT: Record<string, [string, string][]> = {
@@ -39,6 +42,12 @@ const CATEGORIES_BY_PRODUCT: Record<string, [string, string][]> = {
     ["MANUFACTURING", "Manufacturing"], ["MINING_QUARRY", "Mines & quarries"],
     ["SPORTS_ASSOCIATION", "Sports associations"], ["BODA_BODA", "Boda bodas"],
     ["BIKER_ASSOCIATION", "Biker associations"], ["TRAVEL_COMPANY", "Travel companies"],
+    ["INTERNAL_TEST", "Internal test"],
+  ],
+  COFFEE: [
+    ["CAFE_RESTAURANT", "Cafés & restaurants"], ["HOTEL", "Hotels"], ["SUPERMARKET", "Supermarkets & shops"],
+    ["CORPORATE_OFFICE", "Offices & corporates"], ["DISTRIBUTOR", "Distributors"],
+    ["EXPORT_BUYER", "Export buyers"], ["INDIVIDUAL", "Individual customers"],
     ["INTERNAL_TEST", "Internal test"],
   ],
 };
@@ -115,6 +124,7 @@ export default function ProspectsPage() {
   const [importCat, setImportCat]         = useState("CARGO");
   const [importing, setImporting]         = useState(false);
   const [importMsg, setImportMsg]         = useState("");
+  const [importCustomers, setImportCustomers] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const categories = product ? CATEGORIES_BY_PRODUCT[product] : ALL_CATEGORIES;
@@ -280,7 +290,7 @@ export default function ProspectsPage() {
           name: tplName.trim(),
           subject: subject.trim(),
           body: body.trim(),
-          category: product || "General",
+          category: TEMPLATE_CATEGORY[product] ?? "General",
         }),
       });
       setTemplates((t) => [...t, res.data]);
@@ -315,13 +325,14 @@ export default function ProspectsPage() {
 
   const doImport = async () => {
     const file = fileRef.current?.files?.[0];
-    if (!file) { setImportMsg("Choose a CSV file first."); return; }
+    if (!file) { setImportMsg("Choose a file first."); return; }
     setImporting(true); setImportMsg("");
     try {
       const form = new FormData();
       form.append("file", file);
       form.append("product", importProduct);
       form.append("category", importCat);
+      if (importCustomers) form.append("existing_customers", "1");
       const res = await uploadAdmin<{ message: string }>("/admin/prospects/import", form);
       setImportMsg(res.message);
       if (fileRef.current) fileRef.current.value = "";
@@ -344,7 +355,7 @@ export default function ProspectsPage() {
             {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}Export
           </button>
           <button onClick={() => setImportOpen((o) => !o)} className="c-btn c-btn-primary">
-            <Upload className="w-4 h-4" />Import CSV
+            <Upload className="w-4 h-4" />Import list
           </button>
         </>}
       />
@@ -352,10 +363,11 @@ export default function ProspectsPage() {
       {/* Import panel */}
       {importOpen && (
         <div className="c-panel p-4 mb-3">
-          <p className="text-[13px] font-medium text-ink mb-1">Import a prospect list (CSV)</p>
+          <p className="text-[13px] font-medium text-ink mb-1">Import a prospect or customer list (Excel or CSV)</p>
           <p className="text-[12px] text-ink-muted mb-3">
-            Pick the product this list sells, then its industry. Columns matched by header: name, location, phone, email
-            (status and feedback optional). Duplicates are skipped. In Excel use <strong>Save As → CSV</strong>.
+            Pick the product this list belongs to, then its industry. Upload the Excel file as it is (.xlsx) or a CSV.
+            Columns matched by header: name, location, phone, email (status and feedback optional). Rows already on the
+            list are skipped, so uploading the same file twice is safe. One industry per upload: split a mixed list first.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <select value={importProduct} onChange={(e) => selImportProduct(e.target.value)} className="c-select">
@@ -364,7 +376,11 @@ export default function ProspectsPage() {
             <select value={importCat} onChange={(e) => setImportCat(e.target.value)} className="c-select">
               {importCategories.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
-            <input ref={fileRef} type="file" accept=".csv,text/csv" className="text-[13px]" />
+            <input ref={fileRef} type="file" accept=".csv,text/csv,.xlsx,.xls" className="text-[13px]" />
+            <label className="flex items-center gap-1.5 text-[13px] text-ink">
+              <input type="checkbox" checked={importCustomers} onChange={(e) => setImportCustomers(e.target.checked)} />
+              These are existing customers
+            </label>
             <button onClick={doImport} disabled={importing} className="c-btn c-btn-primary">
               {importing ? <><Loader2 className="w-4 h-4 animate-spin" />Importing…</> : "Upload"}
             </button>

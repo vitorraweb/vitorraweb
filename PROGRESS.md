@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 9 October 2026
+**Last updated:** 14 October 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -1153,6 +1153,92 @@ and Unsubscribe are now on the same system. Every form keeps its logic
 
 **Still to redesign:** the order / invoice / payment pages reached from links we send customers, and the gated shop catalogue, cart and checkout.
 Suppliers, legal, Shop. Until then those pages carry the old styling.
+
+## Customer sign-in fix, coffee customer import, new FET prices (14 October 2026)
+
+### Signing in with a new email opened the previous account — fixed
+A customer who signed in (or registered) with a new email could land in the
+**previous** account used on that browser, seeing someone else's orders and
+details.
+
+- **The cause:** the server is set up to accept sign-in cookies from the website,
+  but the website signs people in with a separate pass of its own. When both
+  arrived, the server believed the old cookie over the new sign-in. "Sign out" in
+  the customer portal also only forgot the account in the browser and never ended
+  it on the server, so the old sign-in stayed alive.
+- **The fix:** a new sign-in now always decides who you are. The website no longer
+  sends old cookies, sign-ins from the website now get their own pass, and
+  "Sign out" ends the session on the server too. The same fix covers the staff and
+  admin portals, which had the same weakness.
+- ⚠ Everyone signed in (customers, staff and admins) will be signed out **once**
+  after the deploy and needs to sign in again.
+- The new sign-in pass is limited to the portal it was issued for. Until now the
+  old cookie skipped that limit, so admin, staff and customer sign-ins were less
+  separated than intended.
+
+### Coffee customers can be imported
+Marketing can now load the coffee customer list into the system themselves, in
+`/admin/prospects` → **Import list**.
+
+- **Coffee is its own list**, beside FET and SEAL, with its own buyer types: cafés
+  & restaurants, hotels, supermarkets & shops, offices, distributors, export
+  buyers and individuals.
+- **Upload the Excel file as it is** (.xlsx) or a CSV. No more "Save As CSV".
+  Title rows above the header and a numbered "No." column are handled, and the
+  name column is found from its heading.
+- Tick **"These are existing customers"** and the rows are filed as converted
+  rather than as cold leads.
+- **Uploading the same file twice is safe:** rows already on the list are
+  skipped.
+- **One buyer type per upload:** a mixed list needs splitting by type first.
+- Once imported, the coffee list works like the others: filter, assign an owner,
+  export, and email it through the campaign tool with attachments. A template
+  saved while on the coffee list is filed under "Coffee".
+
+### New FET price list (from the printed product catalogue)
+| Model | Old (EUR) | New (UGX, installed) |
+|---|---|---|
+| FET-PRO-FI | €365.40 | **1,891,000** |
+| FET-PRO-FII | €630.71 | **3,245,000** |
+| FET-PRO-FIII | €1,028.69 | **5,276,000** |
+| FET-PRO-FIV | €1,957.30 | **10,015,000** |
+
+- **Updated in all three places:** the website's pricing section, the
+  reservation flow and the savings calculator; what a reservation actually
+  charges; and the downloadable **product datasheet PDF**.
+- The calculator's default currency was already UGX, so a visitor now sees the
+  catalogue price exactly, with no conversion. The USD and EUR equivalents are
+  shown beside it.
+- **Mismatches are now blocked:** the PDF generator refuses to build if its
+  prices differ from the website.
+- ⚠ **Not copied from the catalogue page:**
+  - **Engine sizes.** The catalogue prints the old, narrower ranges (1.4–2.0,
+    2.1–3.0, 3.1–6.7, 12–13). The site keeps the manufacturer's ranges, because
+    the narrower ones told buyers with 10–12L or 15–16L engines that nothing
+    fits.
+  - **"5-year manufacturer's warranty"** (the site and datasheet say 1 year).
+    This is a commitment to customers and needs the Director's confirmation
+    before it changes.
+  - **"Up to 15% savings".** The site keeps the independently tested 13.9%.
+
+> Technical detail (engineering): `PreferBearerToken` middleware (Bearer token
+> skips Sanctum's session guard); `AuthController::wantsSessionAuth()` (session
+> only when the client sends `X-XSRF-TOKEN`); `authFetch` uses
+> `credentials: "omit"` in token mode; `logoutCustomer()`. `Prospect::PRODUCTS`
+> gains `COFFEE` + verticals; `ProspectController::import` reads xlsx/xls via
+> PhpSpreadsheet, `existing_customers` → `converted`. `FET_TIERS.priceUgx`,
+> `formatUgx`; `FetPriceListSeeder`; `assert_prices_match_site()` in
+> `scripts/generate_fet_pdfs.py`. Tests: `StaleSessionTest`,
+> `CoffeeCustomerImportTest`, `FetPriceListTest`. **413 backend tests passing.**
+
+### Deploy (backend, by hand; no migration)
+```bash
+/opt/alt/php83/usr/bin/php artisan config:cache
+/opt/alt/php83/usr/bin/php artisan route:cache
+/opt/alt/php83/usr/bin/php artisan db:seed --class=FetPriceListSeeder --force   # new reservation prices
+```
+
+---
 
 ## ⏳ Remaining / pending
 

@@ -9,7 +9,7 @@ import { ArrowRight, Check, Copy, Loader2, Mail, Minus, Phone, Plus, ShieldCheck
 import { reserveFet } from "@/lib/api";
 import { ONLINE_PAYMENTS_ENABLED } from "@/lib/config";
 import { isValidPhone } from "@/lib/phone";
-import { formatEur, type FetTier } from "@/lib/fet-pricing";
+import { formatUgx, type FetTier } from "@/lib/fet-pricing";
 import type { Order } from "@/types";
 
 /* ─── "Reserve Now, Pay Cash" ─────────────────────────────────────────────────
@@ -282,7 +282,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
                           {tr("from")}
                         </p>
                         <p className="font-numeric" style={{ fontSize: "20px", fontWeight: 800, lineHeight: 1, color: "#1E1E1E" }}>
-                          {formatEur(tier.priceEur)}
+                          {formatUgx(tier.priceUgx)}
                         </p>
                       </div>
                     </div>

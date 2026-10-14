@@ -11,6 +11,7 @@ Run:  python scripts/generate_fet_pdfs.py   (requires reportlab)
 """
 
 import json
+import re
 import os
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -194,15 +195,16 @@ def datasheet():
     flow.append(data_table(
         ["Model", "Fits", "From (per device, installed)"],
         [
-            ["FET-PRO-FI",   "Compact &amp; mid cars, mini-buses, vans (1.4–2.0L)", "EUR 365.40"],
-            ["FET-PRO-FII",  "SUVs, large cars, Sprinter vans (1.5–3.0L)",          "EUR 630.71"],
-            ["FET-PRO-FIII", "Light &amp; medium trucks (3.0–9.0L)",                "EUR 1,028.69"],
-            ["FET-PRO-FIV",  "Heavy trucks up to 40 tonnes (10–16L)",               "EUR 1,957.30"],
+            ["FET-PRO-FI",   "Small, compact &amp; mid cars, mini-buses, vans (1.0–2.0L)", ugx(PRICES_UGX["FI"])],
+            ["FET-PRO-FII",  "SUVs, large cars, Sprinter vans (1.5–3.0L)",               ugx(PRICES_UGX["FII"])],
+            ["FET-PRO-FIII", "Light &amp; medium trucks (3.0–9.0L)",                     ugx(PRICES_UGX["FIII"])],
+            ["FET-PRO-FIV",  "Heavy trucks up to 40 tonnes (10–16L)",                    ugx(PRICES_UGX["FIV"])],
         ], S, cw))
     flow.append(Spacer(1, 4))
     flow.append(Paragraph(
-        "Prices are per device, landed in Kampala and including professional installation. Larger fleets "
-        "qualify for volume pricing, applied at the quote stage.", S["note"]))
+        "Prices are per device in Uganda shillings, including professional installation, as listed in the "
+        "Fuel Eco Tech product catalogue (October 2026). Larger fleets qualify for volume pricing, applied at "
+        "the quote stage.", S["note"]))
 
     flow.append(Paragraph("Benefits", S["h2"]))
     for b in [
@@ -226,6 +228,36 @@ def datasheet():
         S["body"]))
 
     build(os.path.join(OUT, "vitorra-fet-datasheet.pdf"), flow)
+
+# ─── Prices ───────────────────────────────────────────────────────────────────
+# Selling prices from the Fuel Eco Tech product catalogue (October 2026), UGX.
+# Must match priceUgx in frontend/src/lib/fet-pricing.ts — checked below.
+PRICES_UGX = {"FI": 1_891_000, "FII": 3_245_000, "FIII": 5_276_000, "FIV": 10_015_000}
+
+
+def ugx(amount):
+    return f"UGX {amount:,}"
+
+
+FET_PRICING_TS = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "frontend", "src", "lib", "fet-pricing.ts",
+)
+
+
+def assert_prices_match_site():
+    """Fail loudly if the datasheet would print different prices to the website."""
+    with open(FET_PRICING_TS) as fh:
+        src = fh.read()
+    site = [int(v.replace("_", "")) for v in re.findall(r"priceUgx:\s*([\d_]+)", src)]
+    ours = [PRICES_UGX[d] for d in ("FI", "FII", "FIII", "FIV")]
+    if site != ours:
+        raise SystemExit(
+            f"FET price drift: this script prints {ours} but {os.path.relpath(FET_PRICING_TS)} "
+            f"says {site}. Update both from the same price list."
+        )
+    print(f"  prices verified against {os.path.relpath(FET_PRICING_TS)}")
+
 
 # ─── Drift guard ──────────────────────────────────────────────────────────────
 # The engine ranges printed in these PDFs must agree with the website, which
@@ -265,5 +297,6 @@ def assert_spans_match_source():
 
 if __name__ == "__main__":
     assert_spans_match_source()
+    assert_prices_match_site()
     application_guide()
     datasheet()
