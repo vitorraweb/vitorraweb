@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 14 October 2026
+**Last updated:** 15 October 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -36,16 +36,22 @@
 | **Zero-cost upgrades** (keyless FX, auto holidays, phone validation) | ✅ **Built** |
 | **Reception lobby display** (`/display`) | ✅ **Built & redesigned** (Oct) — all four business lines now run their own film; point the front-desk TV's browser at it |
 | **Site could not reach the API** (blocked sign-in + all forms) | ✅ **Fixed & live** — API now served through the site itself |
-| **Leave approval — two people required** (Operations + Finance), nobody signs their own | ✅ **Built** — needs backend deploy |
-| **Staff offboarding** (`staff:offboard`) + departed accounts can no longer sign in | ✅ **Built** — needs backend deploy |
+| **Leave approval — two people required** (Operations + Finance), nobody signs their own | ✅ **Live** — Joseph Rwabu holds the Finance signature |
+| **Staff offboarding** (`staff:offboard`) + departed accounts can no longer sign in | ✅ **Live** |
 | **FET Trial Manager** — run a client fuel trial end to end, from their own spreadsheet to a client-ready report | ✅ **Built & live** — first trial (Hariss International) loaded |
 | **Blog posts appearing instantly** when published, instead of up to 30 minutes later | ✅ **Fixed & live** — had never worked in production |
 | **Moving the website onto infrastructure we own** (AWS) | 🔨 **Built, not switched on** — site still served by Vercel. Amazon's account hold cleared; the delivery layer and firewall are now live on **both** environments. Remaining work is ours, not theirs |
 | **Automatic releases** — a change goes live without anyone running commands | ✅ **Built & proven** — production needs a human approval |
 | **Being told when the website breaks** — before a customer notices | ✅ **Built & tested on both environments** — a real alert was fired and the email confirmed arriving |
 | **Knowing what we spend, before the bill** | ✅ **Built** — warnings at 60/85/100% of budget, plus unusual-spending detection |
-| **Knowing which channel produced every enquiry** (Google Ads, Facebook, referral, direct) | ✅ **Built** — needs backend deploy |
-| **Enquiries chased and escalated when nobody replies** | ✅ **Built** — needs backend deploy + escalation list |
+| **Knowing which channel produced every enquiry** (Google Ads, Facebook, referral, direct) | ✅ **Live** — ad links still need campaign tags |
+| **Enquiries chased and escalated when nobody replies** | ✅ **Live** — set the escalation list (`ENQUIRY_SLA_ESCALATE_TO`) |
+| **Quotations + branded Coffee / FET invoices** (Finance's templates) | ✅ **Live** |
+| **Customer sign-in landing in a previous account** | ✅ **Fixed & live** — everyone signed in again once |
+| **FET prices — new catalogue list in UGX** (site, calculator, reservations, datasheet PDF) | ✅ **Live** |
+| **Coffee customer list** — Excel import, go4WorldBusiness category, safe re-uploads | ✅ **Live** — 54 coffee rows loaded |
+| **Campaigns to a whole list, quotations from a customer, dated follow-ups** | ✅ **Live** |
+| **Branded campaign email** — letterhead, sender's signature, support copied, test send + preview | ✅ **Live** — Sarah still needs to save her signature |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -1226,10 +1232,10 @@ The Status / Assign to / Follow up menus in the dark bar at the bottom showed
 white words on a white menu. Every console dropdown's menu is now dark text on
 a light background.
 
-### Deploy
-No database change and no new dependency: the standard pull plus
-`config:cache` and `route:cache` (three new routes). Ride it with the previous
-entry's `migrate --force` if that has not been run yet.
+### Deployed (14–15 October 2026)
+On the server with the two entries below (commit `3302f83`). Production check
+on 15 October: Thurayya has a signature saved in her profile; **Sarah has
+not**, so her campaigns sign off as "The Vitorra team" until she does.
 
 ---
 
@@ -1289,15 +1295,9 @@ the same growing workbook.
 > `DocumentEditor` `initialCustomer` + `/admin/quotations/new?name=&email=&phone=&address=`.
 > Tests: `CoffeeOutreachTest` (9). **423 backend tests passing.**
 
-### Deploy (backend, by hand): this one carries a database change
-```bash
-cd ~/vitorraweb && git pull origin master && cd backend
-/opt/alt/php83/usr/bin/php artisan migrate --force
-/opt/alt/php83/usr/bin/php artisan config:cache
-/opt/alt/php83/usr/bin/php artisan route:cache
-```
-⚠ The website half deploys itself on push. Until the backend is pulled and
-migrated, "Follow-ups due", bulk actions and "select all on this list" will fail.
+### Deployed (14 October 2026)
+Pulled and migrated on the server (`2026_10_14_000001` ran). By 15 October
+marketing had loaded **54 coffee rows**.
 
 ---
 
@@ -1379,12 +1379,18 @@ Marketing can now load the coffee customer list into the system themselves, in
 > `scripts/generate_fet_pdfs.py`. Tests: `StaleSessionTest`,
 > `CoffeeCustomerImportTest`, `FetPriceListTest`. **413 backend tests passing.**
 
-### Deploy (backend, by hand; no migration)
-```bash
-/opt/alt/php83/usr/bin/php artisan config:cache
-/opt/alt/php83/usr/bin/php artisan route:cache
-/opt/alt/php83/usr/bin/php artisan db:seed --class=FetPriceListSeeder --force   # new reservation prices
-```
+### Deployed (14 October 2026)
+On the server, and `FetPriceListSeeder` has run: reservations charge
+UGX 1,891,000 / 3,245,000 / 5,276,000 / 10,015,000.
+
+⚠ **Lesson from this deploy:** the first attempt failed with "FetPriceListSeeder
+does not exist" because the server had not pulled. It was still four commits
+behind. **The server does not pull by itself.** Every backend release starts
+with `git pull`. Corrected in the server note at the bottom.
+
+⏳ **Still open from the catalogue page:** the **5-year manufacturer's warranty**
+it advertises (the site and datasheet say 1 year) needs the Director's
+confirmation before the site changes.
 
 ---
 
@@ -1422,11 +1428,18 @@ F. **Write the incident runbook** — what to check, in what order, when the sit
    a certificate refused because of a record in someone else's domain. A generic
    runbook would list none of those.
 
-**Deploy first (built, not yet on the server)**
-3. **Run the standard backend deploy** — the two-signature leave approval
-   carries a database change, and `staff:offboard` plus the departed-staff
-   login block ship with it. See the runbook at the bottom. The frontend half
-   is already live (it deploys itself).
+**Marketing — before the first coffee campaign (from 14–15 October)**
+3. **Sarah: paste your Outlook signature into My profile** (`/admin/profile`).
+   Thurayya's is saved. Without one, a campaign signs off as "The Vitorra team".
+3b. **Send one test first.** In the composer, press **Send test** (Thurayya,
+   Sarah and the sender are ticked) and check it in Outlook before the full send.
+3c. **Support mailbox: add an Outlook rule** that files campaign copies into a
+   folder. Support is copied on every campaign email, so a 200-customer send puts
+   200 copies in the inbox.
+3d. **Director's decision: FET warranty.** The new product catalogue advertises
+   a 5-year manufacturer's warranty; the website and datasheet say 1 year. Also
+   on that page and deliberately not copied: "up to 15% savings" (the site keeps
+   the tested 13.9%) and narrower engine ranges than the manufacturer's.
 
 **Operations setup (not code)**
 4. **Fix the 7 flagged SEAL rows** (above) in `/admin/prospects`, and confirm the
@@ -1459,11 +1472,11 @@ F. **Write the incident runbook** — what to check, in what order, when the sit
    Ops accounts with a **custom permission set** also need "FET trials" ticked in
    `/admin/staff`; department defaults already cover Marketing, Sales, Leadership
    and Operations.
-8. ⚠ **Now blocking leave approvals** — grant **"Accounting — approve"** to the
-   **Senior Finance Officer** in `/admin/staff` (and to a second person, so leave
-   does not stall when they are away). Until someone holds it, no leave request
-   can reach approved. Same screen: grant the **People / Executive / Suppliers /
-   Accounting** modules to existing ops accounts (admins already have everything).
+8. ~~Grant "Accounting — approve" to the Senior Finance Officer~~ ✅ **Joseph
+   Rwabu holds it** (checked 15 October). Still worth granting it to a **second
+   person**, or leave stalls whenever Joseph is away. Same screen: grant the
+   **People / Executive / Suppliers / Accounting** modules to existing ops
+   accounts (admins already have everything).
 9. Set `ANTHROPIC_API_KEY` on prod to enable **CV + receipt auto-read** (both work manually without it).
 10. Optionally link **Suppliers** in the public site footer (Careers is now in the main nav).
 11. Change the seeded `changeme123` admin/ops passwords (now self-service in `/admin/profile`, or `php artisan staff:set-role` / `staff:invite`).
@@ -1511,7 +1524,7 @@ The backend is still released manually:
 cd /home/okelvaxj/vitorraweb && git pull origin master
 cd backend
 # Run composer when dependencies changed (e.g. the 2FA libs / guzzle patch):
-/opt/alt/php83/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader
+/opt/alt/php83/usr/bin/php /opt/alt/php83/usr/bin/composer.phar install --no-dev --optimize-autoloader
 /opt/alt/php83/usr/bin/php artisan migrate --force
 /opt/alt/php83/usr/bin/php artisan config:cache
 /opt/alt/php83/usr/bin/php artisan route:cache
@@ -1527,7 +1540,7 @@ deploy or a rebuild needs to know it carries a **new composer dependency**:
 
 ```bash
 # REQUIRED — phpoffice/phpspreadsheet, for reading and writing client files.
-/opt/alt/php83/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader
+/opt/alt/php83/usr/bin/php /opt/alt/php83/usr/bin/composer.phar install --no-dev --optimize-autoloader
 /opt/alt/php83/usr/bin/php artisan migrate --force   # 5 migrations (fet_trials + friends)
 /opt/alt/php83/usr/bin/php artisan config:cache
 /opt/alt/php83/usr/bin/php artisan route:cache        # ~25 new routes
@@ -1606,7 +1619,11 @@ Check what it would do without sending anything:
 > past enquiries came from. For the Google Ads figures to be meaningful, the ad
 > destination URLs need campaign tags adding by whoever manages the ads.
 
-### Outstanding on the next deploy (7 August 2026)
+### Deployed: the 7 August release ✅ (confirmed on production 15 October 2026)
+
+All done: `leave_approvals` migrated, Uganda holidays synced (16 for 2026) and
+the SEAL list loaded (125 rows). No account exists for `shakirah@vitorra.org`
+on production, so there was nothing left to offboard. Kept below as the record.
 
 The **two-signature leave approval carries a database change** (`leave_approvals`),
 so `migrate --force` is required. `staff:offboard` and the departed-staff login
@@ -1615,7 +1632,7 @@ safe to run even if it has already been done:
 
 ```bash
 # Only if not already run since 30 July — adds libphonenumber:
-/opt/alt/php83/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader
+/opt/alt/php83/usr/bin/php /opt/alt/php83/usr/bin/composer.phar install --no-dev --optimize-autoloader
 /opt/alt/php83/usr/bin/php artisan holidays:sync                     # backfill Uganda holidays
 /opt/alt/php83/usr/bin/php artisan prospects:import --product=SEAL   # load the 124 SEAL leads
 ```
@@ -1707,5 +1724,10 @@ Finance's "Quote & Invoice Manager" design (`Vitorra_Quote_Invoice_Manager_DESIG
 
 - `ssh namecheap` reaches the cPanel box (`business194.web-hosting.com`, port 21098, user `okelvaxj`).
 - The default `php` there is 8.2 and the app refuses to run on it. Use `/opt/alt/php83/usr/bin/php artisan …` and `/opt/alt/php83/usr/bin/php /opt/alt/php83/usr/bin/composer.phar …` (also in CLAUDE.md).
-- The box picks up new commits by itself; migrations and seeders are run by hand.
+- ⚠ **The box does NOT pull new commits by itself** (corrected 14 October 2026). It
+  was found four commits behind after a push. Every backend release is
+  `git pull origin master`, then `migrate --force` (when there is a migration),
+  `config:cache` and `route:cache`. Only the website half releases itself on push.
+- To see what is live: `git log --oneline -1` on the box, and
+  `artisan migrate:status` for pending migrations.
 - **SEO articles:** the four were published on production with `LaunchArticlesSeeder` (6 October 2026).
