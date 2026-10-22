@@ -255,10 +255,10 @@
     {{-- ══ Acceptance (quotations) ══════════════════════════════════════ --}}
     @if($d['acceptance'])
         <div class="section accept">
-            <table class="sec-title"><tr><td><img src="{{ $a }}/ic-accept.png" style="width:43px; height:30px;"></td><td class="t">Acceptance</td></tr></table>
+            <table class="sec-title"><tr><td><img src="{{ $a }}/ic-accept.png" style="width:43px; height:30px;"></td><td class="t">{{ $d['accept_title'] }}</td></tr></table>
             <div class="rule"><img src="{{ $a }}/rule-gold.png"></div>
             <div class="panel">
-                <p>To accept this quotation, please sign below or confirm acceptance in writing.</p>
+                <p>{{ $d['accept_text'] }}</p>
                 <table class="sign">
                     @foreach($d['acceptance'] as [$left, $right])
                         <tr>

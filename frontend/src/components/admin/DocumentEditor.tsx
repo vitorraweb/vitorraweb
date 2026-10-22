@@ -7,9 +7,9 @@ import { ArrowLeft, Check, Download, FileText, Loader2, Plus, RefreshCw, Send, X
 import { apiAdmin, auth, canAccess, downloadFile, fetchPdf } from "@/lib/auth";
 import { PageHeader, StatusBadge } from "@/components/admin/admin-ui";
 import {
-  BUSINESS_LABEL, CURRENCIES, FET_DETAILS, FET_LINES, INCOTERMS, KIND_LABEL, blankForm, formatMoney, fromRecord, joinIncoterm,
+  BUSINESS_LABEL, CURRENCIES, FET_DETAILS, FET_LINES, HEADING_LABEL, INCOTERMS, KIND_LABEL, blankForm, formatMoney, fromRecord, joinIncoterm,
   splitIncoterm, toMinor, toPayload,
-  type Business, type DocForm, type DocType, type InvoiceKind,
+  type Business, type DocForm, type DocType, type InvoiceKind, type QuoteHeading,
 } from "@/lib/documents";
 
 /* ─── Quotation / invoice editor ──────────────────────────────────────────────
@@ -152,7 +152,8 @@ export default function DocumentEditor({
 
   const isQuote = type === "quotation";
   const coffee = form.business === "coffee";
-  const docName = isQuote ? "Quotation" : KIND_LABEL[form.kind];
+  const docName = isQuote ? HEADING_LABEL[form.heading] : KIND_LABEL[form.kind];
+  const isOrder = isQuote && form.heading === "order_confirmation";
   const sub = form.lines.reduce((n, l) => n + (l.quantity || 0) * toMinor(form.currency, l.price), 0);
   const tax = Math.round((sub * Number(form.tax_rate || 0)) / 100);
 
@@ -214,6 +215,13 @@ export default function DocumentEditor({
                   <option value="fet">Fuel Eco Tech (FET)</option>
                 </select>
               </Field>
+              {isQuote && (
+                <Field label="Print as">
+                  <select className="c-select w-full" value={form.heading} onChange={(e) => set("heading", e.target.value as QuoteHeading)}>
+                    {(["quotation", "order_confirmation"] as QuoteHeading[]).map((h) => <option key={h} value={h}>{HEADING_LABEL[h]}</option>)}
+                  </select>
+                </Field>
+              )}
               {!isQuote && (
                 <Field label="Invoice type">
                   <select className="c-select w-full" value={form.kind} disabled={!!id} onChange={(e) => set("kind", e.target.value as InvoiceKind)}>
@@ -226,8 +234,8 @@ export default function DocumentEditor({
                   {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </Field>
-              <Field label={isQuote ? "Quotation date" : "Invoice date"}><input type="date" className="c-input w-full" value={form.issue_date} onChange={(e) => set("issue_date", e.target.value)} /></Field>
-              <Field label={isQuote ? "Valid until" : "Due date"}><input type="date" className="c-input w-full" value={form.second_date} onChange={(e) => set("second_date", e.target.value)} /></Field>
+              <Field label={isOrder ? "Order date" : isQuote ? "Quotation date" : "Invoice date"}><input type="date" className="c-input w-full" value={form.issue_date} onChange={(e) => set("issue_date", e.target.value)} /></Field>
+              {!isOrder && <Field label={isQuote ? "Valid until" : "Due date"}><input type="date" className="c-input w-full" value={form.second_date} onChange={(e) => set("second_date", e.target.value)} /></Field>}
               <Field label="Sales contact"><input className="c-input w-full" value={form.sales_contact} onChange={(e) => set("sales_contact", e.target.value)} /></Field>
               {!coffee && <Field label="Reference"><input className="c-input w-full" value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="e.g. FET – PRO II" /></Field>}
               <Field label="Tax rate %"><input type="number" min={0} max={100} className="c-input w-full" value={form.tax_rate} onChange={(e) => set("tax_rate", e.target.value)} /></Field>

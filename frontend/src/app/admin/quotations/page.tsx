@@ -13,7 +13,7 @@ import { BUSINESS_LABEL, formatMoney, type Business } from "@/lib/documents";
    the editor; an accepted quotation becomes an invoice from there.          */
 
 type Row = {
-  id: number; number: string; business: Business | null; status: string; is_expired: boolean;
+  id: number; number: string; business: Business | null; status: string; is_expired: boolean; heading?: string;
   customer_name: string; currency: string; issue_date: string; valid_until: string | null; total: number;
   invoices: { id: number; number: string; kind: string }[];
 };
@@ -83,7 +83,7 @@ export default function QuotationsPage() {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="c-row" onClick={() => router.push(`/admin/quotations/${r.id}`)}>
-                  <td className="font-medium text-ink whitespace-nowrap">{r.number}</td>
+                  <td className="font-medium text-ink whitespace-nowrap">{r.number}{r.heading === "order_confirmation" && <span className="block text-[11.5px] font-normal text-ink-muted">Order confirmation</span>}</td>
                   <td className="max-w-[16rem] truncate">{r.customer_name}</td>
                   <td className="whitespace-nowrap">{r.business ? BUSINESS_LABEL[r.business] : "General"}</td>
                   <td className="whitespace-nowrap text-ink-muted">{fmt(r.issue_date)}</td>

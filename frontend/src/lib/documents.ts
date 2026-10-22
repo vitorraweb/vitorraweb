@@ -7,6 +7,9 @@
 export type Business = "coffee" | "fet";
 export type DocType = "quotation" | "invoice";
 export type InvoiceKind = "standard" | "commercial" | "final";
+/** The title a quotation prints under. An accepted quotation goes back to the customer as an order confirmation. */
+export type QuoteHeading = "quotation" | "order_confirmation";
+export const HEADING_LABEL: Record<QuoteHeading, string> = { quotation: "Quotation", order_confirmation: "Order confirmation" };
 
 export const BUSINESS_LABEL: Record<Business, string> = { coffee: "Vitorra Coffee", fet: "Fuel Eco Tech" };
 export const KIND_LABEL: Record<InvoiceKind, string> = { standard: "Invoice", commercial: "Commercial invoice", final: "Final invoice" };
@@ -17,6 +20,7 @@ export type DocLine = { name: string; details: string; quantity: number; unit: s
 export type DocForm = {
   business: Business;
   kind: InvoiceKind;
+  heading: QuoteHeading;
   currency: string;
   issue_date: string;
   second_date: string; // valid_until (quotation) / due_date (invoice)
@@ -98,7 +102,7 @@ export const FET_DETAILS = "Fuel Eco Tech System\nfor enhanced fuel efficiency\n
 /** Starting wording per business, taken from the approved templates. */
 export function blankForm(business: Business, type: DocType, kind: InvoiceKind = "standard", salesContact = ""): DocForm {
   const base = {
-    business, kind, issue_date: today(), second_date: addDays(today(), 30),
+    business, kind, heading: "quotation" as QuoteHeading, issue_date: today(), second_date: addDays(today(), 30),
     customer_name: "", customer_address: "", customer_attention: "", customer_tax_id: "", customer_phone: "", customer_email: "",
     sales_contact: salesContact, tax_rate: "0", tax_label: "", total_label: "", notes: "", terms: "",
   };
@@ -138,7 +142,7 @@ export function toPayload(f: DocForm, type: DocType) {
   const nul = (s: string) => (s.trim() === "" ? null : s);
   return {
     business: f.business,
-    ...(type === "invoice" ? { kind: f.kind, due_date: nul(f.second_date), terms: nul(f.terms) } : { valid_until: nul(f.second_date) }),
+    ...(type === "invoice" ? { kind: f.kind, due_date: nul(f.second_date), terms: nul(f.terms) } : { heading: f.heading, valid_until: nul(f.second_date) }),
     currency: f.currency,
     issue_date: f.issue_date || null,
     customer_name: f.customer_name,
@@ -180,6 +184,7 @@ export function fromRecord(r: any, type: DocType): DocForm {
   return {
     business: (r.business ?? "coffee") as Business,
     kind: (r.kind ?? "standard") as InvoiceKind,
+    heading: (r.heading ?? "quotation") as QuoteHeading,
     currency: r.currency,
     issue_date: s(r.issue_date),
     second_date: s(type === "quotation" ? r.valid_until : r.due_date),

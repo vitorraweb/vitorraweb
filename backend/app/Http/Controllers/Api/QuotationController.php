@@ -216,6 +216,7 @@ class QuotationController extends Controller
     {
         return $request->validate($this->brandedRules() + $this->itemRules('name') + [
             'valid_until' => ['nullable', 'date'],
+            'heading'     => ['nullable', Rule::in(Quotation::HEADINGS)],
         ]);
     }
 
@@ -224,6 +225,7 @@ class QuotationController extends Controller
         $out = collect($data)->only([...Quotation::BRANDED_FIELDS, 'valid_until', 'notes'])->all();
         $out['issue_date'] = $data['issue_date'] ?? now()->toDateString();
         $out['tax_rate'] = $data['tax_rate'] ?? 0;
+        $out['heading'] = $data['heading'] ?? 'quotation';
 
         return $out;
     }
@@ -251,6 +253,7 @@ class QuotationController extends Controller
             'number'        => $x->number,
             'business'      => $x->business,
             'status'        => $x->status,
+            'heading'       => $x->heading,
             'is_expired'    => $x->isExpired(),
             'customer_name' => $x->customer_name,
             'customer_email' => $x->customer_email,

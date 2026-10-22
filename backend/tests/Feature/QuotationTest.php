@@ -89,6 +89,43 @@ class QuotationTest extends TestCase
         Mail::assertSent(QuotationMail::class, fn ($m) => $m->hasTo('buyer@example.com'));
     }
 
+    public function test_quotation_can_be_reissued_as_an_order_confirmation(): void
+    {
+        Mail::fake();
+        $h = $this->h();
+        $fet = $this->coffeeQuote([
+            'business' => 'fet', 'currency' => 'UGX', 'valid_until' => now()->subDay()->toDateString(),
+            'items' => [['name' => 'FET – PRO III', 'quantity' => 1, 'unit' => 'pcs.', 'unit_price' => 5276000]],
+        ]);
+        $id = $this->withHeaders($h)->postJson('/api/admin/accounting/quotations', $fet)
+            ->assertCreated()->assertJsonPath('data.heading', 'quotation')->json('data.id');
+
+        $this->withHeaders($h)->putJson("/api/admin/accounting/quotations/{$id}", $fet + ['heading' => 'order_confirmation'])
+            ->assertOk()->assertJsonPath('data.heading', 'order_confirmation');
+
+        $q = Quotation::with('items')->find($id);
+        $d = BrandedDocument::data($q);
+        $this->assertSame('order', $d['kind']);
+        $this->assertStringEndsWith('head-fet-order.jpg', $d['header']);
+        $this->assertFileExists($d['header']);
+        $this->assertSame('ORDER INFORMATION', $d['info_title']);
+        $this->assertSame(['Order No.', $q->number], $d['info'][0]);
+        $labels = array_column($d['info'], 0);
+        $this->assertNotContains('Valid Until', $labels);
+        $this->assertNotContains('Quotation Validity', array_column($d['terms']['rows'], 0));
+        $this->assertStringNotContainsString('Non-binding', $d['footer_tab']);
+        $this->assertFalse($q->isExpired()); // an order confirmation does not expire
+
+        $res = $this->withHeaders($h)->get("/api/admin/accounting/quotations/{$id}/pdf")->assertOk();
+        $this->assertStringStartsWith('%PDF', $res->getContent());
+
+        $this->withHeaders($h)->postJson("/api/admin/accounting/quotations/{$id}/send")->assertOk();
+        Mail::assertSent(QuotationMail::class, fn ($m) => str_starts_with($m->envelope()->subject, 'Order confirmation '));
+
+        $this->withHeaders($h)->postJson('/api/admin/accounting/documents/preview', $fet + ['type' => 'quotation', 'heading' => 'order_confirmation'])
+            ->assertOk();
+    }
+
     public function test_convert_to_commercial_invoice_copies_everything(): void
     {
         $h = $this->h();

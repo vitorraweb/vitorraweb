@@ -13,8 +13,11 @@ class Quotation extends Model
 
     public const STATUSES = ['draft', 'sent', 'accepted', 'declined', 'void'];
 
+    /** The title the document prints under. */
+    public const HEADINGS = ['quotation', 'order_confirmation'];
+
     protected $fillable = [
-        'number', 'status', 'customer_name', 'customer_email', 'customer_address', 'currency',
+        'number', 'status', 'heading', 'customer_name', 'customer_email', 'customer_address', 'currency',
         'issue_date', 'valid_until', 'business', 'customer_attention', 'customer_tax_id', 'customer_phone',
         'sales_contact', 'reference', 'incoterms', 'port_of_loading', 'payment_terms', 'payment_schedule',
         'inspection', 'shipment_schedule', 'deposit_percent', 'tax_rate', 'tax_label', 'total_label',
@@ -47,10 +50,22 @@ class Quotation extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    /** A sent quotation past its validity date. Shown, not stored. */
+    public function isOrderConfirmation(): bool
+    {
+        return $this->heading === 'order_confirmation';
+    }
+
+    /** "Quotation" or "Order confirmation", for emails and file names. */
+    public function headingLabel(): string
+    {
+        return $this->isOrderConfirmation() ? 'Order confirmation' : 'Quotation';
+    }
+
+    /** A sent quotation past its validity date. Shown, not stored. An order confirmation does not expire. */
     public function isExpired(): bool
     {
-        return $this->status === 'sent' && $this->valid_until !== null && $this->valid_until->endOfDay()->isPast();
+        return ! $this->isOrderConfirmation()
+            && $this->status === 'sent' && $this->valid_until !== null && $this->valid_until->endOfDay()->isPast();
     }
 
     public function recalcTotals(): void

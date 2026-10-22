@@ -51,8 +51,11 @@ class BrandedDocument
     public static function data(Quotation|Invoice $doc, ?iterable $items = null): array
     {
         $isQuote = $doc instanceof Quotation;
+        // An accepted quotation sent back as an order confirmation: same
+        // layout, its own title, no validity date or "non-binding" wording.
+        $isOrder = $isQuote && $doc->isOrderConfirmation();
         $business = $doc->business === 'coffee' ? 'coffee' : 'fet';
-        $kind = $isQuote ? 'quotation' : ($doc->kind === 'commercial' ? 'commercial' : ($doc->kind === 'final' ? 'final' : 'invoice'));
+        $kind = $isOrder ? 'order' : ($isQuote ? 'quotation' : ($doc->kind === 'commercial' ? 'commercial' : ($doc->kind === 'final' ? 'final' : 'invoice')));
         $c = $doc->currency ?: 'UGX';
 
         $rows = collect($items ?? $doc->items)->values()->map(function ($it, $i) use ($c, $business) {
@@ -89,12 +92,17 @@ class BrandedDocument
         ]);
 
         $issue = self::date($doc->issue_date);
-        $second = $isQuote ? $doc->valid_until : $doc->due_date;
+        $second = $isOrder ? null : ($isQuote ? $doc->valid_until : $doc->due_date);
+        [$noLabel, $dateLabel] = match (true) {
+            $isOrder => ['Order No.', 'Order Date'],
+            $isQuote => ['Quotation No.', 'Quotation Date'],
+            default  => ['Invoice No.', 'Invoice Date'],
+        };
 
         $info = $business === 'coffee'
             ? [
-                [$isQuote ? 'Quotation No.' : 'Invoice No.', $doc->number],
-                [$isQuote ? 'Quotation Date' : 'Invoice Date', $issue],
+                [$noLabel, $doc->number],
+                [$dateLabel, $issue],
                 [$isQuote ? 'Valid Until' : 'Due Date', self::date($second)],
                 [$isQuote ? 'Incoterms' : 'Incoterm', $doc->incoterms],
                 ...($isQuote ? [['Payment Terms', $fill($doc->payment_terms)]] : []),
@@ -104,8 +112,8 @@ class BrandedDocument
                 ...($isQuote ? [] : [['Payment Terms', $fill($doc->payment_terms)]]),
             ]
             : [
-                [$isQuote ? 'Quotation No.' : 'Invoice No.', $doc->number],
-                [$isQuote ? 'Quotation Date' : 'Invoice Date', $issue],
+                [$noLabel, $doc->number],
+                [$dateLabel, $issue],
                 [$isQuote ? 'Valid Until' : 'Due Date', self::date($second)],
                 ['Sales Contact', $doc->sales_contact],
                 ['Reference', $doc->reference],
@@ -139,7 +147,7 @@ class BrandedDocument
                 ['Shipment Schedule', $doc->shipment_schedule],
             ], fn ($r) => filled($r[1])))];
         } elseif ($isQuote) {
-            $validity = $doc->issue_date && $doc->valid_until
+            $validity = ! $isOrder && $doc->issue_date && $doc->valid_until
                 ? Carbon::parse($doc->issue_date)->diffInDays(Carbon::parse($doc->valid_until)).' days from the quotation date.'
                 : null;
             $terms = ['title' => 'COMMERCIAL TERMS', 'rows' => array_values(array_filter([
@@ -199,7 +207,7 @@ class BrandedDocument
                 'tin'   => $s['company_tin'] ?? '',
             ],
             'customer_title' => $isQuote ? 'CUSTOMER / BUYER' : 'BILL TO',
-            'info_title'     => $isQuote ? 'QUOTATION INFORMATION' : 'INVOICE INFORMATION',
+            'info_title'     => $isOrder ? 'ORDER INFORMATION' : ($isQuote ? 'QUOTATION INFORMATION' : 'INVOICE INFORMATION'),
             'customer'   => $customer,
             'info'       => $info,
             'currency'   => $c,
@@ -213,10 +221,18 @@ class BrandedDocument
             'bank'       => $bank,
             'notes'      => $notes,
             'conditions' => $conditions,
+            'accept_title' => $isOrder ? 'Confirmation' : 'Acceptance',
+            'accept_text'  => $isOrder
+                ? 'To confirm this order, please sign below and return a copy, or confirm in writing.'
+                : 'To accept this quotation, please sign below or confirm acceptance in writing.',
             'acceptance' => $isQuote
                 ? ($business === 'coffee' ? [['Name', 'Signature'], ['Date', 'Company Stamp']] : [['Name', 'Signature'], ['Date', 'Sales Contact']])
                 : null,
-            'footer_tab' => $isQuote ? 'Quotation – Non-binding unless otherwise stated' : 'Thank you for your business!',
+            'footer_tab' => match (true) {
+                $isOrder => 'Order confirmation – Thank you for your order',
+                $isQuote => 'Quotation – Non-binding unless otherwise stated',
+                default  => 'Thank you for your business!',
+            },
         ];
     }
 

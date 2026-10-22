@@ -159,6 +159,7 @@ TITLES = {
     "invoice": "INVOICE",
     "commercial": "COMMERCIAL INVOICE",
     "final": "FINAL INVOICE",
+    "order": "ORDER CONFIRMATION",
 }
 
 def repaint_band(im):

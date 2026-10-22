@@ -24,6 +24,7 @@ class DocumentPreviewController extends Controller
         $rules = $this->brandedRules() + $this->itemRules('name') + [
             'type'        => ['required', Rule::in(['quotation', 'invoice'])],
             'kind'        => ['nullable', Rule::in(Invoice::KINDS)],
+            'heading'     => ['nullable', Rule::in(Quotation::HEADINGS)],
             'number'      => ['nullable', 'string', 'max:40'],
             'valid_until' => ['nullable', 'date'],
             'due_date'    => ['nullable', 'date'],
@@ -38,7 +39,9 @@ class DocumentPreviewController extends Controller
         $fields = collect($data)->except(['items', 'type'])->all();
         $fields['business'] ??= 'coffee';
         $fields['tax_rate'] ??= 0;
-        $doc = $data['type'] === 'quotation' ? new Quotation($fields) : new Invoice($fields + ['kind' => $data['kind'] ?? 'standard']);
+        $doc = $data['type'] === 'quotation'
+            ? new Quotation($fields)
+            : new Invoice(collect($fields)->except('heading')->all() + ['kind' => $data['kind'] ?? 'standard']);
         $doc->number = $data['number'] ?? null;
         $doc->business = $fields['business'];
 

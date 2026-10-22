@@ -21,7 +21,7 @@ class QuotationMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Quotation '.$this->quotation->number.' from Vitorra Holdings');
+        return new Envelope(subject: $this->quotation->headingLabel().' '.$this->quotation->number.' from Vitorra Holdings');
     }
 
     public function content(): Content
