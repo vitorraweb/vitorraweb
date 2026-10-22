@@ -154,8 +154,11 @@ export default function DocumentEditor({
   const coffee = form.business === "coffee";
   const docName = isQuote ? HEADING_LABEL[form.heading] : KIND_LABEL[form.kind];
   const isOrder = isQuote && form.heading === "order_confirmation";
-  const sub = form.lines.reduce((n, l) => n + (l.quantity || 0) * toMinor(form.currency, l.price), 0);
-  const tax = Math.round((sub * Number(form.tax_rate || 0)) / 100);
+  // Same split as the server: inclusive prices have the tax taken out, otherwise it is added on top.
+  const lineSum = form.lines.reduce((n, l) => n + (l.quantity || 0) * toMinor(form.currency, l.price), 0);
+  const rate = Number(form.tax_rate || 0);
+  const tax = form.tax_inclusive ? Math.round((lineSum * rate) / (100 + rate)) : Math.round((lineSum * rate) / 100);
+  const sub = form.tax_inclusive ? lineSum - tax : lineSum;
 
   return (
     <div className="pb-10">
@@ -239,6 +242,12 @@ export default function DocumentEditor({
               <Field label="Sales contact"><input className="c-input w-full" value={form.sales_contact} onChange={(e) => set("sales_contact", e.target.value)} /></Field>
               {!coffee && <Field label="Reference"><input className="c-input w-full" value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="e.g. FET – PRO II" /></Field>}
               <Field label="Tax rate %"><input type="number" min={0} max={100} className="c-input w-full" value={form.tax_rate} onChange={(e) => set("tax_rate", e.target.value)} /></Field>
+              <Field label="Prices">
+                <label className="flex items-center gap-2 h-9 text-[13px] text-ink">
+                  <input type="checkbox" checked={form.tax_inclusive} onChange={(e) => set("tax_inclusive", e.target.checked)} />
+                  Prices include VAT
+                </label>
+              </Field>
             </Grid>
           </Card>
 

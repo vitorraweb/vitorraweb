@@ -40,6 +40,7 @@ export type DocForm = {
   shipment_schedule: string;
   deposit_percent: string;
   tax_rate: string;
+  tax_inclusive: boolean; // line prices already include the tax (catalogue prices)
   tax_label: string;
   total_label: string;
   notes: string;
@@ -104,7 +105,7 @@ export function blankForm(business: Business, type: DocType, kind: InvoiceKind =
   const base = {
     business, kind, heading: "quotation" as QuoteHeading, issue_date: today(), second_date: addDays(today(), 30),
     customer_name: "", customer_address: "", customer_attention: "", customer_tax_id: "", customer_phone: "", customer_email: "",
-    sales_contact: salesContact, tax_rate: "0", tax_label: "", total_label: "", notes: "", terms: "",
+    sales_contact: salesContact, tax_rate: "0", tax_inclusive: false, tax_label: "", total_label: "", notes: "", terms: "",
   };
   if (business === "coffee") {
     return {
@@ -161,6 +162,7 @@ export function toPayload(f: DocForm, type: DocType) {
     shipment_schedule: nul(f.shipment_schedule),
     deposit_percent: f.deposit_percent ? Number(f.deposit_percent) : null,
     tax_rate: Number(f.tax_rate || 0),
+    tax_inclusive: f.tax_inclusive,
     tax_label: nul(f.tax_label),
     total_label: nul(f.total_label),
     notes: nul(f.notes),
@@ -192,7 +194,7 @@ export function fromRecord(r: any, type: DocType): DocForm {
     customer_tax_id: s(r.customer_tax_id), customer_phone: s(r.customer_phone), customer_email: s(r.customer_email),
     sales_contact: s(r.sales_contact), reference: s(r.reference), incoterms: s(r.incoterms), port_of_loading: s(r.port_of_loading),
     payment_terms: s(r.payment_terms), payment_schedule: s(r.payment_schedule), inspection: s(r.inspection),
-    shipment_schedule: s(r.shipment_schedule), deposit_percent: s(r.deposit_percent), tax_rate: s(r.tax_rate ?? 0),
+    shipment_schedule: s(r.shipment_schedule), deposit_percent: s(r.deposit_percent), tax_rate: s(r.tax_rate ?? 0), tax_inclusive: !!r.tax_inclusive,
     tax_label: s(r.tax_label), total_label: s(r.total_label), notes: s(r.notes), terms: s(r.terms),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     lines: (r.items ?? []).map((it: any) => ({

@@ -29,7 +29,7 @@ class Invoice extends Model implements Payable
         'notes', 'terms', 'source', 'source_id', 'sent_at', 'last_reminded_at', 'created_by',
         'kind', 'quotation_id', 'business', 'customer_attention', 'customer_tax_id', 'customer_phone',
         'sales_contact', 'reference', 'incoterms', 'port_of_loading', 'payment_terms', 'payment_schedule',
-        'inspection', 'shipment_schedule', 'deposit_percent', 'tax_rate', 'tax_label', 'total_label',
+        'inspection', 'shipment_schedule', 'deposit_percent', 'tax_rate', 'tax_inclusive', 'tax_label', 'total_label',
     ];
 
     protected static function booted(): void
@@ -46,6 +46,7 @@ class Invoice extends Model implements Payable
         'subtotal'         => 'integer',
         'vat_total'        => 'integer',
         'total'            => 'integer',
+        'tax_inclusive'    => 'boolean',
         'amount_paid'      => 'integer',
         'sent_at'          => 'datetime',
         'last_reminded_at' => 'datetime',

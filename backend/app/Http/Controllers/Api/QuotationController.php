@@ -185,8 +185,7 @@ class QuotationController extends Controller
                 'created_by'   => $request->user()->id,
             ]);
             foreach ($quotation->items as $it) {
-                $subtotal = $it->quantity * $it->unit_price;
-                $vat = (int) round($subtotal * $quotation->tax_rate / 100);
+                [$subtotal, $vat, $total] = $invoice->splitTax($it->quantity * $it->unit_price);
                 $invoice->items()->create([
                     'description'   => $it->name,
                     'details'       => $it->details,
@@ -196,7 +195,7 @@ class QuotationController extends Controller
                     'vat_rate'      => $quotation->tax_rate,
                     'line_subtotal' => $subtotal,
                     'vat_amount'    => $vat,
-                    'line_total'    => $subtotal + $vat,
+                    'line_total'    => $total,
                 ]);
             }
             $invoice->recalcTotals();
@@ -225,6 +224,7 @@ class QuotationController extends Controller
         $out = collect($data)->only([...Quotation::BRANDED_FIELDS, 'valid_until', 'notes'])->all();
         $out['issue_date'] = $data['issue_date'] ?? now()->toDateString();
         $out['tax_rate'] = $data['tax_rate'] ?? 0;
+        $out['tax_inclusive'] = (bool) ($data['tax_inclusive'] ?? false);
         $out['heading'] = $data['heading'] ?? 'quotation';
 
         return $out;

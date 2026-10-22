@@ -29,6 +29,7 @@ trait ValidatesBrandedDocument
             'shipment_schedule'  => ['nullable', 'string', 'max:2000'],
             'deposit_percent'    => ['nullable', 'integer', 'min:1', 'max:100'],
             'tax_rate'           => ['nullable', 'integer', 'min:0', 'max:100'],
+            'tax_inclusive'      => ['nullable', 'boolean'],
             'tax_label'          => ['nullable', 'string', 'max:60'],
             'total_label'        => ['nullable', 'string', 'max:60'],
             'issue_date'         => ['nullable', 'date'],

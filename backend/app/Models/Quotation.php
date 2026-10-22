@@ -20,7 +20,7 @@ class Quotation extends Model
         'number', 'status', 'heading', 'customer_name', 'customer_email', 'customer_address', 'currency',
         'issue_date', 'valid_until', 'business', 'customer_attention', 'customer_tax_id', 'customer_phone',
         'sales_contact', 'reference', 'incoterms', 'port_of_loading', 'payment_terms', 'payment_schedule',
-        'inspection', 'shipment_schedule', 'deposit_percent', 'tax_rate', 'tax_label', 'total_label',
+        'inspection', 'shipment_schedule', 'deposit_percent', 'tax_rate', 'tax_inclusive', 'tax_label', 'total_label',
         'subtotal', 'tax_total', 'total', 'notes', 'sent_at', 'created_by',
     ];
 
@@ -31,6 +31,7 @@ class Quotation extends Model
         'tax_total'       => 'integer',
         'total'           => 'integer',
         'tax_rate'        => 'integer',
+        'tax_inclusive'   => 'boolean',
         'deposit_percent' => 'integer',
         'sent_at'         => 'datetime',
     ];
@@ -70,9 +71,7 @@ class Quotation extends Model
 
     public function recalcTotals(): void
     {
-        $this->subtotal = (int) $this->items()->sum('line_total');
-        $this->tax_total = (int) round($this->subtotal * ((int) $this->tax_rate) / 100);
-        $this->total = $this->subtotal + $this->tax_total;
+        [$this->subtotal, $this->tax_total, $this->total] = $this->splitTax((int) $this->items()->sum('line_total'));
         $this->save();
     }
 

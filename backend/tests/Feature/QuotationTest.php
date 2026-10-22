@@ -126,6 +126,37 @@ class QuotationTest extends TestCase
             ->assertOk();
     }
 
+    public function test_vat_inclusive_prices_land_on_the_catalogue_total(): void
+    {
+        $h = $this->h();
+        $fet = $this->coffeeQuote([
+            'business' => 'fet', 'currency' => 'UGX', 'tax_rate' => 18, 'tax_inclusive' => true,
+            'items' => [['name' => 'FET – PRO III', 'quantity' => 1, 'unit' => 'pcs.', 'unit_price' => 5276000]],
+        ]);
+        $id = $this->withHeaders($h)->postJson('/api/admin/accounting/quotations', $fet)->assertCreated()
+            ->assertJsonPath('data.tax_inclusive', true)
+            ->assertJsonPath('data.subtotal', 4471186)
+            ->assertJsonPath('data.tax_total', 804814)
+            ->assertJsonPath('data.total', 5276000)
+            ->json('data.id');
+
+        $d = BrandedDocument::data(Quotation::with('items')->find($id));
+        $this->assertSame(['SUBTOTAL (EXCL. VAT)', 'UGX 4,471,186.00'], $d['totals'][0]);
+        $this->assertSame(['VAT (18%, INCLUDED)', '804,814.00'], $d['totals'][1]);
+        $this->assertSame(['TOTAL', 'UGX 5,276,000.00'], $d['totals'][2]);
+        $this->assertSame('5,276,000.00', $d['items'][0]['unit_price']);
+
+        // The invoice it becomes charges the same, not VAT on top again.
+        $inv = $this->withHeaders($h)->postJson("/api/admin/accounting/quotations/{$id}/convert", ['kind' => 'final'])->assertCreated()->json('data.id');
+        $invoice = Invoice::find($inv);
+        $this->assertTrue($invoice->tax_inclusive);
+        $this->assertSame([4471186, 804814, 5276000], [$invoice->subtotal, $invoice->vat_total, $invoice->total]);
+
+        // Off by default: tax is added on top, as before.
+        $this->withHeaders($h)->postJson('/api/admin/accounting/quotations', ['tax_inclusive' => false] + $fet)->assertCreated()
+            ->assertJsonPath('data.total', 6225680);
+    }
+
     public function test_convert_to_commercial_invoice_copies_everything(): void
     {
         $h = $this->h();

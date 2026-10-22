@@ -80,10 +80,9 @@ class BrandedDocument
             ];
         });
 
-        $subtotal = (int) $rows->sum('raw_total');
         $taxRate = (int) $doc->tax_rate;
-        $tax = (int) round($subtotal * $taxRate / 100);
-        $total = $subtotal + $tax;
+        [$subtotal, $tax, $total] = $doc->splitTax((int) $rows->sum('raw_total'), $taxRate);
+        $inclusive = (bool) $doc->tax_inclusive;
         $deposit = $doc->deposit_percent ? (int) round($total * $doc->deposit_percent / 100) : null;
 
         $fill = fn (?string $text) => strtr((string) $text, [
@@ -133,9 +132,9 @@ class BrandedDocument
             $doc->customer_email && $business === 'fet' ? ['', 'E-Mail: '.$doc->customer_email] : null,
         ], fn ($r) => $r && filled($r[1])));
 
-        $taxLabel = $doc->tax_label ?: ($business === 'coffee'
+        $taxLabel = $doc->tax_label ?: ($inclusive && $taxRate > 0 ? "VAT ({$taxRate}%, INCLUDED)" : ($business === 'coffee'
             ? ($taxRate === 0 ? 'TAXES (0% EXPORT)' : "TAXES ({$taxRate}% VAT)")
-            : "TAX ({$taxRate}%)");
+            : "TAX ({$taxRate}%)"));
         $place = trim((string) preg_replace('/\s*\(.*$/', '', (string) $doc->incoterms));
         $totalLabel = $doc->total_label ?: ($business === 'coffee' && $place !== '' ? 'TOTAL ('.mb_strtoupper($place).')' : 'TOTAL');
 
@@ -213,7 +212,7 @@ class BrandedDocument
             'currency'   => $c,
             'items'      => $rows->all(),
             'totals'     => [
-                [$business === 'coffee' ? 'UNTAXED AMOUNT' : 'SUBTOTAL', self::money($c, $subtotal)],
+                [$business === 'coffee' ? 'UNTAXED AMOUNT' : ($inclusive && $taxRate > 0 ? 'SUBTOTAL (EXCL. VAT)' : 'SUBTOTAL'), self::money($c, $subtotal)],
                 [$taxLabel, $business === 'coffee' ? self::money($c, $tax) : self::number($c, $tax)],
                 [$totalLabel, self::money($c, $total)],
             ],

@@ -167,6 +167,7 @@ class InvoiceController extends Controller
         $out = collect($data)->only([...Invoice::BRANDED_FIELDS, 'kind', 'sector', 'due_date', 'notes', 'terms'])->all();
         $out['issue_date'] = $data['issue_date'] ?? now()->toDateString();
         $out['tax_rate'] = $data['tax_rate'] ?? 0;
+        $out['tax_inclusive'] = (bool) ($data['tax_inclusive'] ?? false);
         $out['kind'] = $data['kind'] ?? 'standard';
         // Branded invoices file under their business line automatically.
         $out['sector'] ??= match ($data['business'] ?? null) { 'coffee' => 'COFFEE', 'fet' => 'FET', default => null };
@@ -179,8 +180,7 @@ class InvoiceController extends Controller
         foreach ($items as $row) {
             // Branded templates carry one tax rate for the whole document.
             $rate = $invoice->isBranded() ? (int) $invoice->tax_rate : (int) ($row['vat_rate'] ?? 0);
-            $subtotal = $row['quantity'] * $row['unit_price'];
-            $vat = (int) round($subtotal * $rate / 100);
+            [$subtotal, $vat, $total] = $invoice->splitTax($row['quantity'] * $row['unit_price'], $rate);
             $invoice->items()->create([
                 'description'   => $row['description'],
                 'details'       => $row['details'] ?? null,
@@ -190,7 +190,7 @@ class InvoiceController extends Controller
                 'vat_rate'      => $rate,
                 'line_subtotal' => $subtotal,
                 'vat_amount'    => $vat,
-                'line_total'    => $subtotal + $vat,
+                'line_total'    => $total,
             ]);
         }
         $invoice->recalcTotals();
