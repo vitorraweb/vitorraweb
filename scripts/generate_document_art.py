@@ -115,6 +115,37 @@ erase_rows(foot, 46, 340, 8, 36)
 save(foot, "footer-tab.png", optimize=True)
 save(COFFEE.crop((44, 1432, 1010, 1438)), "rule-footer.png", optimize=True)
 
+# ── FET product photograph ────────────────────────────────────────────────────
+# The design's device render is replaced by the photograph of the real unit
+# (document-art-src/fet-device.png, upright on white). It is laid on its side
+# like the render it replaces and multiplied onto the page, so its white
+# ground disappears and the gold sweep behind it shows through.
+def swap_fet_device(page):
+    from PIL import ImageChops
+    dev = Image.open(SRC / "fet-device.png").convert("RGB")
+    ink = ImageChops.difference(dev, Image.new("RGB", dev.size, (255, 255, 255))).convert("L")
+    dev = dev.crop(ink.point(lambda v: 255 if v > 18 else 0).getbbox()).rotate(90, expand=True, fillcolor=(255, 255, 255))
+    w = 530
+    dev = dev.resize((w, round(dev.height * w / dev.width)), Image.LANCZOS)
+    x, y = 455, 258 - dev.height // 2
+
+    # Paint the old render and its floor shadow out, stopping short of the
+    # gold line on the title band (feathered, so the sweep fades, not cuts).
+    m = Image.new("L", page.size, 0)
+    ImageDraw.Draw(m).polygon([(428, 166), (1020, 166), (1020, 343), (680, 343), (640, 372), (428, 372)], fill=255)
+    page.paste((254, 254, 254), (0, 0, *page.size), m.filter(ImageFilter.GaussianBlur(8)))
+
+    # A soft contact shadow so the unit sits on the page instead of floating.
+    sh = Image.new("L", page.size, 0)
+    ImageDraw.Draw(sh).ellipse((x + 40, y + dev.height - 14, x + w - 40, y + dev.height + 16), fill=120)
+    page.paste((150, 150, 150), (0, 0, *page.size), sh.filter(ImageFilter.GaussianBlur(12)))
+
+    region = page.crop((x, y, x + dev.width, y + dev.height))
+    page.paste(ImageChops.multiply(region, dev), (x, y))
+
+
+swap_fet_device(FET)
+
 # ── Headers: product photography + title band, one per business × title ─────
 TITLE_FONT = SRC / "Cinzel.ttf"
 SUB_FONT = SRC / "Montserrat.ttf"
