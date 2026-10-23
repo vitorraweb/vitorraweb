@@ -75,7 +75,8 @@ class ContractTest extends TestCase
         $this->postJson("/api/contracts/sign/{$token}", ['signer_name' => 'J. Wambede', 'signature_type' => 'drawn', 'signature_data' => self::PNG])
             ->assertStatus(422); // must tick "I agree"
 
-        $this->withHeaders(['X-Forwarded-For' => '102.85.1.10'])->postJson("/api/contracts/sign/{$token}", [
+        config(['services.frontend.revalidate_secret' => 'relay-secret']);
+        $this->withHeaders(['X-Vitorra-Client-IP' => '102.85.1.10', 'X-Vitorra-Relay-Key' => 'relay-secret'])->postJson("/api/contracts/sign/{$token}", [
             'signer_name' => 'J. Wambede', 'signer_position' => 'Director', 'signature_type' => 'drawn', 'signature_data' => self::PNG, 'agree' => true,
         ])->assertOk()->assertJsonPath('data.status', 'signed')->assertJsonPath('data.mailed', true);
 
@@ -94,6 +95,16 @@ class ContractTest extends TestCase
         $h = $this->h();
         $this->withHeaders($h)->putJson("/api/admin/contracts/{$id}", $this->payload())->assertStatus(422);
         $this->assertStringStartsWith('%PDF', $this->withHeaders($h)->get("/api/admin/contracts/{$id}/pdf")->assertOk()->getContent());
+    }
+
+    public function test_client_ip_is_only_believed_from_the_website_relay(): void
+    {
+        config(['services.frontend.revalidate_secret' => 'relay-secret']);
+        [$id, $token] = $this->sent($this->h());
+        $this->withHeaders(['X-Vitorra-Client-IP' => '6.6.6.6', 'X-Vitorra-Relay-Key' => 'guess', 'X-Forwarded-For' => '6.6.6.6'])
+            ->postJson("/api/contracts/sign/{$token}", ['signer_name' => 'X', 'signature_type' => 'typed', 'signature_data' => 'X', 'agree' => true])
+            ->assertOk();
+        $this->assertSame('127.0.0.1', Contract::find($id)->signer_ip);
     }
 
     public function test_link_expires_after_48_hours(): void

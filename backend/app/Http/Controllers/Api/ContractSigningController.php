@@ -145,19 +145,24 @@ class ContractSigningController extends Controller
     }
 
     /**
-     * Browsers reach the API through the website (vitorra.org/api), so the
-     * connecting address is the website's relay, not the client. The client's
-     * address comes from the forwarded header the relay adds; the relay is
-     * kept beside it so the signature record shows where the value came from.
+     * Browsers reach the API through the website, so the connecting address
+     * is a Vercel relay, not the client. The website's signing relay
+     * (frontend app/api/contracts/sign) passes the client's address with the
+     * shared frontend secret; it is believed only when that secret matches,
+     * and the relay is kept beside it so the record shows where it came from.
      */
     private function clientIp(Request $request): string
     {
         $relay = (string) $request->server('REMOTE_ADDR');
-        $forwarded = trim(explode(',', (string) $request->header('X-Forwarded-For'))[0] ?? '');
+        $secret = (string) config('services.frontend.revalidate_secret');
+        $client = (string) $request->header('X-Vitorra-Client-IP');
 
-        return filter_var($forwarded, FILTER_VALIDATE_IP) && $forwarded !== $relay
-            ? mb_substr("{$forwarded} (via {$relay})", 0, 64)
-            : $relay;
+        if ($secret !== '' && hash_equals($secret, (string) $request->header('X-Vitorra-Relay-Key'))
+            && filter_var($client, FILTER_VALIDATE_IP)) {
+            return mb_substr("{$client} (via {$relay})", 0, 64);
+        }
+
+        return $relay;
     }
 
     private function resolve(string $token): ?Contract
