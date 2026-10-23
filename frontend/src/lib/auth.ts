@@ -24,11 +24,15 @@ export type AdminUser = {
 };
 
 /** Whether a user may access a nav entry / module. Admins see everything. */
-export function canAccess(user: AdminUser | null, opts: { adminOnly?: boolean; module?: string }): boolean {
+/** `module` may list several; holding any one of them grants access. */
+export function canAccess(user: AdminUser | null, opts: { adminOnly?: boolean; module?: string | string[] }): boolean {
   if (!user) return false;
   const isAdmin = user.role?.toLowerCase() === "admin";
   if (opts.adminOnly) return isAdmin;
-  if (opts.module) return isAdmin || (user.permissions ?? []).includes(opts.module);
+  if (opts.module) {
+    const mods = Array.isArray(opts.module) ? opts.module : [opts.module];
+    return isAdmin || mods.some((m) => (user.permissions ?? []).includes(m));
+  }
   return true;
 }
 
@@ -117,6 +121,14 @@ export async function downloadFile(path: string, filename: string): Promise<void
   const res  = await authFetch(base, path, auth.getToken(), {}, false);
   if (!res.ok) throw new Error("Download failed");
   await saveBlob(res, filename);
+}
+
+/** GET a file as a blob (e.g. a PDF to show in the page rather than download). */
+export async function fetchBlob(path: string): Promise<Blob> {
+  const res = await authFetch(API_BASE_URL, path, auth.getToken(), {}, false);
+  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
+  if (!res.ok) throw new Error(res.status === 403 ? "You don't have access to this document." : "Could not load the document.");
+  return res.blob();
 }
 
 /** POST JSON and get a PDF back (the quotation / invoice live preview). */

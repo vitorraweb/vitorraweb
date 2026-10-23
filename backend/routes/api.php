@@ -45,6 +45,7 @@ use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\SupplierAdminController;
 use App\Http\Controllers\Api\SupplierBillController;
 use App\Http\Controllers\Api\SupplierController;
+use App\Http\Controllers\Api\SalesDocumentController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\UserAdminController;
@@ -424,6 +425,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send']);
             Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment']);
             Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
+        });
+        // Internal sales documents (contract templates) — the sales and marketing
+        // team, quotation holders and Finance. Never served publicly.
+        Route::middleware('perm:prospects,quotations,accounting')->group(function () {
+            Route::get('/sales-documents', [SalesDocumentController::class, 'index']);
+            Route::get('/sales-documents/{key}/{format}', [SalesDocumentController::class, 'file'])
+                ->where(['key' => '[a-z0-9-]+', 'format' => 'pdf|docx']);
         });
         // Quotations on the branded Coffee / FET templates — Finance, Marketing and
         // Operations staff named by Finance hold the `quotations` module. Turning a
