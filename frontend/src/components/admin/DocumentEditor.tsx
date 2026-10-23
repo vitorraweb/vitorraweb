@@ -170,6 +170,9 @@ export default function DocumentEditor({
         subtitle={`${BUSINESS_LABEL[form.business]} · ${docName}${meta?.quotation ? ` · from quotation ${meta.quotation.number}` : ""}`}
         actions={<>
           {meta && <StatusBadge status={meta.is_expired ? "overdue" : meta.status} label={meta.is_expired ? "expired" : meta.status} />}
+          {isQuote && meta && form.business === "fet" && meta.status !== "void" && (
+            <Link href={`/admin/contracts/new?quotation=${meta.id}`} className="c-btn"><FileText className="w-4 h-4" />Create contract</Link>
+          )}
           {meta && <button onClick={download} disabled={!!busy} className="c-btn">{busy === "pdf" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}PDF</button>}
           {meta && editable && <button onClick={send} disabled={!!busy || !form.customer_email} title={form.customer_email ? "" : "Add a customer email to send"} className="c-btn">{busy === "send" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}Email to customer</button>}
           {editable && <button onClick={save} disabled={!!busy} className="c-btn c-btn-primary">{busy === "save" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}{id ? "Save" : "Save draft"}</button>}

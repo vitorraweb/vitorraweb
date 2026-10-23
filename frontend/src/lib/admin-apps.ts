@@ -2,7 +2,7 @@ import {
   Handshake, ShoppingCart, Gauge, Wallet, LineChart, Users, ListChecks, Globe, Settings,
   MessageSquare, Workflow, Contact, Target, LayoutTemplate, CreditCard, FlaskConical,
   TrendingUp, LayoutDashboard, CalendarCheck, Hourglass, Briefcase, CalendarDays,
-  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock,
+  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck,
 } from "lucide-react";
 import { canAccess, type AdminUser } from "@/lib/auth";
 
@@ -52,6 +52,7 @@ export const ADMIN_APPS: AdminApp[] = [
       { label: "Prospects", href: "/admin/prospects", icon: Target,        module: "prospects", keywords: "outreach campaign leads list" },
       { label: "Quotations", href: "/admin/quotations", icon: FileSignature, module: "quotations", keywords: "quote proforma coffee fet export offer" },
       { label: "Templates", href: "/admin/templates", icon: LayoutTemplate, module: "customers", keywords: "email replies" },
+      { label: "Contracts", href: "/admin/contracts", icon: FileCheck, module: ["prospects", "quotations", "accounting"], keywords: "contract agreement sign signature fet" },
       { label: "Documents", href: "/admin/sales-documents", icon: FolderLock, module: ["prospects", "quotations", "accounting"], keywords: "contract agreement fet sales terms" },
     ],
   },

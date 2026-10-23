@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Download, FileText, Loader2, Lock } from "lucide-react";
 import { apiAdmin, downloadFile, fetchBlob } from "@/lib/auth";
 import { PageHeader, Empty } from "@/components/admin/admin-ui";
@@ -52,7 +53,11 @@ export default function SalesDocumentsPage() {
 
   return (
     <div className="pb-10">
-      <PageHeader title="Sales documents" subtitle="Contract templates for the sales team. Internal only: do not forward the files outside the company." />
+      <PageHeader
+        title="Sales documents"
+        subtitle="Contract templates for the sales team. Internal only: do not forward the files outside the company."
+        actions={<Link href="/admin/contracts/new" className="c-btn c-btn-primary">Fill in and send a contract</Link>}
+      />
 
       {docs === null ? (
         <div className="flex items-center gap-2 text-[13px] text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>

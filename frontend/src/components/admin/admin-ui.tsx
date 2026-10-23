@@ -25,6 +25,8 @@ const STATUS_TONE: Record<string, string> = {
   // prospects / approvals
   contacted: "blue", interested: "violet", not_interested: "muted", needs_fixing: "alert",
   approved: "ok", rejected: "alert", draft: "muted", sent: "blue", overdue: "alert", void: "muted",
+  // contracts
+  viewed: "violet", signed: "ok", declined: "alert", expired: "alert",
 };
 
 export function statusTone(status: string): string {

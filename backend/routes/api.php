@@ -46,6 +46,8 @@ use App\Http\Controllers\Api\SupplierAdminController;
 use App\Http\Controllers\Api\SupplierBillController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SalesDocumentController;
+use App\Http\Controllers\Api\ContractController;
+use App\Http\Controllers\Api\ContractSigningController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\UserAdminController;
@@ -105,6 +107,15 @@ Route::post('/webhooks/email/inbound', [InboundEmailController::class, 'handle']
 Route::get('/invoices/pay/{token}', [InvoicePaymentController::class, 'show']);
 Route::post('/invoices/pay/{token}', [InvoicePaymentController::class, 'pay']);
 Route::get('/invoices/pay/{token}/status', [InvoicePaymentController::class, 'status']);
+
+// Public, one-time contract signing link (emailed to the client). No login;
+// the link is the credential, expires after 48 hours and works once.
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/contracts/sign/{token}', [ContractSigningController::class, 'show']);
+    Route::get('/contracts/sign/{token}/pdf', [ContractSigningController::class, 'pdf']);
+    Route::post('/contracts/sign/{token}', [ContractSigningController::class, 'sign']);
+    Route::post('/contracts/sign/{token}/decline', [ContractSigningController::class, 'decline']);
+});
 
 // Public, token-gated read-only view of a client's own FET trial. No login:
 // clients keep sending their export and get a link back.
@@ -432,6 +443,17 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/sales-documents', [SalesDocumentController::class, 'index']);
             Route::get('/sales-documents/{key}/{format}', [SalesDocumentController::class, 'file'])
                 ->where(['key' => '[a-z0-9-]+', 'format' => 'pdf|docx']);
+
+            // Sales contracts, filled in here and signed by the client online.
+            Route::get('/contracts', [ContractController::class, 'index']);
+            Route::get('/contracts/defaults', [ContractController::class, 'defaults']);
+            Route::post('/contracts/preview', [ContractController::class, 'preview'])->middleware('throttle:60,1');
+            Route::post('/contracts', [ContractController::class, 'store']);
+            Route::get('/contracts/{contract}', [ContractController::class, 'show']);
+            Route::match(['put', 'patch'], '/contracts/{contract}', [ContractController::class, 'update']);
+            Route::get('/contracts/{contract}/pdf', [ContractController::class, 'pdf']);
+            Route::post('/contracts/{contract}/send', [ContractController::class, 'send']);
+            Route::post('/contracts/{contract}/void', [ContractController::class, 'void']);
         });
         // Quotations on the branded Coffee / FET templates — Finance, Marketing and
         // Operations staff named by Finance hold the `quotations` module. Turning a
