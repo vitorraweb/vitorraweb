@@ -24,13 +24,14 @@ type Doc = {
 };
 
 type Data = { number: string; buyer_name: string; expires_at: string; document: Doc };
+type Done = { kind: "signed"; email: string; mailed: boolean } | { kind: "declined" };
 
 const serif = { fontFamily: "var(--font-display, Georgia, serif)" } as const;
 
 export default function ContractSigning({ token }: { token: string }) {
   const [data, setData] = useState<Data | null>(null);
   const [gone, setGone] = useState("");
-  const [done, setDone] = useState<{ kind: "signed"; email: string } | { kind: "declined" } | null>(null);
+  const [done, setDone] = useState<Done | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/contracts/sign/${token}`, { headers: { Accept: "application/json" } })
@@ -60,7 +61,9 @@ export default function ContractSigning({ token }: { token: string }) {
           <p className="text-2xl text-ink mb-2" style={serif}>{done.kind === "signed" ? "Thank you. Your contract is signed." : "We have let the team know."}</p>
           <p className="text-[15px] text-ink-soft">
             {done.kind === "signed"
-              ? `A signed copy has been emailed to ${done.email}. Our team will be in touch about payment and installation.`
+              ? done.mailed
+                ? `A signed copy has been emailed to ${done.email}. Our team will be in touch about payment and installation.`
+                : "Your signature is recorded. We could not email your signed copy just now; our team will send it to you and be in touch about payment and installation."
               : "Your Vitorra representative will contact you. You can also reply to the email we sent you."}
           </p>
         </div>
@@ -141,7 +144,7 @@ function BlockView({ b }: { b: Block }) {
 
 /* ── Signing ── */
 
-function SignPanel({ data, token, onDone }: { data: Data; token: string; onDone: (d: { kind: "signed"; email: string } | { kind: "declined" }) => void }) {
+function SignPanel({ data, token, onDone }: { data: Data; token: string; onDone: (d: Done) => void }) {
   const [mode, setMode] = useState<"draw" | "type">("draw");
   const [name, setName] = useState("");
   const [position, setPosition] = useState("");
@@ -172,7 +175,7 @@ function SignPanel({ data, token, onDone }: { data: Data; token: string; onDone:
       const signature = mode === "draw" ? padRef.current?.toDataUrl() : typed.trim();
       if (!signature) throw new Error("Please add your signature.");
       const r = await post("", { signer_name: name.trim(), signer_position: position.trim() || null, signature_type: mode === "draw" ? "drawn" : "typed", signature_data: signature, agree: true });
-      onDone({ kind: "signed", email: r.data.email });
+      onDone({ kind: "signed", email: r.data.email, mailed: r.data.mailed !== false });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally { setBusy(false); }

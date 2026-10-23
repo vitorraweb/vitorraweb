@@ -33,7 +33,7 @@ class ContractSigningController extends Controller
         }
         if (! $c->viewed_at) {
             $c->forceFill(['viewed_at' => now(), 'status' => 'viewed'])->save();
-            Audit::log('contract.viewed', "Client opened contract {$c->number} ({$request->ip()})", $c);
+            Audit::log('contract.viewed', "Client opened contract {$c->number} ({$this->clientIp($request)})", $c);
         }
 
         return response()->json(['data' => [
@@ -81,7 +81,7 @@ class ContractSigningController extends Controller
                 'signer_position' => filled($data['signer_position'] ?? null) ? trim($data['signer_position']) : null,
                 'signature_type'  => $data['signature_type'],
                 'signature_data'  => $data['signature_type'] === 'typed' ? trim($data['signature_data']) : $data['signature_data'],
-                'signer_ip'       => $request->ip(),
+                'signer_ip'       => $this->clientIp($request),
                 'signer_agent'    => mb_substr((string) $request->userAgent(), 0, 500),
                 'signed_hash'     => ContractDocument::hash(ContractDocument::build($c)),
                 'sign_token_hash' => null, // one signature per link
@@ -99,6 +99,7 @@ class ContractSigningController extends Controller
 
         // The signature is already recorded; a mail outage must not show the
         // client an error for a contract they have in fact signed.
+        $mailed = true;
         try {
             $mail = Mail::to($contract->buyer_email);
             if ($cc = $contract->sender?->email) {
@@ -107,6 +108,7 @@ class ContractSigningController extends Controller
             $mail->send(new ContractSigned($contract, $pdf));
         } catch (\Throwable $e) {
             report($e);
+            $mailed = false;
         }
 
         return response()->json(['data' => [
@@ -114,6 +116,7 @@ class ContractSigningController extends Controller
             'number'    => $contract->number,
             'signed_at' => $contract->signed_at->toIso8601String(),
             'email'     => $contract->buyer_email,
+            'mailed'    => $mailed,
         ]]);
     }
 
@@ -139,6 +142,22 @@ class ContractSigningController extends Controller
         }
 
         return response()->json(['data' => ['status' => 'declined']]);
+    }
+
+    /**
+     * Browsers reach the API through the website (vitorra.org/api), so the
+     * connecting address is the website's relay, not the client. The client's
+     * address comes from the forwarded header the relay adds; the relay is
+     * kept beside it so the signature record shows where the value came from.
+     */
+    private function clientIp(Request $request): string
+    {
+        $relay = (string) $request->server('REMOTE_ADDR');
+        $forwarded = trim(explode(',', (string) $request->header('X-Forwarded-For'))[0] ?? '');
+
+        return filter_var($forwarded, FILTER_VALIDATE_IP) && $forwarded !== $relay
+            ? mb_substr("{$forwarded} (via {$relay})", 0, 64)
+            : $relay;
     }
 
     private function resolve(string $token): ?Contract

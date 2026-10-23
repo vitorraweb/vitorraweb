@@ -75,14 +75,15 @@ class ContractTest extends TestCase
         $this->postJson("/api/contracts/sign/{$token}", ['signer_name' => 'J. Wambede', 'signature_type' => 'drawn', 'signature_data' => self::PNG])
             ->assertStatus(422); // must tick "I agree"
 
-        $this->postJson("/api/contracts/sign/{$token}", [
+        $this->withHeaders(['X-Forwarded-For' => '102.85.1.10'])->postJson("/api/contracts/sign/{$token}", [
             'signer_name' => 'J. Wambede', 'signer_position' => 'Director', 'signature_type' => 'drawn', 'signature_data' => self::PNG, 'agree' => true,
-        ])->assertOk()->assertJsonPath('data.status', 'signed');
+        ])->assertOk()->assertJsonPath('data.status', 'signed')->assertJsonPath('data.mailed', true);
 
         $c = $c->fresh();
         $this->assertSame('signed', $c->status);
         $this->assertNull($c->sign_token_hash);
         $this->assertSame(64, strlen($c->signed_hash));
+        $this->assertSame('102.85.1.10 (via 127.0.0.1)', $c->signer_ip); // the client, not the website relay
         $this->assertStringStartsWith('%PDF', SecureFile::read($c->signed_pdf_path));
         $this->assertStringStartsNotWith('%PDF', Storage::disk('local')->get($c->signed_pdf_path)); // encrypted at rest
         Mail::assertSent(ContractSigned::class, fn ($m) => $m->hasTo('buyer@example.com') && $m->hasCc($this->staff->email));

@@ -7,7 +7,7 @@ import ContractSigning from "@/components/contract/ContractSigning";
  * negotiation in middleware.ts.
  */
 export const metadata: Metadata = {
-  title: "Review and sign your contract — Vitorra Holdings",
+  title: "Review and sign your contract",
   robots: { index: false, follow: false, nocache: true },
   referrer: "no-referrer",
 };
