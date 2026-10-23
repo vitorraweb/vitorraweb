@@ -119,12 +119,14 @@ export default function ContractEditor({ id, quotationId }: { id?: number; quota
   const send = () => run("send", async () => {
     if (!form?.buyer_email.trim()) throw new Error("Add the client's email first.");
     const savedId = dirty || !id ? (await persist()).id : id;
-    const r = await apiAdmin<{ data: ContractRecord; sign_url: string; expires_at: string }>(`${API}/${savedId}/send`, { method: "POST" });
+    const r = await apiAdmin<{ data: ContractRecord; sign_url: string; expires_at: string; mailed: boolean }>(`${API}/${savedId}/send`, { method: "POST" });
     setConfirmSend(false);
     if (!id) { router.replace(`/admin/contracts/${savedId}`); return; }
     setRecord(r.data);
     setLink({ url: r.sign_url, expires: r.expires_at });
-    setMsg({ ok: true, text: `Sent to ${r.data.buyer_email}.` });
+    setMsg(r.mailed
+      ? { ok: true, text: `Sent to ${r.data.buyer_email}.` }
+      : { ok: false, text: "The email could not be sent right now. The link below works: share it with the client, or press Send new link to try the email again." });
   });
 
   const voidIt = () => run("void", async () => {

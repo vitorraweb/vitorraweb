@@ -97,11 +97,17 @@ class ContractSigningController extends Controller
         $contract->forceFill(['signed_pdf_path' => SecureFile::storeContent($pdf, $contract->number.'-signed.pdf', 'contracts')])->save();
         Audit::log('contract.signed', "Contract {$contract->number} signed by {$contract->signer_name} ({$contract->signer_ip})", $contract);
 
-        $mail = Mail::to($contract->buyer_email);
-        if ($cc = $contract->sender?->email) {
-            $mail->cc($cc);
+        // The signature is already recorded; a mail outage must not show the
+        // client an error for a contract they have in fact signed.
+        try {
+            $mail = Mail::to($contract->buyer_email);
+            if ($cc = $contract->sender?->email) {
+                $mail->cc($cc);
+            }
+            $mail->send(new ContractSigned($contract, $pdf));
+        } catch (\Throwable $e) {
+            report($e);
         }
-        $mail->send(new ContractSigned($contract, $pdf));
 
         return response()->json(['data' => [
             'status'    => 'signed',
@@ -126,7 +132,11 @@ class ContractSigningController extends Controller
         ])->save();
         Audit::log('contract.declined', "Client declined contract {$c->number}", $c);
 
-        Mail::to($c->sender?->email ?: config('mail.from.address'))->send(new ContractDeclined($c));
+        try {
+            Mail::to($c->sender?->email ?: config('mail.from.address'))->send(new ContractDeclined($c));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json(['data' => ['status' => 'declined']]);
     }

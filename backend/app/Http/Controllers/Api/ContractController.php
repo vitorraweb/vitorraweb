@@ -161,11 +161,20 @@ class ContractController extends Controller
         ])->save();
         $url = $contract->signingUrl($token);
 
-        Mail::to($contract->buyer_email)->send(new ContractSigningRequest($contract, $url, ContractDocument::pdf($contract)->output(), $request->user()));
-        Audit::log('contract.sent', "Sent contract {$contract->number} to {$contract->buyer_email} for signature", $contract);
+        // If the email fails the link still works; staff are told, and can
+        // share it another way (WhatsApp) or press Send again.
+        $mailed = true;
+        try {
+            Mail::to($contract->buyer_email)->send(new ContractSigningRequest($contract, $url, ContractDocument::pdf($contract)->output(), $request->user()));
+        } catch (\Throwable $e) {
+            report($e);
+            $mailed = false;
+        }
+        Audit::log('contract.sent', ($mailed ? 'Sent' : 'Issued (email failed)')." contract {$contract->number} to {$contract->buyer_email} for signature", $contract);
 
         return response()->json([
             'data'       => $this->shape($contract->fresh(['quotation:id,number', 'sender:id,name']), full: true),
+            'mailed'     => $mailed,
             // Shown once, for staff who also want to share it on WhatsApp. Only its hash is stored.
             'sign_url'   => $url,
             'expires_at' => $contract->sign_expires_at->toIso8601String(),
