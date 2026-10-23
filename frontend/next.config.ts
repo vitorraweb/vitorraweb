@@ -40,7 +40,10 @@ const nextConfig: NextConfig = {
      wins and is not proxied. */
   async rewrites() {
     return [
-      { source: "/api/:path*", destination: `${API_ORIGIN}/:path*` },
+      // Everything except contract signing, which has its own route handler
+      // (app/api/contracts/sign) to pass the client's IP to the API. Rewrites
+      // run before dynamic routes, so the handler must be excluded here.
+      { source: "/api/:path((?!contracts/sign/).*)", destination: `${API_ORIGIN}/:path` },
       // Only used when NEXT_PUBLIC_AUTH_MODE=cookie (Sanctum SPA mode).
       { source: "/sanctum/:path*", destination: `${API_HOST}/sanctum/:path*` },
     ];
