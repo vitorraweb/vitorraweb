@@ -1471,6 +1471,66 @@ unprofessional.
 
 ---
 
+## The cinematic redesign (26 October 2026) — live
+
+The October "Quiet Authority" pages kept their wording, colours and type, and
+gained depth, motion and interaction. The site read as clean but static: flat
+bands, a generic four-card grid, nothing that answered the visitor.
+
+**Across the public site** (admin, staff and customer portals untouched)
+- Smooth, weighted scrolling (Lenis) and soft transitions between pages. A
+  homepage business photo is handed into that business's page hero as you
+  click through (React view transitions).
+- A cursor ring that becomes a gold **"View"** disc over photographs; a gold
+  reading-progress line; buttons that lean toward the pointer; a frosted
+  header; a full-width "Vitorra" signature in the footer.
+- Heroes: the photograph moves with the mouse and sinks as you scroll; the
+  headline rises from behind a mask, line by line.
+
+**Showpiece moments**
+- **A real-time 3D Fuel Eco Tech device** (three.js), modelled from the
+  product's shape. On the homepage it turns beside the measured result
+  (11.52 → 9.92 L/100 km → 13.9%, counted up, then the honest caveat) and
+  opens to show the swirl chamber. On the FET page it sits beside "How it
+  works" and opens on the swirl-chamber step. The open view is **labelled as
+  an illustration**, not a photograph of a production unit.
+- **Homepage businesses:** four tall panels; the one under the pointer opens
+  to full colour with its description, the others fold to their name.
+- **SEAL:** the four application steps travel sideways as you scroll, on dark;
+  the three formats tilt toward the pointer.
+- **Coffee:** grown → processed → roasted travels sideways with photographs.
+- **Logistics:** "Each link in the chain" — the four services on one gold
+  line that draws itself, each link lighting as it is reached. (No route map:
+  our copy names no ports or countries, and a map would invent claims.)
+- **About:** the mission statement fills in word by word as you read it.
+
+**Built to stay fast and inclusive**
+- 3D loads only as it is about to appear; phones on data-saver, very
+  low-memory devices and browsers without WebGL get the product photograph.
+- Everything that moves is switched off for visitors who ask their device for
+  reduced motion; sideways sections become ordinary lists on phones.
+- Content is in the page from the first byte, as before.
+
+**⏳ Open**
+- The FET packshot (shown where 3D cannot load) reads **"Fuel *Eca* Tech"** —
+  it appears to be generated. A real product photograph is needed.
+- Olivia / Solomon sign-off on the new motion and the 3D device.
+- Libraries added: `lenis`, `motion` (formerly Framer Motion), `three`,
+  `@react-three/fiber`, `@react-three/drei`. Radix was not added — the site
+  already uses Base UI, from the same team.
+
+> Technical detail (engineering): `components/motion/*` (SmoothScroll, Cursor,
+> ScrollProgress, Magnetic, HeroMotion, Parallax, WordReveal, HorizontalSteps,
+> TiltCard, ServiceChain), `components/three/FetDevice{,Canvas}.tsx` (lathed
+> geometry, Lightformer studio lighting — no HDR download — dynamic import,
+> IntersectionObserver mount), `sections/EvidenceStory.tsx`,
+> `sections/DeviceSteps.tsx`, `system/BusinessPanels.tsx`; `next.config.ts`
+> `experimental.viewTransition`; view-transition + mask-reveal CSS in
+> `globals.css` ("CINEMATIC LAYER"). `types/react-canary.d.ts` for
+> `<ViewTransition>`. Build, typecheck and lint clean.
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**

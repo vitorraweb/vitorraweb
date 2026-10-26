@@ -4,9 +4,11 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/reveal";
 import { Faq } from "@/components/ui/faq";
+import { HorizontalSteps } from "@/components/motion/HorizontalSteps";
+import { TiltCard } from "@/components/motion/TiltCard";
 import { Section, Container, Text, TextLink } from "@/components/system";
 import {
-  SectionHead, Steps, FactGrid, SpecTable, ContactBand,
+  SectionHead, FactGrid, SpecTable, ContactBand,
 } from "@/components/system/blocks";
 import { Film } from "@/components/system/Film";
 import { CinematicHero, FactStrip, ImageBand, Picture } from "@/components/system/imagery";
@@ -75,33 +77,35 @@ export default async function SealPage() {
           ]}
         />
 
-        {/* ══ How it is used ════════════════════════════════════════════════ */}
-        <Section tone="paper" rule aria-labelledby="seal-how">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-            <div className="lg:col-span-5">
-              <SectionHead id="seal-how" label={t("howLabel")} title={t("howTitle")} body={old("benefit1Body")} />
-              <Film
-                className="mt-12"
-                src="/videos/seal-hero.mp4"
-                poster="/videos/seal-hero-poster.jpg"
-                title={t("filmTitle")}
-                caption={t("filmCaption")}
-                playLabel={shared("playFilm")}
-              />
-            </div>
-            <div className="lg:col-span-7">
-              <Steps items={[1, 2, 3, 4].map((n) => ({ title: old(`step${n}Title`), body: old(`step${n}Body`) }))} />
-            </div>
-          </Container>
-        </Section>
+        {/* ══ How it is used — four steps that travel sideways on scroll ═════ */}
+        <HorizontalSteps
+          id="seal-how"
+          tone="ink"
+          label={t("howLabel")}
+          title={t("howTitle")}
+          intro={old("benefit1Body")}
+          steps={[1, 2, 3, 4].map((n) => ({ title: old(`step${n}Title`), body: old(`step${n}Body`) }))}
+          after={
+            <Film
+              onInk
+              className="max-w-[44rem]"
+              src="/videos/seal-hero.mp4"
+              poster="/videos/seal-hero-poster.jpg"
+              title={t("filmTitle")}
+              caption={t("filmCaption")}
+              playLabel={shared("playFilm")}
+            />
+          }
+        />
 
         {/* ══ The range ═════════════════════════════════════════════════════ */}
         <Section tone="deep" id="seal-range" aria-labelledby="seal-range-heading">
           <Container>
             <SectionHead id="seal-range-heading" label={t("rangeLabel")} title={old("rangeTitle")} body={old("rangeBody")} className="mb-14" />
-            <ul className="grid grid-cols-1 md:grid-cols-3 gap-px bg-line border-y border-line">
+            <ul className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {variants.map((v) => (
-                <li key={v.name} className="flex flex-col bg-paper-deep py-10 md:px-8 md:first:pl-0">
+                <li key={v.name}>
+                  <TiltCard className="flex flex-col bg-paper border border-line rounded-frame p-8 lg:p-10">
                   <p className="t-label text-gold-ink">{v.note ?? v.tagline}</p>
                   <h3 className="t-h2 text-ink mt-4">{v.name}</h3>
                   {v.note && <p className="t-small text-ink-muted mt-1">{v.tagline}</p>}
@@ -111,6 +115,7 @@ export default async function SealPage() {
                       <li key={s} className="t-small text-ink py-3 border-b border-line">{s}</li>
                     ))}
                   </ul>
+                  </TiltCard>
                 </li>
               ))}
             </ul>

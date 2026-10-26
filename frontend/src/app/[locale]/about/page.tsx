@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/reveal";
+import { WordReveal } from "@/components/motion/WordReveal";
 import { Section, Container, Label, Text, TextLink } from "@/components/system";
 import { SectionHead, FactGrid, CredentialGroups, ContactBand } from "@/components/system/blocks";
 import { CinematicHero, Mosaic } from "@/components/system/imagery";
@@ -55,7 +56,8 @@ export default async function AboutPage() {
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <Label className="lg:col-span-3 lg:pt-4">{t("missionLabel")}</Label>
             <Reveal className="lg:col-span-9">
-              <p id="about-mission" className="t-h1 text-ink max-w-[52rem]">{t("missionStatement")}</p>
+              <h2 id="about-mission" className="sr-only">{t("missionLabel")}</h2>
+              <WordReveal text={t("missionStatement")} className="t-h1 text-ink max-w-[52rem]" />
               <Text size="lead" className="mt-8 max-w-[38rem]">{t("missionBody")}</Text>
             </Reveal>
           </Container>

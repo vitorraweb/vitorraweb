@@ -3,9 +3,10 @@ import { getTranslations } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Faq } from "@/components/ui/faq";
+import { ServiceChain } from "@/components/motion/ServiceChain";
 import { Section, Container, ButtonLink } from "@/components/system";
 import {
-  SectionHead, FactGrid, Steps, ContactBand,
+  SectionHead, Steps, ContactBand,
 } from "@/components/system/blocks";
 import { CinematicHero, FactStrip, ImageBand, Picture } from "@/components/system/imagery";
 
@@ -79,8 +80,7 @@ export default async function LogisticsPage() {
         <Section tone="paper" rule aria-labelledby="logistics-services">
           <Container>
             <SectionHead id="logistics-services" label={t("servicesLabel")} title={t("servicesTitle")} className="mb-14" />
-            <FactGrid
-              columns={4}
+            <ServiceChain
               items={[
                 { title: old("cap1Title"), body: t("cap1Body") },
                 { title: old("cap2Title"), body: old("cap2Body") },

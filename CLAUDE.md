@@ -156,6 +156,10 @@ Tests: `Tier1SecurityTest`, `TwoFactorTest`, `TokenScopeTest`, `SessionsTest`, `
   - Inverted semicircle arc vectors in FinalCTA (mirrors Why Vitorra rising arcs)
   - Digit scramble animation in StatsBand (numbers cycle through random digits then lock)
 
+### Cinematic layer (October 2026)
+
+On top of the Quiet Authority system (paper/ink, Fraunces + Hanken Grotesk, gold as a line): Lenis smooth scroll, React view transitions, cursor ring, magnetic buttons, a real-time 3D FET device (three.js / react-three-fiber), pinned and sideways scroll chapters. Motion components live in `frontend/src/components/motion/`, 3D in `components/three/`. Public site only; every effect is off under prefers-reduced-motion. See PROGRESS.md "The cinematic redesign".
+
 ### Section Flow Principle (All Pages)
 
 Dark → Gold strip → White → Dark → White → Ivory → Dark → Ivory → White. Never two heavy dark sections consecutively.

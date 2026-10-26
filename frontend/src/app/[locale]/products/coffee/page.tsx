@@ -4,11 +4,12 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Faq } from "@/components/ui/faq";
 import CoffeeExportSpec from "@/components/sections/CoffeeExportSpec";
+import { HorizontalSteps } from "@/components/motion/HorizontalSteps";
 import { Section, Container, TextLink } from "@/components/system";
 import {
-  SectionHead, Steps, SpecTable, ContactBand,
+  SectionHead, SpecTable, ContactBand,
 } from "@/components/system/blocks";
-import { CinematicHero, FactStrip, ImageBand, Mosaic } from "@/components/system/imagery";
+import { CinematicHero, FactStrip } from "@/components/system/imagery";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
 /* ─── Vitorra Coffee — Quiet Authority ────────────────────────────────────────
@@ -79,32 +80,32 @@ export default async function CoffeePage() {
           ]}
         />
 
-        {/* ══ Origin and process ════════════════════════════════════════════ */}
-        <Section tone="paper" rule aria-labelledby="coffee-origin">
+        {/* ══ Origin and process — cherry to export, travelling sideways ═════ */}
+        <HorizontalSteps
+          id="coffee-origin"
+          tone="deep"
+          label={t("originLabel")}
+          title={t("originTitle")}
+          intro={t("originBody")}
+          steps={[
+            { title: old("ftcStep1Title"), body: old("ftcStep1Body"), image: { src: "/images/stock/coffee-cherries.jpg", alt: alt("coffeeCherries") } },
+            { title: old("ftcStep2Title"), body: old("ftcStep2Body"), image: { src: "/images/stock/coffee-hands.jpg", alt: alt("coffeeHands") } },
+            { title: old("ftcStep3Title"), body: old("ftcStep3Body"), image: { src: "/images/stock/coffee-roaster.jpg", alt: alt("coffeeRoaster") } },
+          ]}
+        />
+
+        <Section tone="paper" aria-labelledby="coffee-blend">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
             <div className="lg:col-span-5">
-              <SectionHead id="coffee-origin" label={t("originLabel")} title={t("originTitle")} body={t("originBody")} />
-              <div className="mt-14">
-                <Mosaic
-                  a={{ src: "/images/stock/coffee-cherries.jpg", alt: alt("coffeeCherries") }}
-                  b={{ src: "/images/stock/coffee-hands.jpg", alt: alt("coffeeHands") }}
-                />
-              </div>
+              <h2 id="coffee-blend" className="t-h2 text-ink">{old("blendTitle")}</h2>
+              <p className="t-body text-ink-soft mt-6">{old("blendBody")}</p>
             </div>
             <div className="lg:col-span-7">
-              <Steps
-                items={[1, 2, 3].map((n) => ({ title: old(`ftcStep${n}Title`), body: old(`ftcStep${n}Body`) }))}
-              />
-              <div className="mt-14">
-                <h3 className="t-h3 text-ink">{old("blendTitle")}</h3>
-                <p className="t-small text-ink-muted mt-2 mb-6">{old("blendBody")}</p>
-                <SpecTable rows={[1, 2, 3, 4, 5].map((n) => [old(`spec${n}Key`), old(`spec${n}Value`)] as [string, string])} />
-              </div>
+              <SpecTable rows={[1, 2, 3, 4, 5].map((n) => [old(`spec${n}Key`), old(`spec${n}Value`)] as [string, string])} />
             </div>
           </Container>
         </Section>
 
-        <ImageBand image="/images/stock/coffee-roaster.jpg" alt={alt("coffeeRoaster")} height="medium" />
 
         <CoffeeExportSpec />
 
