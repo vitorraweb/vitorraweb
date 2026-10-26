@@ -73,7 +73,7 @@ export const ADMIN_APPS: AdminApp[] = [
   {
     id: "accounting", name: "Accounting", blurb: "Books, invoices, bills, VAT and budgets", icon: Wallet, area: "Money",
     items: [
-      { label: "Books", href: "/admin/accounting", icon: Wallet, module: "accounting", keywords: "invoices bills vat transactions ledger" },
+      { label: "Books", href: "/admin/accounting", icon: Wallet, module: "accounting", keywords: "invoices bills vat transactions ledger stock inventory" },
     ],
   },
   {

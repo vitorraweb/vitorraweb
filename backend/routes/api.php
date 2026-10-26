@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\EnquiryController;
 use App\Http\Controllers\Api\ExchangeRateController;
 use App\Http\Controllers\Api\ExecutiveController;
 use App\Http\Controllers\Api\FetInstallationController;
+use App\Http\Controllers\Api\FetStockController;
 use App\Http\Controllers\Api\FetTrialController;
 use App\Http\Controllers\Api\FetTrialImportController;
 use App\Http\Controllers\Api\FetTrialShareController;
@@ -436,6 +437,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send']);
             Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment']);
             Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
+            // FET stock overview — devices in/out per model, rolled up by week.
+            Route::get('/stock', [FetStockController::class, 'index']);
+            Route::get('/stock/export', [FetStockController::class, 'export']);
+            Route::post('/stock', [FetStockController::class, 'store']);
         });
         // Internal sales documents (contract templates) — the sales and marketing
         // team, quotation holders and Finance. Never served publicly.
@@ -486,6 +491,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/recurring', [AccountingController::class, 'storeRecurring']);
             Route::patch('/recurring/{recurring}', [AccountingController::class, 'updateRecurring']);
             Route::delete('/recurring/{recurring}', [AccountingController::class, 'destroyRecurring']);
+            Route::delete('/stock/{movement}', [FetStockController::class, 'destroy']);
         });
 
         // System settings + staff management — admin role only (not ops), per the BRD.

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, CornerDownLeft, Target, Contact, Plus, ExternalLink, ShieldCheck, LogOut, Loader2 } from "lucide-react";
+import { Search, CornerDownLeft, Target, Contact, Plus, ExternalLink, ShieldCheck, LogOut, Loader2, Package } from "lucide-react";
 import { apiAdmin, canAccess, type AdminUser } from "@/lib/auth";
 import { visibleApps, type AppIcon } from "@/lib/admin-apps";
 
@@ -90,6 +90,7 @@ export function CommandPalette({ user, open, onClose, onLogout }: {
       ...(canAccess(user, { module: "accounting" }) ? [
         { id: "new-i-coffee", group: "Actions", label: "New coffee invoice", icon: Plus, run: () => go("/admin/invoices/new?business=coffee&kind=commercial"), match: "new coffee commercial invoice bill" },
         { id: "new-i-fet", group: "Actions", label: "New FET invoice", icon: Plus, run: () => go("/admin/invoices/new?business=fet"), match: "new fet invoice bill" },
+        { id: "fet-stock", group: "Actions", label: "FET stock overview", icon: Package, run: () => go("/admin/accounting?tab=stock"), match: "fet stock inventory devices weekly overview" },
       ] : []),
       ...(canAccess(user, { module: "products" }) ? [{ id: "new-product", group: "Actions", label: "Add a product", icon: Plus, run: () => go("/admin/products/new"), match: "new product add catalogue" }] : []),
       { id: "profile", group: "Actions", label: "Profile & security", icon: ShieldCheck, run: () => go("/admin/profile"), match: "profile password two factor 2fa sessions security" },

@@ -1394,6 +1394,43 @@ confirmation before the site changes.
 
 ---
 
+## FET stock overview, week by week (26 October 2026) — built, not yet deployed
+
+Finance asked for a weekly view of FET stock per model. It is a new **Stock** tab
+in Accounting → Books (`/admin/accounting?tab=stock`, also "FET stock overview"
+in ⌘K).
+
+- **What Finance records:** each movement, with its date, model (FI–FIV) and
+  quantity: **Received** (a delivery), **Sold / installed**, **Returned**, or a
+  **stock-count correction** (+/−, a reason is required). Delivery note or
+  invoice number goes in the reference.
+- **What they see:**
+  - devices on hand per model, valued at the catalogue price;
+  - a **week-by-week table** (Monday to Sunday) showing each model's closing
+    stock, with devices in and out underneath. Pick a model for opening,
+    received, sold, returned, corrected and closing;
+  - every movement behind it;
+  - a CSV export for the accountant.
+- **Stock is never typed in, only worked out**, so a late entry or a removal
+  updates every week after it.
+- **It refuses to go below zero.** Selling a device the book never received
+  means a delivery is missing, and it says so instead of showing −1.
+- **Who can do what:** anyone with Accounting records. Only the senior officer
+  (`accounting_approve`) can remove an entry, and each removal goes in the
+  activity log.
+- **First step for Finance:** record the devices on the shelf today as
+  *Received*, then keep it up as stock moves.
+
+> Technical detail (engineering): migration `2026_10_26_000001`
+> (`fet_stock_movements`, signed `quantity`); `FetStockMovement::MODELS` maps
+> each model to its product slug for pricing; `FetStockController`
+> (`GET/POST /admin/accounting/stock`, `GET …/stock/export`,
+> `DELETE …/stock/{movement}` under `accounting_approve`);
+> `components/admin/FetStock.tsx`. Tests: `FetStockTest` (9). **443 backend
+> tests passing.** Deploy needs `migrate --force` + `route:cache`.
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**
