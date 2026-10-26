@@ -6,6 +6,7 @@ import { Loader2, Check, X, Plus, Download, Wallet, Landmark, Banknote, Sparkles
 import { apiAdmin, uploadAdmin, downloadFile, auth, canAccess } from "@/lib/auth";
 import { PageHeader, Empty } from "@/components/admin/admin-ui";
 import { Stock } from "@/components/admin/FetStock";
+import { SendDocumentDialog } from "@/components/admin/SendDocument";
 
 const CURRENCIES = ["UGX", "USD", "EUR"];
 const money = (c: string, a: number) => (c === "UGX" ? `UGX ${a.toLocaleString()}` : `${c === "USD" ? "$" : "€"}${(a / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
@@ -526,7 +527,7 @@ function Panel({ icon: Icon, title, children }: { icon: typeof Wallet; title: st
 
 /* ── Invoices (accounts receivable) ───────────────────────────────────── */
 
-type Inv = { id: number; number: string; customer_name: string; currency: string; total: number; amount_paid: number; balance: number; status: string; is_overdue: boolean; due_date: string | null; business: string | null; kind: string };
+type Inv = { id: number; number: string; customer_name: string; customer_email: string | null; currency: string; total: number; amount_paid: number; balance: number; status: string; is_overdue: boolean; due_date: string | null; business: string | null; kind: string };
 type Line = { description: string; quantity: number; unit_price: number; vat_rate: number };
 
 const INV_STATUS: Record<string, { bg: string; fg: string }> = {
@@ -572,7 +573,9 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
     } catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); }
   };
 
-  const send = async (i: Inv) => { try { await apiAdmin(`/admin/accounting/invoices/${i.id}/send`, { method: "POST" }); setMsg(`Invoice ${i.number} sent.`); load(); } catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); } };
+  // "Send" opens the who-gets-it window rather than emailing the customer outright.
+  const [sending, setSending] = useState<Inv | null>(null);
+  const send = (i: Inv) => { setMsg(""); setSending(i); };
   const pay = async (i: Inv) => {
     const acct = accounts.find((a) => a.currency === i.currency);
     if (!acct) { setMsg(`No ${i.currency} account to receive into — add one under Accounts.`); return; }
@@ -628,7 +631,17 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
         </div>
       )}
 
-      {msg && <p className="text-sm mb-3" style={{ color: /sent|recorded/.test(msg) ? "#16A34A" : "#C0392B" }}>{msg}</p>}
+      {sending && (
+        <SendDocumentDialog
+          endpoint={`/admin/accounting/invoices/${sending.id}/send`}
+          docLabel="Invoice"
+          docNumber={sending.number}
+          customer={{ name: sending.customer_name, email: sending.customer_email ?? "" }}
+          onClose={() => setSending(null)}
+          onSent={(_, summary) => { setSending(null); setMsg(summary); load(); }}
+        />
+      )}
+      {msg && <p className="text-sm mb-3" style={{ color: /sent|emailed|recorded/.test(msg) ? "#16A34A" : "#C0392B" }}>{msg}</p>}
 
       {list.length === 0 ? <Empty label="No invoices in this view." /> : (
         <div className="space-y-2">
@@ -649,7 +662,7 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button onClick={() => downloadFile(`/admin/accounting/invoices/${i.id}/pdf`, `${i.number}.pdf`)} className="p-1.5 rounded-lg" style={{ background: "#F2F2F2", color: "#555" }} title="PDF"><Download className="w-4 h-4" /></button>
-                  {i.status !== "void" && i.status !== "paid" && <button onClick={() => send(i)} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "rgba(59,130,246,0.12)", color: "#2563EB" }}><Send className="w-3.5 h-3.5" />Send</button>}
+                  {i.status !== "void" && i.status !== "paid" && <button onClick={() => send(i)} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "rgba(59,130,246,0.12)", color: "#2563EB" }}><Send className="w-3.5 h-3.5" />Send…</button>}
                   {(i.status === "sent" || i.status === "partial") && <button onClick={() => pay(i)} className="text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}>Record payment</button>}
                   {canApprove && i.status !== "void" && i.status !== "paid" && <button onClick={() => voidInv(i)} className="text-[11px] font-semibold px-2 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>Void</button>}
                 </div>

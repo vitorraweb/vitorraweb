@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\EnquiryController;
 use App\Http\Controllers\Api\ExchangeRateController;
 use App\Http\Controllers\Api\ExecutiveController;
 use App\Http\Controllers\Api\FetInstallationController;
+use App\Http\Controllers\Api\DocumentRecipientController;
 use App\Http\Controllers\Api\FetStockController;
 use App\Http\Controllers\Api\FetTrialController;
 use App\Http\Controllers\Api\FetTrialImportController;
@@ -476,6 +477,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // The editor's live preview serves both quotations and invoices.
         Route::post('/accounting/documents/preview', DocumentPreviewController::class)
             ->middleware(['perm:quotations,accounting', 'throttle:60,1']);
+        // Who a quotation / invoice can be emailed to (team + clients on record).
+        Route::get('/accounting/documents/recipients', DocumentRecipientController::class)
+            ->middleware(['perm:quotations,accounting', 'throttle:120,1']);
         // Senior-finance-only actions (approval, account/category/budget management).
         Route::middleware('perm:accounting_approve')->prefix('accounting')->group(function () {
             Route::post('/accounts', [AccountingController::class, 'storeAccount']);

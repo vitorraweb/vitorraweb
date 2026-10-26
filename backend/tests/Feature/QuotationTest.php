@@ -85,7 +85,7 @@ class QuotationTest extends TestCase
         $h = $this->h();
         $id = $this->withHeaders($h)->postJson('/api/admin/accounting/quotations', $this->coffeeQuote())->json('data.id');
 
-        $this->withHeaders($h)->postJson("/api/admin/accounting/quotations/{$id}/send")->assertOk()->assertJsonPath('data.status', 'sent');
+        $this->withHeaders($h)->postJson("/api/admin/accounting/quotations/{$id}/send", ['to' => ['buyer@example.com']])->assertOk()->assertJsonPath('data.status', 'sent');
         Mail::assertSent(QuotationMail::class, fn ($m) => $m->hasTo('buyer@example.com'));
     }
 
@@ -119,7 +119,7 @@ class QuotationTest extends TestCase
         $res = $this->withHeaders($h)->get("/api/admin/accounting/quotations/{$id}/pdf")->assertOk();
         $this->assertStringStartsWith('%PDF', $res->getContent());
 
-        $this->withHeaders($h)->postJson("/api/admin/accounting/quotations/{$id}/send")->assertOk();
+        $this->withHeaders($h)->postJson("/api/admin/accounting/quotations/{$id}/send", ['to' => [$q->customer_email]])->assertOk();
         Mail::assertSent(QuotationMail::class, fn ($m) => str_starts_with($m->envelope()->subject, 'Order confirmation '));
 
         $this->withHeaders($h)->postJson('/api/admin/accounting/documents/preview', $fet + ['type' => 'quotation', 'heading' => 'order_confirmation'])

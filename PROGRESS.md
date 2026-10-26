@@ -1431,6 +1431,46 @@ in ⌘K).
 
 ---
 
+## Sending a quotation or invoice: choose who gets it (26 October 2026) — built, not yet deployed
+
+Finance raised it: a quotation or invoice went to the customer the moment anyone
+pressed the button, and unfinished drafts went out more than once. It looked
+unprofessional.
+
+- **"Send…" now opens a window.** Nothing is emailed until the sender ticks who
+  gets it:
+  - **The customer**: unticked by default, so it is always a deliberate choice;
+  - **another contact at the client**, searched from the system;
+  - **anyone on the Vitorra team**, with a short note.
+- **"This is final" tick.** A send that includes the customer needs it ticked
+  before the button works.
+- **Send to colleagues for review.** They get the PDF marked **"For review — the
+  customer has NOT received it"**, the note, and a link to open the document.
+  Nothing changes: the document stays a draft and no follow-up is booked. A
+  colleague copied on a real send gets it marked "Copy". Replies go to the
+  sender.
+- **No typed addresses.** Each client recipient must be the document's own
+  customer or someone already in the system (prospect list, enquiry, contact
+  message or customer account). A mistyped email is refused, not delivered to a
+  stranger. Staff who have left are not on the team list.
+- **Find customer on the form.** The quotation and invoice form has a **"Find
+  customer in the system"** box that fills in the name, email, phone and
+  location instead of retyping them.
+- **Every send is in the activity log**: who sent which document to whom.
+- Same window on the Books → Invoices list, which also used to send in one
+  click.
+
+> Technical detail (engineering): `App\Support\DocumentRecipients` (team vs
+> client split, known-client check, client search across prospects / customer
+> users / enquiries); `App\Mail\DocumentForReview` + `emails.document-review`;
+> `send()` on `QuotationController` / `InvoiceController` now requires `to[]`
+> (+ optional `note`); `GET /admin/accounting/documents/recipients?q=`;
+> `components/admin/SendDocument.tsx` (`SendDocumentDialog`, `ClientFinder`).
+> Tests: `DocumentSendTest` (8). **463 backend tests passing.** No migration;
+> deploy needs `config:cache` + `route:cache`.
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**

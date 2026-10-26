@@ -8,7 +8,10 @@ use App\Mail\QuotationMail;
 use App\Models\Invoice;
 use App\Models\Prospect;
 use App\Models\Quotation;
+use App\Mail\DocumentForReview;
+use App\Support\Audit;
 use App\Support\BrandedDocument;
+use App\Support\DocumentRecipients;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -92,23 +95,37 @@ class QuotationController extends Controller
     }
 
     /** Email the quotation PDF to the customer and mark it sent. */
-    public function send(Quotation $quotation): JsonResponse
+    /**
+     * Email the quotation to the people the sender chose: the client (marks it
+     * sent and books a follow-up) and/or colleagues (a "for review" copy that
+     * changes nothing). See DocumentRecipients for who is allowed.
+     */
+    public function send(Request $request, Quotation $quotation): JsonResponse
     {
-        if (! $quotation->customer_email) {
-            return response()->json(['message' => 'Add a customer email before sending.'], 422);
-        }
         if ($quotation->status === 'void') {
             return response()->json(['message' => 'This quotation is void.'], 422);
         }
 
-        $pdf = BrandedDocument::pdf($quotation->load('items'))->output();
-        Mail::to($quotation->customer_email)->send(new QuotationMail($quotation, $pdf));
+        ['team' => $team, 'clients' => $clients, 'note' => $note] = DocumentRecipients::fromRequest($request, $quotation->customer_email);
 
-        if ($quotation->status === 'draft') {
-            $quotation->update(['status' => 'sent', 'sent_at' => now()]);
+        $pdf = BrandedDocument::pdf($quotation->load('items'))->output();
+        if ($clients) {
+            Mail::to($clients)->send(new QuotationMail($quotation, $pdf));
+        }
+        if ($team->isNotEmpty()) {
+            Mail::to($team)->send(new DocumentForReview($quotation, $pdf, $request->user(), $note, customerSent: (bool) $clients));
         }
 
-        $this->scheduleFollowUp($quotation);
+        if ($clients) {
+            if ($quotation->status === 'draft') {
+                $quotation->update(['status' => 'sent', 'sent_at' => now()]);
+            }
+            $this->scheduleFollowUp($quotation, $clients);
+        }
+
+        Audit::log('quotation.send', "Emailed {$quotation->number}", $quotation, [
+            'clients' => $clients, 'team' => $team->pluck('email')->all(),
+        ]);
 
         return response()->json(['data' => $this->shape($quotation->fresh(['items', 'invoices']), full: true)]);
     }
@@ -120,7 +137,7 @@ class QuotationController extends Controller
      * An existing customer keeps the "converted" status; an earlier
      * follow-up the team set by hand is never pushed back.
      */
-    private function scheduleFollowUp(Quotation $quotation): void
+    private function scheduleFollowUp(Quotation $quotation, array $emails): void
     {
         $product = match ($quotation->business) {
             'coffee' => 'COFFEE',
@@ -129,7 +146,7 @@ class QuotationController extends Controller
         };
         $due = today()->addDays((int) config('pipeline.quotation_follow_up_days', 3));
 
-        Prospect::whereRaw('LOWER(email) = ?', [mb_strtolower(trim($quotation->customer_email))])
+        Prospect::where(fn ($q) => collect($emails)->each(fn ($e) => $q->orWhereRaw('LOWER(email) = ?', [mb_strtolower(trim($e))])))
             ->when($product, fn ($q) => $q->where('product', $product))
             ->get()
             ->each(function (Prospect $p) use ($quotation, $due) {

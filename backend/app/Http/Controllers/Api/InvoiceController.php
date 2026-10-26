@@ -10,7 +10,10 @@ use App\Models\FinanceCategory;
 use App\Models\FinanceTransaction;
 use App\Models\Invoice;
 use App\Models\Setting;
+use App\Mail\DocumentForReview;
+use App\Support\Audit;
 use App\Support\BrandedDocument;
+use App\Support\DocumentRecipients;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -74,21 +77,33 @@ class InvoiceController extends Controller
     }
 
     /** Email the invoice PDF to the customer and mark it sent. */
-    public function send(Invoice $invoice): JsonResponse
+    /**
+     * Email the invoice to the people the sender chose: the client (marks it
+     * sent) and/or colleagues (a "for review" copy that changes nothing).
+     */
+    public function send(Request $request, Invoice $invoice): JsonResponse
     {
-        if (! $invoice->customer_email) {
-            return response()->json(['message' => 'Add a customer email before sending.'], 422);
-        }
         if ($invoice->status === 'void') {
             return response()->json(['message' => 'This invoice is void.'], 422);
         }
 
-        $pdf = BrandedDocument::pdf($invoice->load('items'));
-        Mail::to($invoice->customer_email)->send(new InvoiceMail($invoice, $pdf->output()));
+        ['team' => $team, 'clients' => $clients, 'note' => $note] = DocumentRecipients::fromRequest($request, $invoice->customer_email);
 
-        if ($invoice->status === 'draft') {
+        $pdf = BrandedDocument::pdf($invoice->load('items'))->output();
+        if ($clients) {
+            Mail::to($clients)->send(new InvoiceMail($invoice, $pdf));
+        }
+        if ($team->isNotEmpty()) {
+            Mail::to($team)->send(new DocumentForReview($invoice, $pdf, $request->user(), $note, customerSent: (bool) $clients));
+        }
+
+        if ($clients && $invoice->status === 'draft') {
             $invoice->update(['status' => 'sent', 'sent_at' => now()]);
         }
+
+        Audit::log('invoice.send', "Emailed {$invoice->number}", $invoice, [
+            'clients' => $clients, 'team' => $team->pluck('email')->all(),
+        ]);
 
         return response()->json(['data' => $this->shape($invoice->fresh('items'), full: true)]);
     }

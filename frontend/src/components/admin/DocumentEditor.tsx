@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Download, FileText, Loader2, Plus, RefreshCw, Send, X, XCircle } from "lucide-react";
 import { apiAdmin, auth, canAccess, downloadFile, fetchPdf } from "@/lib/auth";
 import { PageHeader, StatusBadge } from "@/components/admin/admin-ui";
+import { ClientFinder, SendDocumentDialog, type Client } from "@/components/admin/SendDocument";
 import {
   BUSINESS_LABEL, CURRENCIES, FET_DETAILS, FET_LINES, HEADING_LABEL, INCOTERMS, KIND_LABEL, blankForm, formatMoney, fromRecord, joinIncoterm,
   splitIncoterm, toMinor, toPayload,
@@ -48,6 +49,7 @@ export default function DocumentEditor({
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
 
   /* ── load an existing record ── */
   useEffect(() => {
@@ -123,13 +125,29 @@ export default function DocumentEditor({
     }
   });
 
-  const send = () => run("send", async () => {
-    if (!id) return;
-    if (dirty) throw new Error("Save your changes before sending.");
-    const r = await apiAdmin<{ data: Meta & Record<string, unknown> }>(`${API[type]}/${id}/send`, { method: "POST" });
-    if (r.data?.status) setMeta((m) => (m ? { ...m, ...r.data } : r.data));
-    setMsg({ ok: true, text: `Emailed to ${form?.customer_email}.` });
-  });
+  // Sending always goes through the "who gets it" window — never one click to the customer.
+  const openSend = () => {
+    setMsg(null);
+    if (dirty) { setMsg({ ok: false, text: "Save your changes before sending." }); return; }
+    setSendOpen(true);
+  };
+
+  // Fill the customer block from someone already in the system, rather than retyping (and mistyping) them.
+  const pickCustomer = (c: Client) => {
+    setForm((f) => {
+      if (!f) return f;
+      const company = c.company && c.company !== c.name ? c.company : null;
+      return {
+        ...f,
+        customer_name: company ?? c.name,
+        customer_email: c.email,
+        customer_phone: c.phone ?? f.customer_phone,
+        customer_address: f.customer_address || (c.address ?? ""),
+        customer_attention: company && f.business === "coffee" ? c.name : f.customer_attention,
+      };
+    });
+    setDirty(true);
+  };
 
   const setStatus = (status: string) => run(status, async () => {
     const r = await apiAdmin<{ data: Meta & Record<string, unknown> }>(`${API.quotation}/${id}/status`, { method: "POST", body: JSON.stringify({ status }) });
@@ -174,7 +192,7 @@ export default function DocumentEditor({
             <Link href={`/admin/contracts/new?quotation=${meta.id}`} className="c-btn"><FileText className="w-4 h-4" />Create contract</Link>
           )}
           {meta && <button onClick={download} disabled={!!busy} className="c-btn">{busy === "pdf" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}PDF</button>}
-          {meta && editable && <button onClick={send} disabled={!!busy || !form.customer_email} title={form.customer_email ? "" : "Add a customer email to send"} className="c-btn">{busy === "send" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}Email to customer</button>}
+          {meta && editable && <button onClick={openSend} disabled={!!busy} className="c-btn"><Send className="w-4 h-4" />Send…</button>}
           {editable && <button onClick={save} disabled={!!busy} className="c-btn c-btn-primary">{busy === "save" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}{id ? "Save" : "Save draft"}</button>}
         </>}
       />
@@ -207,6 +225,20 @@ export default function DocumentEditor({
         <p className="text-[12.5px] text-ink-muted mb-3">Payments against this invoice are recorded in <Link href="/admin/accounting?tab=invoices" className="text-gold-ink hover:underline">Books → Invoices</Link>.</p>
       )}
       {msg && <p className={`text-[13px] mb-3 ${msg.ok ? "text-ok-ink" : "text-alert-ink"}`}>{msg.text}</p>}
+      {sendOpen && meta && id && (
+        <SendDocumentDialog
+          endpoint={`${API[type]}/${id}/send`}
+          docLabel={docName}
+          docNumber={meta.number}
+          customer={{ name: form.customer_name, email: form.customer_email }}
+          onClose={() => setSendOpen(false)}
+          onSent={(data, summary) => {
+            if (data?.status) setMeta((m) => (m ? { ...m, ...(data as Partial<Meta>) } : (data as Meta)));
+            setSendOpen(false);
+            setMsg({ ok: true, text: summary });
+          }}
+        />
+      )}
       {!editable && <p className="text-[13px] mb-3 text-ink-muted">This {docName.toLowerCase()} is {meta?.status} and can no longer be edited.</p>}
 
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-4 items-start">
@@ -254,7 +286,7 @@ export default function DocumentEditor({
             </Grid>
           </Card>
 
-          <Card title={isQuote ? "Customer / buyer" : "Bill to"}>
+          <Card title={isQuote ? "Customer / buyer" : "Bill to"} aside={editable ? <ClientFinder onPick={pickCustomer} /> : undefined}>
             <Grid>
               <Field label={coffee ? "Company" : "Customer name"} wide><input className="c-input w-full" value={form.customer_name} onChange={(e) => set("customer_name", e.target.value)} /></Field>
               <Field label="Address" wide hint={coffee ? undefined : "Put the company name on the first line if there is one."}>

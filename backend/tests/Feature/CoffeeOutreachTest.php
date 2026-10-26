@@ -180,7 +180,7 @@ class CoffeeOutreachTest extends TestCase
                 'currency' => 'USD', 'issue_date' => today(),
             ]);
             $this->app['auth']->forgetGuards();
-            $this->admin()->postJson("/api/admin/accounting/quotations/{$q->id}/send")->assertOk();
+            $this->admin()->postJson("/api/admin/accounting/quotations/{$q->id}/send", ['to' => [$p->email]])->assertOk();
         }
 
         $buyer->refresh();
