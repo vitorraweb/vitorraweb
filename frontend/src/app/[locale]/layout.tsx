@@ -3,6 +3,9 @@ import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import StickyQuoteBar from "@/components/layout/StickyQuoteBar";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
+import { ScrollProgress } from "@/components/motion/ScrollProgress";
+import { Cursor } from "@/components/motion/Cursor";
 
 /* Pre-render both locales at build time (/, /sw). */
 export function generateStaticParams() {
@@ -26,6 +29,10 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   return (
     <>
+      {/* Cinematic layer — public site only, never the portals. */}
+      <SmoothScroll />
+      <ScrollProgress />
+      <Cursor />
       {children}
       <StickyQuoteBar />
       <WhatsAppButton />

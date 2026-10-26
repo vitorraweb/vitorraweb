@@ -1,12 +1,11 @@
 import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-import { Label, Heading, Text, TextLink } from "@/components/system";
-import { Picture } from "@/components/system/imagery";
+import { BusinessPanels } from "@/components/system/BusinessPanels";
 
 /* ─── The four businesses, as doors ───────────────────────────────────────────
    Shared by the homepage and About. Each door shows the photograph its
-   business's page opens on, so clicking through feels like stepping into the
-   picture. One component, so the businesses can never be described two ways. */
+   business's page opens on, and carries it into that page's hero as the
+   visitor clicks through (BusinessPanels). One component, so the businesses
+   can never be described two ways. */
 
 export async function BusinessDoors() {
   const t = await getTranslations("homeQA");
@@ -25,23 +24,9 @@ export async function BusinessDoors() {
   ] as { key: string; href: string; image: string; imageAlt: string; body: string; action: { label: string; href: string }; second?: { label: string; href: string } }[];
 
   return (
-    <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
-      {doors.map((d, i) => (
-        <li key={d.key} className="flex flex-col">
-          <Link href={d.href} className="group block" aria-label={tp(`${d.key}.name`)}>
-            <Picture src={d.image} alt={d.imageAlt} ratio="4/5" zoom sizes="(min-width: 1024px) 24vw, (min-width: 640px) 46vw, 100vw" />
-          </Link>
-          <Label index={String(i + 1).padStart(2, "0")} className="mt-7 mb-4">{tp(`${d.key}.tagline`)}</Label>
-          <Heading as="h3" size="h3" className="text-ink">
-            <Link href={d.href} className="hover:text-gold-ink transition-colors">{tp(`${d.key}.name`)}</Link>
-          </Heading>
-          <Text size="small" className="mt-3 mb-7">{d.body}</Text>
-          <div className="mt-auto flex flex-col items-start gap-3">
-            <TextLink href={d.action.href}>{d.action.label}</TextLink>
-            {d.second && <TextLink href={d.second.href} className="text-ink-muted">{d.second.label}</TextLink>}
-          </div>
-        </li>
-      ))}
-    </ol>
+    <BusinessPanels
+      viewLabel={t("panelView")}
+      doors={doors.map((d) => ({ ...d, name: tp(`${d.key}.name`), tagline: tp(`${d.key}.tagline`) }))}
+    />
   );
 }

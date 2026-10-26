@@ -61,6 +61,7 @@ export default async function CoffeePage() {
 
         <CinematicHero
           image="/images/stock/coffee-valley.jpg"
+          transitionName="hero-coffee"
           alt={alt("coffeeValley")}
           index="03"
           label={tp("coffee.name")}

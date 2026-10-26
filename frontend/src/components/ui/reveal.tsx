@@ -45,7 +45,8 @@ export function Reveal({
     }
   })();
 
-  const Component = as as React.ElementType;
+  // Every allowed tag takes the same props; typed as one so the canary JSX types accept it.
+  const Component = as as "div";
 
   return (
     <Component

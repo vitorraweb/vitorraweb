@@ -5,13 +5,12 @@ import { ArrowUpRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { Reveal } from "@/components/ui/reveal";
 import {
   Section, Container, Label, Heading, Text, TextLink,
 } from "@/components/system";
 import { ContactBand, CredentialGroups } from "@/components/system/blocks";
 import { CinematicHero, ImageBand, Mosaic } from "@/components/system/imagery";
-import { CountUp } from "@/components/system/CountUp";
+import { EvidenceStory } from "@/components/sections/EvidenceStory";
 import { BusinessDoors } from "@/components/system/doors";
 import { getBlogPosts } from "@/lib/api";
 import { CONTACT_ADDRESS, COMPANY_REG_NO } from "@/lib/constants";
@@ -111,6 +110,7 @@ export default async function HomePage() {
           primary={{ label: t("openCta"), href: "/enquire" }}
           secondary={{ label: t("openSecondary"), href: "/about" }}
           credit={t("heroCredit")}
+          scrollCue={t("scrollCue")}
         />
 
         {/* ══ 2 · Four doors — each shows the photograph its page opens on ═ */}
@@ -123,35 +123,23 @@ export default async function HomePage() {
 
         <ImageBand image="/images/stock/hills-road.jpg" alt={alt("hillsRoad")} statement={t("bandStatement")} />
 
-        {/* ══ 3 · Evidence ══════════════════════════════════════════════════ */}
-        <Section tone="ink" aria-labelledby="evidence-heading">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-            <Reveal className="lg:col-span-6">
-              <Label onInk className="mb-10">{t("evidenceLabel")}</Label>
-              <p id="evidence-heading" className="t-figure text-ink-fg">
-                <CountUp value={13.9} /><span className="text-gold">%</span>
-              </p>
-              <Text size="lead" onInk className="mt-6 max-w-[30rem]">{t("evidenceFigureCaption")}</Text>
-            </Reveal>
-
-            <Reveal className="lg:col-span-6 lg:pt-16">
-              <dl className="border-t border-ink-line">
-                {evidenceRows.map(([k, v]) => (
-                  <div key={k} className="flex items-baseline justify-between gap-6 border-b border-ink-line py-5">
-                    <dt className="t-small text-ink-fg-muted">{k}</dt>
-                    <dd className="font-display text-[1.75rem] leading-none text-ink-fg whitespace-nowrap [font-variant-numeric:lining-nums_tabular-nums]">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              <Text size="small" muted onInk className="mt-6">{t("evidenceSource")}</Text>
-              <Text size="small" onInk className="mt-4 max-w-[32rem]">{t("evidenceHonest")}</Text>
-              <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4">
-                <TextLink href="/products/fuel-eco-tech#fet-calculator" onInk>{t("evidenceLinkCalc")}</TextLink>
-                <TextLink href="/products/fuel-eco-tech" onInk>{t("evidenceLinkProduct")}</TextLink>
-              </div>
-            </Reveal>
-          </Container>
-        </Section>
+        {/* ══ 3 · Evidence — a pinned chapter: the device turns and opens as
+               the measured result builds up beside it ══════════════════════ */}
+        <EvidenceStory
+          label={t("evidenceLabel")}
+          before={{ k: evidenceRows[0][0], v: evidenceRows[0][1] }}
+          after={{ k: evidenceRows[1][0], v: evidenceRows[1][1] }}
+          noise={{ k: evidenceRows[2][0], v: evidenceRows[2][1] }}
+          figureCaption={t("evidenceFigureCaption")}
+          source={t("evidenceSource")}
+          honest={t("evidenceHonest")}
+          illustration={t("deviceIllustration")}
+          deviceAlt={t("deviceAlt")}
+          links={[
+            { label: t("evidenceLinkCalc"), href: "/products/fuel-eco-tech#fet-calculator" },
+            { label: t("evidenceLinkProduct"), href: "/products/fuel-eco-tech" },
+          ]}
+        />
 
         {/* ══ 4 · Credentials, separated ════════════════════════════════════ */}
         <Section tone="paper" aria-labelledby="cred-heading">

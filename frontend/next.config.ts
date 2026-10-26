@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
   // deploy to ECS Fargate (planning/12-aws-migration-plan.md); it takes the
   // runtime image from ~1.2GB to ~200MB. Harmless on Vercel, which ignores it.
   output: "standalone",
+  // React <ViewTransition>: page-to-page and shared-element transitions.
+  experimental: {
+    viewTransition: true,
+  },
   turbopack: {
     root: path.resolve(__dirname),
   },

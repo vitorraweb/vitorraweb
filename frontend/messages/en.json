@@ -1363,7 +1363,11 @@
     "closeVisit": "Visit",
     "bandStatement": "Measured on the road. Not promised in a brochure.",
     "heroCredit": "Kampala",
-    "companyPhotoCaption": "Head office reception, Padre Pio House"
+    "companyPhotoCaption": "Head office reception, Padre Pio House",
+    "panelView": "View",
+    "scrollCue": "Scroll",
+    "deviceIllustration": "The cut-away is an illustration of the swirl-chamber principle the manufacturer describes, not a photograph of a production unit.",
+    "deviceAlt": "The Fuel Eco Tech device"
   },
   "fetQA": {
     "title": "Lower fuel bills, measured on your own vehicles.",

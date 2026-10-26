@@ -57,6 +57,7 @@ export default async function SealPage() {
 
         <CinematicHero
           image="/images/stock/trauma-kit-open.jpg"
+          transitionName="hero-seal"
           alt={alt("traumaKit")}
           index="02"
           label={tp("seal.name")}

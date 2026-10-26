@@ -80,6 +80,7 @@ export default async function FuelEcoTechPage() {
         {/* ══ Intro ═════════════════════════════════════════════════════════ */}
         <CinematicHero
           image="/images/stock/road-mountains.jpg"
+          transitionName="hero-fet"
           alt={alt("roadMountains")}
           index="01"
           label={tp("fet.name")}

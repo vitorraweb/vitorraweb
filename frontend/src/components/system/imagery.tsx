@@ -1,5 +1,10 @@
+import { ViewTransition } from "react";
 import Image from "next/image";
 import { Container, Label, ButtonLink, TextLink } from "@/components/system";
+import { HeroMedia, HeroCopy } from "@/components/motion/HeroMotion";
+import { Magnetic } from "@/components/motion/Magnetic";
+import { Parallax } from "@/components/motion/Parallax";
+import { WordReveal } from "@/components/motion/WordReveal";
 import { cn } from "@/lib/utils";
 
 /* ─── Quiet Authority — imagery ───────────────────────────────────────────────
@@ -25,7 +30,13 @@ export function CinematicHero({
   credit,
   grade = true,
   priority = true,
+  transitionName,
+  scrollCue,
 }: {
+  /** Shared-element name: the homepage panel with the same name morphs into this photo. */
+  transitionName?: string;
+  /** Small "Scroll" cue at the foot of the hero. */
+  scrollCue?: string;
   image: string;
   alt: string;
   label: string;
@@ -43,50 +54,62 @@ export function CinematicHero({
 }) {
   return (
     <section aria-labelledby="hero-title" className="q-scope relative isolate overflow-hidden bg-ink text-ink-fg min-h-[82svh] lg:min-h-[92svh] flex">
-      <div className="absolute inset-0 -z-10">
-        <Image
-          src={image}
-          alt={alt}
-          fill
-          priority={priority}
-          sizes="100vw"
-          className={cn("object-cover q-settle", grade && "q-grade")}
-        />
+      <HeroMedia>
+        <MaybeTransition name={transitionName}>
+          <Image
+            src={image}
+            alt={alt}
+            fill
+            priority={priority}
+            sizes="100vw"
+            className={cn("object-cover q-settle", grade && "q-grade")}
+          />
+        </MaybeTransition>
         {/* Legibility: a deep wash from the bottom-left, where the type sits. */}
         <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,20,0.88)_0%,rgba(20,20,20,0.42)_40%,rgba(20,20,20,0.08)_68%,rgba(20,20,20,0.5)_100%)]" />
         <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_right,rgba(20,20,20,0.45)_0%,transparent_55%)]" />
-      </div>
+      </HeroMedia>
 
       <Container className="relative mt-auto pb-14 lg:pb-20 pt-40">
-        <div className="max-w-[46rem]">
+        <HeroCopy className="max-w-[48rem]">
           <div className="q-rise" style={{ "--d": "100ms" } as React.CSSProperties}>
             <Label onInk index={index} className="mb-8 text-ink-fg">{label}</Label>
           </div>
           <h1 id="hero-title" className="t-display text-ink-fg">
             {lines.map((l, i) => (
-              <span key={l} className="block q-rise" style={{ "--d": `${250 + i * 140}ms` } as React.CSSProperties}>
-                {l}
+              <span key={l} className="block overflow-hidden pb-[0.08em] -mb-[0.08em]">
+                <span className="block q-mask-rise" style={{ "--d": `${250 + i * 120}ms` } as React.CSSProperties}>{l}</span>
               </span>
             ))}
           </h1>
           {lead && (
-            <p className="t-lead text-ink-fg/85 mt-8 max-w-[36rem] q-rise" style={{ "--d": `${400 + lines.length * 140}ms` } as React.CSSProperties}>
+            <p className="t-lead text-ink-fg/85 mt-8 max-w-[36rem] q-rise" style={{ "--d": `${450 + lines.length * 120}ms` } as React.CSSProperties}>
               {lead}
             </p>
           )}
           {(primary || secondary) && (
-            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5 q-rise" style={{ "--d": `${550 + lines.length * 140}ms` } as React.CSSProperties}>
-              {primary && <ButtonLink href={primary.href} onInk>{primary.label}</ButtonLink>}
+            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5 q-rise" style={{ "--d": `${600 + lines.length * 120}ms` } as React.CSSProperties}>
+              {primary && <Magnetic><ButtonLink href={primary.href} onInk>{primary.label}</ButtonLink></Magnetic>}
               {secondary && <TextLink href={secondary.href} onInk>{secondary.label}</TextLink>}
             </div>
           )}
-        </div>
+        </HeroCopy>
+        {scrollCue && (
+          <div aria-hidden="true" className="hidden md:flex absolute left-1/2 -translate-x-1/2 bottom-6 flex-col items-center gap-3 q-rise" style={{ "--d": "1400ms" } as React.CSSProperties}>
+            <span className="t-label text-[0.625rem] text-ink-fg-muted">{scrollCue}</span>
+            <span className="relative block h-10 w-px bg-ink-fg/20 overflow-hidden"><span className="absolute inset-x-0 top-0 h-1/2 bg-gold q-scroll-cue" /></span>
+          </div>
+        )}
         {credit && (
           <p className="t-label text-ink-fg-muted absolute right-[clamp(1.25rem,0.6rem+2.8vw,3rem)] bottom-6 hidden md:block">{credit}</p>
         )}
       </Container>
     </section>
   );
+}
+
+function MaybeTransition({ name, children }: { name?: string; children: React.ReactNode }) {
+  return name ? <ViewTransition name={name} share="morph">{children}</ViewTransition> : <>{children}</>;
 }
 
 /* A strip of checkable facts, sitting directly under a cinematic hero. */
@@ -131,7 +154,7 @@ export function ImageBand({
           <>
             <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,20,0.75),rgba(20,20,20,0.1)_60%)]" />
             <Container className="absolute inset-x-0 bottom-0 pb-12 lg:pb-16">
-              <p className="t-h1 text-ink-fg max-w-[40rem]">{statement}</p>
+              <WordReveal text={statement} className="t-h1 text-ink-fg max-w-[40rem]" />
             </Container>
           </>
         )}
@@ -191,8 +214,12 @@ export function Mosaic({
 }) {
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-8 items-start">
-      <Picture className="col-span-7" src={a.src} alt={a.alt} caption={a.caption} ratio="4/5" sizes="(min-width: 1024px) 40vw, 58vw" />
-      <Picture className="col-span-5 mt-[22%]" src={b.src} alt={b.alt} caption={b.caption} ratio="3/4" sizes="(min-width: 1024px) 30vw, 42vw" />
+      <Parallax className="col-span-7" distance={30}>
+        <Picture src={a.src} alt={a.alt} caption={a.caption} ratio="4/5" sizes="(min-width: 1024px) 40vw, 58vw" />
+      </Parallax>
+      <Parallax className="col-span-5 mt-[22%]" distance={-50}>
+        <Picture src={b.src} alt={b.alt} caption={b.caption} ratio="3/4" sizes="(min-width: 1024px) 30vw, 42vw" />
+      </Parallax>
     </div>
   );
 }

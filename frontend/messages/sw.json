@@ -1363,7 +1363,11 @@
     "closeVisit": "Tutembelee",
     "bandStatement": "Hupimwa barabarani. Si ahadi kwenye kipeperushi.",
     "heroCredit": "Kampala",
-    "companyPhotoCaption": "Mapokezi ya ofisi kuu, Padre Pio House"
+    "companyPhotoCaption": "Mapokezi ya ofisi kuu, Padre Pio House",
+    "panelView": "Tazama",
+    "scrollCue": "Sogeza",
+    "deviceIllustration": "Sehemu ya ndani ni mchoro wa kanuni ya chemba ya mzunguko inayoelezwa na mtengenezaji, si picha ya kifaa halisi.",
+    "deviceAlt": "Kifaa cha Fuel Eco Tech"
   },
   "fetQA": {
     "title": "Gharama ndogo za mafuta, zilizopimwa kwenye magari yako mwenyewe.",

@@ -57,6 +57,7 @@ export default async function LogisticsPage() {
 
         <CinematicHero
           image="/images/stock/port-aerial.jpg"
+          transitionName="hero-logistics"
           alt={alt("portAerial")}
           index="04"
           label={tp("logistics.name")}
