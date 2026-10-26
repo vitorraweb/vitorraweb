@@ -59,7 +59,7 @@ export function FetDevice({
         alt={fallbackAlt}
         fill
         sizes="(min-width: 1024px) 40vw, 80vw"
-        className={cn("object-contain transition-opacity duration-700 mix-blend-lighten", ready && "opacity-0")}
+        className={cn("object-contain transition-opacity duration-700", ready && "opacity-0")}
       />
       {mount && (
         <div className={cn("absolute inset-0 transition-opacity duration-1000", ready ? "opacity-100" : "opacity-0")} aria-hidden="true">
