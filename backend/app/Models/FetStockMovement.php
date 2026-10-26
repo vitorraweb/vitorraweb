@@ -22,7 +22,7 @@ class FetStockMovement extends Model
     /** received/returned add stock, sold removes it, an adjustment can go either way. */
     public const TYPES = ['received', 'sold', 'returned', 'adjustment'];
 
-    protected $fillable = ['model', 'type', 'quantity', 'moved_on', 'reference', 'note', 'created_by'];
+    protected $fillable = ['model', 'type', 'quantity', 'moved_on', 'reference', 'picked_by', 'note', 'created_by'];
 
     protected $casts = [
         'moved_on' => 'date:Y-m-d',

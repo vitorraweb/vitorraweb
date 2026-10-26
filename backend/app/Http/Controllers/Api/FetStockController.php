@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\FetStockMovement;
 use App\Models\Product;
 use App\Support\Audit;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -61,7 +63,11 @@ class FetStockController extends Controller
             'quantity'  => ['required', 'integer', 'not_in:0', 'between:-10000,10000'],
             'moved_on'  => ['required', 'date', 'before_or_equal:today'],
             'reference' => ['nullable', 'string', 'max:255'],
+            // The person who collected the devices from stock signs for them.
+            'picked_by' => ['nullable', 'required_if:type,sold', 'string', 'max:255'],
             'note'      => ['nullable', 'string', 'max:2000'],
+        ], [
+            'picked_by.required_if' => 'Enter the name of the person who picked up the devices.',
         ]);
 
         $data['moved_on'] = CarbonImmutable::parse($data['moved_on'])->toDateString();
@@ -121,6 +127,52 @@ class FetStockController extends Controller
             'Content-Disposition' => 'attachment; filename="vitorra-fet-stock-'.now()->format('Y-m-d').'.csv"',
             'Cache-Control'       => 'no-cache, no-store',
         ]);
+    }
+
+    /**
+     * One week's devices out, as a printable PDF: every device that left stock
+     * (date, model, quantity, who picked it up, reference), then the week's
+     * opening and closing stock per model, with lines to sign.
+     */
+    public function weekPdf(Request $request): Response
+    {
+        $day   = $request->validate(['week' => ['required', 'date']])['week'];
+        $start = CarbonImmutable::parse($day)->startOfWeek(CarbonImmutable::MONDAY);
+        $end   = $start->addDays(6);
+
+        $inWeek = FetStockMovement::with('creator:id,name')
+            ->whereBetween('moved_on', [$start->toDateString(), $end->toDateString()])
+            ->orderBy('moved_on')->orderBy('id')->get();
+        $opening = FetStockMovement::where('moved_on', '<', $start->toDateString())
+            ->selectRaw('model, SUM(quantity) q')->groupBy('model')->pluck('q', 'model');
+
+        $summary = [];
+        foreach (FetStockMovement::MODELS as $code => $m) {
+            $mine = $inWeek->where('model', $code);
+            $row  = [
+                'label'    => $m['label'],
+                'opening'  => (int) ($opening[$code] ?? 0),
+                'received' => (int) $mine->where('type', 'received')->sum('quantity'),
+                'out'      => (int) -$mine->where('type', 'sold')->sum('quantity'),
+                'returned' => (int) $mine->where('type', 'returned')->sum('quantity'),
+                'adjusted' => (int) $mine->where('type', 'adjustment')->sum('quantity'),
+            ];
+            $row['closing'] = $row['opening'] + $row['received'] - $row['out'] + $row['returned'] + $row['adjusted'];
+            $summary[$code] = $row;
+        }
+
+        $out = $inWeek->filter(fn (FetStockMovement $m) => $m->quantity < 0)->values();
+
+        $pdf = Pdf::loadView('documents.fet-stock-week', [
+            'start'   => $start,
+            'end'     => $end,
+            'out'     => $out,
+            'summary' => $summary,
+            'models'  => FetStockMovement::MODELS,
+            'printedBy' => $request->user()?->name,
+        ])->setPaper('a4');
+
+        return $pdf->download('vitorra-fet-devices-out-'.$start->toDateString().'.pdf');
     }
 
     /**
@@ -215,6 +267,7 @@ class FetStockController extends Controller
             'quantity'   => $m->quantity,
             'moved_on'   => $m->moved_on->toDateString(),
             'reference'  => $m->reference,
+            'picked_by'  => $m->picked_by,
             'note'       => $m->note,
             'created_by' => $m->creator?->name,
         ];

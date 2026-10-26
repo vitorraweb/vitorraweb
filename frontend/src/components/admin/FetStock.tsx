@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Download, Loader2, Plus, Trash2, X } from "lucide-react";
+import { Download, FileText, Loader2, Plus, Trash2, X } from "lucide-react";
 import { apiAdmin, downloadFile } from "@/lib/auth";
 import { Empty } from "@/components/admin/admin-ui";
 
@@ -14,7 +14,7 @@ import { Empty } from "@/components/admin/admin-ui";
 type Model = { code: string; label: string; on_hand: number; price_ugx: number | null; value_ugx: number | null };
 type WeekModel = { opening: number; received: number; sold: number; returned: number; adjusted: number; closing: number };
 type Week = { start: string; end: string; models: Record<string, WeekModel> };
-type Movement = { id: number; model: string; type: string; quantity: number; moved_on: string; reference: string | null; note: string | null; created_by: string | null };
+type Movement = { id: number; model: string; type: string; quantity: number; moved_on: string; reference: string | null; picked_by: string | null; note: string | null; created_by: string | null };
 
 const TYPE_LABEL: Record<string, string> = { received: "Received", sold: "Sold / installed", returned: "Returned", adjustment: "Stock-count correction" };
 const TYPE_TONE: Record<string, string> = { received: "ok", sold: "blue", returned: "violet", adjustment: "gold" };
@@ -23,6 +23,22 @@ const today = () => new Date().toISOString().slice(0, 10);
 const day = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 const ugx = (n: number) => `UGX ${n.toLocaleString()}`;
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`);
+
+/** That week's devices-out sheet, ready to print and sign. */
+function WeekPdf({ start }: { start: string }) {
+  const [busy, setBusy] = useState(false);
+  const get = async () => {
+    setBusy(true);
+    try { await downloadFile(`/admin/accounting/stock/week-pdf?week=${start}`, `vitorra-fet-devices-out-${start}.pdf`); }
+    catch (e) { alert(e instanceof Error ? e.message : "Could not create the PDF."); }
+    finally { setBusy(false); }
+  };
+  return (
+    <button onClick={get} disabled={busy} className="c-btn c-btn-ghost !h-7 !px-2" title="Devices out this week, printable PDF">
+      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}PDF
+    </button>
+  );
+}
 
 export function Stock({ canApprove }: { canApprove: boolean }) {
   const [models, setModels] = useState<Model[]>([]);
@@ -34,7 +50,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
-  const [form, setForm] = useState({ model: "FI", type: "received", quantity: "", moved_on: today(), reference: "", note: "" });
+  const [form, setForm] = useState({ model: "FI", type: "received", quantity: "", moved_on: today(), reference: "", picked_by: "", note: "" });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -48,10 +64,11 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
   const save = async () => {
     setMsg("");
     if (!form.quantity || Number(form.quantity) === 0) { setMsg("Enter how many devices."); return; }
+    if (form.type === "sold" && !form.picked_by.trim()) { setMsg("Enter the name of the person who picked up the devices."); return; }
     setSaving(true);
     try {
       await apiAdmin("/admin/accounting/stock", { method: "POST", body: JSON.stringify({ ...form, quantity: Number(form.quantity) }) });
-      setForm({ ...form, quantity: "", reference: "", note: "" });
+      setForm({ ...form, quantity: "", reference: "", picked_by: "", note: "" });
       setMsg("Recorded.");
       load();
     } catch (e) { setMsg(e instanceof Error ? e.message : "Could not record that."); } finally { setSaving(false); }
@@ -114,6 +131,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
             <input type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} placeholder={isAdjust ? "± devices (e.g. -2)" : "How many devices"} min={isAdjust ? undefined : 1} className="c-input w-full" />
             <input type="date" value={form.moved_on} max={today()} onChange={(e) => setForm({ ...form, moved_on: e.target.value })} className="c-input w-full" aria-label="Date" />
             <input value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} placeholder={form.type === "received" ? "Delivery note / shipment" : form.type === "sold" ? "Invoice no. or customer" : "Reference (optional)"} className="c-input w-full sm:col-span-2" />
+            <input value={form.picked_by} onChange={(e) => setForm({ ...form, picked_by: e.target.value })} placeholder={form.type === "sold" ? "Picked up by (name, required)" : form.type === "received" ? "Received by (optional)" : "Picked up by (optional)"} className="c-input w-full sm:col-span-2" aria-label="Picked up by" />
             <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder={isAdjust ? "Reason (required, e.g. stock count 24 Oct)" : "Note (optional)"} className="c-input w-full sm:col-span-2" />
           </div>
           <div className="flex items-center gap-3 mt-3">
@@ -129,7 +147,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
         <div className="c-panel-head"><span className="c-panel-title">Stock per week{focus ? ` · ${label(focus)}` : ""}</span><span className="text-xs text-ink-muted">Weeks run Monday to Sunday</span></div>
         {focus ? (
           <table className="c-table">
-            <thead><tr><th>Week</th><th className="text-right">Opening</th><th className="text-right">Received</th><th className="text-right">Sold</th><th className="text-right">Returned</th><th className="text-right">Corrected</th><th className="text-right">Closing</th></tr></thead>
+            <thead><tr><th>Week</th><th className="text-right">Opening</th><th className="text-right">Received</th><th className="text-right">Sold</th><th className="text-right">Returned</th><th className="text-right">Corrected</th><th className="text-right">Closing</th><th /></tr></thead>
             <tbody>
               {weeks.map((w) => {
                 const r = w.models[focus];
@@ -142,6 +160,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
                     <td className="text-right tabular-nums">{r.returned || "–"}</td>
                     <td className="text-right tabular-nums">{r.adjusted ? signed(r.adjusted) : "–"}</td>
                     <td className="text-right tabular-nums font-semibold text-ink">{r.closing}</td>
+                    <td className="text-right"><WeekPdf start={w.start} /></td>
                   </tr>
                 );
               })}
@@ -149,7 +168,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
           </table>
         ) : (
           <table className="c-table">
-            <thead><tr><th>Week</th>{models.map((m) => <th key={m.code} className="text-right">{m.label}</th>)}<th className="text-right">Total</th></tr></thead>
+            <thead><tr><th>Week</th>{models.map((m) => <th key={m.code} className="text-right">{m.label}</th>)}<th className="text-right">Total</th><th /></tr></thead>
             <tbody>
               {weeks.map((w) => (
                 <tr key={w.start}>
@@ -166,12 +185,13 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
                     );
                   })}
                   <td className="text-right tabular-nums font-semibold text-ink">{Object.values(w.models).reduce((a, r) => a + r.closing, 0)}</td>
+                  <td className="text-right"><WeekPdf start={w.start} /></td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-        <p className="text-xs text-ink-muted px-4 py-2">Figures are closing stock at the end of each week. {focus ? "" : "Underneath: devices in (+) and out (−) that week. Pick a model for the full breakdown."}</p>
+        <p className="text-xs text-ink-muted px-4 py-2">Figures are closing stock at the end of each week. <b>PDF</b> prints that week&apos;s devices out, with who picked them up, ready to sign. {focus ? "" : "Underneath: devices in (+) and out (−) that week. Pick a model for the full breakdown."}</p>
       </div>
 
       {/* The entries behind it */}
@@ -179,7 +199,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
         <div className="c-panel-head"><span className="c-panel-title">Movements</span><span className="text-xs text-ink-muted">Latest 100</span></div>
         {movements.filter((m) => !focus || m.model === focus).length === 0 ? <div className="p-4"><Empty label="No stock movements recorded yet. Start with the devices currently on the shelf, as Received." /></div> : (
           <table className="c-table">
-            <thead><tr><th>Date</th><th>Model</th><th>Movement</th><th className="text-right">Qty</th><th>Reference</th><th>Note</th><th>By</th>{canApprove && <th />}</tr></thead>
+            <thead><tr><th>Date</th><th>Model</th><th>Movement</th><th className="text-right">Qty</th><th>Picked up by</th><th>Reference</th><th>Note</th><th>Recorded by</th>{canApprove && <th />}</tr></thead>
             <tbody>
               {movements.filter((m) => !focus || m.model === focus).map((m) => (
                 <tr key={m.id}>
@@ -187,6 +207,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
                   <td className="whitespace-nowrap">{label(m.model)}</td>
                   <td><span className="c-chip" data-tone={TYPE_TONE[m.type]}>{TYPE_LABEL[m.type] ?? m.type}</span></td>
                   <td className="text-right tabular-nums font-semibold text-ink">{signed(m.quantity)}</td>
+                  <td className="whitespace-nowrap">{m.picked_by ?? "–"}</td>
                   <td>{m.reference ?? "–"}</td>
                   <td className="max-w-[240px] truncate" title={m.note ?? undefined}>{m.note ?? "–"}</td>
                   <td className="whitespace-nowrap">{m.created_by ?? "–"}</td>

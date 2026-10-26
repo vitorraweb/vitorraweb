@@ -441,6 +441,7 @@ Route::middleware('auth:sanctum')->group(function () {
             // FET stock overview — devices in/out per model, rolled up by week.
             Route::get('/stock', [FetStockController::class, 'index']);
             Route::get('/stock/export', [FetStockController::class, 'export']);
+            Route::get('/stock/week-pdf', [FetStockController::class, 'weekPdf']);
             Route::post('/stock', [FetStockController::class, 'store']);
         });
         // Internal sales documents (contract templates) — the sales and marketing

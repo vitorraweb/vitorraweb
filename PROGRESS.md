@@ -1420,6 +1420,16 @@ in ⌘K).
   activity log.
 - **First step for Finance:** record the devices on the shelf today as
   *Received*, then keep it up as stock moves.
+- **Picked up by** (added the same day, Finance's request): every movement
+  carries the name of the person who physically collected the devices —
+  **required when devices go out**, optional otherwise. Shown in the
+  movements list beside who recorded the entry.
+- **Weekly "devices out" PDF:** a **PDF** button on each week's row prints
+  that week's sheet — every device that left stock (date, model, quantity,
+  who picked it up, reference, note), the week's opening/received/out/
+  closing stock per model, and lines for *Prepared by*, *Checked by* and
+  *Date*. Migration `2026_10_26_000002` (`picked_by`); route
+  `GET /admin/accounting/stock/week-pdf?week=`.
 
 > Technical detail (engineering): migration `2026_10_26_000001`
 > (`fet_stock_movements`, signed `quantity`); `FetStockMovement::MODELS` maps

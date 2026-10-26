@@ -38,7 +38,7 @@ class FetStockTest extends TestCase
     {
         $u = $this->juniorFinance();
         $this->record($u, ['model' => 'FII', 'type' => 'received', 'quantity' => 10])->assertCreated();
-        $this->record($u, ['model' => 'FII', 'type' => 'sold', 'quantity' => 3])->assertCreated()->assertJsonPath('data.quantity', -3);
+        $this->record($u, ['model' => 'FII', 'type' => 'sold', 'quantity' => 3, 'picked_by' => 'Victor Lojum'])->assertCreated()->assertJsonPath('data.quantity', -3);
 
         $res = $this->withHeaders($this->h($u))->getJson('/api/admin/accounting/stock')->assertOk();
         $fii = collect($res->json('models'))->firstWhere('code', 'FII');
@@ -51,7 +51,7 @@ class FetStockTest extends TestCase
         $u = $this->admin();
 
         $this->record($u, ['model' => 'FI', 'type' => 'received', 'quantity' => 20, 'moved_on' => '2026-10-13'])->assertCreated();
-        $this->record($u, ['model' => 'FI', 'type' => 'sold', 'quantity' => 5, 'moved_on' => '2026-10-21'])->assertCreated();
+        $this->record($u, ['model' => 'FI', 'type' => 'sold', 'quantity' => 5, 'picked_by' => 'Victor Lojum', 'moved_on' => '2026-10-21'])->assertCreated();
         $this->record($u, ['model' => 'FI', 'type' => 'adjustment', 'quantity' => -1, 'moved_on' => '2026-10-26', 'note' => 'count'])->assertCreated();
 
         $weeks = $this->withHeaders($this->h($u))->getJson('/api/admin/accounting/stock?weeks=3')->assertOk()->json('weeks');
@@ -67,14 +67,14 @@ class FetStockTest extends TestCase
     public function test_cannot_sell_more_than_in_stock(): void
     {
         $u = $this->admin();
-        $this->record($u, ['model' => 'FIII', 'type' => 'sold', 'quantity' => 1])->assertUnprocessable()->assertJsonValidationErrors('quantity');
+        $this->record($u, ['model' => 'FIII', 'type' => 'sold', 'quantity' => 1, 'picked_by' => 'Victor Lojum'])->assertUnprocessable()->assertJsonValidationErrors('quantity');
 
         // A sale dated before the delivery is refused too.
         $this->record($u, ['model' => 'FIII', 'type' => 'received', 'quantity' => 2, 'moved_on' => now()->toDateString()])->assertCreated();
-        $this->record($u, ['model' => 'FIII', 'type' => 'sold', 'quantity' => 1, 'moved_on' => now()->subDays(3)->toDateString()])->assertUnprocessable();
+        $this->record($u, ['model' => 'FIII', 'type' => 'sold', 'quantity' => 1, 'picked_by' => 'Victor Lojum', 'moved_on' => now()->subDays(3)->toDateString()])->assertUnprocessable();
 
         // Same-day delivery and sale is fine.
-        $this->record($u, ['model' => 'FIII', 'type' => 'sold', 'quantity' => 2])->assertCreated();
+        $this->record($u, ['model' => 'FIII', 'type' => 'sold', 'quantity' => 2, 'picked_by' => 'Victor Lojum'])->assertCreated();
     }
 
     public function test_adjustment_needs_a_reason(): void
@@ -112,10 +112,43 @@ class FetStockTest extends TestCase
     {
         $u = $this->admin();
         $this->record($u, ['model' => 'FI', 'type' => 'received', 'quantity' => 2])->assertCreated();
-        $this->record($u, ['model' => 'FI', 'type' => 'sold', 'quantity' => 2])->assertCreated();
+        $this->record($u, ['model' => 'FI', 'type' => 'sold', 'quantity' => 2, 'picked_by' => 'Victor Lojum'])->assertCreated();
         $delivery = FetStockMovement::where('type', 'received')->first();
 
         $this->withHeaders($this->h($u))->deleteJson("/api/admin/accounting/stock/{$delivery->id}")->assertUnprocessable();
+    }
+
+    public function test_a_sale_needs_the_name_of_who_picked_the_devices_up(): void
+    {
+        $u = $this->admin();
+        $this->record($u, ['model' => 'FI', 'type' => 'received', 'quantity' => 3])->assertCreated();
+        $this->record($u, ['model' => 'FI', 'type' => 'sold', 'quantity' => 1])
+            ->assertUnprocessable()->assertJsonValidationErrors('picked_by');
+
+        $this->record($u, ['model' => 'FI', 'type' => 'sold', 'quantity' => 1, 'picked_by' => 'Musa (installer)'])
+            ->assertCreated()->assertJsonPath('data.picked_by', 'Musa (installer)');
+        $this->withHeaders($this->h($u))->getJson('/api/admin/accounting/stock')
+            ->assertJsonPath('movements.0.picked_by', 'Musa (installer)');
+    }
+
+    public function test_weekly_devices_out_pdf(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-28'));
+        $u = $this->admin();
+        $this->record($u, ['model' => 'FII', 'type' => 'received', 'quantity' => 5, 'moved_on' => '2026-10-20'])->assertCreated();
+        $this->record($u, ['model' => 'FII', 'type' => 'sold', 'quantity' => 2, 'moved_on' => '2026-10-27', 'picked_by' => 'Victor Lojum', 'reference' => 'INV-77'])->assertCreated();
+
+        $res = $this->withHeaders($this->h($u))->get('/api/admin/accounting/stock/week-pdf?week=2026-10-29')->assertOk();
+        $this->assertStringStartsWith('%PDF', $res->getContent());
+        $this->assertStringContainsString('vitorra-fet-devices-out-2026-10-26.pdf', $res->headers->get('content-disposition'));
+
+        // The sheet itself names who picked the devices up.
+        $html = view('documents.fet-stock-week', [
+            'start' => CarbonImmutable::parse('2026-10-26'), 'end' => CarbonImmutable::parse('2026-11-01'),
+            'out' => FetStockMovement::where('quantity', '<', 0)->get(), 'summary' => [], 'models' => FetStockMovement::MODELS, 'printedBy' => 'A',
+        ])->render();
+        $this->assertStringContainsString('Victor Lojum', $html);
+        $this->assertStringContainsString('INV-77', $html);
     }
 
     public function test_customers_cannot_see_stock(): void
