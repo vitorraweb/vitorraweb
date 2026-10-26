@@ -7,6 +7,7 @@ import { Faq } from "@/components/ui/faq";
 import FetCalculator from "@/components/sections/FetCalculator";
 import FetPricing from "@/components/sections/FetPricing";
 import { Section, Container, Label, Text, TextLink } from "@/components/system";
+import { DeviceSteps } from "@/components/sections/DeviceSteps";
 import {
   SectionHead, Steps, FactGrid, CredentialGroups, ContactBand,
 } from "@/components/system/blocks";
@@ -133,31 +134,28 @@ export default async function FuelEcoTechPage() {
           </Container>
         </Section>
 
-        {/* ══ How it works ══════════════════════════════════════════════════ */}
-        <Section tone="paper" aria-labelledby="fet-how">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-            <div className="lg:col-span-5">
-              <SectionHead id="fet-how" label={t("howLabel")} title={t("howTitle")} body={old("scienceBody")} />
-              <Film
-                className="mt-12"
-                src="/videos/fet-hero.mp4"
-                poster="/videos/fet-hero-poster.jpg"
-                title={t("filmTitle")}
-                caption={t("filmCaption")}
-                playLabel={shared("playFilm")}
-              />
-            </div>
-            <div className="lg:col-span-7 lg:pt-2">
-              <Steps
-                items={[
-                  { title: old("step1Title"), body: old("step1Body") },
-                  { title: old("step2Title"), body: old("step2Body") },
-                  { title: old("step3Title"), body: old("step3Body") },
-                ]}
-              />
-            </div>
-          </Container>
-        </Section>
+        {/* ══ How it works — beside the device, which opens on step two ══════ */}
+        <DeviceSteps
+          label={t("howLabel")}
+          title={t("howTitle")}
+          body={old("scienceBody")}
+          steps={[
+            { title: old("step1Title"), body: old("step1Body") },
+            { title: old("step2Title"), body: old("step2Body") },
+            { title: old("step3Title"), body: old("step3Body") },
+          ]}
+          illustration={home("deviceIllustration")}
+          deviceAlt={home("deviceAlt")}
+        >
+          <Film
+            className="max-w-[44rem]"
+            src="/videos/fet-hero.mp4"
+            poster="/videos/fet-hero-poster.jpg"
+            title={t("filmTitle")}
+            caption={t("filmCaption")}
+            playLabel={shared("playFilm")}
+          />
+        </DeviceSteps>
 
         <ImageBand image="/images/stock/engine-hands.jpg" alt={alt("engineHands")} height="medium" />
 

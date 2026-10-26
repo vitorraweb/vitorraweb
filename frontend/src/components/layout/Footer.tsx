@@ -112,6 +112,11 @@ export default function Footer() {
         ))}
       </div>
 
+      {/* ── Signature — the name, set at the width of the page ──────────────── */}
+      <div className="q-container overflow-hidden" aria-hidden="true">
+        <p className="q-signature font-display text-ink leading-[0.78] tracking-[-0.045em] select-none whitespace-nowrap pt-6">Vitorra</p>
+      </div>
+
       {/* ── Bottom bar ────────────────────────────────────────────────────── */}
       <div className="border-t border-line">
         <div className="q-container flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 py-6 t-small text-ink-muted">

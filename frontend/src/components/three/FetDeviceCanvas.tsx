@@ -98,11 +98,12 @@ function Device({ spin, open }: { spin?: MotionValue<number>; open?: MotionValue
       root.current.rotation.z = THREE.MathUtils.lerp(root.current.rotation.z, 0.08 + state.pointer.x * -0.06, 0.05);
       root.current.position.y = Math.sin(t * 0.9) * 0.04;
     }
-    if (top.current) top.current.position.y = o * 0.62;
-    if (base.current) base.current.position.y = -o * 0.42;
+    if (top.current) top.current.position.y = o * 0.46;
+    if (base.current) base.current.position.y = -o * 0.3;
     if (shellMat.current) {
-      shellMat.current.opacity = 1 - o * 0.86;
-      shellMat.current.transparent = o > 0.01;
+      // `transparent` is set once at creation: flipping it later needs a
+      // shader recompile, and the body would stay solid.
+      shellMat.current.opacity = 1 - o * 0.8;
       shellMat.current.depthWrite = o < 0.5;
     }
     if (labelMat.current) labelMat.current.opacity = 1 - o * 0.9;
@@ -127,7 +128,7 @@ function Device({ spin, open }: { spin?: MotionValue<number>; open?: MotionValue
       </group>
 
       <mesh geometry={geo.body}>
-        <meshPhysicalMaterial ref={shellMat} {...black} />
+        <meshPhysicalMaterial ref={shellMat} {...black} transparent />
       </mesh>
       {/* Printed mark: a thin sleeve just proud of the body, facing the viewer at rest. */}
       <mesh position={[0, -0.18, 0]} rotation={[0, Math.PI * 0.5 + 0.5, 0]}>
@@ -140,8 +141,8 @@ function Device({ spin, open }: { spin?: MotionValue<number>; open?: MotionValue
           <meshStandardMaterial color="#C5B27A" emissive="#7A6020" metalness={1} roughness={0.22} transparent opacity={0} />
         </mesh>
         <mesh position={[0, -0.23, 0]}>
-          <cylinderGeometry args={[0.1, 0.1, 1.3, 32]} />
-          <meshStandardMaterial color="#D4C49A" emissive="#C5B27A" metalness={0.6} roughness={0.35} transparent opacity={0} />
+          <cylinderGeometry args={[0.07, 0.07, 1.3, 32]} />
+          <meshStandardMaterial color="#5A4A22" emissive="#3A2E12" metalness={0.9} roughness={0.4} transparent opacity={0} />
         </mesh>
       </group>
 
@@ -156,7 +157,7 @@ export default function FetDeviceCanvas({ spin, open, onReady }: { spin?: Motion
   return (
     <Canvas
       dpr={[1, 1.75]}
-      camera={{ position: [0, 0.1, 6.2], fov: 32 }}
+      camera={{ position: [0, 0.1, 8.6], fov: 32 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       onCreated={() => onReady?.()}
     >

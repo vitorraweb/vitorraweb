@@ -1175,6 +1175,17 @@
   ::view-transition-image-pair(.morph) { animation-name: q-vt-blur; }
   @keyframes q-vt-blur { 40% { filter: blur(2px); } }
 }
+/* Footer signature: the wordmark at full page width, rising as it arrives. */
+.q-signature { font-size: clamp(5rem, 24vw, 21rem); font-weight: 300; }
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    @keyframes q-sig { from { translate: 0 40%; opacity: 0.2; } to { translate: 0 0; opacity: 1; } }
+    .q-signature { animation: q-sig linear both; animation-timeline: view(); animation-range: entry 0% cover 40%; }
+  }
+  /* A gold hairline draws under a list row on hover. */
+  .q-row::after { content: ""; position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%; background: var(--color-gold); scale: 0 1; transform-origin: left; transition: scale 700ms var(--ease-cinematic); }
+  .q-row:hover::after { scale: 1 1; }
+}
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }

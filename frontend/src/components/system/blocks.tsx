@@ -1,5 +1,6 @@
 import { Section, Container, Label, Heading, Text, ButtonLink, TextLink } from "@/components/system";
 import { Reveal } from "@/components/ui/reveal";
+import { Magnetic } from "@/components/motion/Magnetic";
 import { CONTACT_ADDRESS, CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -178,9 +179,9 @@ export function CredentialGroups({
           <h3 className="t-label text-ink-muted pb-4 border-b border-line-strong">{g.title}</h3>
           <ul>
             {g.items.map((c) => (
-              <li key={c.name} className="border-b border-line py-5">
-                <p className="font-display text-[1.375rem] leading-tight text-ink">{c.name}</p>
-                <p className="t-small text-ink-muted mt-1">{c.what}</p>
+              <li key={c.name} className="q-row group relative border-b border-line py-5">
+                <p className="font-display text-[1.375rem] leading-tight text-ink transition-transform duration-500 ease-[var(--ease-cinematic)] group-hover:translate-x-2">{c.name}</p>
+                <p className="t-small text-ink-muted mt-1 transition-transform duration-500 delay-75 ease-[var(--ease-cinematic)] group-hover:translate-x-2">{c.what}</p>
               </li>
             ))}
           </ul>
@@ -213,8 +214,8 @@ export function ContactBand({
           <Heading id="contact-band-heading" size="h1" className="text-ink-fg">{title}</Heading>
           <Text size="lead" onInk muted className="mt-6 max-w-[30rem]">{body}</Text>
           <div className="mt-10 flex flex-wrap gap-4">
-            <ButtonLink href={briefHref} onInk>{briefLabel}</ButtonLink>
-            <ButtonLink href={wa} external onInk variant="secondary" arrow={false}>{labels.whatsapp}</ButtonLink>
+            <Magnetic><ButtonLink href={briefHref} onInk>{briefLabel}</ButtonLink></Magnetic>
+            <Magnetic><ButtonLink href={wa} external onInk variant="secondary" arrow={false}>{labels.whatsapp}</ButtonLink></Magnetic>
           </div>
         </div>
         <dl className="lg:col-span-5 lg:col-start-8 border-t border-ink-line">

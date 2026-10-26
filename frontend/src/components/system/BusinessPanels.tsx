@@ -36,7 +36,7 @@ export function BusinessPanels({ doors, viewLabel }: { doors: Door[]; viewLabel:
   return (
     <>
       {/* Desktop */}
-      <ol className="hidden lg:flex gap-3 h-[min(80svh,46rem)]" onMouseLeave={() => undefined}>
+      <ol className="hidden lg:flex gap-3 h-[min(80svh,46rem)]">
         {doors.map((d, i) => {
           const on = active === i;
           return (
@@ -55,7 +55,7 @@ export function BusinessPanels({ doors, viewLabel }: { doors: Door[]; viewLabel:
                     <Image src={d.image} alt={d.imageAlt} fill sizes="(min-width: 1024px) 60vw, 100vw" className={cn("object-cover q-grade transition-[filter] duration-1000", on ? "" : "grayscale-[0.6] brightness-[0.55]")} />
                   </motion.div>
                 </ViewTransition>
-                <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,20,0.92)_0%,rgba(20,20,20,0.35)_45%,rgba(20,20,20,0.1)_100%)]" />
+                <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,20,0.92)_0%,rgba(20,20,20,0.35)_45%,rgba(20,20,20,0.1)_80%,rgba(20,20,20,0.45)_100%)]" />
               </Link>
 
               {/* Spine — folded state */}

@@ -19,6 +19,8 @@ type Props = {
   label: string;
   before: { k: string; v: string };
   after: { k: string; v: string };
+  /** Unit printed small after the before/after figures, e.g. "L/100 km". */
+  unit: string;
   noise: { k: string; v: string };
   figureCaption: string;
   source: string;
@@ -54,9 +56,9 @@ export function EvidenceStory(p: Props) {
         <div className="sticky top-0 h-svh overflow-hidden">
           <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_45%_55%_at_30%_55%,rgba(197,178,122,0.16),transparent_70%)]" />
           <div className="q-container h-full grid grid-cols-12 gap-10 items-center relative">
-            <div className="col-span-6 h-[78svh] relative">
-              <FetDevice spin={spin} open={open} fallbackAlt={p.deviceAlt} className="h-full w-full" />
-              <motion.p style={{ opacity: open }} className="t-label text-ink-fg-muted absolute bottom-2 left-0 max-w-[22rem] normal-case tracking-normal text-[0.75rem]">
+            <div className="col-span-6 flex flex-col">
+              <FetDevice spin={spin} open={open} fallbackAlt={p.deviceAlt} className="h-[70svh] w-full" />
+              <motion.p style={{ opacity: open }} className="t-small text-ink-fg-muted mt-2 max-w-[24rem] text-[0.75rem]">
                 {p.illustration}
               </motion.p>
             </div>
@@ -83,7 +85,10 @@ export function EvidenceStory(p: Props) {
                   {step < 2 && steps[step] && (
                     <>
                       <p className="t-small text-ink-fg-muted max-w-[26rem]">{steps[step]!.k}</p>
-                      <p className="t-figure text-ink-fg mt-6">{steps[step]!.v}</p>
+                      <p className="t-figure text-ink-fg mt-6">
+                        {steps[step]!.v}
+                        <span className="t-h3 text-ink-fg-muted ml-3 align-baseline">{p.unit}</span>
+                      </p>
                     </>
                   )}
                   {step === 2 && (
@@ -117,7 +122,7 @@ export function EvidenceStory(p: Props) {
           <p className="t-figure text-ink-fg">13.9<span className="text-gold">%</span></p>
           <p className="t-lead text-ink-fg mt-5">{p.figureCaption}</p>
           <dl className="border-t border-ink-line mt-10">
-            {[p.before, p.after, p.noise].map((r) => (
+            {[{ k: p.before.k, v: `${p.before.v} ${p.unit}` }, { k: p.after.k, v: `${p.after.v} ${p.unit}` }, p.noise].map((r) => (
               <div key={r.k} className="flex items-baseline justify-between gap-6 border-b border-ink-line py-5">
                 <dt className="t-small text-ink-fg-muted">{r.k}</dt>
                 <dd className="font-display text-[1.5rem] leading-none text-ink-fg whitespace-nowrap">{r.v}</dd>

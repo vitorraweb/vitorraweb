@@ -127,8 +127,9 @@ export default async function HomePage() {
                the measured result builds up beside it ══════════════════════ */}
         <EvidenceStory
           label={t("evidenceLabel")}
-          before={{ k: evidenceRows[0][0], v: evidenceRows[0][1] }}
-          after={{ k: evidenceRows[1][0], v: evidenceRows[1][1] }}
+          before={{ k: t("evidenceRowBefore"), v: "11.52" }}
+          after={{ k: t("evidenceRowAfter"), v: "9.92" }}
+          unit={t("evidenceUnit")}
           noise={{ k: evidenceRows[2][0], v: evidenceRows[2][1] }}
           figureCaption={t("evidenceFigureCaption")}
           source={t("evidenceSource")}

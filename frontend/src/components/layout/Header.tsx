@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
+import { Magnetic } from "@/components/motion/Magnetic";
 
 /* ─── Header — Quiet Authority ────────────────────────────────────────────────
    Two tiers, the way holdings groups like LVMH structure it:
@@ -111,7 +112,7 @@ export default function Header({ overlay = false }: {
         data-hidden={tucked && !open ? "true" : "false"}
         className={cn(
           "q-scope q-header fixed inset-x-0 top-0 z-[60] border-b",
-          light ? "bg-transparent border-transparent" : "bg-paper border-line",
+          light ? "bg-transparent border-transparent" : "bg-paper/80 backdrop-blur-xl backdrop-saturate-150 border-line",
         )}
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
@@ -185,9 +186,11 @@ export default function Header({ overlay = false }: {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link href="/enquire" className={cn("q-btn hidden lg:inline-flex min-h-10 px-5", light ? "bg-ink-fg text-ink hover:bg-white" : "bg-ink text-paper hover:bg-black")}>
-              {t("common.requestQuote")}
-            </Link>
+            <Magnetic className="hidden lg:inline-flex">
+              <Link href="/enquire" className={cn("q-btn min-h-10 px-5", light ? "bg-ink-fg text-ink hover:bg-white" : "bg-ink text-paper hover:bg-black")}>
+                {t("common.requestQuote")}
+              </Link>
+            </Magnetic>
             <div className="lg:hidden">
               <LanguageSwitcher dark={light} />
             </div>
