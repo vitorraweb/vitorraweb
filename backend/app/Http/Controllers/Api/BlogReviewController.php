@@ -33,7 +33,7 @@ class BlogReviewController extends Controller
             'published' => $published,
             'action'    => $request->fullUrl(),
             'liveUrl'   => rtrim((string) config('services.frontend.url'), '/').'/blog/'.$post->slug,
-            'editUrl'   => rtrim((string) config('services.frontend.url'), '/').'/admin/blog/'.$post->id,
+            'editUrl'   => rtrim((string) config('services.frontend.url'), '/').'/admin/blog/'.$post->id.'/edit',
         ]);
     }
 }

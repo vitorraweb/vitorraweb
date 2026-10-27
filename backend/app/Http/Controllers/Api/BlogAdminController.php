@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BlogDraftReady;
 use App\Models\BlogPost;
+use App\Models\Setting;
 use App\Support\FrontendRevalidator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -76,6 +79,27 @@ class BlogAdminController extends Controller
         FrontendRevalidator::blogPosts([$oldSlug, $post->slug]);
 
         return response()->json(['data' => $post->fresh()->load('translations')]);
+    }
+
+    /**
+     * Email the reviewers (Settings → Blog drafts, else the team email) a link
+     * to read the draft and publish it with one click. Drafts only.
+     */
+    public function requestReview(Request $request, BlogPost $post): JsonResponse
+    {
+        if ($post->status === 'published') {
+            return response()->json(['message' => 'This post is already published.'], 422);
+        }
+
+        $to = collect(explode(',', (string) (Setting::get('blog_review_to') ?: Setting::get('notify_email'))))
+            ->map(fn ($e) => trim($e))->filter()->values()->all();
+        if (! $to) {
+            return response()->json(['message' => 'No reviewers set. Add them in Settings → Blog drafts.'], 422);
+        }
+
+        Mail::to($to)->send(new BlogDraftReady($post, $request->user()));
+
+        return response()->json(['message' => 'Sent for review to '.implode(', ', $to).'.', 'to' => $to]);
     }
 
     public function destroy(BlogPost $post): JsonResponse

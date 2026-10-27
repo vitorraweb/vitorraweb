@@ -381,6 +381,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/blog/posts', [BlogAdminController::class, 'store']);
             Route::get('/blog/posts/{post}', [BlogAdminController::class, 'show']);
             Route::match(['put', 'patch'], '/blog/posts/{post}', [BlogAdminController::class, 'update']);
+            Route::post('/blog/posts/{post}/request-review', [BlogAdminController::class, 'requestReview']);
             Route::delete('/blog/posts/{post}', [BlogAdminController::class, 'destroy']);
         });
         // People / HR — leave overview & review, public holidays, company events.

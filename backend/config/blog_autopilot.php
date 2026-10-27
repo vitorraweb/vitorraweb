@@ -5,12 +5,14 @@
 | of Vitorra's sectors and writes a DRAFT post for Marketing to check. Nothing
 | is published without a person pressing Publish (email link or console).
 |
-| Runs Monday + Thursday (routes/console.php). Needs ANTHROPIC_API_KEY; without
-| it the command logs and does nothing.
+| OFF and unscheduled (October 2026): the business chose not to pay for the AI
+| API yet, so posts are written by hand and sent for review from the editor
+| (BlogAdminController::requestReview). To turn it on later: set
+| ANTHROPIC_API_KEY + BLOG_AUTOPILOT_ENABLED=true and schedule `blog:draft`.
 */
 
 return [
-    'enabled' => env('BLOG_AUTOPILOT_ENABLED', true),
+    'enabled' => env('BLOG_AUTOPILOT_ENABLED', false),
 
     'model' => env('BLOG_AUTOPILOT_MODEL', 'claude-opus-5-5'),
 

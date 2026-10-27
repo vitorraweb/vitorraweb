@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Save, Trash2, ArrowLeft, ExternalLink } from "lucide-react";
+import { Loader2, Save, Trash2, ArrowLeft, ExternalLink, Send } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 
 type Status = "draft" | "published";
@@ -42,6 +42,7 @@ export default function BlogEditor({ postId }: { postId?: number }) {
   const [loading, setLoading] = useState(!!postId);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     if (!postId) return;
@@ -63,25 +64,41 @@ export default function BlogEditor({ postId }: { postId?: number }) {
 
   const set = (k: keyof Form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  const payload = (status: Status) => ({
+    title: form.title, slug: form.slug, excerpt: form.excerpt, content: form.content,
+    cover_image: form.cover_image, seo_title: form.seo_title, seo_description: form.seo_description,
+    status,
+    translations: {
+      sw: {
+        title: form.sw_title, excerpt: form.sw_excerpt, content: form.sw_content,
+        seo_title: form.sw_seo_title, seo_description: form.sw_seo_description,
+      },
+    },
+  });
+
   const save = async (status: Status) => {
     if (!form.title.trim() || !form.content.trim()) { setError("Title and content are required."); return; }
     setSaving(true); setError("");
-    const payload = {
-      title: form.title, slug: form.slug, excerpt: form.excerpt, content: form.content,
-      cover_image: form.cover_image, seo_title: form.seo_title, seo_description: form.seo_description,
-      status,
-      translations: {
-        sw: {
-          title: form.sw_title, excerpt: form.sw_excerpt, content: form.sw_content,
-          seo_title: form.sw_seo_title, seo_description: form.sw_seo_description,
-        },
-      },
-    };
     try {
-      if (postId) await apiAdmin(`/admin/blog/posts/${postId}`, { method: "PATCH", body: JSON.stringify(payload) });
-      else await apiAdmin(`/admin/blog/posts`, { method: "POST", body: JSON.stringify(payload) });
+      if (postId) await apiAdmin(`/admin/blog/posts/${postId}`, { method: "PATCH", body: JSON.stringify(payload(status)) });
+      else await apiAdmin(`/admin/blog/posts`, { method: "POST", body: JSON.stringify(payload(status)) });
       router.push("/admin/blog");
     } catch (e) { setError(e instanceof Error ? e.message : "Save failed"); setSaving(false); }
+  };
+
+  // Save the draft as it stands, then email the reviewers a one-click Publish link.
+  const sendForReview = async () => {
+    if (!form.title.trim() || !form.content.trim()) { setError("Title and content are required."); return; }
+    setSaving(true); setError(""); setNotice("");
+    try {
+      let id = postId;
+      if (id) await apiAdmin(`/admin/blog/posts/${id}`, { method: "PATCH", body: JSON.stringify(payload("draft")) });
+      else id = (await apiAdmin<{ data: { id: number } }>(`/admin/blog/posts`, { method: "POST", body: JSON.stringify(payload("draft")) })).data.id;
+      const res = await apiAdmin<{ message: string }>(`/admin/blog/posts/${id}/request-review`, { method: "POST" });
+      setNotice(res.message);
+      if (!postId) router.replace(`/admin/blog/${id}/edit`);
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not send for review"); }
+    setSaving(false);
   };
 
   const remove = async () => {
@@ -176,6 +193,7 @@ export default function BlogEditor({ postId }: { postId?: number }) {
         </details>
 
         {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
+        {notice && <p className="text-sm" style={{ color: "#16A34A" }}>{notice}</p>}
 
         <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
           <button onClick={() => save("published")} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: saving ? 0.7 : 1 }}>
@@ -185,6 +203,11 @@ export default function BlogEditor({ postId }: { postId?: number }) {
           <button onClick={() => save("draft")} disabled={saving} className="px-5 py-2.5 rounded-full text-sm font-semibold" style={{ background: "#F2F2F2", color: "#555" }}>
             Save as draft
           </button>
+          {form.status === "draft" && (
+            <button onClick={sendForReview} disabled={saving} title="Saves the draft and emails Marketing a link to read and publish it" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border" style={{ borderColor: "rgba(197,178,122,0.6)", color: "#7A6020" }}>
+              <Send className="w-4 h-4" />Send for review
+            </button>
+          )}
           {postId && (
             <button onClick={remove} disabled={saving} className="ml-auto inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#C0392B" }}>
               <Trash2 className="w-4 h-4" />Delete

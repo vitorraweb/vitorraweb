@@ -19,6 +19,13 @@ class BlogAutopilotTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Off by default in production (no AI spend yet); these tests cover it switched on.
+        config(['blog_autopilot.enabled' => true]);
+    }
+
     private function fakeClaude(array $sourceUrls = ['https://www.monitor.co.ug/fuel-prices']): void
     {
         $research = [
@@ -112,6 +119,50 @@ class BlogAutopilotTest extends TestCase
         $this->artisan('blog:draft', ['--topic' => 'coffee'])->assertFailed();
 
         $this->assertSame(0, BlogPost::count());
+        Mail::assertNothingSent();
+    }
+
+    public function test_it_is_off_by_default(): void
+    {
+        config(['blog_autopilot.enabled' => false, 'services.anthropic.key' => 'test-key']);
+        Http::fake();
+
+        $this->artisan('blog:draft')->assertSuccessful();
+
+        Http::assertNothingSent();
+        $this->assertSame(0, BlogPost::count());
+    }
+
+    private function staffHeaders(): array
+    {
+        $u = \App\Models\User::create(['name' => 'Sarah N', 'email' => 'sarah-'.uniqid().'@vitorra.org', 'password' => 'changeme123changeme', 'role' => 'admin']);
+
+        return ['Authorization' => 'Bearer '.$u->createToken('t', ['admin'])->plainTextToken];
+    }
+
+    public function test_a_hand_written_draft_can_be_sent_for_review(): void
+    {
+        Mail::fake();
+        Setting::put(['blog_review_to' => 'marketing@vitorra.org']);
+        $post = BlogPost::create(['title' => 'Our take', 'slug' => 'our-take', 'content' => 'Body', 'status' => 'draft']);
+
+        $this->withHeaders($this->staffHeaders())
+            ->postJson("/api/admin/blog/posts/{$post->id}/request-review")
+            ->assertOk()->assertJsonPath('to', ['marketing@vitorra.org']);
+
+        Mail::assertSent(BlogDraftReady::class, fn ($m) => $m->hasTo('marketing@vitorra.org') && $m->sender?->name === 'Sarah N');
+        $this->assertSame('draft', $post->fresh()->status);
+    }
+
+    public function test_a_published_post_cannot_be_sent_for_review(): void
+    {
+        Mail::fake();
+        $post = BlogPost::create(['title' => 'Live', 'slug' => 'live', 'content' => 'Body', 'status' => 'published', 'published_at' => now()]);
+
+        $this->withHeaders($this->staffHeaders())
+            ->postJson("/api/admin/blog/posts/{$post->id}/request-review")
+            ->assertStatus(422);
+
         Mail::assertNothingSent();
     }
 

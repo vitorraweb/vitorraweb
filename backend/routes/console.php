@@ -66,8 +66,3 @@ Schedule::command('campaigns:send')->everyMinute()->withoutOverlapping()
 Schedule::command('enquiries:chase')->hourly()->withoutOverlapping()
     ->onFailure(fn () => logger()->error('Scheduled enquiries:chase failed'));
 
-// Blog autopilot — Monday and Thursday morning, research the week's news on one
-// sector and save a DRAFT post; Marketing gets an email with a Publish button.
-// Nothing goes live without a person. No-op without ANTHROPIC_API_KEY.
-Schedule::command('blog:draft')->days([1, 4])->at('06:30')->withoutOverlapping()
-    ->onFailure(fn () => logger()->error('Scheduled blog:draft failed'));
