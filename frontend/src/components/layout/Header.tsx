@@ -61,10 +61,13 @@ function Wordmark({ small = false, light = false, onNavigate }: { small?: boolea
   );
 }
 
-export default function Header({ overlay = false }: {
+export default function Header({ overlay = false, languageSwitcher }: {
   /** The page opens on a full-screen photograph: the header sits transparent
       over it until the visitor scrolls, then turns solid. */
   overlay?: boolean;
+  /** Replaces the site switcher — the careers portal picks its language by
+      cookie, not by URL, and offers French too. */
+  languageSwitcher?: React.ReactNode;
 } = {}) {
   const t = useTranslations();
   const pathname = usePathname();
@@ -136,7 +139,7 @@ export default function Header({ overlay = false }: {
               </Link>
             ))}
             <span aria-hidden="true" className="h-3 w-px bg-line-strong" />
-            <LanguageSwitcher dark={light} />
+            {languageSwitcher ?? <LanguageSwitcher dark={light} />}
             {COFFEE_SHOP_ENABLED && <CartButton />}
             <Link
               href="/account/dashboard"
@@ -192,7 +195,7 @@ export default function Header({ overlay = false }: {
               </Link>
             </Magnetic>
             <div className="lg:hidden">
-              <LanguageSwitcher dark={light} />
+              {languageSwitcher ?? <LanguageSwitcher dark={light} />}
             </div>
             <button
               type="button"

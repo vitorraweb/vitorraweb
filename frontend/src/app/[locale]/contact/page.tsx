@@ -3,14 +3,15 @@ import { getTranslations } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ContactForm from "@/components/sections/ContactForm";
-import { Section, Container, Label, Heading, Text, TextLink } from "@/components/system";
+import { Section, Container, Label, Heading, TextLink } from "@/components/system";
+import { PageHero } from "@/components/sections/PageHero";
 import { Picture } from "@/components/system/imagery";
 import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_ALT, CONTACT_ADDRESS } from "@/lib/constants";
 
 /* ─── Contact — Quiet Authority ───────────────────────────────────────────────
-   Calm and direct: who we are and where, every way to reach a person (with
-   hours), a short message form, and the map. The photograph is the real head
-   office — on a contact page, the actual building is the useful image.      */
+   Set like the homepage: the statement opening, then every way to reach a
+   person (with hours) beside a short form on cream, then the real head
+   office beside the map on sage.                                           */
 
 export async function generateMetadata({
   params,
@@ -50,24 +51,21 @@ export default async function ContactPage() {
   return (
     <>
       <Header />
-      <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
-        <Section tone="paper" className="!pt-14 lg:!pt-20" aria-labelledby="contact-title">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-end">
-            <div className="lg:col-span-6 lg:pb-8">
-              <Label className="mb-8 q-rise">{t("eyebrow")}</Label>
-              <Heading as="h1" size="display" id="contact-title" className="text-ink q-rise">{t("title")}</Heading>
-              <Text size="lead" className="mt-8 max-w-[32rem] q-rise">{t("subtitle")}</Text>
-            </div>
-            <div className="lg:col-span-5 lg:col-start-8">
-              <Picture src="/photos/company-A-head-office.jpg" alt={alt("hq")} caption={CONTACT_ADDRESS.join(", ")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 38vw, 100vw" />
-            </div>
-          </Container>
-        </Section>
+      <main id="main" className="flex-1 bg-paper">
+        <PageHero
+          id="contact-title"
+          label={t("eyebrow")}
+          title={t("title")}
+          lead={t("subtitle")}
+          cta={{ label: t("quoteCta"), href: "/enquire" }}
+        />
 
-        <Section tone="deep" aria-labelledby="contact-direct">
+        {/* Every way to reach a person, and the short form, on cream. */}
+        <Section tone="cream" aria-labelledby="contact-direct">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
             <div className="lg:col-span-5">
-              <h2 id="contact-direct" className="t-h2 text-ink mb-10">{t("directTitle")}</h2>
+              <Label className="mb-6">{t("eyebrow")}</Label>
+              <Heading id="contact-direct" size="h2" className="text-ink mb-10">{t("directTitle")}</Heading>
               <dl className="border-t border-line-strong">
                 {methods.map((m) => (
                   <div key={m.k} className="grid grid-cols-[7rem_1fr] gap-4 py-5 border-b border-line">
@@ -88,16 +86,26 @@ export default async function ContactPage() {
           </Container>
         </Section>
 
-        {/* The map, toned to sit with the page instead of Google's colours. */}
-        <figure className="q-scope m-0 bg-paper-deep border-t border-line">
-          <iframe
-            title={t("mapTitle")}
-            src={mapSrc}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="block w-full h-[52svh] border-0 [filter:grayscale(1)_contrast(1.05)_opacity(0.92)]"
-          />
-        </figure>
+        {/* Where we are: the real building beside the map, on sage. */}
+        <Section tone="sage" aria-labelledby="contact-visit">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-stretch">
+            <div className="lg:col-span-5">
+              <Label className="mb-6">{t("visitLabel")}</Label>
+              <h2 id="contact-visit" className="sr-only">{t("visitLabel")}</h2>
+              <Picture src="/photos/company-A-head-office.jpg" alt={alt("hq")} caption={CONTACT_ADDRESS.join(", ")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 38vw, 100vw" />
+            </div>
+            {/* The map, toned to sit with the page instead of Google's colours. */}
+            <figure className="lg:col-span-7 m-0 min-h-[24rem] overflow-hidden rounded-frame border border-line bg-paper-deep">
+              <iframe
+                title={t("mapTitle")}
+                src={mapSrc}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="block w-full h-full min-h-[24rem] border-0 [filter:grayscale(1)_contrast(1.05)_opacity(0.92)]"
+              />
+            </figure>
+          </Container>
+        </Section>
       </main>
       <Footer />
     </>
