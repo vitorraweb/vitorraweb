@@ -1,0 +1,11 @@
+{
+  "title": "Fares have not caught up with fuel",
+  "subtitle": "Lwengo to Kampala taxi fare per passenger, Uganda shillings, October 2026",
+  "bars": [
+    {"label": "What passengers pay", "value": 20000},
+    {"label": "What operators say fuel prices require", "value": 30000, "highlight": true}
+  ],
+  "format": "Shs {:,.0f}",
+  "source": "Source: taxi operator Umar Mawanda, via Nile Post (14 October 2026)",
+  "output": "planning/blog/drafts/images/2026-10-27-taxi-fare-gap.png"
+}

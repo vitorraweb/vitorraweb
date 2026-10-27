@@ -23,6 +23,7 @@ Needs matplotlib: python3 -m venv scripts/.venv && scripts/.venv/bin/pip install
 """
 import json
 import sys
+import textwrap
 from pathlib import Path
 
 import matplotlib
@@ -50,7 +51,9 @@ SERIF = "Georgia" if Path("/System/Library/Fonts/Supplemental/Georgia.ttf").exis
 def draw(spec: dict) -> Path:
     bars = spec["bars"]
     fmt = spec.get("format", "{:,.0f}")
-    labels = [b["label"] for b in bars][::-1]
+    # Long labels wrap onto two lines; the left margin then fits the longest line.
+    labels = [textwrap.fill(b["label"], 24) for b in bars][::-1]
+    longest = max(len(line) for lbl in labels for line in lbl.split("\n"))
     values = [b["value"] for b in bars][::-1]
     colours = [INK if b.get("highlight") else BAR for b in bars][::-1]
 
@@ -91,7 +94,7 @@ def draw(spec: dict) -> Path:
         fig.text(0.02, 0.28 / fig_h, spec["source"], fontsize=9.5, color=MUTED, family=SANS, ha="left", va="bottom")
     fig.text(0.98, 0.28 / fig_h, "VITORRA", fontsize=9.5, color=BAR, family=SERIF, ha="right", va="bottom")
 
-    fig.subplots_adjust(left=0.3, right=0.97, top=1 - 1.25 / fig_h, bottom=0.85 / fig_h)
+    fig.subplots_adjust(left=min(0.42, 0.05 + 0.0115 * longest), right=0.97, top=1 - 1.25 / fig_h, bottom=0.85 / fig_h)
 
     out = Path(spec["output"])
     out.parent.mkdir(parents=True, exist_ok=True)

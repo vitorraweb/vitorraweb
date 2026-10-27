@@ -1,0 +1,14 @@
+{
+  "title": "Most of Uganda's coffee goes to Europe",
+  "subtitle": "Share of coffee exports by destination, August 2026, per cent",
+  "bars": [
+    {"label": "Europe (all countries)", "value": 63, "highlight": true},
+    {"label": "Italy", "value": 25.2},
+    {"label": "Sudan", "value": 15.2},
+    {"label": "Germany", "value": 9.9},
+    {"label": "India", "value": 5.7}
+  ],
+  "format": "{:.1f}%",
+  "source": "Source: Ministry of Agriculture (MAAIF) monthly report, via Uganda Business News (1 October 2026)",
+  "output": "planning/blog/drafts/images/2026-10-27-coffee-destinations.png"
+}

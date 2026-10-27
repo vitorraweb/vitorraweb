@@ -50,6 +50,8 @@ Write a spec next to the draft as `planning/blog/drafts/images/YYYY-MM-DD-<name>
 scripts/.venv/bin/python scripts/blog_chart.py planning/blog/drafts/images/<spec>.json
 ```
 
+**Photos (1–2, plus optionally the cover):** use freely licensed photos that fit the story — Wikimedia Commons is the default (search with the API, `generator=search&gsrnamespace=6&prop=imageinfo&iiextmetadatafilter=LicenseShortName|Artist`, with a User-Agent naming support@vitorra.org). Only CC0, CC BY or CC BY-SA. Download a 1600–1920px copy (`iiurlwidth`), look at it, resize to ≤1600px JPEG into `planning/blog/drafts/images/`, and never hotlink. Avoid identifiable faces where you can. Under each in-article photo put a credit line: `*Photo: <Artist>, [<licence>](<licence url>), via [Wikimedia Commons](<file page>)*`; for a local cover (`COVER IMAGE: images/<file>.jpg`, uploaded with the draft) add `*Cover photo: …*` as the last line of the content. Note the cover's source in the log.
+
 Look at the PNG (Read it) for clipped or colliding labels before using it. Use millions ("Shs 18m", subtitle "million shillings") for large amounts. Put each chart in the content where it supports the text: `![Bar chart: <what it shows, with the numbers>](images/<name>.png)` — the alt text describes the chart for screen readers and Google.
 
 ## 5. Hand over

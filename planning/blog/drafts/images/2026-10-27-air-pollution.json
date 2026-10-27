@@ -1,0 +1,22 @@
+{
+  "title": "Transport is the biggest source of Uganda's air pollution",
+  "subtitle": "Share of air pollution by source, per cent, as estimated by NEMA",
+  "bars": [
+    {
+      "label": "Transport (vehicles, motorcycles, road dust)",
+      "value": 60,
+      "highlight": true
+    },
+    {
+      "label": "Industry",
+      "value": 11
+    },
+    {
+      "label": "Other (cooking, waste and biomass burning)",
+      "value": 29
+    }
+  ],
+  "format": "{:.0f}%",
+  "source": "Source: NEMA Executive Director, via Nile Post (7 September 2026). Transport is given as 'up to 60%'; the remainder is calculated.",
+  "output": "planning/blog/drafts/images/2026-10-27-air-pollution.png"
+}
