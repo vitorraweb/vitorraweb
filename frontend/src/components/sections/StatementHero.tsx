@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Sparkle } from "lucide-react";
 import { Container, Label, TextLink } from "@/components/system";
 import { CircleLink } from "@/components/system/CircleLink";
 import { Parallax } from "@/components/motion/Parallax";
@@ -46,7 +45,6 @@ export function StatementHero({
             <Label>{label}</Label>
             <span aria-hidden="true" className="hidden sm:block h-px w-24 bg-line-strong" />
           </div>
-          <Sparkle aria-hidden="true" className="h-6 w-6 text-gold-ink" strokeWidth={1.25} />
         </div>
 
         <h1 id="hero-title" className="sr-only">{lines.join(" ")}</h1>

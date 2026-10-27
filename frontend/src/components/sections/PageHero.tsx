@@ -1,10 +1,9 @@
-import { Sparkle } from "lucide-react";
 import { Container, Label, TextLink } from "@/components/system";
 import { CircleLink } from "@/components/system/CircleLink";
 
 /* ─── Page hero ───────────────────────────────────────────────────────────────
    The homepage's opening, scaled for a working page (contact, blog, careers):
-   the label with its hairline and the gold sparkle, a large headline rising
+   the label with its hairline, a large headline rising
    from behind a mask, then the lead with one circle action beside it. No
    photograph; pages that have one show it in their next section.          */
 
@@ -33,7 +32,6 @@ export function PageHero({
             <Label>{label}</Label>
             <span aria-hidden="true" className="hidden sm:block h-px w-24 bg-line-strong" />
           </div>
-          <Sparkle aria-hidden="true" className="h-6 w-6 text-gold-ink" strokeWidth={1.25} />
         </div>
 
         <h1 id={id} className="mt-8 lg:mt-10 overflow-hidden pb-[0.06em] font-display font-[330] text-[clamp(2.75rem,0.9rem+6.6vw,7.5rem)] leading-[0.95] tracking-[-0.03em] text-ink max-w-[16ch] [text-wrap:balance]">
