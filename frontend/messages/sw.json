@@ -1682,5 +1682,24 @@
     "body": "Jaribu moja ya biashara zetu nne hapa chini, au rudi mwanzo.",
     "home": "Rudi ukurasa wa mwanzo",
     "contact": "Wasiliana nasi"
+  },
+  "banners": {
+    "proofLabel": "Ushahidi",
+    "proofTitle": "Ukweli mmoja kutoka kila biashara, kabla hatujaomba wako.",
+    "prev": "Slaidi iliyotangulia",
+    "next": "Slaidi inayofuata",
+    "proofFetAlt": "Mafuta pungufu kwa 13.9%. Volkswagen T5 moja, Ujerumani, mwezi kamili wa kwanza ikiwa na FET. CTI GmbH, 2025. Matokeo ya gari moja; akiba hutofautiana.",
+    "proofSealAlt": "SEAL Wound Spray: inadumu miezi 36, haihitaji jokofu.",
+    "proofCoffeeAlt": "Masharti ya kuuza nje Vitorra Coffee: agizo la chini tani 1 ya metriki. Arabika ya Uganda, imekaangwa Uganda.",
+    "proofLogisticsAlt": "Usafirishaji: mtu mmoja wa kuwasiliana naye tangu bei hadi ufikishaji, kwa simu, barua pepe au WhatsApp.",
+    "wideFetAlt": "Fuel Eco Tech: ufanisi wa mafuta, uliopimwa.",
+    "wideSealAlt": "SEAL Wound Spray: tayari inapohitajika.",
+    "wideCoffeeAlt": "Vitorra Coffee: Arabika ya Uganda, kwa dunia.",
+    "wideLogisticsAlt": "Vitorra Logistics: kila kiungo, timu moja.",
+    "keyFetAlt": "Fuel Eco Tech: ufanisi wa mafuta, uliopimwa. Tathmini ya mafuta bure.",
+    "keySealAlt": "SEAL Wound Spray: tayari inapohitajika. Inadumu miezi 36, haihitaji jokofu.",
+    "keyCoffeeAlt": "Vitorra Coffee: Arabika ya Uganda, kwa dunia. Kuuza nje na jumla.",
+    "keyLogisticsAlt": "Huduma za usafirishaji: kila kiungo, timu moja. Usafirishaji, maghala na forodha.",
+    "manifestoAlt": "Tunachosimamia: biashara nne, kiwango kimoja. Ushahidi kabla ya ahadi."
   }
 }

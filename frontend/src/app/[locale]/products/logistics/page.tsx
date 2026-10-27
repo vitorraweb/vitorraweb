@@ -8,7 +8,7 @@ import { Section, Container, ButtonLink } from "@/components/system";
 import {
   SectionHead, Steps, ContactBand,
 } from "@/components/system/blocks";
-import { CinematicHero, FactStrip, ImageBand, Picture } from "@/components/system/imagery";
+import { CinematicHero, DesignedBanner, FactStrip, Picture } from "@/components/system/imagery";
 
 /* ─── Logistics Services — Quiet Authority ────────────────────────────────────
    Built around getting a usable quote: what we do → the services → the five
@@ -42,6 +42,7 @@ export default async function LogisticsPage() {
   const shared = await getTranslations("productQA");
   const tp = await getTranslations("products");
   const alt = await getTranslations("imageAlt");
+  const bn = await getTranslations("banners");
 
   const faqs = [
     { q: old("faq1Q"), a: old("faq1A") },
@@ -91,7 +92,7 @@ export default async function LogisticsPage() {
           </Container>
         </Section>
 
-        <ImageBand image="/images/stock/ship-wake.jpg" alt={alt("shipWake")} height="medium" />
+        <DesignedBanner src="/banners/wide-logistics.jpg" alt={bn("wideLogisticsAlt")} width={1916} height={821} tone="ink" />
 
         {/* ══ What we need to quote ═════════════════════════════════════════ */}
         <Section tone="deep" id="logistics-need" aria-labelledby="logistics-need-heading">
@@ -101,7 +102,7 @@ export default async function LogisticsPage() {
               <div className="mt-10">
                 <ButtonLink href={ENQUIRE}>{t("primary")}</ButtonLink>
               </div>
-              <Picture className="mt-14 hidden lg:block" src="/images/stock/warehouse-dark.jpg" alt={alt("warehouse")} ratio="4/3" sizes="35vw" />
+              <Picture className="mt-14 max-w-[22rem]" src="/banners/keyvisual-logistics.jpg" alt={bn("keyLogisticsAlt")} ratio="1122/1402" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
             </div>
             <ol className="lg:col-span-6 lg:col-start-7 border-t border-line-strong">
               {[1, 2, 3, 4, 5].map((n) => (

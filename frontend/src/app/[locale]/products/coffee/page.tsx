@@ -9,7 +9,7 @@ import { Section, Container, TextLink } from "@/components/system";
 import {
   SectionHead, SpecTable, ContactBand,
 } from "@/components/system/blocks";
-import { CinematicHero, FactStrip } from "@/components/system/imagery";
+import { CinematicHero, DesignedBanner, FactStrip, Picture } from "@/components/system/imagery";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 
 /* ─── Vitorra Coffee — Quiet Authority ────────────────────────────────────────
@@ -43,6 +43,7 @@ export default async function CoffeePage() {
   const shared = await getTranslations("productQA");
   const tp = await getTranslations("products");
   const alt = await getTranslations("imageAlt");
+  const bn = await getTranslations("banners");
 
   const ways = [
     { title: old("exportTitle"), body: old("exportBody"), href: "#coffee-export", cta: old("exportCta") },
@@ -94,11 +95,14 @@ export default async function CoffeePage() {
           ]}
         />
 
+        <DesignedBanner src="/banners/wide-coffee.jpg" alt={bn("wideCoffeeAlt")} width={1916} height={821} />
+
         <Section tone="paper" aria-labelledby="coffee-blend">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
             <div className="lg:col-span-5">
               <h2 id="coffee-blend" className="t-h2 text-ink">{old("blendTitle")}</h2>
               <p className="t-body text-ink-soft mt-6">{old("blendBody")}</p>
+              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-coffee.jpg" alt={bn("keyCoffeeAlt")} ratio="1122/1402" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
             </div>
             <div className="lg:col-span-7">
               <SpecTable rows={[1, 2, 3, 4, 5].map((n) => [old(`spec${n}Key`), old(`spec${n}Value`)] as [string, string])} />

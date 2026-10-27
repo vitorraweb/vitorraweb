@@ -11,7 +11,7 @@ import {
   SectionHead, FactGrid, SpecTable, ContactBand,
 } from "@/components/system/blocks";
 import { Film } from "@/components/system/Film";
-import { CinematicHero, FactStrip, ImageBand, Picture } from "@/components/system/imagery";
+import { CinematicHero, DesignedBanner, FactStrip, Picture } from "@/components/system/imagery";
 
 /* ─── SEAL Hemostatic Wound Spray — Quiet Authority ───────────────────────────
    Built around a procurement journey, because SEAL is bought by institutions:
@@ -43,6 +43,7 @@ export default async function SealPage() {
   const shared = await getTranslations("productQA");
   const tp = await getTranslations("products");
   const alt = await getTranslations("imageAlt");
+  const bn = await getTranslations("banners");
 
   const variants = [
     { name: "SEAL OTC", tagline: old("v1Tagline"), body: old("v1Body"), specs: [1, 2, 3, 4, 5].map((n) => old(`v1Spec${n}`)) },
@@ -142,7 +143,7 @@ export default async function SealPage() {
           </Container>
         </Section>
 
-        <ImageBand image="/images/stock/ambulance-motion.jpg" alt={alt("ambulance")} height="medium" />
+        <DesignedBanner src="/banners/wide-seal.jpg" alt={bn("wideSealAlt")} width={1916} height={821} />
 
         {/* ══ Specifications and safety ═════════════════════════════════════ */}
         <Section tone="deep" aria-labelledby="seal-specs">
@@ -167,7 +168,7 @@ export default async function SealPage() {
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
             <div className="lg:col-span-5">
               <SectionHead id="seal-proc" onInk label={t("procLabel")} title={t("procTitle")} body={t("procBody")} />
-              <Picture className="mt-12 max-w-[26rem]" src="/products/seal/Picture1.jpg" alt={t("photoAlt")} caption={t("photoCaption")} ratio="4/3" grade={false} sizes="(min-width: 1024px) 30vw, 100vw" />
+              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-seal.jpg" alt={bn("keySealAlt")} ratio="1122/1402" grade={false} sizes="(min-width: 1024px) 30vw, 100vw" />
             </div>
             <ol className="lg:col-span-6 lg:col-start-7 border-t border-ink-line">
               {[t("proc1"), t("proc2"), t("proc3"), t("proc4")].map((p, i) => (

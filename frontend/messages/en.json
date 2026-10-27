@@ -1682,5 +1682,24 @@
     "body": "Try one of our four businesses below, or go back to the start.",
     "home": "Back to the homepage",
     "contact": "Contact us"
+  },
+  "banners": {
+    "proofLabel": "The proof",
+    "proofTitle": "One fact from each business, before we ask for yours.",
+    "prev": "Previous slide",
+    "next": "Next slide",
+    "proofFetAlt": "13.9% less fuel. One Volkswagen T5, Germany, first full month with FET fitted. CTI GmbH, 2025. Single-vehicle result; savings vary.",
+    "proofSealAlt": "SEAL Wound Spray: 36 months shelf life, no refrigeration.",
+    "proofCoffeeAlt": "Vitorra Coffee export terms: 1 metric tonne minimum export order. Ugandan Arabica, roasted at origin.",
+    "proofLogisticsAlt": "Logistics: one named contact from quote to delivery, by phone, email or WhatsApp.",
+    "wideFetAlt": "Fuel Eco Tech: fuel efficiency, measured.",
+    "wideSealAlt": "SEAL Wound Spray: ready when needed.",
+    "wideCoffeeAlt": "Vitorra Coffee: Ugandan Arabica, for the world.",
+    "wideLogisticsAlt": "Vitorra Logistics: every link, one team.",
+    "keyFetAlt": "Fuel Eco Tech: fuel efficiency, measured. Free fuel assessment.",
+    "keySealAlt": "SEAL Wound Spray: ready when needed. 36-month shelf life, no refrigeration.",
+    "keyCoffeeAlt": "Vitorra Coffee: Ugandan Arabica, for the world. Export and wholesale.",
+    "keyLogisticsAlt": "Logistics services: every link, one team. Freight, warehousing and customs.",
+    "manifestoAlt": "What we stand for: four businesses, one standard. Evidence before promises."
   }
 }

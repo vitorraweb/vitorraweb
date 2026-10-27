@@ -6,7 +6,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { WordReveal } from "@/components/motion/WordReveal";
 import { Section, Container, Label, Text, TextLink } from "@/components/system";
 import { SectionHead, FactGrid, CredentialGroups, ContactBand } from "@/components/system/blocks";
-import { CinematicHero, Mosaic } from "@/components/system/imagery";
+import { CinematicHero, Picture } from "@/components/system/imagery";
 import { BusinessDoors } from "@/components/system/doors";
 import { COMPANY_REG_NO } from "@/lib/constants";
 
@@ -35,6 +35,7 @@ export default async function AboutPage() {
   const t = await getTranslations("aboutQA");
   const home = await getTranslations("homeQA");
   const alt = await getTranslations("imageAlt");
+  const bn = await getTranslations("banners");
 
   return (
     <>
@@ -83,10 +84,7 @@ export default async function AboutPage() {
               </dl>
             </div>
             <div className="lg:col-span-6 lg:col-start-7">
-              <Mosaic
-                a={{ src: "/hero/brand-wall.jpg", alt: alt("reception"), caption: home("companyPhotoCaption") }}
-                b={{ src: "/images/stock/kampala-skyline.jpg", alt: alt("kampala") }}
-              />
+              <Picture src="/banners/manifesto.jpg" alt={bn("manifestoAlt")} ratio="1/1" grade={false} sizes="(min-width: 1024px) 45vw, 100vw" />
             </div>
           </Container>
         </Section>

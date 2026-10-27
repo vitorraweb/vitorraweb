@@ -12,6 +12,7 @@ import { ContactBand, CredentialGroups } from "@/components/system/blocks";
 import { ImageBand, Mosaic } from "@/components/system/imagery";
 import { CircleLink } from "@/components/system/CircleLink";
 import { StatementHero } from "@/components/sections/StatementHero";
+import { ProofCarousel } from "@/components/sections/ProofCarousel";
 import { EvidenceStory } from "@/components/sections/EvidenceStory";
 import { BusinessDoors } from "@/components/system/doors";
 import { getBlogPosts } from "@/lib/api";
@@ -48,6 +49,8 @@ export async function generateMetadata({
 export default async function HomePage() {
   const t = await getTranslations("homeQA");
   const alt = await getTranslations("imageAlt");
+  const bn = await getTranslations("banners");
+  const tp = await getTranslations("products");
   const locale = await getLocale();
 
   let posts: BlogPost[] = [];
@@ -163,6 +166,20 @@ export default async function HomePage() {
             </div>
           </Container>
         </Section>
+
+        {/* ══ 4b · Proof — one designed fact per business ═══════════════════ */}
+        <ProofCarousel
+          label={bn("proofLabel")}
+          title={bn("proofTitle")}
+          prevLabel={bn("prev")}
+          nextLabel={bn("next")}
+          slides={[
+            { src: "/banners/proof-fet.jpg", alt: bn("proofFetAlt"), href: "/products/fuel-eco-tech", name: tp("fet.name") },
+            { src: "/banners/proof-seal.jpg", alt: bn("proofSealAlt"), href: "/products/seal-wound-spray", name: tp("seal.name") },
+            { src: "/banners/proof-coffee.jpg", alt: bn("proofCoffeeAlt"), href: "/products/coffee", name: tp("coffee.name") },
+            { src: "/banners/proof-logistics.jpg", alt: bn("proofLogisticsAlt"), href: "/products/logistics", name: tp("logistics.name") },
+          ]}
+        />
 
         {/* ══ 5 · The company ═══════════════════════════════════════════════ */}
         <Section tone="sage" aria-labelledby="company-heading">

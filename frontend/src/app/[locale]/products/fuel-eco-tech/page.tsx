@@ -12,7 +12,7 @@ import {
   SectionHead, Steps, FactGrid, CredentialGroups, ContactBand,
 } from "@/components/system/blocks";
 import { Film } from "@/components/system/Film";
-import { CinematicHero, FactStrip, ImageBand, Mosaic } from "@/components/system/imagery";
+import { CinematicHero, DesignedBanner, FactStrip, Mosaic, Picture } from "@/components/system/imagery";
 import { CountUp } from "@/components/system/CountUp";
 import APPLICATIONS from "@/data/fet-applications.json";
 import { engineSpanLabel } from "@/lib/fet-pricing";
@@ -51,6 +51,7 @@ export default async function FuelEcoTechPage() {
   const tp = await getTranslations("products");
   const pricing = await getTranslations("fetPricing");
   const alt = await getTranslations("imageAlt");
+  const bn = await getTranslations("banners");
 
   const evidenceRows: [string, string][] = [
     [home("evidenceRowBefore"), `11.52 ${home("evidenceUnit")}`],
@@ -157,7 +158,7 @@ export default async function FuelEcoTechPage() {
           />
         </DeviceSteps>
 
-        <ImageBand image="/images/stock/engine-hands.jpg" alt={alt("engineHands")} height="medium" />
+        <DesignedBanner src="/banners/wide-fet.jpg" alt={bn("wideFetAlt")} width={1916} height={821} />
 
         {/* ══ What it doesn't touch — with Vitorra's own fitting photographs ═ */}
         <Section tone="deep" aria-labelledby="fet-notouch">
@@ -256,7 +257,10 @@ export default async function FuelEcoTechPage() {
         {/* ══ How we sell ═══════════════════════════════════════════════════ */}
         <Section tone="ink" aria-labelledby="fet-sell">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-            <SectionHead id="fet-sell" onInk label={t("sellLabel")} title={t("sellTitle")} className="lg:col-span-4" />
+            <div className="lg:col-span-4">
+              <SectionHead id="fet-sell" onInk label={t("sellLabel")} title={t("sellTitle")} />
+              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-fet.jpg" alt={bn("keyFetAlt")} ratio="1122/1402" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
+            </div>
             <div className="lg:col-span-8">
               <Steps
                 onInk

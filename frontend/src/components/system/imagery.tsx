@@ -166,6 +166,33 @@ export function ImageBand({
   );
 }
 
+/* A designed banner from the brand team, full width at its own proportions:
+   the artwork carries its own words, so it is never cropped, darkened or
+   colour-graded, and its alt text repeats what it says. */
+export function DesignedBanner({
+  src,
+  alt,
+  width,
+  height,
+  tone = "paper",
+}: {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  tone?: "paper" | "ink";
+}) {
+  return (
+    <figure className={cn("q-scope m-0 overflow-hidden", tone === "ink" ? "bg-ink" : "bg-paper")}>
+      <div className="relative q-unveil" style={{ aspectRatio: `${width}/${height}` }}>
+        <div className="q-inner absolute inset-0">
+          <Image src={src} alt={alt} fill sizes="100vw" className="object-cover" />
+        </div>
+      </div>
+    </figure>
+  );
+}
+
 /* A single photograph that unveils as it scrolls in. */
 export function Picture({
   src,
