@@ -34,6 +34,9 @@ class Setting extends Model
         // Executive report — who the scheduled CEO summary is emailed to.
         'exec_report_to' => '',   // CEO inbox (To); falls back to notify_email when blank
         'exec_report_cc' => '',
+        // Blog autopilot — who reviews the twice-weekly drafts (comma-separated);
+        // falls back to notify_email when blank.
+        'blog_review_to' => '',
 
         // Printed on the branded quotations / invoices (BrandedDocument).
         'company_tin'       => '1055502376',

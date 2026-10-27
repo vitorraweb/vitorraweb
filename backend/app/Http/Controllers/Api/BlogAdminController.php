@@ -16,7 +16,7 @@ class BlogAdminController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = BlogPost::with('author:id,name')
-            ->select(['id', 'user_id', 'title', 'slug', 'excerpt', 'status', 'published_at', 'updated_at'])
+            ->select(['id', 'user_id', 'title', 'slug', 'excerpt', 'status', 'origin', 'topic', 'published_at', 'updated_at'])
             ->latest('updated_at');
 
         if ($request->filled('status')) {

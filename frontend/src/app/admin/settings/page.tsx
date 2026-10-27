@@ -12,6 +12,7 @@ type Settings = {
   notify_email: string; notify_whatsapp: string;
   staff_session_lifetime_hours: number;
   exec_report_to: string; exec_report_cc: string;
+  blog_review_to: string;
   company_tin: string; bank_name: string; bank_account_name: string; bank_branch: string; bank_swift: string;
   bank_account_ugx: string; bank_account_usd: string; bank_account_eur: string;
 };
@@ -108,6 +109,13 @@ export default function SettingsPage() {
           </Row>
           <Row label="Copy to (CC)" hint="Comma-separated — e.g. Ops &amp; Finance.">
             <input value={form.exec_report_cc} onChange={(e) => set("exec_report_cc", e.target.value)} placeholder="ops@vitorra.org, finance@vitorra.org" className={inputCls} style={inputStyle} />
+          </Row>
+        </Section>
+
+        {/* Blog autopilot */}
+        <Section title="Blog drafts" note="Every Monday and Thursday a new article is drafted from the week's news. It is emailed here for checking and goes live only when someone presses Publish.">
+          <Row label="Reviewers" hint="Comma-separated. Falls back to the team email above if left blank.">
+            <input value={form.blog_review_to ?? ""} onChange={(e) => set("blog_review_to", e.target.value)} placeholder="marketing@vitorra.org, thurayya@vitorra.org" className={inputCls} style={inputStyle} />
           </Row>
         </Section>
 

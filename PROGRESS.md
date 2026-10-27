@@ -1878,3 +1878,12 @@ Finance's "Quote & Invoice Manager" design (`Vitorra_Quote_Invoice_Manager_DESIG
 - To see what is live: `git log --oneline -1` on the box, and
   `artisan migrate:status` for pending migrations.
 - **SEO articles:** the four were published on production with `LaunchArticlesSeeder` (6 October 2026).
+
+## Blog autopilot (27 October 2026) — built, needs the server key
+
+- The blog was working but had no new post since 6 October. `php artisan blog:draft` now runs every Monday and Thursday at 06:30. It searches the week's news on one sector (rotation: FET, Coffee, FET, Logistics, FET, SEAL), then writes a Vitorra article from what it read (`App\Services\BlogAutopilot`, two Claude calls: research with web search, then structured writing).
+- Every article is saved as a **draft** (`origin = auto`, tagged "Auto draft" in `/admin/blog`). Reviewers get a "Blog draft to review" email with a signed, 14-day link. The link opens a review page; it publishes only when someone presses the Publish button (POST), because Outlook Safe Links opens every link in an email.
+- Guardrails: figures must come from the research; sources the research never read are dropped from the Sources list; it may only say about Vitorra what is in `VITORRA_FACTS` (no Uganda NDA claim for SEAL, no promised FET savings); every article carries an "AI-assisted research, checked by the Vitorra team" line.
+- Reviewers: Settings → Blog drafts (`blog_review_to`, falls back to the team email). Topics, covers and rotation: `config/blog_autopilot.php`. Switch off with `BLOG_AUTOPILOT_ENABLED=false`.
+- **Needs `ANTHROPIC_API_KEY` on prod**; without it the command quietly does nothing. Deploy: pull, `migrate --force` (`2026_10_27_000001`), `config:cache`, `route:cache`. Try it once by hand: `artisan blog:draft --topic=fet`.
+- Tests: `BlogAutopilotTest` (7).

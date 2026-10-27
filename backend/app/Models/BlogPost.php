@@ -17,6 +17,8 @@ class BlogPost extends Model
         'content',
         'cover_image',
         'status',
+        'origin',
+        'topic',
         'published_at',
         'seo_title',
         'seo_description',

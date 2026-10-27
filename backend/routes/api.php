@@ -69,6 +69,10 @@ Route::get('/coffee/products', [ProductController::class, 'coffee']);
 // Blog
 Route::get('/blog/posts', [BlogController::class, 'index']);
 Route::get('/blog/posts/{slug}', [BlogController::class, 'show']);
+// Signed, expiring review link from the "Blog draft to review" email — shows the
+// draft; publishing needs the button (POST), so mail link scanners can't publish.
+Route::match(['get', 'post'], '/blog/review/{post}', \App\Http\Controllers\Api\BlogReviewController::class)
+    ->middleware(['signed', 'throttle:30,1'])->name('blog.review');
 
 // Forms — submit enquiry or contact message ('turnstile' = Cloudflare bot check,
 // a no-op until TURNSTILE_SECRET_KEY is set).
