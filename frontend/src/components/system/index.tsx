@@ -14,12 +14,14 @@ import { cn } from "@/lib/utils";
 
 /* ── Section ──────────────────────────────────────────────────────────────── */
 
-export type Tone = "paper" | "deep" | "ink";
+export type Tone = "paper" | "deep" | "ink" | "cream" | "sage";
 
 const TONE: Record<Tone, string> = {
   paper: "bg-paper text-ink",
   deep: "bg-paper-deep text-ink",
   ink: "bg-ink text-ink-fg",
+  cream: "bg-cream text-ink",
+  sage: "bg-sage text-ink",
 };
 
 export function Section({

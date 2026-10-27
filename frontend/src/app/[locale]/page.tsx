@@ -9,7 +9,9 @@ import {
   Section, Container, Label, Heading, Text, TextLink,
 } from "@/components/system";
 import { ContactBand, CredentialGroups } from "@/components/system/blocks";
-import { CinematicHero, ImageBand, Mosaic } from "@/components/system/imagery";
+import { ImageBand, Mosaic } from "@/components/system/imagery";
+import { CircleLink } from "@/components/system/CircleLink";
+import { StatementHero } from "@/components/sections/StatementHero";
 import { EvidenceStory } from "@/components/sections/EvidenceStory";
 import { BusinessDoors } from "@/components/system/doors";
 import { getBlogPosts } from "@/lib/api";
@@ -97,17 +99,17 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header overlay />
+      <Header />
       <main id="main" className="flex-1 bg-paper">
 
         {/* ══ 1 · Opening ═══════════════════════════════════════════════════ */}
-        <CinematicHero
+        <StatementHero
           image="/images/stock/kampala-skyline.jpg"
           alt={alt("kampala")}
           label={t("openLabel")}
           lines={[t("openTitle1"), t("openTitle2")]}
           lead={t("openLead")}
-          primary={{ label: t("openCta"), href: "/enquire" }}
+          cta={{ label: t("openCta"), href: "/enquire" }}
           secondary={{ label: t("openSecondary"), href: "/about" }}
           credit={t("heroCredit")}
           scrollCue={t("scrollCue")}
@@ -143,7 +145,7 @@ export default async function HomePage() {
         />
 
         {/* ══ 4 · Credentials, separated ════════════════════════════════════ */}
-        <Section tone="paper" aria-labelledby="cred-heading">
+        <Section tone="cream" aria-labelledby="cred-heading">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
             <div className="lg:col-span-4">
               <Label className="mb-6">{t("credLabel")}</Label>
@@ -153,7 +155,7 @@ export default async function HomePage() {
                 <TextLink href="/trust/certifications">{t("credCta")}</TextLink>
               </div>
             </div>
-            <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-10">
+            <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-10 lg:border-l lg:border-line-strong lg:pl-16">
               <div className="md:col-span-2">
                 <CredentialGroups groups={credentials.map((g) => ({ title: g.group, items: g.items }))} />
               </div>
@@ -163,7 +165,7 @@ export default async function HomePage() {
         </Section>
 
         {/* ══ 5 · The company ═══════════════════════════════════════════════ */}
-        <Section tone="deep" aria-labelledby="company-heading">
+        <Section tone="sage" aria-labelledby="company-heading">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             <div className="lg:col-span-6 lg:order-2">
               <Mosaic
@@ -175,8 +177,8 @@ export default async function HomePage() {
               <Label className="mb-6">{t("companyLabel")}</Label>
               <Heading id="company-heading" size="h2" className="text-ink">{t("companyTitle")}</Heading>
               <Text className="mt-6 max-w-[34rem]">{t("companyBody", { reg: COMPANY_REG_NO })}</Text>
-              <div className="mt-8">
-                <TextLink href="/about">{t("companyCta")}</TextLink>
+              <div className="mt-10">
+                <CircleLink href="/about">{t("companyCta")}</CircleLink>
               </div>
             </div>
           </Container>

@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import StickyQuoteBar from "@/components/layout/StickyQuoteBar";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { ScrollProgress } from "@/components/motion/ScrollProgress";
 import { Cursor } from "@/components/motion/Cursor";
+import { BackToTop } from "@/components/motion/BackToTop";
 
 /* Pre-render both locales at build time (/, /sw). */
 export function generateStaticParams() {
@@ -27,6 +28,7 @@ export default async function LocaleLayout({
     notFound();
   }
   setRequestLocale(locale);
+  const common = await getTranslations("common");
   return (
     <>
       {/* Cinematic layer — public site only, never the portals. */}
@@ -36,6 +38,7 @@ export default async function LocaleLayout({
       {children}
       <StickyQuoteBar />
       <WhatsAppButton />
+      <BackToTop label={common("backToTop")} />
     </>
   );
 }

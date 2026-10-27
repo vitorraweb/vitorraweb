@@ -1190,6 +1190,55 @@
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   BOLD LAYER (October 2026, fourth pass)
+   ══════════════════════════════════════════════════════════════════════════
+   Borrowed as patterns, not artwork, from the best agency sites: statement
+   type at poster scale, circle calls to action, hairline-split layouts and
+   two softer chapter colours. Gold stays a line and a fill on hover only.  */
+@theme inline {
+  --color-cream: #F5F0E6;   /* warm chapter band — ink-muted is 4.7:1 on it   */
+  --color-sage:  #EDEFE3;   /* calm close band — ink-muted is 4.6:1 on it     */
+}
+
+/* Poster-scale statement: two short lines that fill the page width. */
+@utility t-statement {
+  font-family: var(--font-display);
+  font-weight: 330;
+  font-size: clamp(2.9rem, 0.4rem + 9.6vw, 10rem);
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+}
+
+/* Circle call to action: an outline disc whose gold fill rises on hover. */
+.q-circle {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  width: var(--size, 9.5rem); height: var(--size, 9.5rem); border-radius: 9999px;
+  border: 1px solid var(--color-line-strong); color: var(--color-ink);
+  text-align: center; padding: 1rem; line-height: 1.25;
+  transition: color 500ms var(--ease-cinematic), border-color 500ms var(--ease-cinematic);
+}
+.q-circle[data-on-ink] { border-color: var(--color-ink-line); color: var(--color-ink-fg); }
+.q-circle::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  background: var(--color-gold); translate: 0 101%;
+  transition: translate 650ms var(--ease-cinematic);
+}
+.q-circle:hover, .q-circle:focus-visible { color: var(--color-ink); border-color: var(--color-gold); }
+.q-circle:hover::before, .q-circle:focus-visible::before { translate: 0 0; }
+.q-circle svg { transition: translate 500ms var(--ease-cinematic), rotate 500ms var(--ease-cinematic); }
+.q-circle:hover svg { translate: 2px -2px; }
+@media (prefers-reduced-motion: reduce) {
+  .q-circle, .q-circle::before, .q-circle svg { transition: none; }
+}
+
+/* Scroll pill under the statement hero: a dot that drops and repeats. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes q-pill { 0% { translate: 0 -0.6rem; opacity: 0; } 30% { opacity: 1; } 100% { translate: 0 0.9rem; opacity: 0; } }
+  .q-pill-dot { animation: q-pill 2000ms var(--ease-cinematic) infinite; }
+}
+
 /* Image hover: a slow, small zoom — the only hover motion on photographs. */
 .q-zoom img { transition: scale 1200ms var(--ease-cinematic); }
 .q-zoom:hover img, .group:hover .q-zoom img { scale: 1.04; }
