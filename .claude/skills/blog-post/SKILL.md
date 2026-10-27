@@ -29,6 +29,14 @@ If nothing recent and solid turns up, say so and offer an evergreen practical gu
 
 Match the voice of the existing posts (e.g. `how-to-reduce-fleet-fuel-costs-uganda`): plain British English, calm and practical, short paragraphs, `##` headings (never `#` — the page supplies the title), bold rarely, 650–1,000 words. Money in UGX where sources allow; say when a figure is an estimate. End with a short "what to do / what to watch" section.
 
+Shape it so Google's answer boxes and AI assistants (ChatGPT, Copilot, Perplexity, Google AI Overviews) can quote it — people want the answer, not paragraphs before it:
+- **Title as the question people search**, or the plain answer to it (e.g. "Why diesel is near Shs7,000 a litre in Uganda").
+- **Open with the answer**: the first paragraph is 2–3 sentences that answer the title on their own, with the key number and its date. No scene-setting before it.
+- **`##` headings as questions** where it reads naturally ("How much more does a 40-vehicle fleet pay?"), each followed by a direct one- or two-sentence answer, then the detail.
+- **One fact per sentence** where a number is involved, with its date and source named in the sentence ("UBOS put inflation at 3.4% in September 2026").
+- Before `## Sources`, add `## Questions` with 3–4 `###` questions a reader would ask next, each answered in 1–2 sentences. The site turns this section into FAQ data for search engines automatically (it looks for an `##` heading containing "Questions"), so keep each answer a single paragraph.
+- Name places and things fully once (Uganda Revenue Authority, Mount Elgon, Northern Corridor): assistants match on names.
+
 Hard rules:
 - Every fact and figure comes from a source you opened. No invented numbers, quotes, names or dates. Say when something is uncertain.
 - Mention Vitorra at most once, near the end, only where it genuinely helps, with one internal link. Only these claims:
@@ -37,7 +45,7 @@ Hard rules:
   - **Coffee**: Ugandan Arabica for export buyers and local wholesale; retail bags not on sale yet. Links: `/products/coffee`, `/enquire?sector=COFFEE`.
   - **Logistics**: freight and supply-chain services quoted per shipment; no promises on border times or tracking. Links: `/products/logistics`, `/enquire?sector=LOGISTICS`.
 - Never promise savings or outcomes.
-- End the content with `## Sources` — a bullet list of `[Publisher: page title](url)` for the pages you relied on.
+- End the content with `## Questions` (above) and then `## Sources` — a bullet list of `[Publisher: page title](url)` for the pages you relied on.
 
 ## 4. Visuals
 

@@ -42,7 +42,7 @@ class CareersController extends Controller
 
         return response()->json(['data' => $opening->only([
             'title', 'slug', 'department', 'location', 'employment_type', 'description', 'closes_at',
-        ])]);
+        ]) + ['posted_at' => $opening->created_at?->toDateString()]]);
     }
 
     /**

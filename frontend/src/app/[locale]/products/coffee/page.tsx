@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { QuickAnswers, quickAnswers } from "@/components/sections/QuickAnswers";
+import { localeAlternates, products, faqPage, breadcrumbs, ldJson } from "@/lib/seo";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Faq } from "@/components/ui/faq";
@@ -33,7 +35,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.coffee" });
-  return { title: t("title"), description: t("description") };
+  return { title: t("title"), description: t("description"), alternates: localeAlternates(locale, "/products/coffee") };
 }
 
 const ENQUIRE_EXPORT = "/enquire?sector=COFFEE&channel=export";
@@ -63,6 +65,11 @@ export default async function CoffeePage() {
     <>
       <Header overlay />
       <main id="main" className="flex-1 bg-paper">
+        <script type="application/ld+json" dangerouslySetInnerHTML={ldJson([
+          products.coffee,
+          faqPage([...(await quickAnswers("coffee")), ...faqs]),
+          breadcrumbs([{ name: "Vitorra", path: "/" }, { name: tp("coffee.name"), path: "/products/coffee" }]),
+        ])} />
 
         <CinematicHero
           image="/images/stock/coffee-valley.jpg"
@@ -83,6 +90,7 @@ export default async function CoffeePage() {
             { k: t("factTermsK"), v: t("factTermsV") },
           ]}
         />
+        <QuickAnswers page="coffee" />
 
         {/* ══ Origin and process — cherry to export, travelling sideways ═════ */}
         <HorizontalSteps

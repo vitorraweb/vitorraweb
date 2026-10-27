@@ -103,4 +103,12 @@ return [
         'cv_model' => env('ANTHROPIC_CV_MODEL', 'claude-haiku-4-5'),
     ],
 
+    // IndexNow (Bing and others) — pings search engines when a blog post is
+    // published. The key matches the file the website serves at /{key}.txt.
+    'indexnow' => [
+        'key'     => env('INDEXNOW_KEY', '25453b7fae61c6b0aa0b2c5a0db0a22b'),
+        'site'    => env('INDEXNOW_SITE', 'https://vitorra.org'),
+        'enabled' => env('INDEXNOW_ENABLED', env('APP_ENV') === 'production'),
+    ],
+
 ];

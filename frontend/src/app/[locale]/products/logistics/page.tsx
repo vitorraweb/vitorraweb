@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { QuickAnswers, quickAnswers } from "@/components/sections/QuickAnswers";
+import { localeAlternates, products, faqPage, breadcrumbs, ldJson } from "@/lib/seo";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Faq } from "@/components/ui/faq";
@@ -32,7 +34,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.logistics" });
-  return { title: t("title"), description: t("description") };
+  return { title: t("title"), description: t("description"), alternates: localeAlternates(locale, "/products/logistics") };
 }
 
 const ENQUIRE = "/enquire?sector=LOGISTICS";
@@ -59,6 +61,11 @@ export default async function LogisticsPage() {
     <>
       <Header overlay />
       <main id="main" className="flex-1 bg-paper">
+        <script type="application/ld+json" dangerouslySetInnerHTML={ldJson([
+          products.logistics,
+          faqPage([...(await quickAnswers("logistics")), ...faqs]),
+          breadcrumbs([{ name: "Vitorra", path: "/" }, { name: tp("logistics.name"), path: "/products/logistics" }]),
+        ])} />
 
         <CinematicHero
           image="/images/stock/port-aerial.jpg"
@@ -79,6 +86,7 @@ export default async function LogisticsPage() {
             { k: t("factQuoteK"), v: t("factQuoteV") },
           ]}
         />
+        <QuickAnswers page="logistics" />
 
         {/* ══ Services ══════════════════════════════════════════════════════ */}
         <Section tone="paper" rule aria-labelledby="logistics-services">

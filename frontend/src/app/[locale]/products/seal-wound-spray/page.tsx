@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { QuickAnswers, quickAnswers } from "@/components/sections/QuickAnswers";
+import { localeAlternates, products, faqPage, breadcrumbs, ldJson } from "@/lib/seo";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/reveal";
@@ -32,7 +34,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.seal" });
-  return { title: t("title"), description: t("description") };
+  return { title: t("title"), description: t("description"), alternates: localeAlternates(locale, "/products/seal-wound-spray") };
 }
 
 const ENQUIRE = "/enquire?sector=SEAL";
@@ -58,6 +60,11 @@ export default async function SealPage() {
     <>
       <Header overlay />
       <main id="main" className="flex-1 bg-paper">
+        <script type="application/ld+json" dangerouslySetInnerHTML={ldJson([
+          products.seal,
+          faqPage([...(await quickAnswers("seal")), ...faqs]),
+          breadcrumbs([{ name: "Vitorra", path: "/" }, { name: tp("seal.name"), path: "/products/seal-wound-spray" }]),
+        ])} />
 
         <CinematicHero
           image="/photos/hero-03-seal.jpg"
@@ -78,6 +85,7 @@ export default async function SealPage() {
             { k: t("factUseK"), v: t("factUseV") },
           ]}
         />
+        <QuickAnswers page="seal" />
 
         {/* ══ How it is used — four steps that travel sideways on scroll ═════ */}
         <HorizontalSteps

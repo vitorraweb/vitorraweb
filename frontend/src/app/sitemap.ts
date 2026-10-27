@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
 import { COFFEE_SHOP_ENABLED } from "@/lib/config";
 import { getBlogPosts } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/constants";
 
 export const revalidate = 3600;
 
@@ -16,7 +17,6 @@ const PAGES: { path: string; priority: number; cf: MetadataRoute.Sitemap[number]
   { path: "/enquire", priority: 0.7, cf: "monthly" },
   { path: "/contact", priority: 0.6, cf: "monthly" },
   { path: "/blog", priority: 0.7, cf: "weekly" },
-  { path: "/careers", priority: 0.5, cf: "monthly" },
   { path: "/trust/certifications", priority: 0.6, cf: "monthly" },
   { path: "/legal/privacy-policy", priority: 0.3, cf: "yearly" },
   { path: "/legal/terms-and-conditions", priority: 0.3, cf: "yearly" },
@@ -68,5 +68,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     /* backend offline at build — static pages only */
   }
 
-  return [...staticEntries, ...blogEntries];
+  /* Careers is one page with its own language switch (no /sw/ copy), plus
+     one URL per open role. */
+  const careerEntries: MetadataRoute.Sitemap = [{ url: `${SITE_URL}/careers`, lastModified: now, changeFrequency: "weekly", priority: 0.5 }];
+  try {
+    const res = await fetch(`${API_BASE_URL}/careers/openings`, { next: { revalidate: 3600 } });
+    const roles: { slug: string }[] = res.ok ? (await res.json()).data ?? [] : [];
+    for (const r of roles) careerEntries.push({ url: `${SITE_URL}/careers/${r.slug}`, lastModified: now, changeFrequency: "weekly", priority: 0.5 });
+  } catch {
+    /* backend offline — the careers page alone */
+  }
+
+  return [...staticEntries, ...blogEntries, ...careerEntries];
 }

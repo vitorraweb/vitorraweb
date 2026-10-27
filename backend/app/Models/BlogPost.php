@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Services\IndexNow;
 use Illuminate\Support\Str;
 
 class BlogPost extends Model
@@ -27,6 +28,16 @@ class BlogPost extends Model
     protected $casts = [
         'published_at' => 'datetime',
     ];
+
+    /** A published post that is new or changed is announced to IndexNow. */
+    protected static function booted(): void
+    {
+        static::saved(function (BlogPost $post) {
+            if ($post->status === 'published' && ($post->wasRecentlyCreated || $post->wasChanged(['status', 'title', 'content', 'excerpt', 'slug']))) {
+                IndexNow::submit(["/blog/{$post->slug}", "/sw/blog/{$post->slug}", '/blog']);
+            }
+        });
+    }
 
     public function author(): BelongsTo
     {

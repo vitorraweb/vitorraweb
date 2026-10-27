@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/lib/seo";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ContactForm from "@/components/sections/ContactForm";
@@ -20,7 +21,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.contact" });
-  return { title: t("title"), description: t("description") };
+  return { title: t("title"), description: t("description"), alternates: localeAlternates(locale, "/contact") };
 }
 
 const tel = `tel:${CONTACT_PHONE.replace(/\s+/g, "")}`;

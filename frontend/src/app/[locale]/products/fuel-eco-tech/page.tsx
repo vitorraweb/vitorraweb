@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { QuickAnswers, quickAnswers } from "@/components/sections/QuickAnswers";
+import { localeAlternates, products, faqPage, breadcrumbs, ldJson } from "@/lib/seo";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/reveal";
@@ -38,7 +40,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.fet" });
-  return { title: t("title"), description: t("description") };
+  return { title: t("title"), description: t("description"), alternates: localeAlternates(locale, "/products/fuel-eco-tech") };
 }
 
 const ENQUIRE = "/enquire?sector=FET";
@@ -80,6 +82,11 @@ export default async function FuelEcoTechPage() {
     <>
       <Header overlay />
       <main id="main" className="flex-1 bg-paper">
+        <script type="application/ld+json" dangerouslySetInnerHTML={ldJson([
+          products.fet,
+          faqPage([...(await quickAnswers("fet")), ...faqs]),
+          breadcrumbs([{ name: "Vitorra", path: "/" }, { name: tp("fet.name"), path: "/products/fuel-eco-tech" }]),
+        ])} />
 
         {/* ══ Intro ═════════════════════════════════════════════════════════ */}
         <CinematicHero
@@ -101,6 +108,7 @@ export default async function FuelEcoTechPage() {
             { k: t("factWarrantyK"), v: t("factWarrantyV") },
           ]}
         />
+        <QuickAnswers page="fet" />
 
         {/* ══ Evidence ══════════════════════════════════════════════════════ */}
         <Section tone="ink" aria-labelledby="fet-evidence">

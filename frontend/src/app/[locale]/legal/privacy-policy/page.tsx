@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import { LegalPage, Section, P, Ul } from "@/components/ui/legal-page";
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/constants";
@@ -11,7 +12,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.legalPrivacy" });
-  return { title: t("title"), description: t("description") };
+  return { title: t("title"), description: t("description"), alternates: localeAlternates(locale, "/legal/privacy-policy") };
 }
 
 const mailLink = () => (

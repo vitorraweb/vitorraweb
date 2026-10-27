@@ -7,6 +7,7 @@ import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { ScrollProgress } from "@/components/motion/ScrollProgress";
 import { Cursor } from "@/components/motion/Cursor";
 import { BackToTop } from "@/components/motion/BackToTop";
+import { organization, website, ldJson } from "@/lib/seo";
 
 /* Pre-render both locales at build time (/, /sw). */
 export function generateStaticParams() {
@@ -31,6 +32,8 @@ export default async function LocaleLayout({
   const common = await getTranslations("common");
   return (
     <>
+      {/* Who Vitorra is, for search engines and AI assistants (every page). */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={ldJson([organization, website])} />
       {/* Cinematic layer — public site only, never the portals. */}
       <SmoothScroll />
       <ScrollProgress />

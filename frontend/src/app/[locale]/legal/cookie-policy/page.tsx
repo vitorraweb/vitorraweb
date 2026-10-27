@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { localeAlternates } from "@/lib/seo";
 import { LegalPage, Section, P, Ul } from "@/components/ui/legal-page";
 import { CONTACT_EMAIL } from "@/lib/constants";
 
@@ -10,7 +11,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.legalCookies" });
-  return { title: t("title"), description: t("description") };
+  return { title: t("title"), description: t("description"), alternates: localeAlternates(locale, "/legal/cookie-policy") };
 }
 
 const bold = (c: React.ReactNode) => <strong className="text-ink font-semibold">{c}</strong>;

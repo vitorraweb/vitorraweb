@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
+import { breadcrumbs, faqFromHtml, faqPage, ldJson } from "@/lib/seo";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
@@ -74,12 +75,18 @@ export default async function BlogPostPage({ params }: Props) {
     mainEntityOfPage: `${SITE_URL}${locale === "en" ? "" : `/${locale}`}/blog/${post.slug}`,
     inLanguage: locale,
     author: { "@type": "Organization", name: "Vitorra Holdings Limited", url: SITE_URL },
-    publisher: { "@type": "Organization", name: "Vitorra Holdings Limited", url: SITE_URL, logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` } },
+    publisher: { "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: "Vitorra Holdings Limited", url: SITE_URL, logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` } },
   };
+  const faq = faqFromHtml(post.content_html);
+  const ld = [
+    jsonLd,
+    breadcrumbs([{ name: "Vitorra", path: "/" }, { name: "Blog", path: "/blog" }, { name: post.title, path: `/blog/${post.slug}` }]),
+    ...(faq.length ? [faqPage(faq)] : []),
+  ];
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={ldJson(ld)} />
       <Header />
       <main id="main" className="flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
         <article className="q-scope">

@@ -76,6 +76,12 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  /* Ownership proof for Google Search Console and Bing Webmaster Tools: set
+     the codes they give you as Vercel env vars; nothing renders until then. */
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } : undefined,
+  },
 };
 
 /* Mobile viewport — device-width, allow zoom (accessibility), and extend under

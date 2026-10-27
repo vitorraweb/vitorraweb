@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
+import { QuickAnswers, quickAnswers } from "@/components/sections/QuickAnswers";
+import { localeAlternates, faqPage, ldJson } from "@/lib/seo";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
@@ -44,7 +46,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.home" });
-  return { title: { absolute: t("title") }, description: t("description") };
+  return { title: { absolute: t("title") }, description: t("description"), alternates: localeAlternates(locale, "") };
 }
 
 export default async function HomePage() {
@@ -106,6 +108,7 @@ export default async function HomePage() {
     <>
       <Header />
       <main id="main" className="flex-1 bg-paper">
+        <script type="application/ld+json" dangerouslySetInnerHTML={ldJson(faqPage(await quickAnswers("home")))} />
 
         {/* ══ 1 · Opening ═══════════════════════════════════════════════════ */}
         <StatementHero
@@ -259,6 +262,8 @@ export default async function HomePage() {
             )}
           </Container>
         </Section>
+
+        <QuickAnswers page="home" />
 
         {/* ══ 7 · Contact ═══════════════════════════════════════════════════ */}
         <ContactBand
