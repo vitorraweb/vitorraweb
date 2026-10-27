@@ -1246,6 +1246,18 @@
 .q-talk:hover span[style], .q-talk:focus-visible span[style] { translate: 0 -0.08em; color: var(--color-gold); }
 @media (prefers-reduced-motion: reduce) { .q-talk span[style] { transition: color 200ms; } .q-talk:hover span[style] { translate: none; } }
 
+/* Map routes draw themselves as the map scrolls into view (pathLength=1).
+   Drawn in full wherever scroll-driven animation is unsupported or motion is
+   reduced. A pulse marks a single place (Mount Elgon). */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    @keyframes q-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+    .q-draw { stroke-dasharray: 1; animation: q-draw linear both; animation-timeline: view(); animation-range: entry 20% cover 55%; }
+  }
+  @keyframes q-pulse { 0%, 100% { opacity: 0.35; scale: 0.85; } 50% { opacity: 0.9; scale: 1.1; } }
+  .q-pulse { transform-box: fill-box; transform-origin: center; animation: q-pulse 3s ease-in-out infinite; }
+}
+
 /* Image hover: a slow, small zoom — the only hover motion on photographs. */
 .q-zoom img { transition: scale 1200ms var(--ease-cinematic); }
 .q-zoom:hover img, .group:hover .q-zoom img { scale: 1.04; }

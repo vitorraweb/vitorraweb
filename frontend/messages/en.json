@@ -1701,5 +1701,25 @@
     "keyCoffeeAlt": "Vitorra Coffee: Ugandan Arabica, for the world. Export and wholesale.",
     "keyLogisticsAlt": "Logistics services: every link, one team. Freight, warehousing and customs.",
     "manifestoAlt": "What we stand for: four businesses, one standard. Evidence before promises."
+  },
+  "visuals": {
+    "stripLabel": "Behind our products",
+    "stripLink": "What each one covers",
+    "routesLabel": "Routes",
+    "routesTitle": "The corridors your cargo travels.",
+    "routesBody": "Uganda is landlocked, so sea freight reaches it through the ports of Mombasa and Dar es Salaam, then by road or rail along two corridors. We quote the route that suits your cargo, timing and budget.",
+    "routesMapTitle": "Map of East Africa: the Northern Corridor from the port of Mombasa through Nairobi and Malaba to Kampala, the Central Corridor from Dar es Salaam through Mwanza and Mutukula to Kampala, and onward roads to Kigali and Juba.",
+    "routesNorthern": "Northern Corridor, via Mombasa",
+    "routesCentral": "Central Corridor, via Dar es Salaam",
+    "routesOnward": "Onward roads to Kigali and Juba",
+    "routesSchematic": "Schematic routes, not to scale.",
+    "portMombasa": "Port of Mombasa",
+    "portDar": "Port of Dar es Salaam",
+    "originLabel": "Origin",
+    "originTitle": "Grown on the slopes of Mount Elgon.",
+    "originBody": "Single-origin Arabica from the highland slopes of Mount Elgon in eastern Uganda, on the border with Kenya. Hand-picked, washed, sun-dried and roasted in Uganda.",
+    "originMapTitle": "Map of Uganda showing Mount Elgon on the eastern border with Kenya, and Kampala.",
+    "elgon": "Mount Elgon",
+    "fuelLess": "{pct}% less fuel"
   }
 }

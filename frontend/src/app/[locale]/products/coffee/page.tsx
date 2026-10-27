@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import { Faq } from "@/components/ui/faq";
 import CoffeeExportSpec from "@/components/sections/CoffeeExportSpec";
 import { HorizontalSteps } from "@/components/motion/HorizontalSteps";
+import { OriginMap } from "@/components/maps/OriginMap";
 import { Section, Container, TextLink } from "@/components/system";
 import {
   SectionHead, SpecTable, ContactBand,
@@ -44,6 +45,7 @@ export default async function CoffeePage() {
   const tp = await getTranslations("products");
   const alt = await getTranslations("imageAlt");
   const bn = await getTranslations("banners");
+  const vt = await getTranslations("visuals");
 
   const ways = [
     { title: old("exportTitle"), body: old("exportBody"), href: "#coffee-export", cta: old("exportCta") },
@@ -94,6 +96,16 @@ export default async function CoffeePage() {
             { title: old("ftcStep3Title"), body: old("ftcStep3Body"), image: { src: "/images/stock/coffee-roaster.jpg", alt: alt("coffeeRoaster") } },
           ]}
         />
+
+        {/* ══ Origin — where it grows, on a real map ═══════════════════════ */}
+        <Section tone="paper" aria-labelledby="coffee-origin-map">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            <div className="lg:col-span-5">
+              <SectionHead id="coffee-origin-map" label={vt("originLabel")} title={vt("originTitle")} body={vt("originBody")} />
+            </div>
+            <OriginMap className="lg:col-span-6 lg:col-start-7 m-0" title={vt("originMapTitle")} elgon={vt("elgon")} />
+          </Container>
+        </Section>
 
         <DesignedBanner src="/banners/wide-coffee.jpg" alt={bn("wideCoffeeAlt")} width={1916} height={821} />
 

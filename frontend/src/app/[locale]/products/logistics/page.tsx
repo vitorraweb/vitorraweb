@@ -4,6 +4,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Faq } from "@/components/ui/faq";
 import { ServiceChain } from "@/components/motion/ServiceChain";
+import { RouteMap } from "@/components/maps/RouteMap";
 import { Section, Container, ButtonLink } from "@/components/system";
 import {
   SectionHead, Steps, ContactBand,
@@ -43,6 +44,7 @@ export default async function LogisticsPage() {
   const tp = await getTranslations("products");
   const alt = await getTranslations("imageAlt");
   const bn = await getTranslations("banners");
+  const vt = await getTranslations("visuals");
 
   const faqs = [
     { q: old("faq1Q"), a: old("faq1A") },
@@ -93,6 +95,27 @@ export default async function LogisticsPage() {
         </Section>
 
         <DesignedBanner src="/banners/wide-logistics.jpg" alt={bn("wideLogisticsAlt")} width={1916} height={821} tone="ink" />
+
+        {/* ══ Routes — the two port corridors, on a real map ═══════════════ */}
+        <Section tone="paper" aria-labelledby="logistics-routes">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            <div className="lg:col-span-4">
+              <SectionHead id="logistics-routes" label={vt("routesLabel")} title={vt("routesTitle")} body={vt("routesBody")} />
+            </div>
+            <RouteMap
+              className="lg:col-span-8 m-0"
+              labels={{
+                title: vt("routesMapTitle"),
+                northern: vt("routesNorthern"),
+                central: vt("routesCentral"),
+                onward: vt("routesOnward"),
+                schematic: vt("routesSchematic"),
+                portMombasa: vt("portMombasa"),
+                portDar: vt("portDar"),
+              }}
+            />
+          </Container>
+        </Section>
 
         {/* ══ What we need to quote ═════════════════════════════════════════ */}
         <Section tone="deep" id="logistics-need" aria-labelledby="logistics-need-heading">

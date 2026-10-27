@@ -12,6 +12,7 @@ import {
   SectionHead, Steps, FactGrid, CredentialGroups, ContactBand,
 } from "@/components/system/blocks";
 import { Film } from "@/components/system/Film";
+import { FuelBars } from "@/components/sections/FuelBars";
 import { CinematicHero, DesignedBanner, FactStrip, Mosaic, Picture } from "@/components/system/imagery";
 import { CountUp } from "@/components/system/CountUp";
 import APPLICATIONS from "@/data/fet-applications.json";
@@ -52,6 +53,7 @@ export default async function FuelEcoTechPage() {
   const pricing = await getTranslations("fetPricing");
   const alt = await getTranslations("imageAlt");
   const bn = await getTranslations("banners");
+  const vt = await getTranslations("visuals");
 
   const evidenceRows: [string, string][] = [
     [home("evidenceRowBefore"), `11.52 ${home("evidenceUnit")}`],
@@ -121,8 +123,14 @@ export default async function FuelEcoTechPage() {
               </ul>
             </Reveal>
             <Reveal className="lg:col-span-6 lg:pt-16">
-              <dl className="border-t border-ink-line">
-                {evidenceRows.map(([k, v]) => (
+              <FuelBars
+                before={11.52}
+                after={9.92}
+                unit={home("evidenceUnit")}
+                labels={{ before: home("evidenceRowBefore"), after: home("evidenceRowAfter"), less: vt.raw("fuelLess") as string }}
+              />
+              <dl className="border-t border-ink-line mt-10">
+                {evidenceRows.slice(2).map(([k, v]) => (
                   <div key={k} className="flex items-baseline justify-between gap-6 border-b border-ink-line py-5">
                     <dt className="t-small text-ink-fg-muted">{k}</dt>
                     <dd className="font-display text-[1.75rem] leading-none text-ink-fg whitespace-nowrap [font-variant-numeric:lining-nums_tabular-nums]">{v}</dd>

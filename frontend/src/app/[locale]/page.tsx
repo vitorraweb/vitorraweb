@@ -13,6 +13,7 @@ import { ImageBand, Picture } from "@/components/system/imagery";
 import { CircleLink } from "@/components/system/CircleLink";
 import { StatementHero } from "@/components/sections/StatementHero";
 import { ProofCarousel } from "@/components/sections/ProofCarousel";
+import { CredentialStrip } from "@/components/sections/CredentialStrip";
 import { EvidenceStory } from "@/components/sections/EvidenceStory";
 import { BusinessDoors } from "@/components/system/doors";
 import { getBlogPosts } from "@/lib/api";
@@ -51,6 +52,7 @@ export default async function HomePage() {
   const alt = await getTranslations("imageAlt");
   const bn = await getTranslations("banners");
   const tp = await getTranslations("products");
+  const vt = await getTranslations("visuals");
   const locale = await getLocale();
 
   let posts: BlogPost[] = [];
@@ -117,6 +119,7 @@ export default async function HomePage() {
           credit={t("heroCredit")}
           scrollCue={t("scrollCue")}
         />
+        <CredentialStrip label={vt("stripLabel")} linkLabel={vt("stripLink")} />
 
         {/* ══ 2 · Four doors — each shows the photograph its page opens on ═ */}
         <Section tone="paper" aria-labelledby="doors-heading">

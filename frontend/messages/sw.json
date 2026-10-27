@@ -1701,5 +1701,25 @@
     "keyCoffeeAlt": "Vitorra Coffee: Arabika ya Uganda, kwa dunia. Kuuza nje na jumla.",
     "keyLogisticsAlt": "Huduma za usafirishaji: kila kiungo, timu moja. Usafirishaji, maghala na forodha.",
     "manifestoAlt": "Tunachosimamia: biashara nne, kiwango kimoja. Ushahidi kabla ya ahadi."
+  },
+  "visuals": {
+    "stripLabel": "Nyuma ya bidhaa zetu",
+    "stripLink": "Kila kimoja kinathibitisha nini",
+    "routesLabel": "Njia",
+    "routesTitle": "Njia ambazo mzigo wako hupita.",
+    "routesBody": "Uganda haina bahari, kwa hiyo mizigo ya baharini hufika kupitia bandari za Mombasa na Dar es Salaam, kisha kwa barabara au reli kupitia korido mbili. Tunakupa bei ya njia inayofaa mzigo, muda na bajeti yako.",
+    "routesMapTitle": "Ramani ya Afrika Mashariki: Korido ya Kaskazini kutoka bandari ya Mombasa kupitia Nairobi na Malaba hadi Kampala, Korido ya Kati kutoka Dar es Salaam kupitia Mwanza na Mutukula hadi Kampala, na barabara za kuendelea hadi Kigali na Juba.",
+    "routesNorthern": "Korido ya Kaskazini, kupitia Mombasa",
+    "routesCentral": "Korido ya Kati, kupitia Dar es Salaam",
+    "routesOnward": "Barabara za kuendelea hadi Kigali na Juba",
+    "routesSchematic": "Njia za mchoro, si kwa kipimo.",
+    "portMombasa": "Bandari ya Mombasa",
+    "portDar": "Bandari ya Dar es Salaam",
+    "originLabel": "Asili",
+    "originTitle": "Hulimwa kwenye miteremko ya Mlima Elgon.",
+    "originBody": "Arabika ya asili moja kutoka miteremko ya juu ya Mlima Elgon mashariki mwa Uganda, mpakani na Kenya. Huchumwa kwa mkono, huoshwa, hukaushwa juani na kukaangwa Uganda.",
+    "originMapTitle": "Ramani ya Uganda inayoonyesha Mlima Elgon kwenye mpaka wa mashariki na Kenya, na Kampala.",
+    "elgon": "Mlima Elgon",
+    "fuelLess": "Mafuta pungufu kwa {pct}%"
   }
 }
