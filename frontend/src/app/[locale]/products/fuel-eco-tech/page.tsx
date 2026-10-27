@@ -83,9 +83,9 @@ export default async function FuelEcoTechPage() {
 
         {/* ══ Intro ═════════════════════════════════════════════════════════ */}
         <CinematicHero
-          image="/images/stock/road-mountains.jpg"
+          image="/photos/hero-02-fet.jpg"
           transitionName="hero-fet"
-          alt={alt("roadMountains")}
+          alt={alt("fetInstalled")}
           index="01"
           label={tp("fet.name")}
           lines={[t("title")]}
@@ -159,14 +159,14 @@ export default async function FuelEcoTechPage() {
           <Film
             className="max-w-[44rem]"
             src="/videos/fet-hero.mp4"
-            poster="/videos/fet-hero-poster.jpg"
+            poster="/photos/poster-fet.jpg"
             title={t("filmTitle")}
             caption={t("filmCaption")}
             playLabel={shared("playFilm")}
           />
         </DeviceSteps>
 
-        <DesignedBanner src="/banners/wide-fet.jpg" alt={bn("wideFetAlt")} width={1916} height={821} />
+        <DesignedBanner src="/banners/wide-fet.webp" alt={bn("wideFetAlt")} width={2880} height={1234} />
 
         {/* ══ What it doesn't touch — with Vitorra's own fitting photographs ═ */}
         <Section tone="deep" aria-labelledby="fet-notouch">
@@ -267,7 +267,7 @@ export default async function FuelEcoTechPage() {
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
             <div className="lg:col-span-4">
               <SectionHead id="fet-sell" onInk label={t("sellLabel")} title={t("sellTitle")} />
-              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-fet.jpg" alt={bn("keyFetAlt")} ratio="1122/1402" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
+              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-fet.webp" alt={bn("keyFetAlt")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
             </div>
             <div className="lg:col-span-8">
               <Steps

@@ -93,7 +93,7 @@ export default async function HomePage() {
   const fallbackNews = [
     { tag: t("newsLaunchTag"), title: t("newsLaunchTitle"), caption: t("newsLaunchCaption"), image: "/press/launch-team.jpg", href: "/products/fuel-eco-tech", external: false },
     {
-      tag: t("newsPressTag"), title: t("newsPressTitle"), caption: t("newsPressCaption"), image: "/press/launch-presenters.jpg",
+      tag: t("newsPressTag"), title: t("newsPressTitle"), caption: t("newsPressCaption"), image: "/photos/launch-presenters.jpg",
       href: "https://www.ugnewsline.com/german-fuel-saving-technology-launches-in-uganda-as-motorists-seek-relief-from-rising-fuel-costs/",
       external: true,
     },
@@ -109,14 +109,13 @@ export default async function HomePage() {
 
         {/* ══ 1 · Opening ═══════════════════════════════════════════════════ */}
         <StatementHero
-          image="/images/stock/kampala-skyline.jpg"
-          alt={alt("kampala")}
+          image="/photos/hero-01-home.jpg"
+          alt={alt("fourBusinesses")}
           label={t("openLabel")}
           lines={[t("openTitle1"), t("openTitle2")]}
           lead={t("openLead")}
           cta={{ label: t("openCta"), href: "/enquire" }}
           secondary={{ label: t("openSecondary"), href: "/about" }}
-          credit={t("heroCredit")}
           scrollCue={t("scrollCue")}
         />
         <CredentialStrip label={vt("stripLabel")} linkLabel={vt("stripLink")} />
@@ -129,7 +128,7 @@ export default async function HomePage() {
           </Container>
         </Section>
 
-        <ImageBand image="/images/stock/hills-road.jpg" alt={alt("hillsRoad")} statement={t("bandStatement")} />
+        <ImageBand image="/photos/process-road.jpg" alt={alt("openRoad")} statement={t("bandStatement")} />
 
         {/* ══ 3 · Evidence — a pinned chapter: the device turns and opens as
                the measured result builds up beside it ══════════════════════ */}
@@ -175,10 +174,10 @@ export default async function HomePage() {
           label={bn("proofLabel")}
           title={bn("proofTitle")}
           slides={[
-            { src: "/banners/proof-fet.jpg", alt: bn("proofFetAlt"), href: "/products/fuel-eco-tech", name: tp("fet.name") },
-            { src: "/banners/proof-seal.jpg", alt: bn("proofSealAlt"), href: "/products/seal-wound-spray", name: tp("seal.name") },
-            { src: "/banners/proof-coffee.jpg", alt: bn("proofCoffeeAlt"), href: "/products/coffee", name: tp("coffee.name") },
-            { src: "/banners/proof-logistics.jpg", alt: bn("proofLogisticsAlt"), href: "/products/logistics", name: tp("logistics.name") },
+            { src: "/banners/proof-fet.webp", alt: bn("proofFetAlt"), href: "/products/fuel-eco-tech", name: tp("fet.name") },
+            { src: "/banners/proof-seal.webp", alt: bn("proofSealAlt"), href: "/products/seal-wound-spray", name: tp("seal.name") },
+            { src: "/banners/proof-coffee.webp", alt: bn("proofCoffeeAlt"), href: "/products/coffee", name: tp("coffee.name") },
+            { src: "/banners/proof-logistics.webp", alt: bn("proofLogisticsAlt"), href: "/products/logistics", name: tp("logistics.name") },
           ]}
         />
 
@@ -186,9 +185,7 @@ export default async function HomePage() {
         <Section tone="sage" aria-labelledby="company-heading">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             <div className="lg:col-span-6 lg:order-2">
-              {/* The team itself, not the building: until the new company
-                  photographs arrive, the launch group shot carries this. */}
-              <Picture src="/press/launch-team.jpg" alt={t("newsLaunchCaption")} caption={t("newsLaunchCaption")} ratio="3/2" sizes="(min-width: 1024px) 45vw, 100vw" />
+              <Picture src="/photos/company-B-reception.jpg" alt={alt("reception")} ratio="4/3" grade={false} sizes="(min-width: 1024px) 45vw, 100vw" />
             </div>
             <div className="lg:col-span-5 lg:order-1">
               <Label className="mb-6">{t("companyLabel")}</Label>

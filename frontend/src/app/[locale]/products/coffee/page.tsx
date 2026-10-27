@@ -6,6 +6,7 @@ import { Faq } from "@/components/ui/faq";
 import CoffeeExportSpec from "@/components/sections/CoffeeExportSpec";
 import { HorizontalSteps } from "@/components/motion/HorizontalSteps";
 import { OriginMap } from "@/components/maps/OriginMap";
+import { Film } from "@/components/system/Film";
 import { Section, Container, TextLink } from "@/components/system";
 import {
   SectionHead, SpecTable, ContactBand,
@@ -64,9 +65,9 @@ export default async function CoffeePage() {
       <main id="main" className="flex-1 bg-paper">
 
         <CinematicHero
-          image="/images/stock/coffee-valley.jpg"
+          image="/photos/hero-04-coffee.jpg"
           transitionName="hero-coffee"
-          alt={alt("coffeeValley")}
+          alt={alt("coffeeWarehouse")}
           index="03"
           label={tp("coffee.name")}
           lines={[t("title")]}
@@ -91,10 +92,20 @@ export default async function CoffeePage() {
           title={t("originTitle")}
           intro={t("originBody")}
           steps={[
-            { title: old("ftcStep1Title"), body: old("ftcStep1Body"), image: { src: "/images/stock/coffee-cherries.jpg", alt: alt("coffeeCherries") } },
-            { title: old("ftcStep2Title"), body: old("ftcStep2Body"), image: { src: "/images/stock/coffee-hands.jpg", alt: alt("coffeeHands") } },
-            { title: old("ftcStep3Title"), body: old("ftcStep3Body"), image: { src: "/images/stock/coffee-roaster.jpg", alt: alt("coffeeRoaster") } },
+            { title: old("ftcStep1Title"), body: old("ftcStep1Body"), image: { src: "/photos/process-coffee-cherries.jpg", alt: alt("coffeeCherries") } },
+            { title: old("ftcStep2Title"), body: old("ftcStep2Body"), image: { src: "/photos/process-coffee-hands.jpg", alt: alt("coffeeHands") } },
+            { title: old("ftcStep3Title"), body: old("ftcStep3Body"), image: { src: "/photos/process-coffee-roaster.jpg", alt: alt("coffeeRoaster") } },
           ]}
+          after={
+            <Film
+              className="max-w-[44rem]"
+              src="/videos/coffee-hero.mp4"
+              poster="/photos/poster-coffee.jpg"
+              title={t("filmTitle")}
+              caption={t("filmCaption")}
+              playLabel={shared("playFilm")}
+            />
+          }
         />
 
         {/* ══ Origin — where it grows, on a real map ═══════════════════════ */}
@@ -107,14 +118,14 @@ export default async function CoffeePage() {
           </Container>
         </Section>
 
-        <DesignedBanner src="/banners/wide-coffee.jpg" alt={bn("wideCoffeeAlt")} width={1916} height={821} />
+        <DesignedBanner src="/banners/wide-coffee.webp" alt={bn("wideCoffeeAlt")} width={2880} height={1234} />
 
         <Section tone="paper" aria-labelledby="coffee-blend">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
             <div className="lg:col-span-5">
               <h2 id="coffee-blend" className="t-h2 text-ink">{old("blendTitle")}</h2>
               <p className="t-body text-ink-soft mt-6">{old("blendBody")}</p>
-              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-coffee.jpg" alt={bn("keyCoffeeAlt")} ratio="1122/1402" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
+              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-coffee.webp" alt={bn("keyCoffeeAlt")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
             </div>
             <div className="lg:col-span-7">
               <SpecTable rows={[1, 2, 3, 4, 5].map((n) => [old(`spec${n}Key`), old(`spec${n}Value`)] as [string, string])} />

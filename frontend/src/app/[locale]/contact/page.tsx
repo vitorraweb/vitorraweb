@@ -59,7 +59,7 @@ export default async function ContactPage() {
               <Text size="lead" className="mt-8 max-w-[32rem] q-rise">{t("subtitle")}</Text>
             </div>
             <div className="lg:col-span-5 lg:col-start-8">
-              <Picture src="/hero/about-hq.jpg" alt={alt("hq")} caption={CONTACT_ADDRESS.join(", ")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 38vw, 100vw" />
+              <Picture src="/photos/company-A-head-office.jpg" alt={alt("hq")} caption={CONTACT_ADDRESS.join(", ")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 38vw, 100vw" />
             </div>
           </Container>
         </Section>

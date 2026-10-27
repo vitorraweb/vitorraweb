@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import { Faq } from "@/components/ui/faq";
 import { ServiceChain } from "@/components/motion/ServiceChain";
 import { RouteMap } from "@/components/maps/RouteMap";
+import { Film } from "@/components/system/Film";
 import { Section, Container, ButtonLink } from "@/components/system";
 import {
   SectionHead, Steps, ContactBand,
@@ -60,9 +61,9 @@ export default async function LogisticsPage() {
       <main id="main" className="flex-1 bg-paper">
 
         <CinematicHero
-          image="/images/stock/port-aerial.jpg"
+          image="/photos/hero-05-logistics.jpg"
           transitionName="hero-logistics"
-          alt={alt("portAerial")}
+          alt={alt("freightTruck")}
           index="04"
           label={tp("logistics.name")}
           lines={[t("title")]}
@@ -91,10 +92,18 @@ export default async function LogisticsPage() {
                 { title: old("cap4Title"), body: old("cap4Body") },
               ]}
             />
+            <Film
+              className="mt-16 max-w-[44rem]"
+              src="/videos/logistics-hero.mp4"
+              poster="/photos/poster-logistics.jpg"
+              title={t("filmTitle")}
+              caption={t("filmCaption")}
+              playLabel={shared("playFilm")}
+            />
           </Container>
         </Section>
 
-        <DesignedBanner src="/banners/wide-logistics.jpg" alt={bn("wideLogisticsAlt")} width={1916} height={821} tone="ink" />
+        <DesignedBanner src="/banners/wide-logistics.webp" alt={bn("wideLogisticsAlt")} width={2880} height={1234} tone="ink" />
 
         {/* ══ Routes — the two port corridors, on a real map ═══════════════ */}
         <Section tone="paper" aria-labelledby="logistics-routes">
@@ -125,7 +134,7 @@ export default async function LogisticsPage() {
               <div className="mt-10">
                 <ButtonLink href={ENQUIRE}>{t("primary")}</ButtonLink>
               </div>
-              <Picture className="mt-14 max-w-[22rem]" src="/banners/keyvisual-logistics.jpg" alt={bn("keyLogisticsAlt")} ratio="1122/1402" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
+              <Picture className="mt-14 max-w-[22rem]" src="/banners/keyvisual-logistics.webp" alt={bn("keyLogisticsAlt")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
             </div>
             <ol className="lg:col-span-6 lg:col-start-7 border-t border-line-strong">
               {[1, 2, 3, 4, 5].map((n) => (

@@ -53,7 +53,11 @@ export function CinematicHero({
   priority?: boolean;
 }) {
   return (
-    <section aria-labelledby="hero-title" className="q-scope relative isolate overflow-hidden bg-ink text-ink-fg min-h-[82svh] lg:min-h-[92svh] flex">
+    <section aria-labelledby="hero-title" className="q-scope relative isolate overflow-hidden bg-ink text-ink-fg md:min-h-[82svh] lg:min-h-[92svh] flex">
+      {/* On a phone a tall crop would hide the product behind the headline,
+          so the photograph keeps a 4:3 frame under the header and the copy
+          sits below it. From md up it fills the hero as before. */}
+      <div className="absolute inset-x-0 top-16 aspect-[4/3] md:inset-0 md:aspect-auto -z-10">
       <HeroMedia>
         <MaybeTransition name={transitionName}>
           <Image
@@ -67,11 +71,13 @@ export function CinematicHero({
         </MaybeTransition>
         {/* Legibility: a deep wash from the bottom-left, where the type sits,
             leaving the right of the photograph (the subject) bright. */}
-        <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,20,0.92)_0%,rgba(20,20,20,0.62)_32%,rgba(20,20,20,0.16)_62%,rgba(20,20,20,0.5)_100%)]" />
-        <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_right,rgba(20,20,20,0.62)_0%,rgba(20,20,20,0.25)_45%,transparent_70%)]" />
+        <div aria-hidden="true" className="absolute inset-0 hidden md:block bg-[linear-gradient(to_top,rgba(20,20,20,0.92)_0%,rgba(20,20,20,0.62)_32%,rgba(20,20,20,0.16)_62%,rgba(20,20,20,0.5)_100%)]" />
+        <div aria-hidden="true" className="absolute inset-0 md:hidden bg-[linear-gradient(to_top,rgb(20,20,20)_0%,rgba(20,20,20,0)_22%)]" />
+        <div aria-hidden="true" className="absolute inset-0 hidden md:block bg-[linear-gradient(to_right,rgba(20,20,20,0.62)_0%,rgba(20,20,20,0.25)_45%,transparent_70%)]" />
       </HeroMedia>
+      </div>
 
-      <Container className="relative mt-auto pb-14 lg:pb-20 pt-40">
+      <Container className="relative mt-auto pb-14 lg:pb-20 pt-[calc(4rem+75vw-1.5rem)] md:pt-40">
         <HeroCopy className="max-w-[48rem]">
           <div className="q-rise" style={{ "--d": "100ms" } as React.CSSProperties}>
             <Label onInk index={index} className="mb-8 text-ink-fg">{label}</Label>

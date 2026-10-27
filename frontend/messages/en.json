@@ -1539,7 +1539,16 @@
     "shipWake": "A container ship leaving a long wake at sea",
     "warehouse": "Pallets on racking in a warehouse",
     "hq": "Padre Pio House, the Kampala office building where Vitorra Holdings is based",
-    "reception": "The Vitorra sign at the head-office reception"
+    "reception": "The Vitorra sign at the head-office reception",
+    "fourBusinesses": "A Fuel Eco Tech device, a SEAL PRO wound spray, a sack of coffee beans and a model shipping container on a stone ledge",
+    "fetInstalled": "A Fuel Eco Tech device fitted on the fuel line in an engine bay (illustration)",
+    "sealKit": "A gloved hand holding a SEAL PRO wound spray beside an open trauma kit",
+    "coffeeWarehouse": "Sacks of Uganda Arabica stacked on pallets in an export warehouse",
+    "freightTruck": "A container truck on an East African highway at dusk",
+    "openRoad": "A straight road across open grassland toward a rocky ridge",
+    "sealOtc": "SEAL OTC wound spray, 1.5 oz can",
+    "sealPro": "SEAL PRO wound spray, 2.5 oz can",
+    "sealPet": "HemoSEAL Pet wound spray, 2.8 oz can"
   },
   "aboutQA": {
     "heroLabel": "About Vitorra",

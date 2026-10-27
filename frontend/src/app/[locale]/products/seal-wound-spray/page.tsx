@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -6,7 +7,6 @@ import { Reveal } from "@/components/ui/reveal";
 import { Faq } from "@/components/ui/faq";
 import { HorizontalSteps } from "@/components/motion/HorizontalSteps";
 import { TiltCard } from "@/components/motion/TiltCard";
-import { CanRange } from "@/components/ui/CanRange";
 import { Section, Container, Text, TextLink } from "@/components/system";
 import {
   SectionHead, FactGrid, SpecTable, ContactBand,
@@ -47,9 +47,9 @@ export default async function SealPage() {
   const bn = await getTranslations("banners");
 
   const variants = [
-    { name: "SEAL OTC", tagline: old("v1Tagline"), body: old("v1Body"), specs: [1, 2, 3, 4, 5].map((n) => old(`v1Spec${n}`)) },
-    { name: "SEAL PRO", tagline: old("v2Tagline"), body: old("v2Body"), specs: [1, 2, 3, 4, 5].map((n) => old(`v2Spec${n}`)), note: old("mostCapable") },
-    { name: "HemoSEAL Pet", tagline: old("v3Tagline"), body: old("v3Body"), specs: [1, 2, 3, 4, 5].map((n) => old(`v3Spec${n}`)) },
+    { name: "SEAL OTC", image: "/photos/seal-range-otc.png", imageAlt: alt("sealOtc"), tagline: old("v1Tagline"), body: old("v1Body"), specs: [1, 2, 3, 4, 5].map((n) => old(`v1Spec${n}`)) },
+    { name: "SEAL PRO", image: "/photos/seal-range-pro.png", imageAlt: alt("sealPro"), tagline: old("v2Tagline"), body: old("v2Body"), specs: [1, 2, 3, 4, 5].map((n) => old(`v2Spec${n}`)), note: old("mostCapable") },
+    { name: "HemoSEAL Pet", image: "/photos/seal-range-pet.png", imageAlt: alt("sealPet"), tagline: old("v3Tagline"), body: old("v3Body"), specs: [1, 2, 3, 4, 5].map((n) => old(`v3Spec${n}`)) },
   ];
 
   const faqs = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ q: old(`faq${n}Q`), a: old(`faq${n}A`) }));
@@ -60,9 +60,9 @@ export default async function SealPage() {
       <main id="main" className="flex-1 bg-paper">
 
         <CinematicHero
-          image="/images/stock/trauma-kit-open.jpg"
+          image="/photos/hero-03-seal.jpg"
           transitionName="hero-seal"
-          alt={alt("traumaKit")}
+          alt={alt("sealKit")}
           index="02"
           label={tp("seal.name")}
           lines={[t("title")]}
@@ -92,7 +92,7 @@ export default async function SealPage() {
               onInk
               className="max-w-[44rem]"
               src="/videos/seal-hero.mp4"
-              poster="/videos/seal-hero-poster.jpg"
+              poster="/photos/poster-seal.jpg"
               title={t("filmTitle")}
               caption={t("filmCaption")}
               playLabel={shared("playFilm")}
@@ -105,10 +105,15 @@ export default async function SealPage() {
           <Container>
             <SectionHead id="seal-range-heading" label={t("rangeLabel")} title={old("rangeTitle")} body={old("rangeBody")} className="mb-14" />
             <ul className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {variants.map((v, i) => (
+              {variants.map((v) => (
                 <li key={v.name}>
                   <TiltCard className="flex flex-col bg-paper border border-line rounded-frame p-8 lg:p-10">
-                  <CanRange active={i} className="w-full max-w-[13rem] h-auto mb-8 text-ink" />
+                  {/* The real cans, cut out from the product photos. Shown at
+                      one display height: their true relative sizes aren't
+                      known, so the net weight in the specs carries that. */}
+                  <div className="relative mx-auto mb-8 h-56 w-full">
+                    <Image src={v.image} alt={v.imageAlt} fill sizes="(min-width: 768px) 20vw, 60vw" className="object-contain" />
+                  </div>
                   <p className="t-label text-gold-ink">{v.note ?? v.tagline}</p>
                   <h3 className="t-h2 text-ink mt-4">{v.name}</h3>
                   {v.note && <p className="t-small text-ink-muted mt-1">{v.tagline}</p>}
@@ -145,7 +150,7 @@ export default async function SealPage() {
           </Container>
         </Section>
 
-        <DesignedBanner src="/banners/wide-seal.jpg" alt={bn("wideSealAlt")} width={1916} height={821} />
+        <DesignedBanner src="/banners/wide-seal.webp" alt={bn("wideSealAlt")} width={2880} height={1234} />
 
         {/* ══ Specifications and safety ═════════════════════════════════════ */}
         <Section tone="deep" aria-labelledby="seal-specs">
@@ -170,7 +175,7 @@ export default async function SealPage() {
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
             <div className="lg:col-span-5">
               <SectionHead id="seal-proc" onInk label={t("procLabel")} title={t("procTitle")} body={t("procBody")} />
-              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-seal.jpg" alt={bn("keySealAlt")} ratio="1122/1402" grade={false} sizes="(min-width: 1024px) 30vw, 100vw" />
+              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-seal.webp" alt={bn("keySealAlt")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 30vw, 100vw" />
             </div>
             <ol className="lg:col-span-6 lg:col-start-7 border-t border-ink-line">
               {[t("proc1"), t("proc2"), t("proc3"), t("proc4")].map((p, i) => (

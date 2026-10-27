@@ -42,7 +42,7 @@ export default async function AboutPage() {
       <Header overlay />
       <main id="main" className="flex-1 bg-paper">
         <CinematicHero
-          image="/hero/about-hq.jpg"
+          image="/photos/hero-06-about.jpg"
           alt={alt("hq")}
           label={t("heroLabel")}
           lines={[t("heroLine1"), t("heroLine2")]}
@@ -84,7 +84,7 @@ export default async function AboutPage() {
               </dl>
             </div>
             <div className="lg:col-span-6 lg:col-start-7">
-              <Picture src="/banners/manifesto.jpg" alt={bn("manifestoAlt")} ratio="1/1" grade={false} sizes="(min-width: 1024px) 45vw, 100vw" />
+              <Picture src="/banners/manifesto.webp" alt={bn("manifestoAlt")} ratio="1/1" grade={false} sizes="(min-width: 1024px) 45vw, 100vw" />
             </div>
           </Container>
         </Section>

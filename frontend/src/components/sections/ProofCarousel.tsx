@@ -49,7 +49,7 @@ export function ProofCarousel({
 
   const slide = (s: ProofSlide, i: number, sizes: string) => (
     <Link href={s.href} className="group block" aria-label={`${s.name}: ${s.alt}`}>
-      <div className="relative overflow-hidden rounded-frame bg-ink-line q-zoom" style={{ aspectRatio: "1448/1086" }}>
+      <div className="relative overflow-hidden rounded-frame bg-ink-line q-zoom" style={{ aspectRatio: "4/3" }}>
         <Image src={s.src} alt={s.alt} fill sizes={sizes} className="object-cover" />
       </div>
       <p className="t-label text-ink-fg-muted mt-4 flex items-center justify-between gap-6">
