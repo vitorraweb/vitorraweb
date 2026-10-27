@@ -91,7 +91,7 @@ class BlogAdminController extends Controller
             return response()->json(['message' => 'This post is already published.'], 422);
         }
 
-        $to = collect(explode(',', (string) (Setting::get('blog_review_to') ?: Setting::get('notify_email'))))
+        $to = collect(explode(',', (string) (Setting::get('blog_review_to') ?: 'support@vitorra.org')))
             ->map(fn ($e) => trim($e))->filter()->values()->all();
         if (! $to) {
             return response()->json(['message' => 'No reviewers set. Add them in Settings → Blog drafts.'], 422);

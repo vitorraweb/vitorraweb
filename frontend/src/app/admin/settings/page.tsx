@@ -113,9 +113,9 @@ export default function SettingsPage() {
         </Section>
 
         {/* Blog autopilot */}
-        <Section title="Blog drafts" note="Who checks a blog draft when the writer presses \"Send for review\". They get a link to read it and publish it with one click.">
-          <Row label="Reviewers" hint="Comma-separated. Falls back to the team email above if left blank.">
-            <input value={form.blog_review_to ?? ""} onChange={(e) => set("blog_review_to", e.target.value)} placeholder="marketing@vitorra.org, thurayya@vitorra.org" className={inputCls} style={inputStyle} />
+        <Section title="Blog drafts" note="Who checks a blog draft when the writer presses Send for review. They get a link to read it and publish it with one click.">
+          <Row label="Reviewers" hint="Comma-separated. Marketing's shared inbox, support@vitorra.org, is used if left blank.">
+            <input value={form.blog_review_to ?? ""} onChange={(e) => set("blog_review_to", e.target.value)} placeholder="support@vitorra.org" className={inputCls} style={inputStyle} />
           </Row>
         </Section>
 

@@ -44,7 +44,7 @@ class DraftBlogPost extends Command
             return self::FAILURE;
         }
 
-        $to = collect(explode(',', (string) (Setting::get('blog_review_to') ?: Setting::get('notify_email'))))
+        $to = collect(explode(',', (string) (Setting::get('blog_review_to') ?: 'support@vitorra.org')))
             ->map(fn ($e) => trim($e))->filter()->values()->all();
         if ($to) {
             Mail::to($to)->send(new BlogDraftReady($post));

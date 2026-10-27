@@ -154,6 +154,22 @@ class BlogAutopilotTest extends TestCase
         $this->assertSame('draft', $post->fresh()->status);
     }
 
+    public function test_review_goes_to_the_support_inbox_by_default(): void
+    {
+        Mail::fake();
+        $post = BlogPost::create(['title' => 'Our take', 'slug' => 'our-take-2', 'content' => 'Body', 'status' => 'draft']);
+
+        $this->withHeaders($this->staffHeaders())
+            ->postJson("/api/admin/blog/posts/{$post->id}/request-review")
+            ->assertOk()->assertJsonPath('to', ['support@vitorra.org']);
+
+        // A blank setting (e.g. the field cleared and saved) still reaches Marketing.
+        Setting::put(['blog_review_to' => '']);
+        $this->withHeaders($this->staffHeaders())
+            ->postJson("/api/admin/blog/posts/{$post->id}/request-review")
+            ->assertOk()->assertJsonPath('to', ['support@vitorra.org']);
+    }
+
     public function test_a_published_post_cannot_be_sent_for_review(): void
     {
         Mail::fake();

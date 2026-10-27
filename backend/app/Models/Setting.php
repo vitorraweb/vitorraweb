@@ -34,9 +34,9 @@ class Setting extends Model
         // Executive report — who the scheduled CEO summary is emailed to.
         'exec_report_to' => '',   // CEO inbox (To); falls back to notify_email when blank
         'exec_report_cc' => '',
-        // Blog autopilot — who reviews the twice-weekly drafts (comma-separated);
-        // falls back to notify_email when blank.
-        'blog_review_to' => '',
+        // Who checks blog drafts sent for review (comma-separated). Marketing all
+        // read the shared support inbox, so that is the default and the fallback.
+        'blog_review_to' => 'support@vitorra.org',
 
         // Printed on the branded quotations / invoices (BrandedDocument).
         'company_tin'       => '1055502376',
