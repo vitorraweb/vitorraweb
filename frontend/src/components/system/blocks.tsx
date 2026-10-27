@@ -1,3 +1,4 @@
+import { CircleLink } from "@/components/system/CircleLink";
 import { Section, Container, Label, Heading, Text, ButtonLink, TextLink } from "@/components/system";
 import { Reveal } from "@/components/ui/reveal";
 import { Magnetic } from "@/components/motion/Magnetic";
@@ -207,26 +208,30 @@ export function ContactBand({
   labels: { call: string; email: string; visit: string; whatsapp: string };
 }) {
   const wa = `https://wa.me/${CONTACT_PHONE.replace(/[^0-9]/g, "")}`;
+  /* Sage, light and calm, so the dark footer below reads as its own close:
+     the big question and one circle action on the left, the three ways to
+     reach us on the right. This is the only place contact details appear
+     (the footer no longer repeats them). */
   return (
-    <Section tone="ink" aria-labelledby="contact-band-heading">
-      <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-        <div className="lg:col-span-6">
-          <Heading id="contact-band-heading" size="h1" className="text-ink-fg">{title}</Heading>
-          <Text size="lead" onInk muted className="mt-6 max-w-[30rem]">{body}</Text>
-          <div className="mt-10 flex flex-wrap gap-4">
-            <Magnetic><ButtonLink href={briefHref} onInk>{briefLabel}</ButtonLink></Magnetic>
-            <Magnetic><ButtonLink href={wa} external onInk variant="secondary" arrow={false}>{labels.whatsapp}</ButtonLink></Magnetic>
+    <Section tone="sage" aria-labelledby="contact-band-heading">
+      <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        <div className="lg:col-span-7">
+          <Heading id="contact-band-heading" size="h1" className="text-ink">{title}</Heading>
+          <Text size="lead" className="mt-6 max-w-[30rem]">{body}</Text>
+          <div className="mt-10 flex flex-wrap items-center gap-8">
+            <CircleLink href={briefHref} size="lg">{briefLabel}</CircleLink>
+            <Magnetic><ButtonLink href={wa} external variant="secondary" arrow={false}>{labels.whatsapp}</ButtonLink></Magnetic>
           </div>
         </div>
-        <dl className="lg:col-span-5 lg:col-start-8 border-t border-ink-line">
+        <dl className="lg:col-span-5 border-t border-line-strong">
           {[
             { k: labels.call, v: CONTACT_PHONE, href: `tel:${CONTACT_PHONE.replace(/\s/g, "")}` },
             { k: labels.email, v: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
             { k: labels.visit, v: CONTACT_ADDRESS.join(", "), href: undefined },
           ].map((r) => (
-            <div key={r.k} className="grid grid-cols-3 gap-4 border-b border-ink-line py-5">
-              <dt className="t-label text-ink-fg-muted pt-1">{r.k}</dt>
-              <dd className="col-span-2 t-body text-ink-fg">
+            <div key={r.k} className="grid grid-cols-3 gap-4 border-b border-line-strong py-5">
+              <dt className="t-label text-ink-muted pt-1">{r.k}</dt>
+              <dd className="col-span-2 t-body text-ink">
                 {r.href ? <a href={r.href} className="q-link">{r.v}</a> : r.v}
               </dd>
             </div>

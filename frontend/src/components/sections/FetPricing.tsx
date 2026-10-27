@@ -3,12 +3,13 @@ import { Download } from "lucide-react";
 import ApproxPrice from "@/components/ui/ApproxPrice";
 import CurrencyConverter from "@/components/ui/CurrencyConverter";
 import ReserveButton from "@/components/sections/ReserveButton";
-import { Section, Container, Figure, TextLink, Text } from "@/components/system";
+import { Section, Container, TextLink, Text } from "@/components/system";
+import { VehicleIcon } from "@/components/ui/VehicleIcon";
 import { SectionHead } from "@/components/system/blocks";
 import { FET_TIERS, formatUgx, engineSpanLabel } from "@/lib/fet-pricing";
 
 /* ─── FET Full Line Pricing — Quiet Authority ─────────────────────────────────
-   Public pricing guide, one column per device tier, with its exact selling
+   Public pricing guide, one column per device tier — a line drawing of the vehicle class, then its exact selling
    price (UGX, from the product catalogue, installation included). Prices are shown openly; the
    sales motion stays assessment → quote, so every column also routes to the
    enquiry form. Engine spans come from the manufacturer application table via
@@ -34,16 +35,24 @@ export default function FetPricing() {
             title={<>{tr("titleLead")} {tr("titleAccent")}</>}
             body={tr("body")}
           />
-          <div className="lg:col-span-4 lg:col-start-9">
-            <Figure src="/products/fet/Picture3.jpg" alt={tr("deviceAlt")} ratio="1/1" sizes="(min-width: 1024px) 28vw, 100vw" />
-          </div>
+          {/* What every price includes sits beside the heading, so the four
+              devices come straight after it (the large photo is gone). */}
+          <ul className="lg:col-span-4 lg:col-start-9 space-y-3 border-t border-line-strong pt-6">
+            {included.map((item) => (
+              <li key={item} className="flex items-baseline gap-3 t-small text-ink-soft">
+                <span aria-hidden="true" className="h-px w-4 shrink-0 bg-gold translate-y-[-0.3em]" />
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Hairline grid — one column per device. */}
         <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-line border-y border-line">
           {FET_TIERS.map((t) => (
-            <li key={t.id} className="flex flex-col bg-paper-deep py-8 sm:px-6 lg:first:pl-0">
-              <p className="t-label text-gold-ink">{t.model}</p>
+            <li key={t.id} className="group flex flex-col bg-paper-deep py-8 sm:px-6 lg:first:pl-0 transition-colors duration-500 hover:bg-paper">
+              <VehicleIcon kind={t.id} className="h-12 w-auto self-start text-ink transition-colors duration-500 group-hover:text-gold-ink" />
+              <p className="t-label text-gold-ink mt-6">{t.model}</p>
               <h3 className="t-h3 text-ink mt-3">{tt(`${t.id}.label`)}</h3>
               <p className="t-small text-ink-soft mt-2">{tt(`${t.id}.fits`)}</p>
               <p className="t-small text-ink-muted mt-1 font-numeric">{engineSpanLabel(MODEL_CODE[t.id])}</p>
@@ -68,15 +77,7 @@ export default function FetPricing() {
 
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-6">
-            <ul className="space-y-3">
-              {included.map((item) => (
-                <li key={item} className="flex items-baseline gap-3 t-body text-ink-soft">
-                  <span aria-hidden="true" className="h-px w-4 shrink-0 bg-gold translate-y-[-0.3em]" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-8 flex flex-col items-start gap-4">
+            <div className="flex flex-col items-start gap-4">
               {[
                 { href: "/downloads/vitorra-fet-application-guide.pdf", label: tr("downloadGuide") },
                 { href: "/downloads/vitorra-fet-datasheet.pdf", label: tr("downloadDatasheet") },

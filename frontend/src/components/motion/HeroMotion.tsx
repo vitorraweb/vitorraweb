@@ -44,11 +44,13 @@ export function HeroMedia({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* The hero's words lift and fade a touch faster than the photograph scrolls. */
+/* The hero's words lift and fade a touch faster than the photograph scrolls.
+   Driven by the page's own scroll position, so the words are fully solid when
+   the page opens: measuring the words' position against the viewport made
+   them start part-faded whenever the headline sat high on the screen. */
 export function HeroCopy({ children, className }: { children: React.ReactNode; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 60%", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [0, -90]);
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  return <motion.div ref={ref} className={className} style={{ y, opacity }}>{children}</motion.div>;
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 700], [0, -90]);
+  const opacity = useTransform(scrollY, [120, 620], [1, 0]);
+  return <motion.div className={className} style={{ y, opacity }}>{children}</motion.div>;
 }

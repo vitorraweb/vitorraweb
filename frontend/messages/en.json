@@ -60,7 +60,9 @@
     "returns": "Returns & Warranty",
     "cookies": "Cookie Policy",
     "rights": "© {year} {name}. All rights reserved.",
-    "regLine": "Reg. No. {reg} · Kampala, Uganda"
+    "regLine": "Reg. No. {reg} · Kampala, Uganda",
+    "letsTalkLead": "Have a fleet, an order or a shipment in mind?",
+    "letsTalk": "Let’s talk"
   },
   "cookieBanner": {
     "ariaLabel": "Cookie consent",
@@ -1686,8 +1688,6 @@
   "banners": {
     "proofLabel": "The proof",
     "proofTitle": "One fact from each business, before we ask for yours.",
-    "prev": "Previous slide",
-    "next": "Next slide",
     "proofFetAlt": "13.9% less fuel. One Volkswagen T5, Germany, first full month with FET fitted. CTI GmbH, 2025. Single-vehicle result; savings vary.",
     "proofSealAlt": "SEAL Wound Spray: 36 months shelf life, no refrigeration.",
     "proofCoffeeAlt": "Vitorra Coffee export terms: 1 metric tonne minimum export order. Ugandan Arabica, roasted at origin.",

@@ -9,14 +9,14 @@ import {
   Section, Container, Label, Heading, Text, TextLink,
 } from "@/components/system";
 import { ContactBand, CredentialGroups } from "@/components/system/blocks";
-import { ImageBand, Mosaic } from "@/components/system/imagery";
+import { ImageBand, Picture } from "@/components/system/imagery";
 import { CircleLink } from "@/components/system/CircleLink";
 import { StatementHero } from "@/components/sections/StatementHero";
 import { ProofCarousel } from "@/components/sections/ProofCarousel";
 import { EvidenceStory } from "@/components/sections/EvidenceStory";
 import { BusinessDoors } from "@/components/system/doors";
 import { getBlogPosts } from "@/lib/api";
-import { CONTACT_ADDRESS, COMPANY_REG_NO } from "@/lib/constants";
+import { COMPANY_REG_NO } from "@/lib/constants";
 import type { BlogPost } from "@/types";
 
 /* ─── Homepage — Quiet Authority ──────────────────────────────────────────────
@@ -171,8 +171,6 @@ export default async function HomePage() {
         <ProofCarousel
           label={bn("proofLabel")}
           title={bn("proofTitle")}
-          prevLabel={bn("prev")}
-          nextLabel={bn("next")}
           slides={[
             { src: "/banners/proof-fet.jpg", alt: bn("proofFetAlt"), href: "/products/fuel-eco-tech", name: tp("fet.name") },
             { src: "/banners/proof-seal.jpg", alt: bn("proofSealAlt"), href: "/products/seal-wound-spray", name: tp("seal.name") },
@@ -185,10 +183,9 @@ export default async function HomePage() {
         <Section tone="sage" aria-labelledby="company-heading">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             <div className="lg:col-span-6 lg:order-2">
-              <Mosaic
-                a={{ src: "/hero/about-hq.jpg", alt: alt("hq"), caption: CONTACT_ADDRESS.join(", ") }}
-                b={{ src: "/hero/brand-wall.jpg", alt: alt("reception"), caption: t("companyPhotoCaption") }}
-              />
+              {/* The team itself, not the building: until the new company
+                  photographs arrive, the launch group shot carries this. */}
+              <Picture src="/press/launch-team.jpg" alt={t("newsLaunchCaption")} caption={t("newsLaunchCaption")} ratio="3/2" sizes="(min-width: 1024px) 45vw, 100vw" />
             </div>
             <div className="lg:col-span-5 lg:order-1">
               <Label className="mb-6">{t("companyLabel")}</Label>

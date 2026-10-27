@@ -6,6 +6,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { Faq } from "@/components/ui/faq";
 import { HorizontalSteps } from "@/components/motion/HorizontalSteps";
 import { TiltCard } from "@/components/motion/TiltCard";
+import { CanRange } from "@/components/ui/CanRange";
 import { Section, Container, Text, TextLink } from "@/components/system";
 import {
   SectionHead, FactGrid, SpecTable, ContactBand,
@@ -104,9 +105,10 @@ export default async function SealPage() {
           <Container>
             <SectionHead id="seal-range-heading" label={t("rangeLabel")} title={old("rangeTitle")} body={old("rangeBody")} className="mb-14" />
             <ul className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {variants.map((v) => (
+              {variants.map((v, i) => (
                 <li key={v.name}>
                   <TiltCard className="flex flex-col bg-paper border border-line rounded-frame p-8 lg:p-10">
+                  <CanRange active={i} className="w-full max-w-[13rem] h-auto mb-8 text-ink" />
                   <p className="t-label text-gold-ink">{v.note ?? v.tagline}</p>
                   <h3 className="t-h2 text-ink mt-4">{v.name}</h3>
                   {v.note && <p className="t-small text-ink-muted mt-1">{v.tagline}</p>}

@@ -1175,13 +1175,7 @@
   ::view-transition-image-pair(.morph) { animation-name: q-vt-blur; }
   @keyframes q-vt-blur { 40% { filter: blur(2px); } }
 }
-/* Footer signature: the wordmark at full page width, rising as it arrives. */
-.q-signature { font-size: clamp(5rem, 24vw, 21rem); font-weight: 300; }
 @media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    @keyframes q-sig { from { translate: 0 40%; opacity: 0.2; } to { translate: 0 0; opacity: 1; } }
-    .q-signature { animation: q-sig linear both; animation-timeline: view(); animation-range: entry 0% cover 40%; }
-  }
   /* A gold hairline draws under a list row on hover. */
   .q-row::after { content: ""; position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%; background: var(--color-gold); scale: 0 1; transform-origin: left; transition: scale 700ms var(--ease-cinematic); }
   .q-row:hover::after { scale: 1 1; }
@@ -1238,6 +1232,19 @@
   @keyframes q-pill { 0% { translate: 0 -0.6rem; opacity: 0; } 30% { opacity: 1; } 100% { translate: 0 0.9rem; opacity: 0; } }
   .q-pill-dot { animation: q-pill 2000ms var(--ease-cinematic) infinite; }
 }
+
+/* Film stills: a slow drift, and a ring that breathes out from the play disc. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes q-kenburns { from { scale: 1; translate: 0 0; } to { scale: 1.09; translate: -1.5% -1%; } }
+  .q-kenburns { animation: q-kenburns 16s ease-in-out infinite alternate; }
+  @keyframes q-ring { from { scale: 0.85; opacity: 0.9; } to { scale: 1.7; opacity: 0; } }
+  .q-ring { animation: q-ring 2400ms var(--ease-cinematic) infinite; }
+}
+
+/* Footer "Let's talk": on hover each letter lifts and turns gold in turn. */
+.q-talk span[style] { transition: translate 600ms var(--ease-cinematic), color 600ms var(--ease-cinematic); transition-delay: calc(var(--i) * 28ms); }
+.q-talk:hover span[style], .q-talk:focus-visible span[style] { translate: 0 -0.08em; color: var(--color-gold); }
+@media (prefers-reduced-motion: reduce) { .q-talk span[style] { transition: color 200ms; } .q-talk:hover span[style] { translate: none; } }
 
 /* Image hover: a slow, small zoom — the only hover motion on photographs. */
 .q-zoom img { transition: scale 1200ms var(--ease-cinematic); }

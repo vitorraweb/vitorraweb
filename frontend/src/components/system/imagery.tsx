@@ -65,9 +65,10 @@ export function CinematicHero({
             className={cn("object-cover q-settle", grade && "q-grade")}
           />
         </MaybeTransition>
-        {/* Legibility: a deep wash from the bottom-left, where the type sits. */}
-        <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,20,0.88)_0%,rgba(20,20,20,0.42)_40%,rgba(20,20,20,0.08)_68%,rgba(20,20,20,0.5)_100%)]" />
-        <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_right,rgba(20,20,20,0.45)_0%,transparent_55%)]" />
+        {/* Legibility: a deep wash from the bottom-left, where the type sits,
+            leaving the right of the photograph (the subject) bright. */}
+        <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,20,0.92)_0%,rgba(20,20,20,0.62)_32%,rgba(20,20,20,0.16)_62%,rgba(20,20,20,0.5)_100%)]" />
+        <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_right,rgba(20,20,20,0.62)_0%,rgba(20,20,20,0.25)_45%,transparent_70%)]" />
       </HeroMedia>
 
       <Container className="relative mt-auto pb-14 lg:pb-20 pt-40">
@@ -75,7 +76,7 @@ export function CinematicHero({
           <div className="q-rise" style={{ "--d": "100ms" } as React.CSSProperties}>
             <Label onInk index={index} className="mb-8 text-ink-fg">{label}</Label>
           </div>
-          <h1 id="hero-title" className="t-display text-ink-fg">
+          <h1 id="hero-title" className="t-display text-ink-fg [text-shadow:0_2px_28px_rgba(0,0,0,0.35)]">
             {lines.map((l, i) => (
               <span key={l} className="block overflow-hidden pb-[0.08em] -mb-[0.08em]">
                 <span className="block q-mask-rise" style={{ "--d": `${250 + i * 120}ms` } as React.CSSProperties}>{l}</span>
@@ -83,7 +84,7 @@ export function CinematicHero({
             ))}
           </h1>
           {lead && (
-            <p className="t-lead text-ink-fg/85 mt-8 max-w-[36rem] q-rise" style={{ "--d": `${450 + lines.length * 120}ms` } as React.CSSProperties}>
+            <p className="t-lead text-ink-fg mt-8 max-w-[36rem] q-rise [text-shadow:0_1px_16px_rgba(0,0,0,0.45)]" style={{ "--d": `${450 + lines.length * 120}ms` } as React.CSSProperties}>
               {lead}
             </p>
           )}

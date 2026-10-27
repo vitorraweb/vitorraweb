@@ -60,7 +60,9 @@
     "returns": "Marejesho na Dhamana",
     "cookies": "Sera ya Vidakuzi",
     "rights": "© {year} {name}. Haki zote zimehifadhiwa.",
-    "regLine": "Nambari ya Usajili {reg} · Kampala, Uganda"
+    "regLine": "Nambari ya Usajili {reg} · Kampala, Uganda",
+    "letsTalkLead": "Una magari, oda au mzigo wa kusafirisha akilini?",
+    "letsTalk": "Tuzungumze"
   },
   "cookieBanner": {
     "ariaLabel": "Idhini ya vidakuzi",
@@ -1686,8 +1688,6 @@
   "banners": {
     "proofLabel": "Ushahidi",
     "proofTitle": "Ukweli mmoja kutoka kila biashara, kabla hatujaomba wako.",
-    "prev": "Slaidi iliyotangulia",
-    "next": "Slaidi inayofuata",
     "proofFetAlt": "Mafuta pungufu kwa 13.9%. Volkswagen T5 moja, Ujerumani, mwezi kamili wa kwanza ikiwa na FET. CTI GmbH, 2025. Matokeo ya gari moja; akiba hutofautiana.",
     "proofSealAlt": "SEAL Wound Spray: inadumu miezi 36, haihitaji jokofu.",
     "proofCoffeeAlt": "Masharti ya kuuza nje Vitorra Coffee: agizo la chini tani 1 ya metriki. Arabika ya Uganda, imekaangwa Uganda.",

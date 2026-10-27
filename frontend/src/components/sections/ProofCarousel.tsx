@@ -2,17 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { motion, useScroll, useTransform } from "motion/react";
 import { Link } from "@/i18n/navigation";
-import { Container, Label } from "@/components/system";
-import { cn } from "@/lib/utils";
+import { Label } from "@/components/system";
 
-/* ─── Proof carousel ──────────────────────────────────────────────────────────
+/* ─── Proof, travelling sideways ──────────────────────────────────────────────
    One designed proof slide per business (Olivia's 4:3 banners), each a link
-   to its page. A native horizontal scroll with snap points, so touch, the
-   trackpad and the keyboard all work without a library; the arrows step one
-   slide, and the counter follows the slide nearest the left edge. The next
-   slide peeks in at the edge so it reads as "there's more".               */
+   to its page. On a desktop the section pins and the slides travel across as
+   the visitor scrolls down — no dragging, no arrows — with a gold line that
+   fills as they go (the same chapter as "How it is used" on the SEAL page).
+   Phones and reduced motion get the slides as a plain vertical list.      */
 
 export type ProofSlide = { src: string; alt: string; href: string; name: string };
 
@@ -20,89 +19,76 @@ export function ProofCarousel({
   label,
   title,
   slides,
-  prevLabel,
-  nextLabel,
 }: {
   label: string;
   title: string;
   slides: ProofSlide[];
-  prevLabel: string;
-  nextLabel: string;
 }) {
-  const track = useRef<HTMLUListElement>(null);
-  const [active, setActive] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLDivElement>(null);
+  const [distance, setDistance] = useState(0);
 
-  /* The current slide is the one whose left edge is nearest the track's
-     scroll position — robust when the next slide peeks in. */
+  // How far the track must travel: its full width minus one screen.
   useEffect(() => {
-    const el = track.current;
-    if (!el) return;
-    const onScroll = () => {
-      const items = Array.from(el.children) as HTMLElement[];
-      let best = 0;
-      let dist = Infinity;
-      items.forEach((item, i) => {
-        const d = Math.abs(item.offsetLeft - el.offsetLeft - el.scrollLeft);
-        if (d < dist) { dist = d; best = i; }
-      });
-      setActive(best);
-    };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
+    const measure = () => setDistance(Math.max(0, (track.current?.scrollWidth ?? 0) - window.innerWidth));
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
   }, []);
 
-  const go = (dir: 1 | -1) => {
-    const el = track.current;
-    if (!el) return;
-    const next = Math.max(0, Math.min(slides.length - 1, active + dir));
-    const item = el.children[next] as HTMLElement | undefined;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (item) el.scrollTo({ left: item.offsetLeft - el.offsetLeft, behavior: reduce ? "auto" : "smooth" });
-  };
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const x = useTransform(scrollYProgress, [0.06, 0.94], [0, -distance]);
+  const bar = useTransform(scrollYProgress, [0.06, 0.94], [0, 1]);
+
+  const Head = (
+    <div className="max-w-[26rem]">
+      <Label onInk className="mb-6">{label}</Label>
+      <h2 id="proof-heading" className="t-h1 text-ink-fg">{title}</h2>
+    </div>
+  );
+
+  const slide = (s: ProofSlide, i: number, sizes: string) => (
+    <Link href={s.href} className="group block" aria-label={`${s.name}: ${s.alt}`}>
+      <div className="relative overflow-hidden rounded-frame bg-ink-line q-zoom" style={{ aspectRatio: "1448/1086" }}>
+        <Image src={s.src} alt={s.alt} fill sizes={sizes} className="object-cover" />
+      </div>
+      <p className="t-label text-ink-fg-muted mt-4 flex items-center justify-between gap-6">
+        <span className="group-hover:text-gold transition-colors">{s.name} →</span>
+        <span className="font-numeric">{String(i + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}</span>
+      </p>
+    </Link>
+  );
 
   return (
-    <section aria-labelledby="proof-heading" className="q-scope bg-ink text-ink-fg py-[clamp(4.5rem,3rem+6vw,9rem)] overflow-hidden">
-      <Container>
-        <div className="flex flex-wrap items-end justify-between gap-8 mb-12">
-          <div>
-            <Label onInk className="mb-6">{label}</Label>
-            <h2 id="proof-heading" className="t-h1 text-ink-fg max-w-[36rem]">{title}</h2>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="t-label text-ink-fg-muted font-numeric" aria-live="polite">
-              {String(active + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
-            </span>
-            {([-1, 1] as const).map((dir) => (
-              <button
-                key={dir}
-                type="button"
-                onClick={() => go(dir)}
-                disabled={dir === -1 ? active === 0 : active === slides.length - 1}
-                aria-label={dir === -1 ? prevLabel : nextLabel}
-                className="grid place-items-center h-12 w-12 rounded-full border border-ink-line text-ink-fg transition-colors hover:border-gold hover:text-gold disabled:opacity-35 disabled:hover:border-ink-line disabled:hover:text-ink-fg"
-              >
-                {dir === -1 ? <ArrowLeft aria-hidden="true" className="h-4 w-4" /> : <ArrowRight aria-hidden="true" className="h-4 w-4" />}
-              </button>
+    <section aria-labelledby="proof-heading" data-tone="ink" className="q-scope bg-ink text-ink-fg">
+      {/* Desktop: pinned, travelling sideways with the scroll */}
+      <div ref={ref} className="hidden lg:block motion-reduce:!hidden relative" style={{ height: `${100 + slides.length * 60}vh` }}>
+        <div className="sticky top-0 h-svh overflow-hidden flex flex-col justify-center">
+          <motion.div ref={track} style={{ x }} className="flex items-center gap-10 pl-[max(3rem,calc((100vw-1240px)/2+3rem))] pr-[10vw]">
+            <div className="w-[26rem] shrink-0">{Head}</div>
+            {slides.map((s, i) => (
+              <div key={s.href} className="shrink-0 w-[min(42rem,46vw,calc((100svh-14rem)*1.333))]">{slide(s, i, "46vw")}</div>
             ))}
+          </motion.div>
+          <div className="q-container w-full mt-12">
+            <div className="h-px w-full bg-ink-line">
+              <motion.div className="h-px bg-gold origin-left" style={{ scaleX: bar }} />
+            </div>
           </div>
         </div>
+      </div>
 
-        <ul
-          ref={track}
-          className="flex gap-5 lg:gap-8 overflow-x-auto snap-x snap-mandatory pb-4 -mb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {slides.map((s, i) => (
-            <li key={s.href} className="snap-start shrink-0 basis-[86%] sm:basis-[70%] lg:basis-[58%]">
-              <Link href={s.href} className="group block" aria-label={`${s.name}: ${s.alt}`}>
-                <div className={cn("relative overflow-hidden rounded-frame bg-ink-line q-zoom transition-opacity duration-500", i !== active && "lg:opacity-60")} style={{ aspectRatio: "1448/1086" }}>
-                  <Image src={s.src} alt={s.alt} fill sizes="(min-width: 1024px) 58vw, 86vw" className="object-cover" />
-                </div>
-                <p className="t-label text-ink-fg-muted mt-4 group-hover:text-gold transition-colors">{s.name} →</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </Container>
+      {/* Phones, tablets and reduced motion: the slides in a column */}
+      <div className="lg:hidden motion-reduce:!block q-section">
+        <div className="q-container">
+          {Head}
+          <ul className="mt-10 space-y-10">
+            {slides.map((s, i) => (
+              <li key={s.href}>{slide(s, i, "100vw")}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </section>
   );
 }

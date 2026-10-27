@@ -8,7 +8,8 @@ import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 
 /* Footer newsletter signup (single opt-in). Posts to the API and swaps to a
    confirmation state on success. Errors render inline. Dark-surface styling. */
-export default function NewsletterSignup() {
+/* `onInk` restyles the form for the dark footer. */
+export default function NewsletterSignup({ onInk = false }: { onInk?: boolean }) {
   const t = useTranslations("newsletter");
   const locale = useLocale();
   const [email, setEmail] = useState("");
@@ -37,8 +38,8 @@ export default function NewsletterSignup() {
   /* Quiet Authority: a hairline field and an ink button on the paper footer. */
   if (state === "done") {
     return (
-      <p role="status" className="flex items-center gap-3 t-small text-ink">
-        <Check aria-hidden="true" className="h-4 w-4 text-gold-ink" />
+      <p role="status" className={`flex items-center gap-3 t-small ${onInk ? "text-ink-fg" : "text-ink"}`}>
+        <Check aria-hidden="true" className={`h-4 w-4 ${onInk ? "text-gold" : "text-gold-ink"}`} />
         {t("success")}
       </p>
     );
@@ -56,13 +57,13 @@ export default function NewsletterSignup() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("placeholder")}
             autoComplete="email"
-            className="w-full bg-transparent border-0 border-b border-line-strong rounded-none px-0 py-3 t-body text-ink placeholder:text-ink-muted outline-none focus:border-ink transition-colors"
+            className={`w-full bg-transparent border-0 border-b rounded-none px-0 py-3 t-body outline-none transition-colors ${onInk ? "border-ink-line text-ink-fg placeholder:text-ink-fg-muted focus:border-gold" : "border-line-strong text-ink placeholder:text-ink-muted focus:border-ink"}`}
           />
         </label>
         <button
           type="submit"
           disabled={state === "loading"}
-          className="q-btn bg-ink text-paper hover:bg-black disabled:opacity-60"
+          className={`q-btn disabled:opacity-60 ${onInk ? "bg-ink-fg text-ink hover:bg-white" : "bg-ink text-paper hover:bg-black"}`}
         >
           {state === "loading" ? (
             <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
@@ -81,8 +82,8 @@ export default function NewsletterSignup() {
         onExpire={() => setTurnstileToken("")}
         className="mt-3"
       />
-      {state === "error" && <p role="alert" className="mt-3 t-small text-alert-ink">{error}</p>}
-      <p className="mt-3 t-small text-ink-muted">{t("consent")}</p>
+      {state === "error" && <p role="alert" className={`mt-3 t-small ${onInk ? "text-[#F2B8B5]" : "text-alert-ink"}`}>{error}</p>}
+      <p className={`mt-3 t-small ${onInk ? "text-ink-fg-muted" : "text-ink-muted"}`}>{t("consent")}</p>
     </form>
   );
 }
