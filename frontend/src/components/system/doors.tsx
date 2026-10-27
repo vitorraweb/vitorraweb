@@ -17,9 +17,9 @@ export async function BusinessDoors() {
       action: { label: t("door1Action"), href: "/products/fuel-eco-tech#fet-calculator" }, second: { label: t("door1Second"), href: "/enquire?sector=FET" } },
     { key: "seal", href: "/products/seal-wound-spray", image: "/photos/hero-03-seal.jpg", imageAlt: alt("sealKit"), body: t("door2Body"),
       action: { label: t("door2Action"), href: "/enquire?sector=SEAL" } },
-    { key: "coffee", href: "/products/coffee", image: "/photos/hero-04-coffee.jpg", imageAlt: alt("coffeeWarehouse"), body: t("door3Body"),
+    { key: "coffee", href: "/products/coffee", image: "/images/stock/coffee-valley.jpg", imageAlt: alt("coffeeValley"), body: t("door3Body"),
       action: { label: t("door3Action"), href: "/products/coffee#coffee-export" } },
-    { key: "logistics", href: "/products/logistics", image: "/photos/hero-05-logistics.jpg", imageAlt: alt("freightTruck"), body: t("door4Body"),
+    { key: "logistics", href: "/products/logistics", image: "/images/stock/port-aerial.jpg", imageAlt: alt("portAerial"), body: t("door4Body"),
       action: { label: t("door4Action"), href: "/enquire?sector=LOGISTICS" } },
   ] as { key: string; href: string; image: string; imageAlt: string; body: string; action: { label: string; href: string }; second?: { label: string; href: string } }[];
 

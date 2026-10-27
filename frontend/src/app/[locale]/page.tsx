@@ -109,13 +109,14 @@ export default async function HomePage() {
 
         {/* ══ 1 · Opening ═══════════════════════════════════════════════════ */}
         <StatementHero
-          image="/photos/hero-01-home.jpg"
-          alt={alt("fourBusinesses")}
+          image="/images/stock/kampala-skyline.jpg"
+          alt={alt("kampala")}
           label={t("openLabel")}
           lines={[t("openTitle1"), t("openTitle2")]}
           lead={t("openLead")}
           cta={{ label: t("openCta"), href: "/enquire" }}
           secondary={{ label: t("openSecondary"), href: "/about" }}
+          credit={t("heroCredit")}
           scrollCue={t("scrollCue")}
         />
         <CredentialStrip label={vt("stripLabel")} linkLabel={vt("stripLink")} />

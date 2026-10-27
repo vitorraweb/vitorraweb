@@ -61,9 +61,9 @@ export default async function LogisticsPage() {
       <main id="main" className="flex-1 bg-paper">
 
         <CinematicHero
-          image="/photos/hero-05-logistics.jpg"
+          image="/images/stock/port-aerial.jpg"
           transitionName="hero-logistics"
-          alt={alt("freightTruck")}
+          alt={alt("portAerial")}
           index="04"
           label={tp("logistics.name")}
           lines={[t("title")]}

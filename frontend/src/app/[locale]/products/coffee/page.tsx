@@ -65,9 +65,9 @@ export default async function CoffeePage() {
       <main id="main" className="flex-1 bg-paper">
 
         <CinematicHero
-          image="/photos/hero-04-coffee.jpg"
+          image="/images/stock/coffee-valley.jpg"
           transitionName="hero-coffee"
-          alt={alt("coffeeWarehouse")}
+          alt={alt("coffeeValley")}
           index="03"
           label={tp("coffee.name")}
           lines={[t("title")]}
