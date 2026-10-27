@@ -12,10 +12,10 @@ Title: {{ $post->title }}
 {{ $post->excerpt }}
 
 Read it and publish with one click:
-{{ $reviewLink }}
+{!! $reviewLink !!}
 
 Or open it in the console to edit first:
-{{ $editLink }}
+{!! $editLink !!}
 
 Before publishing, check the facts and figures, and that nothing it says about Vitorra goes beyond what we can stand behind. Nothing goes live until someone presses Publish.
 @if($sender)

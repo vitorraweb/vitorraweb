@@ -182,6 +182,18 @@ class BlogAutopilotTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    public function test_the_link_in_the_email_opens_the_review_page(): void
+    {
+        $post = BlogPost::create(['title' => 'Draft title', 'slug' => 'draft-title', 'content' => 'Body', 'status' => 'draft']);
+
+        $text = (new BlogDraftReady($post))->render();
+
+        // A plain-text email must carry the link verbatim — "&amp;" breaks the signature.
+        $this->assertStringNotContainsString('&amp;', $text);
+        preg_match('#https?://\S+/api/blog/review/\S+#', $text, $m);
+        $this->get($m[0])->assertOk()->assertSee('Publish now');
+    }
+
     public function test_review_link_shows_the_draft_without_publishing_it(): void
     {
         $post = BlogPost::create(['title' => 'Draft title', 'slug' => 'draft-title', 'content' => "## Hi\n\nBody", 'status' => 'draft', 'origin' => 'auto', 'topic' => 'fet']);
