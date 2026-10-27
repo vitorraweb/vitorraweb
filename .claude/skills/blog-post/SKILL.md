@@ -1,11 +1,11 @@
 ---
 name: blog-post
-description: Write the next Vitorra blog article from this week's news (FET/fuel, coffee, logistics, SEAL/first aid), ready to paste into Admin → Blog and send for review. Use when John types /blog-post or asks for a blog post / blog day.
+description: Write the next Vitorra blog article from this week's news (FET/fuel, coffee, logistics, SEAL/first aid), with charts, and upload it to Admin → Blog as a draft for John to review and send to Marketing. Use when John types /blog-post or asks for a blog post / blog day.
 ---
 
 # Vitorra blog day
 
-The team writes blog posts by hand with Claude in a session (no paid AI API — decided 27 October 2026). Output is a draft John pastes into **Admin → Blog → New post**, then presses **Send for review**; Marketing publishes from the email. Nothing here publishes anything.
+The team writes blog posts with Claude in a session (no paid AI API — decided 27 October 2026). You research, write, draw the charts and upload the article as a **draft** (`scripts/push_blog_draft.py`). John reviews it in **Admin → Blog** and presses **Send for review**; Marketing (support@vitorra.org) publishes from the email. Nothing here can publish — the upload key only creates drafts.
 
 Optional argument: a topic (`fet`, `coffee`, `logistics`, `seal`) or a specific story/angle. Otherwise pick by rotation.
 
@@ -39,7 +39,20 @@ Hard rules:
 - Never promise savings or outcomes.
 - End the content with `## Sources` — a bullet list of `[Publisher: page title](url)` for the pages you relied on.
 
-## 4. Hand over
+## 4. Visuals
+
+Every article gets a cover photo (below) and **1–2 charts** drawn from figures in the article — never a figure that isn't in the text. Good subjects: a price or volume before/after, a comparison across places or years, or a worked example (label it "Illustration by Vitorra").
+
+Write a spec next to the draft as `planning/blog/drafts/images/YYYY-MM-DD-<name>.json` (format in the docstring of `scripts/blog_chart.py`: title as the takeaway, subtitle with the unit, 2–6 bars, one `highlight` at most, a `source` line naming the sources) and draw it:
+
+```
+[ -x scripts/.venv/bin/python ] || (python3 -m venv scripts/.venv && scripts/.venv/bin/pip -q install matplotlib)
+scripts/.venv/bin/python scripts/blog_chart.py planning/blog/drafts/images/<spec>.json
+```
+
+Look at the PNG (Read it) for clipped or colliding labels before using it. Use millions ("Shs 18m", subtitle "million shillings") for large amounts. Put each chart in the content where it supports the text: `![Bar chart: <what it shows, with the numbers>](images/<name>.png)` — the alt text describes the chart for screen readers and Google.
+
+## 5. Hand over
 
 Save to `planning/blog/drafts/YYYY-MM-DD-<slug>.md` with this layout so each field maps to the editor:
 
@@ -50,6 +63,7 @@ EXCERPT: …         (1–2 sentences, ≤ 300 chars)
 COVER IMAGE: …     (pick from the list below)
 SEO TITLE: …       (≤ 60 chars)
 SEO DESCRIPTION: … (≤ 155 chars)
+TOPIC: fet | coffee | logistics | seal
 ---
 <markdown content, ending with ## Sources>
 ```
@@ -58,4 +72,12 @@ Cover images (already on the site): fet → `/products/fet/field-truck.jpg`, `/i
 
 Append a line to `planning/blog/LOG.md`: `| date | topic | title | cover |`.
 
-Then tell John, briefly: the title and one-line angle, the file path, and the steps — Admin → Blog → New post, paste each field, press **Send for review**. Flag anything the reviewer should double-check (e.g. a figure from a single source).
+Upload it as a draft (charts go with it):
+
+```
+python3 scripts/push_blog_draft.py planning/blog/drafts/YYYY-MM-DD-<slug>.md
+```
+
+It prints the draft's console link. If it says no key is found, ask John to run `/opt/alt/php83/usr/bin/php artisan blog:drafts-token` on the server and save the key it prints to `~/.config/vitorra/blog-drafts-token` (`chmod 600`) — never paste the key into the chat or a committed file. If the upload is refused or fails, give John the file path and the manual route (Admin → Blog → New post, paste each field) instead. Running it again with the same slug refreshes the same draft.
+
+Then tell John, briefly: the title and one-line angle, the console link, and what to check before pressing **Send for review** (e.g. a figure from a single source).

@@ -1,0 +1,22 @@
+{
+  "title": "What a price rise costs one working truck",
+  "subtitle": "Extra fuel cost per year, million shillings: 60,000 km a year at 30 litres per 100 km",
+  "bars": [
+    {
+      "label": "Shs 500 more per litre",
+      "value": 9
+    },
+    {
+      "label": "Shs 1,000 more per litre",
+      "value": 18,
+      "highlight": true
+    },
+    {
+      "label": "Shs 1,500 more per litre",
+      "value": 27
+    }
+  ],
+  "format": "Shs {:,.0f}m",
+  "source": "Illustration by Vitorra. Use your own distance and consumption.",
+  "output": "planning/blog/drafts/images/2026-10-27-truck-cost.png"
+}

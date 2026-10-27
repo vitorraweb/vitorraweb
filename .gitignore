@@ -33,3 +33,6 @@ frontend/screenshots/
 
 # Laravel runtime (also covered by backend/.gitignore)
 backend/storage/*.key
+
+# Local Python env for scripts/blog_chart.py
+scripts/.venv/

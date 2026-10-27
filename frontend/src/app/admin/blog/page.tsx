@@ -63,9 +63,9 @@ export default function BlogAdminPage() {
                   <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={p.status === "published" ? { background: "rgba(34,197,94,0.12)", color: "#16A34A" } : { background: "rgba(0,0,0,0.06)", color: "#777" }}>
                     {p.status}
                   </span>
-                  {p.origin === "auto" && (
-                    <span title="Drafted from the week's news — check it before publishing" className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(197,178,122,0.18)", color: "#7A6020" }}>
-                      Auto draft
+                  {(p.origin === "auto" || p.origin === "claude") && (
+                    <span title="Written with Claude from the week's news — check it before sending for review" className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(197,178,122,0.18)", color: "#7A6020" }}>
+                      {p.origin === "claude" ? "Claude draft" : "Auto draft"}
                     </span>
                   )}
                 </div>

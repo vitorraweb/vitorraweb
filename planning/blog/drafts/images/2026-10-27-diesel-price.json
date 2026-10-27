@@ -1,0 +1,12 @@
+{
+  "title": "Diesel has climbed by about a third since April",
+  "subtitle": "Pump price of diesel per litre, Uganda shillings",
+  "bars": [
+    {"label": "April, national average", "value": 5090},
+    {"label": "September, Kampala", "value": 6800},
+    {"label": "September, Moroto", "value": 7099, "highlight": true}
+  ],
+  "format": "Shs {:,.0f}",
+  "source": "Sources: Uganda Radio Network (22 April 2026); Energy Minister to Parliament, via Daily Monitor (8 October 2026)",
+  "output": "planning/blog/drafts/images/2026-10-27-diesel-price.png"
+}

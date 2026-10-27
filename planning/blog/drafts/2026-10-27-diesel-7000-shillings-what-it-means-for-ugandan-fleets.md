@@ -4,10 +4,13 @@ EXCERPT: Diesel has climbed from about Shs5,100 a litre in April to Shs6,800 in 
 COVER IMAGE: /products/fet/field-truck.jpg
 SEO TITLE: Uganda Diesel Prices Near Shs7,000: What Fleets Should Do
 SEO DESCRIPTION: Why Ugandan diesel prices rose in 2026, what each Shs1,000 a litre costs a working truck, and practical steps fleet owners can take now.
+TOPIC: fet
 ---
 If you run trucks, buses or delivery vans in Uganda, you have felt it at the pump. In April, Uganda Radio Network put the national average for diesel at about Shs5,090 a litre. By early September, the Energy Minister told Parliament that diesel was selling at Shs6,800 in Kampala and Shs7,099 in Moroto, with prices in Karamoja above Shs7,000.
 
 That is one of the sharpest rises Ugandan fleet owners have faced in years. This article explains what is driving it, what it means in shillings for a working vehicle, and what you can do about it this month.
+
+![Bar chart: diesel at about Shs5,090 a litre in April (national average), Shs6,800 in Kampala and Shs7,099 in Moroto in September](images/2026-10-27-diesel-price.png)
 
 ## Why diesel is rising
 
@@ -31,7 +34,10 @@ A simple illustration makes the numbers concrete. Take one diesel truck that cov
 
 - Every Shs500 rise per litre costs that truck Shs9 million a year.
 - Every Shs1,000 rise costs it Shs18 million a year.
+- Every Shs1,500 rise costs it Shs27 million a year.
 - At Shs6,800 a litre, its annual fuel bill is about Shs122 million.
+
+![Bar chart: extra fuel cost per year for one truck: Shs9 million for each Shs500 a litre, Shs18 million for Shs1,000, Shs27 million for Shs1,500](images/2026-10-27-truck-cost.png)
 
 Use your own distances and consumption, and multiply by your fleet. For many transport, construction and distribution businesses, a rise of this size can be the difference between a profitable contract and a loss-making one.
 

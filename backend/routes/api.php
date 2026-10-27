@@ -67,6 +67,10 @@ Route::get('/products/{slug}', [ProductController::class, 'show']);
 Route::get('/coffee/products', [ProductController::class, 'coffee']);
 
 // Blog
+// Claude-written drafts from scripts/push_blog_draft.py — drafts only, and only
+// with the key from `php artisan blog:drafts-token` (checked in the controller).
+Route::post('/blog/drafts', \App\Http\Controllers\Api\BlogDraftController::class)
+    ->middleware(['auth:sanctum', 'throttle:20,1']);
 Route::get('/blog/posts', [BlogController::class, 'index']);
 Route::get('/blog/posts/{slug}', [BlogController::class, 'show']);
 // Signed, expiring review link from the "Blog draft to review" email — shows the
