@@ -22,6 +22,11 @@ use App\Http\Controllers\Api\FetTrialController;
 use App\Http\Controllers\Api\FetTrialImportController;
 use App\Http\Controllers\Api\FetTrialShareController;
 use App\Http\Controllers\Api\GoogleAdsController;
+use App\Http\Controllers\Api\CampaignTrackController;
+use App\Http\Controllers\Api\EmailDesignController;
+use App\Http\Controllers\Api\LeadPriorityController;
+use App\Http\Controllers\Api\MarketController;
+use App\Http\Controllers\Api\MarketingCampaignController;
 use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\InboundEmailController;
 use App\Http\Controllers\Api\InstallmentController;
@@ -133,6 +138,15 @@ Route::middleware('throttle:30,1')->group(function () {
 Route::get('/trials/review/{token}', [FetTrialShareController::class, 'review']);
 Route::get('/trials/{token}', [FetTrialShareController::class, 'show']);
 Route::get('/trials/{token}/pdf', [FetTrialShareController::class, 'pdf']);
+
+// Campaign tracking, hit from inside emails: open pixel, signed click
+// redirect, and unsubscribe (GET confirms, POST unsubscribes).
+Route::middleware('throttle:240,1')->prefix('t')->group(function () {
+    Route::get('/o/{token}.gif', [CampaignTrackController::class, 'open'])->where('token', '[A-Za-z0-9]{32}');
+    Route::get('/c/{token}', [CampaignTrackController::class, 'click'])->where('token', '[A-Za-z0-9]{32}');
+    Route::get('/u/{token}', [CampaignTrackController::class, 'unsubscribePage'])->where('token', '[A-Za-z0-9]{32}');
+    Route::post('/u/{token}', [CampaignTrackController::class, 'unsubscribe'])->where('token', '[A-Za-z0-9]{32}');
+});
 
 // Google's browser redirect after an admin presses "Connect Google Ads".
 // Public by necessity; the single-use state minted by /admin/google-ads/connect
@@ -344,6 +358,41 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/prospect-campaigns/{campaign}', [ProspectCampaignController::class, 'show']);
             Route::post('/prospect-campaigns/{campaign}/run', [ProspectCampaignController::class, 'run']);
             Route::post('/prospect-campaigns/{campaign}/cancel', [ProspectCampaignController::class, 'cancel']);
+
+            // Marketing: markets, the template designer, designed campaigns
+            // (test to support before sending), the scorer and lead priorities.
+            Route::prefix('marketing')->group(function () {
+                Route::get('/markets', [MarketController::class, 'index']);
+                Route::post('/markets', [MarketController::class, 'store']);
+                Route::patch('/markets/{market}', [MarketController::class, 'update']);
+                Route::delete('/markets/{market}', [MarketController::class, 'destroy']);
+                Route::get('/markets/{market}/members', [MarketController::class, 'members']);
+                Route::post('/markets/{market}/members', [MarketController::class, 'addMembers']);
+                Route::post('/markets/{market}/contacts', [MarketController::class, 'addContact']);
+                Route::post('/markets/{market}/remove', [MarketController::class, 'removeMembers']);
+                Route::post('/markets/{market}/move', [MarketController::class, 'move']);
+
+                Route::get('/designs', [EmailDesignController::class, 'index']);
+                Route::post('/designs', [EmailDesignController::class, 'store']);
+                Route::post('/designs/render', [EmailDesignController::class, 'render'])->middleware('throttle:120,1');
+                Route::post('/designs/upload', [EmailDesignController::class, 'upload']);
+                Route::get('/designs/{design}', [EmailDesignController::class, 'show']);
+                Route::put('/designs/{design}', [EmailDesignController::class, 'update']);
+                Route::delete('/designs/{design}', [EmailDesignController::class, 'destroy']);
+
+                Route::get('/campaigns', [MarketingCampaignController::class, 'index']);
+                Route::post('/campaigns', [MarketingCampaignController::class, 'store']);
+                Route::get('/campaigns/{campaign}', [MarketingCampaignController::class, 'show']);
+                Route::patch('/campaigns/{campaign}', [MarketingCampaignController::class, 'update']);
+                Route::delete('/campaigns/{campaign}', [MarketingCampaignController::class, 'destroy']);
+                Route::get('/campaigns/{campaign}/audience', [MarketingCampaignController::class, 'audience']);
+                Route::post('/campaigns/{campaign}/test', [MarketingCampaignController::class, 'test'])->middleware('throttle:10,1');
+                Route::post('/campaigns/{campaign}/send', [MarketingCampaignController::class, 'send']);
+                Route::get('/campaigns/{campaign}/report', [MarketingCampaignController::class, 'report']);
+
+                Route::get('/priorities', [LeadPriorityController::class, 'index']);
+                Route::post('/priorities/recalculate', [LeadPriorityController::class, 'recalculate'])->middleware('throttle:6,1');
+            });
         });
         Route::middleware('perm:products')->group(function () {
             Route::get('/products', [ProductAdminController::class, 'index']);

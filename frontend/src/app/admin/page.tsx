@@ -9,7 +9,7 @@ import { APP_AREAS, visibleApps } from "@/lib/admin-apps";
 /* Odoo gives every app its own coloured tile; these are ours. White icons
    on each clear 4.5:1. */
 const APP_TINT: Record<string, string> = {
-  sales: "#1F64A8", orders: "#B4531F", fet: "#17785C", accounting: "#5B44A6", insights: "#0E7272",
+  sales: "#1F64A8", marketing: "#B03A5B", orders: "#B4531F", fet: "#17785C", accounting: "#5B44A6", insights: "#0E7272",
   operations: "#7A6020", people: "#A8406E", website: "#2E6E31", settings: "#4D545E",
 };
 

@@ -49,7 +49,7 @@ export default function ExecutivePage() {
   return (
     <div className="pb-12">
       <PageHeader
-        title="CEO report"
+        title="Executive report"
         subtitle="The health of the business at a glance: money in, money owed, sales and demand."
         actions={
           <div className="o-seg" role="group" aria-label="Period">

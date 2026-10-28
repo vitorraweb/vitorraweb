@@ -58,6 +58,7 @@
 | **Blog drafts written with Claude, approved by Marketing by email** | ✅ **Live** — three drafts waiting for Send for review |
 | **Console redesigned like Odoo** — dark top bar, app tiles, breadcrumb control panels, list views, larger system fonts, light/dark mode, graph ⇄ pivot reporting on Overview, CEO report, Google Ads and Accounting | ✅ **Built** (28 October) |
 | **Staff test records removed from enquiries / orders / messages** (`leads:purge-test`) | ⏳ Run on the server: list first, then `--force` |
+| **Marketing app** — email template designer, markets, campaigns that must be tested to support before sending, open/click scorer, one-click unsubscribe, lead-priority decision engine; CEO report renamed Executive report | 🔨 **Built** (29 October) — server update needed |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -1740,6 +1741,70 @@ admin-only, and both are written to the activity log.
 > `components/GoogleTag.tsx`, `lib/cookies.ts` (`COOKIE_CONSENT_EVENT`), conversions
 > fired from `lib/api.ts`, page `app/admin/google-ads/page.tsx`. Tests: `GoogleAdsTest`
 > (15). **500 backend tests passing.**
+
+---
+
+## Marketing: designer, markets, tested campaigns, scorer and lead priorities (29 October 2026)
+
+A new **Marketing** app in the console (Sell), for the marketing team.
+
+- **Templates (designer):** campaign emails are built from blocks: logo,
+  heading, text, image, button, image + text, divider and spacer.
+  - Click a block to edit it. Text is typed straight onto the canvas with
+    bold, links, lists and colour.
+  - The side panel sets colours, text size, font, alignment, image width and
+    rounded corners, backgrounds, and spacing.
+  - Desktop and mobile views, plus "Preview real email", which shows exactly
+    what will be sent.
+  - Four ready-made layouts: product announcement, simple letter,
+    newsletter, event invitation.
+  - The Vitorra footer and an unsubscribe link are added to every email.
+- **Markets:** named audiences, such as "Kampala fleet operators" or
+  "Hospitals".
+  - Add contacts from Prospects, or create new contacts inside a market.
+  - Move contacts between markets, or remove them.
+  - Prospects' bulk bar has a new "Add to market…" option.
+  - Each market shows its size, how many contacts are reachable by email,
+    and its lead-quality mix.
+- **Campaigns:** set up → design → test & send.
+  - **Sending is locked until a test has gone to support**, and locks again
+    if anything changes after that test.
+  - The audience is shown before sending: who receives it, each address
+    once, and who is skipped (no email, unsubscribed, or marked Avoid).
+- **Campaign scorer:** delivered, opened, clicked, clicked-after-opening,
+  unsubscribed, a 0–100 score and grade, clicks per link, results by market,
+  and each person's engagement.
+  - Clicks from mail security scanners are flagged and left out.
+  - Opens are labelled indicative, because Apple Mail loads images on its own.
+- **One-click unsubscribe:** a link in every email plus the List-Unsubscribe
+  header.
+  - Opening the link only shows a confirmation page. Only the button press,
+    or a mail client's one-click request, unsubscribes, so link scanners
+    can't unsubscribe anyone.
+  - An unsubscribed address is never emailed again, by either campaign tool.
+- **Lead priorities (decision engine):** every lead is scored hourly as Hot,
+  Warm, Cold, Avoid, Do not contact or Customer, with its reasons in words
+  and a suggested next step.
+  - **Raises a lead:** clicks, replies, a quotation or qualified status, a
+    follow-up due, an industry that has bought from us before.
+  - **Lowers a lead:** ignoring campaigns in a row, going quiet after a
+    quotation.
+  - **Avoid:** said no, ignored us repeatedly, or has bad contact details.
+    It is never applied just for being new.
+  - Campaigns can skip Avoid leads automatically.
+- **Insights:** "CEO report" is now "Executive report".
+
+**Server:** pull, `migrate --force` (`2026_10_29_000002`), `config:cache`,
+`route:cache`, then `leads:score` once. Scoring runs hourly after that.
+
+> Technical detail (engineering): `App\Services\Marketing\{EmailDesigner (normalise + render),
+> StarterDesigns, CampaignTracking, LeadScorer}`, `DesignedCampaignEmail`, controllers
+> `Market`, `EmailDesign`, `MarketingCampaign`, `CampaignTrack` (public `/api/t/{o,c,u}/{token}`;
+> click links HMAC-signed), `LeadPriority`; `leads:score` hourly. Tables `markets`,
+> `market_members`, `email_designs`, `campaign_clicks`; new columns on campaigns, recipients
+> and prospects. Designed campaigns reuse `CampaignSender` batches. Frontend
+> `app/admin/marketing/*`, `components/admin/marketing/EmailDesigner.tsx`.
+> Tests: `MarketingTest` (14). **519 backend tests passing.**
 
 ---
 

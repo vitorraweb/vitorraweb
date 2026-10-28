@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Mail\DesignedCampaignEmail;
 use App\Mail\ProspectOutreach;
 use App\Models\Prospect;
+use App\Services\Marketing\CampaignTracking;
+use App\Services\Marketing\EmailDesigner;
 use App\Models\ProspectCampaign;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -42,6 +45,12 @@ class CampaignSender
 
         try {
             $campaign->loadMissing('creator'); // their signature signs every email
+            // A designed campaign is rendered once per batch, then personalised
+            // and tracked per recipient.
+            $designed = $campaign->isDesigned()
+                ? EmailDesigner::render($campaign->design, $campaign->subject, $campaign->preheader)
+                : null;
+            $designedText = $designed !== null ? EmailDesigner::plainText($campaign->design) : null;
             $batch = $campaign->recipients()
                 ->where('status', 'pending')
                 ->orderBy('id')
@@ -50,9 +59,23 @@ class CampaignSender
 
             foreach ($batch as $recipient) {
                 try {
-                    Mail::to($recipient->email)->send(
-                        ProspectOutreach::forCampaign($campaign, $recipient->name ?: $recipient->email)
-                    );
+                    if ($designed !== null) {
+                        if (! $recipient->token) {
+                            $recipient->update(['token' => CampaignTracking::newToken()]);
+                        }
+                        $name = $recipient->name ?: 'there';
+                        $unsubscribe = CampaignTracking::unsubscribeUrl($recipient->token);
+                        Mail::to($recipient->email)->send(new DesignedCampaignEmail(
+                            str_replace(['{name}', '{company}'], $name, $campaign->subject),
+                            CampaignTracking::forRecipient($designed, $recipient),
+                            str_replace(['{name}', '{company}', EmailDesigner::UNSUBSCRIBE_PLACEHOLDER], [$name, $name, $unsubscribe], $designedText),
+                            $unsubscribe,
+                        ));
+                    } else {
+                        Mail::to($recipient->email)->send(
+                            ProspectOutreach::forCampaign($campaign, $recipient->name ?: $recipient->email)
+                        );
+                    }
 
                     $recipient->update(['status' => 'sent', 'sent_at' => now(), 'error' => null]);
                     $campaign->increment('sent_count');

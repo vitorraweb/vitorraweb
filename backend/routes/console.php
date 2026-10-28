@@ -75,3 +75,8 @@ Schedule::command('google-ads:sync --days=3')->hourlyAt(20)->withoutOverlapping(
     ->onFailure(fn () => logger()->error('Scheduled google-ads:sync failed'));
 Schedule::command('google-ads:sync --days=30')->dailyAt('03:40')->withoutOverlapping()
     ->onFailure(fn () => logger()->error('Scheduled nightly google-ads:sync failed'));
+
+// Decision engine: re-score every prospect from the latest opens, clicks,
+// replies and pipeline changes, so Marketing's focus list stays current.
+Schedule::command('leads:score')->hourlyAt(35)->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Scheduled leads:score failed'));

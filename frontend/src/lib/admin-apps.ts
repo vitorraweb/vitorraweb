@@ -2,7 +2,7 @@ import {
   Handshake, ShoppingCart, Gauge, Wallet, LineChart, Users, ListChecks, Globe, Settings,
   MessageSquare, Workflow, Contact, Target, LayoutTemplate, CreditCard, FlaskConical,
   TrendingUp, LayoutDashboard, CalendarCheck, Hourglass, Briefcase, CalendarDays,
-  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone,
+  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame,
 } from "lucide-react";
 import { canAccess, type AdminUser } from "@/lib/auth";
 
@@ -57,6 +57,15 @@ export const ADMIN_APPS: AdminApp[] = [
     ],
   },
   {
+    id: "marketing", name: "Marketing", blurb: "Email campaigns, markets, templates and lead priorities", icon: Mails, area: "Sell",
+    items: [
+      { label: "Campaigns", href: "/admin/marketing/campaigns", icon: Mails, module: "prospects", keywords: "email campaign newsletter send blast" },
+      { label: "Markets", href: "/admin/marketing/markets", icon: Layers, module: "prospects", keywords: "audience segment list contacts" },
+      { label: "Templates", href: "/admin/marketing/templates", icon: Palette, module: "prospects", keywords: "email design builder template" },
+      { label: "Lead priorities", href: "/admin/marketing/priorities", icon: Flame, module: "prospects", keywords: "decision engine score hot leads focus" },
+    ],
+  },
+  {
     id: "orders", name: "Orders", blurb: "Orders, part-payments and payment records", icon: ShoppingCart, area: "Sell",
     items: [
       { label: "Orders",   href: "/admin/orders",   icon: ShoppingCart, module: "orders", keywords: "sales installments" },
@@ -77,10 +86,10 @@ export const ADMIN_APPS: AdminApp[] = [
     ],
   },
   {
-    id: "insights", name: "Insights", blurb: "Company overview, the CEO report and Google Ads", icon: LineChart, area: "Money",
+    id: "insights", name: "Insights", blurb: "Company overview, the Executive report and Google Ads", icon: LineChart, area: "Money",
     items: [
       { label: "Overview",  href: "/admin/overview",  icon: LayoutDashboard, keywords: "dashboard stats" },
-      { label: "CEO report", href: "/admin/executive", icon: TrendingUp, module: "executive", keywords: "executive revenue" },
+      { label: "Executive report", href: "/admin/executive", icon: TrendingUp, module: "executive", keywords: "executive ceo revenue report" },
       { label: "Google Ads", href: "/admin/google-ads", icon: Megaphone, module: "google_ads", keywords: "adwords ads advertising spend campaigns cpc clicks search terms marketing" },
     ],
   },

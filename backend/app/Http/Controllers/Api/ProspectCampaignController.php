@@ -121,6 +121,8 @@ class ProspectCampaignController extends Controller
 
                 if ($email === '') {
                     $status = 'skipped';
+                } elseif ($prospect->unsubscribed_at) {
+                    $status = 'unsubscribed';   // asked never to be emailed again
                 } elseif (isset($seen[strtolower($email)])) {
                     $status = 'duplicate';
                 } else {

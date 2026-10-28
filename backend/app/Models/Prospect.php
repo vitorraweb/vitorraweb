@@ -21,12 +21,29 @@ class Prospect extends Model
         'assigned_to',
         'flags',
         'source',
+        'unsubscribed_at',
+        'lead_score',
+        'lead_tier',
+        'lead_reasons',
+        'lead_action',
+        'lead_scored_at',
     ];
 
     protected $casts = [
-        'flags'        => 'array',
-        'follow_up_on' => 'date:Y-m-d',
+        'flags'           => 'array',
+        'follow_up_on'    => 'date:Y-m-d',
+        'unsubscribed_at' => 'datetime',
+        'lead_reasons'    => 'array',
+        'lead_scored_at'  => 'datetime',
     ];
+
+    /** Decision-engine tiers, best first. See App\Services\Marketing\LeadScorer. */
+    public const TIERS = ['hot', 'warm', 'cold', 'avoid', 'do_not_contact', 'customer'];
+
+    public function markets(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Market::class, 'market_members')->withTimestamps();
+    }
 
     /**
      * Industry verticals per product line. Each product's outreach list is

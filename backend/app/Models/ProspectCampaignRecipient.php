@@ -9,10 +9,14 @@ class ProspectCampaignRecipient extends Model
 {
     protected $fillable = [
         'campaign_id', 'prospect_id', 'email', 'name', 'status', 'error', 'sent_at',
+        'token', 'market_id', 'opened_at', 'open_count', 'clicked_at', 'click_count', 'unsubscribed_at',
     ];
 
     protected $casts = [
-        'sent_at' => 'datetime',
+        'sent_at'         => 'datetime',
+        'opened_at'       => 'datetime',
+        'clicked_at'      => 'datetime',
+        'unsubscribed_at' => 'datetime',
     ];
 
     public function campaign(): BelongsTo

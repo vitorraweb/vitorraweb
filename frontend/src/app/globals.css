@@ -1366,7 +1366,8 @@
   background: var(--o-canvas);
   -webkit-font-smoothing: antialiased;
 }
-.admin-console :is(h1, h2, h3, h4, h5, h6, .font-serif, [style*="font-playfair"]) { font-family: var(--o-font) !important; }
+/* The email designer's canvas shows the email's own fonts, so it is exempt. */
+.admin-console :is(h1, h2, h3, h4, h5, h6, .font-serif, [style*="font-playfair"]):not(.email-canvas *) { font-family: var(--o-font) !important; }
 .admin-console [style*="font-playfair"] { font-weight: 600 !important; letter-spacing: -0.01em; }
 .admin-console ::placeholder { color: var(--o-faint); }
 

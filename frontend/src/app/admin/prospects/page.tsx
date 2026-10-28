@@ -256,6 +256,20 @@ export default function ProspectsPage() {
   /* Bulk edits: one request for the ticked rows, or for everyone the
      filters match, then a reload so the list reflects the server. */
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkNote, setBulkNote] = useState("");
+  const [markets, setMarkets] = useState<{ id: number; name: string }[]>([]);
+  useEffect(() => {
+    apiAdmin<{ data: { id: number; name: string }[] }>("/admin/marketing/markets").then((r) => setMarkets(r.data)).catch(() => {});
+  }, []);
+  /* Put the ticked rows (or everyone the filters match) into a market. */
+  const addToMarket = async (marketId: string) => {
+    setBulkBusy(true); setBulkNote("");
+    try {
+      const r = await apiAdmin<{ message: string }>(`/admin/marketing/markets/${marketId}/members`, { method: "POST", body: JSON.stringify(target()) });
+      setBulkNote(r.message);
+    } catch (e) { setBulkNote(e instanceof Error ? e.message : "Could not add to market"); }
+    setBulkBusy(false);
+  };
   const bulkPatch = async (body: Record<string, unknown>) => {
     setBulkBusy(true);
     try {
@@ -732,6 +746,13 @@ export default function ProspectsPage() {
             {FOLLOW_UP_IN.map(([l, d]) => <option key={l} value={isoDay(d)}>{l}</option>)}
             <option value="-">Clear follow-up</option>
           </select>
+          {markets.length > 0 && (
+            <select aria-label="Add selected to a market" value="" disabled={bulkBusy} onChange={(e) => e.target.value && addToMarket(e.target.value)} className="c-select !bg-transparent !text-paper !border-ink-line hidden sm:block">
+              <option value="">Add to market…</option>
+              {markets.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          )}
+          {bulkNote && <span className="text-[13px] text-paper whitespace-nowrap">{bulkNote}</span>}
           <button onClick={() => setComposerOpen(true)} className="c-btn !bg-gold !border-gold !text-ink">
             <Send className="w-3.5 h-3.5" />Email campaign ({allMatching ? targetCount : selectedWithEmail})
           </button>
