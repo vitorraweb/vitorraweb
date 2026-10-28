@@ -39,6 +39,7 @@ return [
         // Granted per person, not by department (Finance's list, Oct 2026):
         // php artisan staff:grant-module quotations <email> ...
         'quotations'         => 'Quotations',
+        'google_ads'         => 'Google Ads',
     ],
 
     // department key => human label
@@ -59,10 +60,10 @@ return [
      * so the trial module is granted to marketing in its own right.
      */
     'departments' => [
-        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'fet', 'fet_trials', 'newsletter', 'tasks', 'people', 'executive', 'suppliers', 'accounting'],
+        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'fet', 'fet_trials', 'newsletter', 'tasks', 'people', 'executive', 'suppliers', 'accounting', 'google_ads'],
         'operations' => ['dashboard', 'orders', 'fet', 'fet_trials', 'enquiries', 'messages', 'customers', 'tasks', 'people', 'suppliers'],
-        'finance'    => ['dashboard', 'orders', 'customers', 'enquiries', 'tasks', 'people', 'executive', 'suppliers', 'accounting'],
-        'marketing'  => ['dashboard', 'blog', 'media', 'prospects', 'fet_trials', 'enquiries', 'customers', 'newsletter', 'tasks'],
+        'finance'    => ['dashboard', 'orders', 'customers', 'enquiries', 'tasks', 'people', 'executive', 'suppliers', 'accounting', 'google_ads'],
+        'marketing'  => ['dashboard', 'blog', 'media', 'prospects', 'fet_trials', 'enquiries', 'customers', 'newsletter', 'tasks', 'google_ads'],
         'sales'      => ['dashboard', 'enquiries', 'prospects', 'customers', 'orders', 'fet', 'fet_trials', 'tasks'],
         'it'         => ['dashboard', 'media', 'tasks'],
     ],

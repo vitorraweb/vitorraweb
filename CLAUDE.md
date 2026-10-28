@@ -63,7 +63,7 @@ A full internal-operations suite was built on top of the marketing site (from th
 - **Role fix-up:** `php artisan staff:set-role <email> <admin|ops|employee>` (guards the last admin). Use this — never tinker — to change roles.
 
 ### Admin modules (config/admin_modules.php)
-Added `people` (HR — ops/finance/leadership), `executive` (CEO report — leadership/finance), `suppliers` (ops/finance/leadership), `accounting` (finance/leadership — record + view), and `accounting_approve` (senior finance only — approve + manage; **per-person grant**, not a department default). Module access is per-department; **existing ops accounts with a custom permission set must have new modules ticked in `/admin/staff`**. Admins always get everything.
+Added `people` (HR — ops/finance/leadership), `executive` (CEO report — leadership/finance), `suppliers` (ops/finance/leadership), `accounting` (finance/leadership — record + view), and `accounting_approve` (senior finance only — approve + manage; **per-person grant**, not a department default). `google_ads` (marketing/finance/leadership) reads `/admin/google-ads`; connecting the ad account is admin-only. Module access is per-department; **existing ops accounts with a custom permission set must have new modules ticked in `/admin/staff`**. Admins always get everything.
 
 ### Phase 1 — Staff/HR portal (`/staff`)
 - **Profile & security** (own password change), **My documents** (private contract/HR files), **My supervisor**, **My team** (supervisors only).
@@ -91,7 +91,7 @@ A multi-currency cash-ledger bookkeeping tool with **maker–checker** approvals
 - All amounts per currency (never summed across currencies). Tables: `finance_accounts`, `finance_categories`, `finance_transactions` (+`vat_rate`/`vat_amount`), `supplier_bills`, `finance_budgets`, `invoices`, `invoice_items`, `recurring_entries`. Default categories via `FinanceCategoriesSeeder`.
 
 ### Scheduled commands (ride the existing cPanel `schedule:run` cron)
-`holidays:notify`, `digest:send`, `executive:report` (monthly+weekly), `applications:purge` (6-month), `invoices:remind`, `finance:recurring`, **`campaigns:send`** (every minute — drains prospect outreach campaigns; no-op when idle), plus the spatie backups.
+`holidays:notify`, `digest:send`, `executive:report` (monthly+weekly), `applications:purge` (6-month), `invoices:remind`, `finance:recurring`, **`campaigns:send`** (every minute — drains prospect outreach campaigns; no-op when idle), **`google-ads:sync`** (hourly 3 days + nightly 30; no-op until connected), plus the spatie backups.
 
 ### Pending (operations setup, not code)
 - Set executive-report recipients in `/admin/settings`; grant new modules to existing ops accounts (incl. **"Accounting — approve"** for the Senior Finance Officer); optionally link **Careers** + **Suppliers** in the public footer; set `ANTHROPIC_API_KEY` on prod to enable CV/receipt auto-read (both work manually without it).

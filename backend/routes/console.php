@@ -66,3 +66,12 @@ Schedule::command('campaigns:send')->everyMinute()->withoutOverlapping()
 Schedule::command('enquiries:chase')->hourly()->withoutOverlapping()
     ->onFailure(fn () => logger()->error('Scheduled enquiries:chase failed'));
 
+
+// Google Ads → console: spend, campaigns, search terms, click → campaign
+// matching, and won enquiries reported back as conversions. Hourly over the
+// last 3 days; nightly over 30 because Google keeps restating recent days as
+// late conversions arrive. A no-op until Google Ads is connected.
+Schedule::command('google-ads:sync --days=3')->hourlyAt(20)->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Scheduled google-ads:sync failed'));
+Schedule::command('google-ads:sync --days=30')->dailyAt('03:40')->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Scheduled nightly google-ads:sync failed'));

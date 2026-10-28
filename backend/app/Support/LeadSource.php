@@ -63,6 +63,9 @@ final class LeadSource
         $utmMedium   = $clean(self::str($in, 'utm_medium'));
         $utmCampaign = $clean(self::str($in, 'utm_campaign'));
         $gclid       = $clean(self::str($in, 'gclid'));
+        // iOS replaces the gclid with gbraid/wbraid on app and web-to-app clicks.
+        $gbraid      = $clean(self::str($in, 'gbraid'));
+        $wbraid      = $clean(self::str($in, 'wbraid'));
         $fbclid      = $clean(self::str($in, 'fbclid'));
         $referrer    = $clean(self::str($in, 'referrer'), 2000);
         $landing     = $clean(self::str($in, 'landing_page'), 2000);
@@ -71,6 +74,8 @@ final class LeadSource
             'utm_term'      => $clean(self::str($in, 'utm_term')),
             'utm_content'   => $clean(self::str($in, 'utm_content')),
             'gclid'         => $gclid,
+            'gbraid'        => $gbraid,
+            'wbraid'        => $wbraid,
             'fbclid'        => $fbclid,
             'referrer'      => $referrer,
             'landing_page'  => $landing,
@@ -78,7 +83,7 @@ final class LeadSource
         ], fn ($v) => $v !== null && $v !== '');
 
         return [
-            'lead_source' => self::label($utmSource, $utmMedium, $gclid, $fbclid, $referrer),
+            'lead_source' => self::label($utmSource, $utmMedium, $gclid ?? $gbraid ?? $wbraid, $fbclid, $referrer),
             'utm_source'  => $utmSource,
             'utm_medium'  => $utmMedium,
             'utm_campaign' => $utmCampaign,

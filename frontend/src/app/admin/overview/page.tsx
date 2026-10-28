@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { MessageSquare, Mail, ShoppingCart, Loader2, ArrowRight, Target, Inbox, Clock, Globe, AlertTriangle } from "lucide-react";
+import { MessageSquare, Mail, ShoppingCart, Loader2, ArrowRight, Target, Inbox, Clock, AlertTriangle } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { Sparkline, LiveDot, formatRelativeTime } from "@/components/admin/admin-ui";
 
@@ -64,20 +64,15 @@ type Alerts = {
   };
 };
 
-type Analytics = {
+/** The slice of /admin/google-ads/summary the overview shows. 403 for staff without the module. */
+type AdsGlance = {
   connected: boolean;
-  error?: boolean;
-  visitors_today?: number;
-  pageviews_today?: number;
-  visitors_7d?: number;
-  pageviews_7d?: number;
-  bounce_rate_7d?: number;
-  top_pages?: { page: string; visitors: number }[];
-  top_sources?: { source: string; visitors: number }[];
+  currency: string | null;
+  totals: { cost: number; clicks: number; leads: number; won: number; cost_per_lead: number | null };
 };
 
 const POLL_MS = 45_000;
-const ANALYTICS_POLL_MS = 5 * 60_000;
+const ADS_POLL_MS = 5 * 60_000;
 
 const ACTIVITY_ICON: Record<ActivityItem["type"], typeof Mail> = {
   enquiry: MessageSquare,
@@ -118,7 +113,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [now, setNow] = useState<number | null>(null);
-  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [ads, setAds] = useState<AdsGlance | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -137,12 +132,12 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const loadAnalytics = useCallback(async () => {
+  const loadAds = useCallback(async () => {
     try {
-      const res = await apiAdmin<{ data: Analytics }>("/admin/analytics");
-      setAnalytics(res.data);
+      const res = await apiAdmin<{ data: AdsGlance }>("/admin/google-ads/summary?period=7d");
+      setAds(res.data);
     } catch {
-      setAnalytics({ connected: false, error: true });
+      setAds(null); // no google_ads module, or the API is down: the card hides
     }
   }, []);
 
@@ -153,10 +148,10 @@ export default function AdminDashboard() {
   }, [load]);
 
   useEffect(() => {
-    loadAnalytics();
-    const id = setInterval(loadAnalytics, ANALYTICS_POLL_MS);
+    loadAds();
+    const id = setInterval(loadAds, ADS_POLL_MS);
     return () => clearInterval(id);
-  }, [loadAnalytics]);
+  }, [loadAds]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -384,87 +379,19 @@ export default function AdminDashboard() {
             })()}
           </Card>
 
-          {/* ── Website traffic ──────────────────────────────────────────── */}
-          <Card title="Website traffic">
-            {!analytics || !analytics.connected ? (
-              <div className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-                  <Globe className="w-4 h-4" />
-                </span>
-                <p className="text-sm" style={{ color: "#999" }}>
-                  Not connected yet. Set <code>PLAUSIBLE_API_KEY</code> (and <code>PLAUSIBLE_SITE_ID</code> if the site isn&apos;t <code>vitorra.org</code>) on the server to show live visitor stats here.
-                </p>
+          {/* ── Google Ads (last 7 days) ─────────────────────────────────
+              Replaced the Plausible traffic card when Marketing moved the
+              budget to Google Ads. Full picture: /admin/google-ads. */}
+          {ads && (
+            <Card title="Google Ads · last 7 days" href="/admin/google-ads">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
+                <Metric label="Spent" value={ads.connected ? adsMoney(ads.totals.cost, ads.currency) : "—"} sub={ads.connected ? `${ads.totals.clicks} clicks` : "Not connected yet"} />
+                <Metric label="Leads from ads" value={String(ads.totals.leads)} sub="Enquiries + messages" />
+                <Metric label="Cost per lead" value={adsMoney(ads.totals.cost_per_lead, ads.currency)} sub="Spend ÷ leads" />
+                <Metric label="Won" value={String(ads.totals.won)} sub="Converted to an order" />
               </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-                  <Metric label="Visitors today" value={String(analytics.visitors_today ?? 0)} sub={`${analytics.pageviews_today ?? 0} pageviews`} />
-                  <Metric label="Visitors (7d)" value={String(analytics.visitors_7d ?? 0)} sub={`${analytics.pageviews_7d ?? 0} pageviews`} />
-                  <Metric label="Bounce rate (7d)" value={`${analytics.bounce_rate_7d ?? 0}%`} sub="Single-page visits" />
-                  <Metric
-                    label="Pages / visit (7d)"
-                    value={(analytics.visitors_7d ? (analytics.pageviews_7d ?? 0) / analytics.visitors_7d : 0).toFixed(1)}
-                    sub="Engagement depth"
-                  />
-                </div>
-
-                {(() => {
-                  const pages = analytics.top_pages ?? [];
-                  const sources = analytics.top_sources ?? [];
-                  const maxPages = Math.max(1, ...pages.map((p) => p.visitors));
-                  const maxSources = Math.max(1, ...sources.map((s) => s.visitors));
-                  return (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wide mb-3" style={{ color: "#999" }}>Top pages (7d)</p>
-                        {pages.length === 0 ? (
-                          <p className="text-xs" style={{ color: "#999" }}>No data yet.</p>
-                        ) : (
-                          <div className="space-y-2.5">
-                            {pages.map((p) => (
-                              <div key={p.page}>
-                                <div className="flex items-baseline justify-between mb-1 gap-2">
-                                  <span className="text-xs truncate" style={{ color: "#555" }}>{p.page}</span>
-                                  <span className="text-xs font-bold shrink-0" style={{ color: "#1E1E1E" }}>{p.visitors}</span>
-                                </div>
-                                <div style={{ height: "6px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
-                                  <div style={{ height: "100%", width: `${(p.visitors / maxPages) * 100}%`, background: "linear-gradient(90deg,#C5B27A,#D4C49A)" }} />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wide mb-3" style={{ color: "#999" }}>Top referrers (7d)</p>
-                        {sources.length === 0 ? (
-                          <p className="text-xs" style={{ color: "#999" }}>No data yet.</p>
-                        ) : (
-                          <div className="space-y-2.5">
-                            {sources.map((s) => (
-                              <div key={s.source}>
-                                <div className="flex items-baseline justify-between mb-1 gap-2">
-                                  <span className="text-xs truncate" style={{ color: "#555" }}>{s.source}</span>
-                                  <span className="text-xs font-bold shrink-0" style={{ color: "#1E1E1E" }}>{s.visitors}</span>
-                                </div>
-                                <div style={{ height: "6px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
-                                  <div style={{ height: "100%", width: `${(s.visitors / maxSources) * 100}%`, background: "linear-gradient(90deg,#C5B27A,#D4C49A)" }} />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                <p className="text-xs flex items-center gap-1.5" style={{ color: "#999" }}>
-                  <Globe className="w-3 h-3" /> Visitor data via Plausible Analytics, updated every 5 minutes.
-                </p>
-              </div>
-            )}
-          </Card>
+            </Card>
+          )}
 
           {/* ── Recent activity ──────────────────────────────────────────── */}
           <Card title="Recent activity">
@@ -510,6 +437,12 @@ export default function AdminDashboard() {
 }
 
 /* ─── Bits ──────────────────────────────────────────────────────────────── */
+
+function adsMoney(n: number | null, currency: string | null): string {
+  if (n == null) return "—";
+  const cur = currency || "UGX";
+  return cur === "UGX" ? fmtUGX(Math.round(n)) : `${cur} ${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+}
 
 function deltaLabel(thisMonth: number, lastMonth: number): string {
   const d = thisMonth - lastMonth;

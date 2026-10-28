@@ -66,14 +66,14 @@
   },
   "cookieBanner": {
     "ariaLabel": "Idhini ya vidakuzi",
-    "message": "Tunatumia vidakuzi muhimu kuwezesha tovuti kufanya kazi, na vidakuzi vya hiari vya uchambuzi kuiboresha.",
+    "message": "Tunatumia vidakuzi muhimu kuwezesha tovuti kufanya kazi, na vidakuzi vya hiari vya uchambuzi na matangazo (Google Ads) kupima matangazo yetu.",
     "policyLink": "Sera ya vidakuzi",
     "dismiss": "Funga bila kukubali",
     "decline": "Kataa",
     "acceptAll": "Kubali zote",
     "settings": "Mipangilio ya vidakuzi",
-    "currentAccepted": "Kwa sasa unaruhusu vidakuzi vya hiari vya uchanganuzi.",
-    "currentDeclined": "Kwa sasa unakataa vidakuzi vya hiari vya uchanganuzi."
+    "currentAccepted": "Kwa sasa unaruhusu vidakuzi vya hiari vya uchanganuzi na matangazo.",
+    "currentDeclined": "Kwa sasa unakataa vidakuzi vya hiari vya uchanganuzi na matangazo."
   },
   "meta": {
     "home": {
@@ -568,7 +568,7 @@
     "lastUpdated": "Ilisasishwa mwisho:",
     "privacy": {
       "title": "Sera ya Faragha",
-      "updated": "1 Juni 2026",
+      "updated": "28 Oktoba 2026",
       "whoTitle": "Sisi ni nani",
       "who1": "{name} (\"Vitorra\", \"sisi\", \"kwetu\") ni kampuni iliyosajiliwa nchini Uganda (Nambari ya Usajili 80034340923220), iliyoko Padre Pio House, Plot 32, Lumumba Avenue, Kampala, Uganda. Tunaendesha tovuti vitorra.org.",
       "who2": "Sisi ni wadhibiti wa data kwa taarifa binafsi zinazokusanywa kupitia tovuti hii. Maswali kuhusu sera hii: <mail></mail>.",
@@ -580,7 +580,7 @@
         "Maelezo ya akaunti (jina na barua pepe) ukiunda akaunti ya portali ya wateja",
         "Ujumbe na mawasiliano unapowasiliana nasi"
       ],
-      "collect2": "Pia tunakusanya taarifa kiotomatiki unapotumia tovuti (kurasa zilizotembelewa, aina ya kifaa, kivinjari, anwani ya IP kupitia kumbukumbu za seva na uchambuzi).",
+      "collect2": "Pia tunakusanya taarifa kiotomatiki unapotumia tovuti (kurasa zilizotembelewa, aina ya kifaa, kivinjari, anwani ya IP kupitia kumbukumbu za seva, na tangazo au kiungo kilichokuleta kwenye tovuti).",
       "useTitle": "Jinsi tunavyotumia taarifa zako",
       "useList": [
         "Kujibu maombi, nukuu, na maombi ya msaada",
@@ -594,14 +594,14 @@
       "basesTitle": "Misingi ya kisheria ya uchakataji",
       "bases1": "Tunachakata taarifa zako kwa misingi ifuatayo: utekelezaji wa mkataba (kuchakata maagizo); maslahi halali (kujibu maombi, kuendesha tovuti); idhini (mawasiliano yoyote ya matangazo); na wajibu wa kisheria (kumbukumbu za kodi, ufuataji).",
       "cookiesTitle": "Vidakuzi",
-      "cookies1": "Tunatumia vidakuzi muhimu vinavyohitajika ili tovuti ifanye kazi, na vidakuzi vya hiari vya uchambuzi kuelewa matumizi. Ona <clink>Sera yetu ya Vidakuzi</clink> kwa maelezo kamili. Unaweza kusimamia mapendeleo yako wakati wowote.",
+      "cookies1": "Tunatumia vidakuzi muhimu vinavyohitajika ili tovuti ifanye kazi, na vidakuzi vya hiari vya uchambuzi na matangazo (Google Ads) kuelewa matumizi na kupima matangazo yetu. Ona <clink>Sera yetu ya Vidakuzi</clink> kwa maelezo kamili. Unaweza kusimamia mapendeleo yako wakati wowote.",
       "sharingTitle": "Ushirikishaji wa data",
       "sharing1": "Tunashiriki data pale tu inapohitajika:",
       "sharingList": [
         "Wachakataji wa malipo (Flutterwave, PayPal) kukamilisha miamala",
         "Watoa huduma za barua pepe kutuma barua pepe za miamala",
         "Washirika wa usafirishaji na ugavi kutimiza maagizo",
-        "Watoa uchambuzi (data iliyojumlishwa na isiyo na utambulisho pekee)",
+        "Google (Google Ads), kupima ni matangazo yapi yanayoleta maombi — kwa idhini yako, au bila vidakuzi na bila vitambulisho ukikataa",
         "Mamlaka za kisheria zinapohitajika kwa sheria"
       ],
       "retentionTitle": "Uhifadhi wa data",
@@ -667,7 +667,7 @@
     },
     "cookies": {
       "title": "Sera ya Vidakuzi",
-      "updated": "1 Juni 2026",
+      "updated": "28 Oktoba 2026",
       "whatTitle": "Vidakuzi ni nini?",
       "what1": "Vidakuzi ni faili ndogo za maandishi zinazowekwa kwenye kifaa chako unapotembelea tovuti. Zinaruhusu tovuti kukumbuka mapendeleo yako na kuelewa jinsi unavyoitumia.",
       "useTitle": "Vidakuzi tunavyotumia",
@@ -682,9 +682,14 @@
         "Kuangaliwa kwa kurasa na njia za urambazaji (zilizojumlishwa, zisizo na utambulisho)",
         "Aina ya kifaa na kivinjari (kuboresha uzoefu wa simu)"
       ],
-      "use3": "Hatutumii vidakuzi vya matangazo au ufuatiliaji, na hatushiriki data ya uchambuzi na watangazaji wa nje.",
+      "advertising": "<b>Vidakuzi vya matangazo (Google Ads)</b>: vinatuonyesha ni tangazo lipi letu la Google lililoleta ombi, simu au uhifadhi, ili tutumie fedha kwenye matangazo yanayofanya kazi. Hivi vinawekwa tu kwa idhini yako.",
+      "advertisingList": [
+        "Tangazo au utafutaji uliokuleta kwenye tovuti",
+        "Kama ziara hiyo ilileta ombi, simu, uhifadhi au usajili wa jarida"
+      ],
+      "use3": "Ukikataa, Google inapokea tu ishara zisizo na vidakuzi, zilizoondolewa vitambulisho vya matangazo, ambazo inazitumia kwa vipimo vilivyojumlishwa. Hakuna kidakuzi cha matangazo kinachowekwa na hakuna kinachotumika kubinafsisha matangazo. Hatuuzi data yako kamwe.",
       "manageTitle": "Kusimamia mapendeleo yako",
-      "manage1": "Unapotembelea tovuti kwa mara ya kwanza, bango la vidakuzi linakuruhusu kukubali au kukataa vidakuzi vya hiari (vya uchambuzi). Unaweza kusasisha pendeleo lako wakati wowote kwa kubofya \"Mipangilio ya vidakuzi\" kwenye kijachini.",
+      "manage1": "Unapotembelea tovuti kwa mara ya kwanza, bango la vidakuzi linakuruhusu kukubali au kukataa vidakuzi vya hiari (vya uchambuzi na matangazo). Unaweza kusasisha pendeleo lako wakati wowote kwa kubofya \"Mipangilio ya vidakuzi\" kwenye kijachini.",
       "manage2": "Pia unaweza kudhibiti vidakuzi kupitia mipangilio ya kivinjari chako. Kumbuka kuwa kuzima vidakuzi muhimu kunaweza kuathiri utendaji wa tovuti (kwa mfano, kikapu cha ununuzi kinaweza kisifanye kazi vizuri).",
       "thirdTitle": "Vidakuzi vya watu wengine",
       "third1": "Tunapachika Ramani ya Google kwenye ukurasa wetu wa Mawasiliano. Google inaweza kuweka vidakuzi vyake ramani hiyo inapopakia. Tunapendekeza kupitia sera ya faragha ya Google kwa maelezo.",

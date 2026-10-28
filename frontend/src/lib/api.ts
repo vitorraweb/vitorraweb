@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "./constants";
 import { getAttribution } from "@/lib/attribution";
+import { trackConversion } from "@/lib/google-ads";
 import type {
   ApiResponse,
   BlogPost,
@@ -96,6 +97,8 @@ export async function submitEnquiry(
       attribution: getAttribution(),
     }),
   });
+  // Tell Google Ads which visit produced this lead (see lib/google-ads.ts).
+  trackConversion("enquiry", { transactionId: `enq-${res.data?.id ?? Date.now()}`, email: data.email, phone: data.phone });
   return res.data;
 }
 
@@ -112,7 +115,7 @@ export async function submitContact(
   data: ContactFormData,
   turnstileToken?: string
 ): Promise<{ message: string }> {
-  return request<{ message: string }>("/contact", {
+  const res = await request<{ message: string }>("/contact", {
     method: "POST",
     body: JSON.stringify({
       ...data,
@@ -120,6 +123,8 @@ export async function submitContact(
       attribution: getAttribution(),
     }),
   });
+  trackConversion("contact", { email: data.email });
+  return res;
 }
 
 /* ─── Newsletter ────────────────────────────────────────────────────────── */
@@ -129,10 +134,12 @@ export async function subscribeNewsletter(
   locale?: string,
   turnstileToken?: string
 ): Promise<{ message: string }> {
-  return request<{ message: string }>("/newsletter/subscribe", {
+  const res = await request<{ message: string }>("/newsletter/subscribe", {
     method: "POST",
     body: JSON.stringify({ email, locale, source: "footer", turnstile_token: turnstileToken }),
   });
+  trackConversion("newsletter", { email });
+  return res;
 }
 
 export async function unsubscribeNewsletter(
@@ -285,7 +292,16 @@ export async function reserveFet(payload: ReserveFetPayload): Promise<{ order: O
     method: "POST",
     body: JSON.stringify(payload),
   });
-  return { order: res.data, message: res.message ?? "" };
+  const order = res.data;
+  trackConversion("reserve", {
+    // Orders hold UGX in shillings and USD in cents.
+    value: order ? (order.currency === "USD" ? order.total / 100 : order.total) : undefined,
+    currency: order?.currency,
+    transactionId: order?.reference,
+    email: payload.customer_email,
+    phone: payload.customer_phone,
+  });
+  return { order, message: res.message ?? "" };
 }
 
 /* ─── Orders (Customer Portal — requires auth) ──────────────────────────── */

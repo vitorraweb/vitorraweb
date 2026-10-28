@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { Hanken_Grotesk, Fraunces } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -8,7 +7,7 @@ import { CookieBanner } from "@/components/ui/cookie-banner";
 import { CartProvider } from "@/lib/cart";
 import { Toaster } from "@/components/ui/sonner";
 import { AttributionCapture } from "@/components/AttributionCapture";
-import { ANALYTICS_ENABLED, PLAUSIBLE_DOMAIN } from "@/lib/constants";
+import { GoogleTag } from "@/components/GoogleTag";
 
 /* ── Type pairing — Quiet Authority (October 2026) ─────────────────────────────
    Display: Fraunces — a variable serif with an optical-size axis, the closest
@@ -115,33 +114,11 @@ export default async function RootLayout({
           <CartProvider>
             {children}
             <AttributionCapture />
+            <GoogleTag />
             <CookieBanner />
             <Toaster position="bottom-right" />
           </CartProvider>
         </NextIntlClientProvider>
-        {ANALYTICS_ENABLED && (
-          <Script
-            defer
-            data-domain={PLAUSIBLE_DOMAIN}
-            data-exclude="/admin/**,/display/**"
-            src="https://plausible.io/js/script.outbound-links.file-downloads.js"
-            strategy="afterInteractive"
-          />
-        )}
-        {/* Google tag (gtag.js) — Google Ads conversion tracking */}
-        <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=AW-18227983736"
-          strategy="afterInteractive"
-        />
-        <Script id="google-tag" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'AW-18227983736');
-          `}
-        </Script>
       </body>
     </html>
   );

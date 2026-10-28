@@ -15,6 +15,9 @@ type Enquiry = {
   requirements: Requirement[] | null; assigned_to: string | null; assigned_user_id: number | null;
   status: string; created_at: string;
   lead_source: string | null;
+  /** Resolved from the Google click by the Ads sync (null until matched). */
+  ads_campaign_name?: string | null;
+  ads_keyword?: string | null;
 };
 
 type AssignableUser = { id: number; name: string };
@@ -233,7 +236,10 @@ export default function EnquiriesPage() {
                 <td className="max-w-[10rem] truncate">{e.assigned_to ?? <span className="text-ink-muted">Unassigned</span>}</td>
                 {/* Enquiries taken before lead-source tracking existed have
                     none, and show nothing rather than a guess. */}
-                <td className="max-w-[8rem] truncate text-ink-muted">{e.lead_source ?? "—"}</td>
+                <td className="max-w-[10rem] text-ink-muted" title={e.ads_keyword ? `Searched: ${e.ads_keyword}` : undefined}>
+                  <span className="block truncate">{e.lead_source ?? "—"}</span>
+                  {e.ads_campaign_name && <span className="block truncate text-[11.5px] text-gold-ink">{e.ads_campaign_name}</span>}
+                </td>
                 <td><StatusBadge status={e.status} /></td>
                 <td><ChevronDown className={`w-4 h-4 text-ink-muted transition-transform ${open === e.id ? "rotate-180" : ""}`} aria-hidden="true" /></td>
               </tr>

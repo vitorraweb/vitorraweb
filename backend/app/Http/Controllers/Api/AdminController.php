@@ -11,7 +11,6 @@ use App\Models\Task;
 use App\Models\User;
 use App\Notifications\EnquiryAssigned;
 use App\Services\DocumentService;
-use App\Services\PlausibleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -216,11 +215,6 @@ class AdminController extends Controller
         ]);
     }
 
-    /** Website traffic (Plausible Stats API) — for the dashboard's "Website traffic" card. */
-    public function analytics(): JsonResponse
-    {
-        return response()->json(['data' => app(PlausibleService::class)->getStats()]);
-    }
 
     /**
      * "Needs attention" feed for the dashboard — contacts going cold in the

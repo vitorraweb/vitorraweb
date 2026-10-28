@@ -14,6 +14,10 @@ export const COOKIE_CONSENT_KEY = "vitorra_cookie_consent";
  *  mind — the "Cookie settings" control the published cookie policy promises. */
 export const COOKIE_SETTINGS_EVENT = "vitorra:cookie-settings";
 
+/** Window event fired after the visitor makes (or changes) a choice, with the
+ *  choice as `detail`, so tags already on the page can follow it. */
+export const COOKIE_CONSENT_EVENT = "vitorra:cookie-consent";
+
 /** The stored choice, or null when the visitor has not chosen yet (or storage
  *  is unavailable, e.g. private browsing). Never throws. */
 export function readConsent(): CookieConsent | null {
@@ -32,4 +36,5 @@ export function writeConsent(value: CookieConsent): void {
   } catch {
     /* private browsing — the banner still closes for this session */
   }
+  window.dispatchEvent(new CustomEvent<CookieConsent>(COOKIE_CONSENT_EVENT, { detail: value }));
 }

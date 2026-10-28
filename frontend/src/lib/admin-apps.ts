@@ -2,7 +2,7 @@ import {
   Handshake, ShoppingCart, Gauge, Wallet, LineChart, Users, ListChecks, Globe, Settings,
   MessageSquare, Workflow, Contact, Target, LayoutTemplate, CreditCard, FlaskConical,
   TrendingUp, LayoutDashboard, CalendarCheck, Hourglass, Briefcase, CalendarDays,
-  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck,
+  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone,
 } from "lucide-react";
 import { canAccess, type AdminUser } from "@/lib/auth";
 
@@ -77,10 +77,11 @@ export const ADMIN_APPS: AdminApp[] = [
     ],
   },
   {
-    id: "insights", name: "Insights", blurb: "Company overview and the CEO report", icon: LineChart, area: "Money",
+    id: "insights", name: "Insights", blurb: "Company overview, the CEO report and Google Ads", icon: LineChart, area: "Money",
     items: [
       { label: "Overview",  href: "/admin/overview",  icon: LayoutDashboard, keywords: "dashboard stats" },
       { label: "CEO report", href: "/admin/executive", icon: TrendingUp, module: "executive", keywords: "executive revenue" },
+      { label: "Google Ads", href: "/admin/google-ads", icon: Megaphone, module: "google_ads", keywords: "adwords ads advertising spend campaigns cpc clicks search terms marketing" },
     ],
   },
   {

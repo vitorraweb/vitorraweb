@@ -32,6 +32,8 @@ export default async function CookiePolicyPage() {
         <Ul items={t.raw("essentialList")} />
         <P>{t.rich("analytics", { b: bold })}</P>
         <Ul items={t.raw("analyticsList")} />
+        <P>{t.rich("advertising", { b: bold })}</P>
+        <Ul items={t.raw("advertisingList")} />
         <P>{t("use3")}</P>
       </Section>
 

@@ -34,7 +34,15 @@ class Enquiry extends Model
         'replied_at'       => 'datetime',
         'sla_notified_at'  => 'datetime',
         'sla_escalated_at' => 'datetime',
+        'ads_click_checked_at'       => 'datetime',
+        'ads_conversion_uploaded_at' => 'datetime',
     ];
+
+    /** The Google Ads click id (gclid) this lead arrived with, if any. */
+    public function googleClickId(): ?string
+    {
+        return $this->attribution['gclid'] ?? null;
+    }
 
     public function isNew(): bool
     {

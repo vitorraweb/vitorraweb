@@ -52,9 +52,27 @@ return [
         ],
     ],
 
-    'plausible' => [
-        'api_key' => env('PLAUSIBLE_API_KEY'),
-        'site_id' => env('PLAUSIBLE_SITE_ID', 'vitorra.org'),
+    /*
+     * Google Ads — spend, campaigns and search terms pulled into the console,
+     * and won enquiries reported back as conversions. See App\Services\GoogleAds.
+     *
+     * Only the OAuth client lives here. The account itself (refresh token,
+     * customer id, conversion action) is connected from /admin/google-ads and
+     * stored encrypted in `google_ads_accounts`, so Marketing can reconnect
+     * without a deploy. Developer tokens were retired by Google on 9 Sep 2026
+     * — access comes from the Cloud project's API access level (Explorer is
+     * enough: 2,880 production operations a day; an hourly sync uses ~250).
+     */
+    'google_ads' => [
+        'client_id'     => env('GOOGLE_ADS_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_ADS_CLIENT_SECRET'),
+        // Where Google sends the admin back after "Connect Google Ads". Must be
+        // listed as an authorised redirect URI on the OAuth client.
+        'redirect_uri'  => env('GOOGLE_ADS_REDIRECT_URI', rtrim((string) env('FRONTEND_URL', 'http://localhost:3000'), '/').'/api/google-ads/oauth/callback'),
+        'api_version'   => env('GOOGLE_ADS_API_VERSION', 'v26'),
+        // Optional and ignored by Google since the sunset; sent only if set,
+        // for as long as the API still accepts the header.
+        'developer_token' => env('GOOGLE_ADS_DEVELOPER_TOKEN'),
     ],
 
     'exchange_rate' => [

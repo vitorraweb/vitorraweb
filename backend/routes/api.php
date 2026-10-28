@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\FetStockController;
 use App\Http\Controllers\Api\FetTrialController;
 use App\Http\Controllers\Api\FetTrialImportController;
 use App\Http\Controllers\Api\FetTrialShareController;
+use App\Http\Controllers\Api\GoogleAdsController;
 use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\InboundEmailController;
 use App\Http\Controllers\Api\InstallmentController;
@@ -133,6 +134,11 @@ Route::get('/trials/review/{token}', [FetTrialShareController::class, 'review'])
 Route::get('/trials/{token}', [FetTrialShareController::class, 'show']);
 Route::get('/trials/{token}/pdf', [FetTrialShareController::class, 'pdf']);
 
+// Google's browser redirect after an admin presses "Connect Google Ads".
+// Public by necessity; the single-use state minted by /admin/google-ads/connect
+// is what ties it to that admin.
+Route::get('/google-ads/oauth/callback', [GoogleAdsController::class, 'callback'])->middleware('throttle:20,1');
+
 // Live exchange rate (cached 1 hr; falls back to config if API key not set)
 Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);
 
@@ -241,7 +247,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware(['role:admin,ops', 'ability:admin'])->prefix('admin')->group(function () {
         // Dashboard — every staff member sees this.
         Route::get('/stats', [AdminController::class, 'stats']);
-        Route::get('/analytics', [AdminController::class, 'analytics']);
         Route::get('/alerts', [AdminController::class, 'alerts']);
 
         // Operational modules — each gated by the staff member's permissions.
@@ -412,6 +417,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/applications/{application}/cv', [JobAdminController::class, 'downloadCv']);
         });
         // Executive report — CEO business summary (leadership/finance/admin).
+        // Google Ads reporting — spend, campaigns, search terms, Ads leads.
+        Route::middleware('perm:google_ads')->prefix('google-ads')->group(function () {
+            Route::get('/status', [GoogleAdsController::class, 'status']);
+            Route::get('/summary', [GoogleAdsController::class, 'summary']);
+            Route::post('/sync', [GoogleAdsController::class, 'sync'])->middleware('throttle:6,1');
+        });
+
         Route::middleware('perm:executive')->group(function () {
             Route::get('/executive/summary', [ExecutiveController::class, 'summary']);
         });
@@ -515,6 +527,12 @@ Route::middleware('auth:sanctum')->group(function () {
             // Online-payments (Flutterwave) health: is the gateway live?
             Route::get('/payments/health', [PaymentHealthController::class, 'show']);
             Route::post('/payments/health/test', [PaymentHealthController::class, 'test']);
+            // Google Ads connection: hands the ad account to the system, so admin only.
+            Route::get('/google-ads/connect', [GoogleAdsController::class, 'connect']);
+            Route::get('/google-ads/accounts', [GoogleAdsController::class, 'accounts']);
+            Route::get('/google-ads/conversion-actions', [GoogleAdsController::class, 'conversionActions']);
+            Route::put('/google-ads/account', [GoogleAdsController::class, 'updateAccount']);
+            Route::delete('/google-ads', [GoogleAdsController::class, 'disconnect']);
             // Audit trail (read-only) — sensitive-action history.
             Route::get('/audit', [AuditController::class, 'index']);
             Route::get('/users', [UserAdminController::class, 'index']);

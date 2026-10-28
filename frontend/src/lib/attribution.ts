@@ -30,6 +30,9 @@ export interface Attribution {
   utm_term?: string;
   utm_content?: string;
   gclid?: string;
+  /** iOS replaces the gclid with these on app and web-to-app ad clicks. */
+  gbraid?: string;
+  wbraid?: string;
   fbclid?: string;
   referrer?: string;
   landing_page?: string;
@@ -43,6 +46,8 @@ const PARAMS = [
   "utm_term",
   "utm_content",
   "gclid",
+  "gbraid",
+  "wbraid",
   "fbclid",
 ] as const;
 

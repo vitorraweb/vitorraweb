@@ -66,14 +66,14 @@
   },
   "cookieBanner": {
     "ariaLabel": "Cookie consent",
-    "message": "We use essential cookies to keep the site working, and optional analytics cookies to improve it.",
+    "message": "We use essential cookies to keep the site working, and optional analytics and advertising cookies (Google Ads) to measure our adverts.",
     "policyLink": "Cookie policy",
     "dismiss": "Dismiss without accepting",
     "decline": "Decline",
     "acceptAll": "Accept all",
     "settings": "Cookie settings",
-    "currentAccepted": "You currently allow optional analytics cookies.",
-    "currentDeclined": "You currently decline optional analytics cookies."
+    "currentAccepted": "You currently allow optional analytics and advertising cookies.",
+    "currentDeclined": "You currently decline optional analytics and advertising cookies."
   },
   "meta": {
     "home": {
@@ -568,7 +568,7 @@
     "lastUpdated": "Last updated:",
     "privacy": {
       "title": "Privacy Policy",
-      "updated": "1 June 2026",
+      "updated": "28 October 2026",
       "whoTitle": "Who we are",
       "who1": "{name} (\"Vitorra\", \"we\", \"us\") is a company registered in Uganda (Reg. No. 80034340923220), located at Padre Pio House, Plot 32, Lumumba Avenue, Kampala, Uganda. We operate the website vitorra.org.",
       "who2": "We are the data controller for personal information collected through this website. Questions about this policy: <mail></mail>.",
@@ -580,7 +580,7 @@
         "Account details (name and email) if you create a customer portal account",
         "Messages and correspondence when you contact us"
       ],
-      "collect2": "We also collect information automatically when you use the site (pages visited, device type, browser, IP address via standard server logs and analytics).",
+      "collect2": "We also collect information automatically when you use the site (pages visited, device type, browser, IP address via standard server logs, and which advert or link brought you to the site).",
       "useTitle": "How we use your information",
       "useList": [
         "To respond to enquiries, quotes, and support requests",
@@ -594,14 +594,14 @@
       "basesTitle": "Legal bases for processing",
       "bases1": "We process your information on the following bases: performance of a contract (processing orders); legitimate interests (responding to enquiries, operating the site); consent (any marketing communications); and legal obligation (tax records, compliance).",
       "cookiesTitle": "Cookies",
-      "cookies1": "We use essential cookies required for the site to function, and optional analytics cookies to understand usage. See our <clink>Cookie Policy</clink> for full details. You can manage your preferences at any time.",
+      "cookies1": "We use essential cookies required for the site to function, and optional analytics and advertising cookies (Google Ads) to understand usage and measure our adverts. See our <clink>Cookie Policy</clink> for full details. You can manage your preferences at any time.",
       "sharingTitle": "Data sharing",
       "sharing1": "We share data only where necessary:",
       "sharingList": [
         "Payment processors (Flutterwave, PayPal) to complete transactions",
         "Email service providers to send transactional emails",
         "Shipping and logistics partners to fulfil orders",
-        "Analytics providers (aggregated, anonymised data only)",
+        "Google (Google Ads), to measure which adverts lead to enquiries — with your consent, or in cookieless, identifier-free form if you decline",
         "Legal authorities when required by law"
       ],
       "retentionTitle": "Data retention",
@@ -667,7 +667,7 @@
     },
     "cookies": {
       "title": "Cookie Policy",
-      "updated": "1 June 2026",
+      "updated": "28 October 2026",
       "whatTitle": "What are cookies?",
       "what1": "Cookies are small text files placed on your device when you visit a website. They allow the site to remember your preferences and understand how you use it.",
       "useTitle": "Cookies we use",
@@ -682,9 +682,14 @@
         "Page views and navigation paths (aggregated, anonymised)",
         "Device type and browser (to improve mobile experience)"
       ],
-      "use3": "We do not use advertising or tracking cookies, and we do not share analytics data with third-party advertisers.",
+      "advertising": "<b>Advertising cookies (Google Ads)</b>: tell us which of our Google adverts led to an enquiry, a call or a reservation, so we spend on adverts that work. These are only set with your consent.",
+      "advertisingList": [
+        "Which advert or search brought you to the site",
+        "Whether that visit led to an enquiry, call, reservation or newsletter sign-up"
+      ],
+      "use3": "If you decline, Google receives only cookieless signals with advertising identifiers removed, which it uses for aggregated measurement. No advertising cookie is set and nothing is used to personalise ads. We never sell your data.",
       "manageTitle": "Managing your preferences",
-      "manage1": "When you first visit the site, a cookie banner lets you accept or decline optional (analytics) cookies. You can update your preference at any time by clicking \"Cookie settings\" in the footer.",
+      "manage1": "When you first visit the site, a cookie banner lets you accept or decline optional (analytics and advertising) cookies. You can update your preference at any time by clicking \"Cookie settings\" in the footer.",
       "manage2": "You can also control cookies through your browser settings. Note that disabling essential cookies may affect site functionality (for example, the shopping cart may not work correctly).",
       "thirdTitle": "Third-party cookies",
       "third1": "We embed a Google Map on our Contact page. Google may set its own cookies when that map loads. We recommend reviewing Google's privacy policy for details.",

@@ -23,5 +23,12 @@ class ContactMessage extends Model
     protected $casts = [
         'read_at'     => 'datetime',
         'attribution' => 'array',
+        'ads_click_checked_at' => 'datetime',
     ];
+
+    /** The Google click id this lead arrived with, if any. */
+    public function googleClickId(): ?string
+    {
+        return $this->attribution['gclid'] ?? null;
+    }
 }

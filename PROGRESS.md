@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 15 October 2026
+**Last updated:** 28 October 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -45,6 +45,7 @@
 | **Being told when the website breaks** — before a customer notices | ✅ **Built & tested on both environments** — a real alert was fired and the email confirmed arriving |
 | **Knowing what we spend, before the bill** | ✅ **Built** — warnings at 60/85/100% of budget, plus unusual-spending detection |
 | **Knowing which channel produced every enquiry** (Google Ads, Facebook, referral, direct) | ✅ **Live** — ad links still need campaign tags |
+| **Google Ads in the console** — spend, campaigns, search terms and cost per lead beside our enquiries; won deals reported back to Google; consent-aware tag with conversions on every lead form, call and WhatsApp tap | 🔨 **Built, not yet deployed** — needs the Google Cloud OAuth client, conversion labels from Marketing, then Connect in `/admin/google-ads` |
 | **Enquiries chased and escalated when nobody replies** | ✅ **Live** — set the escalation list (`ENQUIRY_SLA_ESCALATE_TO`) |
 | **Quotations + branded Coffee / FET invoices** (Finance's templates) | ✅ **Live** |
 | **Customer sign-in landing in a previous account** | ✅ **Fixed & live** — everyone signed in again once |
@@ -52,6 +53,9 @@
 | **Coffee customer list** — Excel import, go4WorldBusiness category, safe re-uploads | ✅ **Live** — 54 coffee rows loaded |
 | **Campaigns to a whole list, quotations from a customer, dated follow-ups** | ✅ **Live** |
 | **Branded campaign email** — letterhead, sender's signature, support copied, test send + preview | ✅ **Live** — Sarah still needs to save her signature |
+| **Bold redesign** — statement homepage, Olivia's banners and photos, real SEAL cans, East Africa route map, Mount Elgon map, fuel bars, contact/blog/careers in the same style | ✅ **Live** (27 October) |
+| **Found by Google, Bing and AI assistants** (structured data, short answers, `llms.txt`, Bing notified on publish) | ✅ **Live** — server update + Search Console / Bing Webmaster setup still to do |
+| **Blog drafts written with Claude, approved by Marketing by email** | ✅ **Live** — three drafts waiting for Send for review |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -1522,8 +1526,8 @@ bands, a generic four-card grid, nothing that answered the visitor.
 - Content is in the page from the first byte, as before.
 
 **⏳ Open**
-- The FET packshot (shown where 3D cannot load) reads **"Fuel *Eca* Tech"** —
-  it appears to be generated. A real product photograph is needed.
+- ~~The FET packshot reads "Fuel *Eca* Tech"~~ ✅ replaced with the real
+  product photograph (26 October).
 - Olivia / Solomon sign-off on the new motion and the 3D device.
 - Libraries added: `lenis`, `motion` (formerly Framer Motion), `three`,
   `@react-three/fiber`, `@react-three/drei`. Radix was not added — the site
@@ -1538,6 +1542,204 @@ bands, a generic four-card grid, nothing that answered the visitor.
 > `experimental.viewTransition`; view-transition + mask-reveal CSS in
 > `globals.css` ("CINEMATIC LAYER"). `types/react-canary.d.ts` for
 > `<ViewTransition>`. Build, typecheck and lint clean.
+
+---
+
+
+## The bold redesign (27 October 2026) — live
+
+Inspired by a review of troimedia.com: bigger type, round calls to action,
+warm cream and sage chapters, and Olivia's designed images throughout. Built
+on `redesign/bold`, previewed, then merged to `master`.
+
+**Homepage**
+- **Statement opening:** "Four businesses. / One standard." set like a poster
+  across the page, with one round "Tell us what you need" button and the
+  Kampala skyline below. Text is solid (an earlier version started half-faded).
+- **Credentials strip** under the opening: CTI GmbH, AVL Technologies,
+  qm-solutions GmbH, ISO 9001 / 14001 / 27001, Zurich Insurance, set as type
+  (using their logos needs their permission).
+- **Proof slides:** Olivia's four designed facts travel sideways as you scroll
+  (a plain list on phones).
+- **The company:** the gold reception sign, on sage, with "About Vitorra".
+- **Quick answers** before the contact close (see the next section).
+- **Footer** rebuilt on dark: an animated "Let's talk" link, the newsletter,
+  logo once, three link columns, no repeated contact details. A gold
+  back-to-top ring shows how far down the page you are.
+
+**Business pages**
+- **New opening photos** for FET (device on the fuel line) and SEAL (can in a
+  gloved hand). Homepage, coffee and logistics kept their earlier photos, the
+  team's choice. On phones the photo shows in full with the headline below,
+  so the product is never hidden behind text.
+- **FET:** two fuel bars drawn to scale (11.52 vs 9.92 L/100 km, 13.9% less),
+  pricing tiers with a vehicle icon each, Olivia's wide and key-visual banners,
+  a new film cover.
+- **SEAL:** the range cards show the **real OTC, PRO and Pet cans** (cut-outs
+  of the official photos, real labels), at one display height because their
+  true relative sizes are not known.
+- **Coffee:** a real map of Uganda with Mount Elgon marked, retouched process
+  photos, and the coffee film (plays only when pressed).
+- **Logistics:** a real East Africa map with the Northern Corridor (Mombasa)
+  and Central Corridor (Dar es Salaam) drawing themselves as you scroll,
+  marked "schematic routes, not to scale"; the logistics film added.
+- **Contact, Blog and Careers** now open the same way as the homepage. Careers
+  uses the main site header and footer and keeps its EN/SW/FR switch.
+
+**Honesty notes**
+- Several of Olivia's round-2 images are generated or retouched (the FET
+  installation is an illustration, the coffee warehouse and container truck
+  are not ours). Provenance per file: `frontend/public/photos/README.md`.
+  The real field photographs stay the FET evidence.
+- Maps use Natural Earth (public domain) borders; routes are town to town.
+
+> Technical detail (engineering): `sections/StatementHero.tsx`,
+> `sections/PageHero.tsx`, `system/CircleLink.tsx`, `sections/ProofCarousel.tsx`,
+> `sections/CredentialStrip.tsx`, `sections/FuelBars.tsx`, `maps/RouteMap.tsx`,
+> `maps/OriginMap.tsx` with `maps/geo.ts` generated by `scripts/build_maps.py`,
+> `ui/VehicleIcon.tsx`, `system/Film.tsx`, `layout/Footer.tsx`,
+> `motion/BackToTop.tsx`; tokens cream `#F5F0E6` and sage `#EDEFE3` (contrast
+> checked); banners `public/banners/*.webp`, photos `public/photos/`.
+> Olivia's full package (`Vitorra-Website-Package/`, 45 MB) is kept out of git.
+
+---
+
+## Found by Google, Bing and AI assistants (27 October 2026) — live, server step pending
+
+Goal: show up in Google and Bing results, and be the source AI assistants
+(ChatGPT, Copilot, Perplexity, Google AI Overviews) quote when someone asks
+about fuel savings, wound spray, Ugandan coffee or East African freight.
+
+- **Structured facts on every page** (schema.org): who Vitorra is (legal name,
+  URSB number, address, contacts), each product (FET with its four UGX
+  prices, SEAL, coffee) and the logistics service, questions and answers,
+  breadcrumbs. Blog posts carry article data, and their "Questions" section
+  becomes Q&A data. Open job roles carry job-posting data for Google's job
+  listings.
+- **Quick answers** on the homepage and the four business pages (EN/SW): the
+  questions people search, each answered in one or two sentences. Google only
+  uses Q&A data that visitors can also see, so these are on the page.
+- **`vitorra.org/llms.txt`:** a plain summary for AI assistants, built from the
+  site's own data so prices cannot drift.
+- **Bing told immediately (IndexNow):** every blog publish notifies Bing, whose
+  index feeds ChatGPT search and Copilot. All 43 pages were submitted on
+  27 October (accepted). Re-run `python3 scripts/indexnow_submit.py` after a
+  release that changes many pages.
+- **robots.txt** names the search and AI crawlers and lets them in; private
+  areas (admin, staff, accounts, invoices, orders, payments) stay closed.
+- **Each page names its English and Swahili versions** so they rank as a pair.
+- **`/sw/careers`**, an old copy, now redirects to `/careers`.
+- **Blog routine** (`/blog-post`): articles now open with the answer, use
+  question headings, and end with a short Questions section.
+
+**⏳ To finish**
+1. **Server update** (blog → Bing notification, job posting dates):
+   `git fetch origin && git merge --ff-only origin/master`, then
+   `$PHP artisan config:cache`. No migration.
+2. **Google Search Console:** add vitorra.org, verify (TXT record at GoDaddy, or
+   set `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` on Vercel), submit the sitemap.
+3. **Bing Webmaster Tools:** import from Search Console (or set
+   `NEXT_PUBLIC_BING_SITE_VERIFICATION`).
+4. **Google Business Profile and Bing Places** for Padre Pio House.
+5. **Company social links** (LinkedIn etc.) to add to the organisation data.
+
+> Technical detail (engineering): `lib/seo.ts` (organization, website,
+> products, `faqPage`, `breadcrumbs`, `faqFromHtml`, `localeAlternates`),
+> `sections/QuickAnswers.tsx` + `answers` messages, `app/llms.txt/route.ts`,
+> `app/robots.ts`, `app/sitemap.ts` (careers + open roles, English only),
+> `careers/[slug]/layout.tsx` (JobPosting), key file
+> `public/25453b7fae61c6b0aa0b2c5a0db0a22b.txt`; backend
+> `App\Services\IndexNow` (on in production only; `services.indexnow`),
+> `BlogPost::booted()` hook, `CareersController@show` adds `posted_at`.
+> Tests: `IndexNowTest` (2). **485 backend tests passing.**
+
+---
+
+## Google Ads in the console (28 October 2026) — built, not yet deployed
+
+Marketing now pays for Google Ads and Plausible is no longer running, so the
+question "what did the ad money produce?" needed Google's numbers beside ours.
+
+**On the website**
+- The Google tag (`AW-18227983736`) now respects the cookie banner (Google
+  Consent Mode v2). Until a visitor presses "Accept all", Google gets only
+  cookieless signals with advertising identifiers removed, and no advertising
+  cookie is set. Before this, the tag set Google's cookies for everyone while
+  the cookie policy said "we do not use advertising cookies". The banner, the
+  cookie policy and the privacy policy (EN + SW) now describe Google Ads.
+- **Conversions reported to Google** for an enquiry, a contact message, an FET
+  reservation (with its value), a newsletter sign-up, and any tap on a phone or
+  WhatsApp link. Each one needs its label from Google Ads; one without a label
+  is simply not sent. With consent, the email and phone are passed for Google's
+  enhanced conversions (Google hashes them in the browser).
+- Staff screens (`/admin`, `/staff`) and the reception screen are never tagged.
+- iPhone ad clicks (`gbraid` / `wbraid`) now count as Google Ads, like `gclid`.
+- Plausible is removed (script, server code, dashboard card).
+
+**In the console: Insights → Google Ads (`/admin/google-ads`)**
+- Spent, clicks, leads from ads, cost per lead, won deals and cost per sale,
+  with the previous period for comparison. Periods: 7 / 30 / 90 days, this
+  month, last month.
+- Spend per day and leads per day.
+- **Campaigns table**: each campaign's spend, clicks and click cost beside the
+  enquiries and wins it produced. A lead is tied to its campaign by its Google
+  click, so this works even when the ad links carry no campaign tags.
+- **What people searched**: the search terms that cost money, flagged when
+  they have not produced a conversion.
+- **Latest leads from ads**, with campaign and keyword.
+- Overview's old Plausible card is now a 7-day Google Ads card. The Enquiries
+  list shows the campaign under the source.
+- Leads from ads are counted **before** Google Ads is connected; only spend,
+  campaigns and search terms wait for the connection.
+
+**Won deals go back to Google.** When an enquiry from an ad is converted to an
+order, the sale and its value are uploaded to Google Ads, once. Google's
+bidding then learns which searches bring buyers, not just form fills. It is off
+until an admin picks an import-type conversion action on the screen.
+
+**Who sees it:** the new `google_ads` module is on by default for Marketing,
+Finance and Leadership. Ops accounts with a custom permission set need it
+ticked in `/admin/staff`. Connecting and disconnecting the ad account is
+admin-only, and both are written to the activity log.
+
+**⏳ To switch it on**
+1. **Google Cloud (IT, about 20 minutes):**
+   - Create a project, enable the **Google Ads API**, and on its overview page
+     apply for **Explorer** access. Test access cannot read the real account.
+     Developer tokens were retired by Google on 9 September 2026, so none is needed.
+   - Create an OAuth client (Web application), with redirect URI
+     `https://vitorra.org/api/google-ads/oauth/callback`.
+   - Put the client id and secret in `backend/.env` as `GOOGLE_ADS_CLIENT_ID` /
+     `GOOGLE_ADS_CLIENT_SECRET`.
+2. **Server update:** pull, `migrate --force` (`2026_10_28_000001`),
+   `config:cache`, `route:cache`. Check with `php artisan google-ads:status`.
+3. **Connect:** an admin opens `/admin/google-ads`, presses **Connect Google Ads**,
+   signs in with Marketing's Google Ads login, and picks the ad account.
+4. **Marketing, in Google Ads (Goals → Conversions):**
+   - Create one "Website" conversion action each for enquiry, contact,
+     reservation, newsletter and call/WhatsApp click.
+   - Send the labels so they can be set on Vercel:
+     `NEXT_PUBLIC_GOOGLE_ADS_LABEL_ENQUIRY`, `_CONTACT`, `_RESERVE`,
+     `_NEWSLETTER`, `_CALL`. Then redeploy.
+   - Turn on **enhanced conversions** for those actions.
+5. **Optional: won-deal reporting.** Create an **Import → clicks** conversion
+   action and choose it on the console screen.
+6. Preview deployments carry the tag too. Set `NEXT_PUBLIC_GOOGLE_ADS_ID=` (empty)
+   on Vercel's Preview environment to keep test visits out of the ad reports.
+
+> Technical detail (engineering): backend `App\Services\GoogleAds\{GoogleAdsClient,
+> GoogleAdsSync}` (plain REST with the Laravel HTTP client, API `v26`; no gRPC SDK,
+> which cPanel cannot build), `GoogleAdsController`, models `GoogleAdsAccount`
+> (refresh token `encrypted` cast; its own table so `Setting::resolved()` can
+> never serve it), `GoogleAdsCampaignDay`, `GoogleAdsSearchTerm`; commands
+> `google-ads:sync` (`--days`, `--retry-failed`) + `google-ads:status`; `services.google_ads`.
+> The sync replaces its date window (Google restates recent days); click lookup is
+> `click_view` by gclid (90-day window, checked once per lead); conversions upload
+> one at a time with `orderId = enq-{id}`. An hourly run is ~4 API operations plus
+> one per new Ads lead (Explorer allows 2,880/day). Frontend `lib/google-ads.ts`,
+> `components/GoogleTag.tsx`, `lib/cookies.ts` (`COOKIE_CONSENT_EVENT`), conversions
+> fired from `lib/api.ts`, page `app/admin/google-ads/page.tsx`. Tests: `GoogleAdsTest`
+> (15). **500 backend tests passing.**
 
 ---
 
@@ -1574,6 +1776,18 @@ F. **Write the incident runbook** — what to check, in what order, when the sit
    while perfectly healthy, every request timing out while the service was fine,
    a certificate refused because of a record in someone else's domain. A generic
    runbook would list none of those.
+
+**Google Ads (from 28 October)**
+- Google Cloud OAuth client + Explorer access, server update, then **Connect** in `/admin/google-ads` (see "Google Ads in the console").
+- Marketing: the five conversion labels for Vercel, enhanced conversions on, and optionally an Import → clicks action for won deals.
+
+**Website and search (from 27 October)**
+- **Server update** for the search work (see "Found by Google, Bing and AI assistants").
+- **Google Search Console, Bing Webmaster Tools, Google Business Profile, Bing Places** — need John's or Marketing's logins.
+- **Blog:** three drafts (diesel prices, coffee EUDR, FET fuel costs) waiting for Send for review; set the coffee export article's cover to `/banners/blog-coffee-export.jpg`.
+- **Testimonials:** two or three real client quotes, each with written consent.
+- **A sharper SEAL PRO photo** from the manufacturer (the current one is small).
+- **Tidy the project folder:** Olivia's original PNGs in the root are no longer used.
 
 **Marketing — before the first coffee campaign (from 14–15 October)**
 3. **Sarah: paste your Outlook signature into My profile** (`/admin/profile`).
