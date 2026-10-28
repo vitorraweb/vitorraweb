@@ -1,0 +1,30 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.19/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.19",
+  "version": "1.0.0",
+  "id": "{{APP_ID}}",
+  "developer": {
+    "name": "Vitorra Holdings Limited",
+    "websiteUrl": "{{BASE_URL}}",
+    "privacyUrl": "{{BASE_URL}}/legal/privacy-policy",
+    "termsOfUseUrl": "{{BASE_URL}}/legal/terms-and-conditions"
+  },
+  "name": { "short": "Vitorra", "full": "Vitorra Holdings dashboard" },
+  "description": {
+    "short": "The Vitorra company dashboard, inside Teams.",
+    "full": "Open the Vitorra console dashboard as a personal tab in Microsoft Teams: enquiries, orders, demand and outreach at a glance. Sign-in uses your Vitorra Microsoft 365 account; staff access rules and two-step verification still apply."
+  },
+  "icons": { "color": "color.png", "outline": "outline.png" },
+  "accentColor": "#1E1E1E",
+  "staticTabs": [
+    {
+      "entityId": "dashboard",
+      "name": "Dashboard",
+      "contentUrl": "{{BASE_URL}}/teams/dashboard?inTeams=1",
+      "websiteUrl": "{{BASE_URL}}/admin/overview",
+      "scopes": ["personal"]
+    }
+  ],
+  "permissions": ["identity"],
+  "validDomains": ["{{DOMAIN}}"]
+}

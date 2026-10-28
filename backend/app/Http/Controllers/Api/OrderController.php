@@ -139,6 +139,7 @@ class OrderController extends Controller
         // own envelope (see NewOrder), so hitting Reply reaches the buyer.
         Mail::to($order->customer_email)->send(new OrderConfirmation($order));
         Mail::to(config('mail.team_address'))->send(new NewOrder($order));
+        app(\App\Services\Teams\TeamsAlerts::class)->newOrder($order);
 
         return response()->json([
             'data'    => $order,
@@ -242,6 +243,7 @@ class OrderController extends Controller
 
         Mail::to($order->customer_email)->send(new ReservationConfirmation($order, online: $payOnline));
         Mail::to(config('mail.team_address'))->send(new NewOrder($order));
+        app(\App\Services\Teams\TeamsAlerts::class)->newOrder($order, reservation: true);
 
         return response()->json([
             'data'    => $order,

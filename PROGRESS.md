@@ -1974,6 +1974,23 @@ Tests: `PurgeTestLeadsTest` (3). **503 backend tests passing.**
 
 ---
 
+## Microsoft Teams integration (28 October 2026)
+
+What the team gets:
+- **Chat in Teams** from any staff record in the console, and from **My team**, **My supervisor** and **Colleagues** in the staff portal. One click opens a Teams chat with that person.
+- **Meetings.** Operations pastes a Teams join link once (Console → Operations → Meetings). Staff see it on their portal home page with a **Join in Teams** button.
+- **Channel alerts.** New enquiries, contact messages, orders and FET reservations, and the executive report post a short card to a chosen Teams channel. Each card has a button back into the console.
+- **The dashboard as a Teams tab**, signed in with the person's Microsoft 365 account. Console access rules and two-step verification still apply.
+
+Switching on (needs a Microsoft 365 admin; full steps in `docs/microsoft-teams.md`):
+1. Create a Workflows "Send webhook alerts to a channel" flow in the alerts channel → put its URL in `TEAMS_WORKFLOW_WEBHOOK_URL` → Settings → Microsoft Teams → **Send test message**.
+2. Register the single-tenant Entra app → set `ENTRA_TENANT_ID` and `ENTRA_CLIENT_ID`.
+3. `scripts/.venv/bin/python scripts/build_teams_app.py --client-id …` → upload `teams-app/dist/vitorra-teams.zip` in the Teams admin center.
+
+Server: `composer install` (new `firebase/php-jwt`), `migrate --force` (meetings, teams_notifications, users.microsoft_email/microsoft_oid), `config:cache`. `teams:deliver` rides the existing cron.
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**

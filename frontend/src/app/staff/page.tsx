@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, FileText, Users, ShieldCheck, Briefcase, CalendarDays, UserCircle } from "lucide-react";
 import { apiStaff } from "@/lib/staff-auth";
+import { TeamsChatButton, TeamsJoinButton } from "@/components/teams/TeamsButtons";
 
 type Me = {
   id: number; name: string; email: string; role: string; phone: string | null;
   department: string | null; job_title: string | null; job_description: string | null;
   start_date: string | null; staff_status: string | null; leave_entitlement_days: number;
-  supervisor: { id: number; name: string; email: string; job_title: string | null } | null;
+  supervisor: { id: number; name: string; email: string; job_title: string | null; teams_email: string | null } | null;
   is_supervisor: boolean;
 };
 
@@ -46,15 +47,19 @@ export default function StaffDashboard() {
             <span className="flex items-center justify-center w-10 h-10 rounded-full text-[12px] font-bold shrink-0" style={{ background: "rgba(197,178,122,0.18)", color: "#7A6020" }}>
               {initials(me.supervisor.name)}
             </span>
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{me.supervisor.name}</p>
               <p className="text-xs" style={{ color: "#999" }}>{me.supervisor.job_title ?? "Supervisor"} · {me.supervisor.email}</p>
             </div>
+            <TeamsChatButton email={me.supervisor.teams_email} name={me.supervisor.name} />
           </div>
         ) : (
           <p className="text-sm" style={{ color: "#999" }}>No supervisor assigned yet. HR will set this up.</p>
         )}
       </Card>
+
+      <MeetingsCard />
+      <ColleaguesCard />
 
       {/* Job description */}
       <Card title="Your role & responsibilities">
@@ -70,6 +75,57 @@ export default function StaffDashboard() {
         <QuickLink href="/staff/profile" icon={ShieldCheck} label="Profile & security" sub="Change your password" />
       </div>
     </div>
+  );
+}
+
+type Meeting = { id: number; title: string; starts_at: string; ends_at: string | null; join_url: string; notes: string | null };
+
+/** Teams meetings shared with this person (company-wide and their department). */
+function MeetingsCard() {
+  const [list, setList] = useState<Meeting[] | null>(null);
+  useEffect(() => { apiStaff<{ data: Meeting[] }>("/staff/meetings").then((r) => setList(r.data)).catch(() => setList([])); }, []);
+  if (!list || list.length === 0) return null;
+  return (
+    <Card title="Upcoming meetings">
+      <ul className="space-y-3">
+        {list.slice(0, 5).map((m) => (
+          <li key={m.id} className="flex flex-wrap items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate" style={{ color: "#1E1E1E" }}>{m.title}</p>
+              <p className="text-xs" style={{ color: "#777" }}>{new Date(m.starts_at).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}{m.notes ? ` · ${m.notes}` : ""}</p>
+            </div>
+            <TeamsJoinButton url={m.join_url} title={m.title} />
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
+type Colleague = { id: number; name: string; job_title: string | null; department: string | null; teams_email: string | null };
+
+/** Everyone on staff, with "Chat in Teams". */
+function ColleaguesCard() {
+  const [list, setList] = useState<Colleague[] | null>(null);
+  const [q, setQ] = useState("");
+  useEffect(() => { apiStaff<{ data: Colleague[] }>("/staff/directory").then((r) => setList(r.data)).catch(() => setList([])); }, []);
+  if (!list || list.length === 0) return null;
+  const shown = list.filter((c) => !q || `${c.name} ${c.job_title ?? ""}`.toLowerCase().includes(q.toLowerCase()));
+  return (
+    <Card title="Colleagues">
+      <input className="c-input w-full mb-3" placeholder="Find a colleague…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Find a colleague" />
+      <ul className="divide-y" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+        {shown.map((c) => (
+          <li key={c.id} className="flex items-center gap-3 py-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate" style={{ color: "#1E1E1E" }}>{c.name}</p>
+              <p className="text-xs truncate" style={{ color: "#777" }}>{c.job_title ?? "—"}</p>
+            </div>
+            <TeamsChatButton email={c.teams_email} name={c.name} compact />
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }
 

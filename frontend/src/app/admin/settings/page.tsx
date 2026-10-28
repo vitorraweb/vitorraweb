@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Save, Check } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
+import { TeamsSettings } from "@/components/admin/TeamsSettings";
 import { PageHeader } from "@/components/admin/admin-ui";
 
 type Settings = {
@@ -162,6 +163,8 @@ export default function SettingsPage() {
           </button>
           {saved && <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--o-success)" }}><Check className="w-4 h-4" />Saved</span>}
         </div>
+
+        <TeamsSettings />
       </div>
     </div>
   );

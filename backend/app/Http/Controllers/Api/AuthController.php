@@ -301,6 +301,78 @@ class AuthController extends Controller
         return $request->hasSession() && $request->hasHeader('X-XSRF-TOKEN');
     }
 
+    /**
+     * Sign in from the Vitorra tab inside Microsoft Teams (single sign-on).
+     *
+     * The tab sends the Entra token Teams issued for our app; identity comes
+     * only from that token after server-side validation (EntraTokenValidator).
+     * The person must already be staff with console access (admin or ops):
+     * matched by their Entra object id once linked, otherwise by their
+     * Microsoft 365 email. Existing rules still apply — departed staff are
+     * refused, and an account with 2FA still has to give its code.
+     */
+    public function teams(Request $request, \App\Services\Teams\EntraTokenValidator $validator, TwoFactorService $tfa): JsonResponse
+    {
+        $data = $request->validate([
+            'token' => ['required', 'string', 'max:20000'],
+            'code'  => ['nullable', 'string', 'max:20'],
+        ]);
+        if (! \App\Services\Teams\EntraTokenValidator::configured()) {
+            return response()->json(['message' => 'Teams sign-in is not set up yet.', 'code' => 'teams_sso_not_configured'], 503);
+        }
+
+        try {
+            $claims = $validator->validate($data['token']);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::notice('Teams sign-in token rejected', ['reason' => \App\Services\Teams\TeamsNotifier::sanitise($e->getMessage())]);
+
+            return response()->json(['message' => 'Microsoft sign-in could not be verified.', 'code' => 'invalid_token'], 401);
+        }
+
+        $oid = (string) $claims['oid'];
+        $upn = mb_strtolower((string) ($claims['preferred_username'] ?? $claims['upn'] ?? ''));
+
+        $user = User::where('microsoft_oid', $oid)->first();
+        if (! $user && $upn !== '') {
+            $user = User::whereRaw('LOWER(microsoft_email) = ?', [$upn])->first()
+                ?? User::whereRaw('LOWER(email) = ?', [$upn])->whereNull('microsoft_email')->first();
+            // An address only counts if it is that person's Microsoft 365 address.
+            if ($user && $user->teamsEmail() !== $upn) {
+                $user = null;
+            }
+            // Linked to a different Microsoft account already: refuse.
+            if ($user && $user->microsoft_oid && $user->microsoft_oid !== $oid) {
+                return response()->json(['message' => 'This Vitorra account is linked to a different Microsoft account.', 'code' => 'account_mismatch'], 403);
+            }
+        }
+
+        if (! $user || ! $user->isStaff()) {
+            return response()->json(['message' => 'No Vitorra staff account matches your Microsoft 365 account. Ask an admin to add your Microsoft 365 email to your staff record.', 'code' => 'no_account'], 403);
+        }
+        if ($user->staff_status === 'left') {
+            return response()->json(['message' => 'This account is no longer active.', 'code' => 'inactive'], 403);
+        }
+        if (! $user->isOps()) {
+            return response()->json(['message' => 'The dashboard is for console users. Your staff portal is at vitorra.org/staff.', 'code' => 'no_dashboard_access'], 403);
+        }
+
+        if ($user->hasTwoFactorEnabled()) {
+            if (empty($data['code'])) {
+                return response()->json(['data' => ['two_factor_required' => true]]);
+            }
+            if (! $tfa->passesChallenge($user, $data['code'])) {
+                return response()->json(['message' => 'That authentication code is not valid.', 'code' => 'invalid_code'], 422);
+            }
+        }
+
+        if (! $user->microsoft_oid) {
+            $user->forceFill(['microsoft_oid' => $oid])->save();
+        }
+        \App\Support\Audit::log('auth.teams_sso', 'Signed in from the Microsoft Teams tab', $user);
+
+        return response()->json(['data' => $this->issueToken($user, 'admin')]);
+    }
+
     private function issueToken(User $user, ?string $scope = null): array
     {
         $token = $user->createToken(

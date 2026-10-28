@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\FetTrialShareController;
 use App\Http\Controllers\Api\GoogleAdsController;
 use App\Http\Controllers\Api\CampaignTrackController;
 use App\Http\Controllers\Api\FinanceReceiptController;
+use App\Http\Controllers\Api\MeetingController;
+use App\Http\Controllers\Api\TeamsAdminController;
 use App\Http\Controllers\Api\ReceiptScanController;
 use App\Http\Controllers\Api\EmailDesignController;
 use App\Http\Controllers\Api\LeadPriorityController;
@@ -172,6 +174,9 @@ Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);
 // Throttled to blunt password-guessing / credential-stuffing (per IP).
 Route::middleware('throttle:8,1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
+    // Sign in from the Vitorra tab inside Microsoft Teams (Entra SSO,
+    // verified server-side). Same per-IP limit as password sign-in.
+    Route::post('/auth/teams', [AuthController::class, 'teams']);
     Route::post('/auth/register', [AuthController::class, 'register']);
 });
 
@@ -241,6 +246,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware(['role:admin,ops,employee', 'ability:staff'])->prefix('staff')->group(function () {
         Route::get('/me', [StaffController::class, 'me']);
         Route::get('/team', [StaffController::class, 'team']);
+        Route::get('/directory', [StaffController::class, 'directory']);
+        // Teams meetings visible to this person (company-wide + their department).
+        Route::get('/meetings', [MeetingController::class, 'index']);
         Route::get('/documents', [StaffController::class, 'documents']);
         Route::get('/documents/{document}/download', [StaffController::class, 'download']);
 
@@ -270,6 +278,13 @@ Route::middleware('auth:sanctum')->group(function () {
         // Dashboard — every staff member sees this.
         Route::get('/stats', [AdminController::class, 'stats']);
         Route::get('/alerts', [AdminController::class, 'alerts']);
+
+        // Teams meetings (join links from Teams/Outlook). Admin + ops add them;
+        // the creator or an admin edits (checked in the controller).
+        Route::get('/meetings', [MeetingController::class, 'index']);
+        Route::post('/meetings', [MeetingController::class, 'store']);
+        Route::patch('/meetings/{meeting}', [MeetingController::class, 'update']);
+        Route::delete('/meetings/{meeting}', [MeetingController::class, 'destroy']);
 
         // Operational modules — each gated by the staff member's permissions.
         Route::middleware('perm:enquiries')->group(function () {
@@ -592,6 +607,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('role:admin')->group(function () {
             Route::get('/settings', [SettingsController::class, 'index']);
             Route::put('/settings', [SettingsController::class, 'update']);
+            // Microsoft Teams: status, events, explicit test message.
+            Route::get('/teams', [TeamsAdminController::class, 'status']);
+            Route::put('/teams/events', [TeamsAdminController::class, 'events']);
+            Route::post('/teams/test', [TeamsAdminController::class, 'test'])->middleware('throttle:5,1');
             // Online-payments (Flutterwave) health: is the gateway live?
             Route::get('/payments/health', [PaymentHealthController::class, 'show']);
             Route::post('/payments/health/test', [PaymentHealthController::class, 'test']);

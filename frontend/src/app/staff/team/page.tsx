@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { Loader2, Users } from "lucide-react";
 import { apiStaff } from "@/lib/staff-auth";
+import { TeamsChatButton } from "@/components/teams/TeamsButtons";
 
-type Report = { id: number; name: string; email: string; job_title: string | null; department: string | null; staff_status: string | null; start_date: string | null };
+type Report = { id: number; name: string; email: string; job_title: string | null; department: string | null; staff_status: string | null; start_date: string | null; teams_email: string | null };
 
 const STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
   active:   { bg: "rgba(34,197,94,0.12)", fg: "#16A34A" },
@@ -49,6 +50,7 @@ export default function StaffTeam() {
                 <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0" style={{ background: sc.bg, color: sc.fg }}>
                   {(r.staff_status ?? "active").replace("_", " ")}
                 </span>
+                <TeamsChatButton email={r.teams_email} name={r.name} compact />
               </div>
             );
           })}

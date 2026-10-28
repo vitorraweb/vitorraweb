@@ -20,7 +20,7 @@ class UserAdminController extends Controller
         'id', 'name', 'email', 'role', 'phone',
         'department', 'supervisor_id', 'job_title', 'job_description',
         'start_date', 'staff_status', 'leave_entitlement_days',
-        'permissions', 'documents', 'notes', 'created_at',
+        'permissions', 'documents', 'notes', 'created_at', 'microsoft_email',
     ];
 
     /** Staff directory (admin + ops + employees). Customers are managed elsewhere. */
@@ -28,7 +28,8 @@ class UserAdminController extends Controller
     {
         $users = User::whereIn('role', ['admin', 'ops', 'employee'])
             ->orderBy('name')
-            ->get(self::FIELDS);
+            ->get(self::FIELDS)
+            ->map(fn (User $u) => [...$u->toArray(), 'teams_email' => $u->teamsEmail()]);
 
         // Ship the module/department registry so the editor can render choices
         // without hardcoding them on the client.
@@ -89,7 +90,8 @@ class UserAdminController extends Controller
     private function payload(User $user): array
     {
         return array_merge($user->only(self::FIELDS), [
-            'start_date' => optional($user->start_date)->toDateString(),
+            'start_date'  => optional($user->start_date)->toDateString(),
+            'teams_email' => $user->teamsEmail(),
         ]);
     }
 
@@ -185,6 +187,8 @@ class UserAdminController extends Controller
             'documents.*.label' => ['required_with:documents', 'string', 'max:255'],
             'documents.*.url'   => ['required_with:documents', 'string', 'max:2048'],
             'notes'        => ['nullable', 'string', 'max:5000'],
+            // Their Teams address, when it differs from the login email.
+            'microsoft_email' => ['nullable', 'email', 'max:255'],
         ];
     }
 
@@ -192,7 +196,7 @@ class UserAdminController extends Controller
     private function profile(array $data): array
     {
         return collect($data)
-            ->only(['name', 'role', 'phone', 'department', 'supervisor_id', 'job_title', 'job_description', 'start_date', 'staff_status', 'leave_entitlement_days', 'permissions', 'documents', 'notes'])
+            ->only(['name', 'role', 'phone', 'department', 'supervisor_id', 'job_title', 'job_description', 'start_date', 'staff_status', 'leave_entitlement_days', 'permissions', 'documents', 'notes', 'microsoft_email'])
             ->all();
     }
 

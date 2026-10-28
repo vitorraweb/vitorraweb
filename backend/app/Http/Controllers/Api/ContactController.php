@@ -29,6 +29,7 @@ class ContactController extends Controller
 
         // Reply-to (sender) is set in the mailable's envelope
         Mail::to(config('mail.team_address'))->send(new NewContactMessage($msg));
+        app(\App\Services\Teams\TeamsAlerts::class)->newMessage($msg);
 
         return response()->json([
             'data'    => $msg,

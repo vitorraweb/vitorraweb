@@ -85,3 +85,8 @@ Schedule::command('leads:score')->hourlyAt(35)->withoutOverlapping()
 // scanning never waits on it. A no-op when nothing is waiting or no key is set.
 Schedule::command('receipts:read')->everyMinute()->withoutOverlapping()
     ->onFailure(fn () => logger()->error('Scheduled receipts:read failed'));
+
+// Teams channel notifications: retry anything due (bounded by
+// teams.max_attempts). A no-op without TEAMS_WORKFLOW_WEBHOOK_URL.
+Schedule::command('teams:deliver')->everyMinute()->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Scheduled teams:deliver failed'));

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Loader2, UserPlus, ChevronDown, Save, Trash2, KeyRound, Plus, X, Upload, Download, FileLock2 } from "lucide-react";
+import { TeamsChatButton } from "@/components/teams/TeamsButtons";
 import { apiAdmin, auth, uploadAdmin, downloadFile } from "@/lib/auth";
 import { PageHeader, Empty } from "@/components/admin/admin-ui";
 
@@ -23,6 +24,10 @@ type Staff = {
   permissions?: string[] | null;
   documents?: Doc[] | null;
   notes?: string | null;
+  /** Teams address when it differs from the login email. */
+  microsoft_email?: string | null;
+  /** The address "Chat in Teams" uses (server-derived). */
+  teams_email?: string | null;
 };
 type Registry = {
   modules: Record<string, string>;
@@ -155,6 +160,7 @@ export default function StaffPage() {
           permissions: draft.permissions,
           documents: (draft.documents ?? []).filter((d) => d.label.trim() && d.url.trim()),
           notes: draft.notes,
+          microsoft_email: draft.microsoft_email || null,
         }),
       });
       setList((l) => l.map((u) => (u.id === draft.id ? res.data : u)));
@@ -234,7 +240,8 @@ export default function StaffPage() {
             const d = isOpen ? draft : null;
             return (
               <div key={s.id} className="bg-white rounded-[18px] border border-black/[0.05] overflow-hidden">
-                <button onClick={() => expand(s)} className="w-full flex items-center gap-3 p-4 text-left">
+                <div className="flex items-center">
+                <button onClick={() => expand(s)} className="flex-1 min-w-0 flex items-center gap-3 p-4 text-left">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                       <span className="font-semibold text-sm" style={{ color: "var(--o-text)" }}>{s.name}</span>
@@ -247,6 +254,8 @@ export default function StaffPage() {
                   <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0" style={ROLE_BADGE[s.role] ?? ROLE_BADGE.ops}>{ROLE_LABEL[s.role] ?? s.role}</span>
                   <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "var(--o-faint)" }} />
                 </button>
+                <span className="pr-4 shrink-0"><TeamsChatButton email={s.teams_email} name={s.name} compact /></span>
+                </div>
 
                 {isOpen && d && (
                   <div className="px-4 pb-5 pt-1 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
@@ -256,6 +265,9 @@ export default function StaffPage() {
                       <Field label="Email"><input value={d.email} onChange={(e) => setD("email", e.target.value)} type="email" className={inputCls} style={inputStyle} /></Field>
                       <Field label="Job title"><input value={d.job_title ?? ""} onChange={(e) => setD("job_title", e.target.value)} className={inputCls} style={inputStyle} /></Field>
                       <Field label="Phone"><input value={d.phone ?? ""} onChange={(e) => setD("phone", e.target.value)} className={inputCls} style={inputStyle} /></Field>
+                      <Field label="Microsoft 365 / Teams email (only if different from the login email)">
+                        <input value={d.microsoft_email ?? ""} onChange={(e) => setD("microsoft_email", e.target.value)} type="email" placeholder={d.teams_email ?? "name@vitorra.org"} className={inputCls} style={inputStyle} />
+                      </Field>
                       <Field label="Department">
                         <select value={d.department ?? ""} onChange={(e) => setD("department", e.target.value)} className={inputCls} style={inputStyle}>
                           <option value="">—</option>

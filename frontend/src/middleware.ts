@@ -17,9 +17,10 @@ export const config = {
                           English-only, and never indexed)
        - /scan           (Finance's phone receipt scanner — a 30-minute token
                           link from a QR code; English-only, never indexed)
+       - /teams          (the dashboard tab inside Microsoft Teams — private)
        - /_next /_vercel (framework internals)
        - any path with a "." (static assets: images, sitemap.xml, robots.txt …)
      NOTE: /account is intentionally NOT excluded — the customer portal is
      localized along with the rest of the public site.                         */
-  matcher: ["/((?!api|admin|staff|careers|suppliers|display|trial|contract|scan|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|admin|staff|careers|suppliers|display|trial|contract|scan|teams|_next|_vercel|.*\\..*).*)"],
 };

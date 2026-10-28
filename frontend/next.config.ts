@@ -42,6 +42,28 @@ const nextConfig: NextConfig = {
      Returning an array gives these `afterFiles` semantics — they are checked
      *after* filesystem routes, so the local /api/revalidate route handler still
      wins and is not proxied. */
+  /* Framing. Only the Teams tab (/teams/*) may be embedded, and only by the
+     Microsoft 365 hosts that run Teams tabs (Teams, Outlook, microsoft365.com).
+     Every other page may be framed by vitorra.org itself and nobody else —
+     the console's own previews (email designer, PDF viewers) are same-origin. */
+  async headers() {
+    const teamsHosts = [
+      "https://teams.microsoft.com", "https://*.teams.microsoft.com", "https://*.cloud.microsoft",
+      "https://*.microsoft365.com", "https://*.office.com",
+      "https://outlook.office.com", "https://outlook.office365.com",
+      "https://outlook-sdf.office.com", "https://outlook-sdf.office365.com",
+    ].join(" ");
+    return [
+      { source: "/teams/:path*", headers: [{ key: "Content-Security-Policy", value: `frame-ancestors 'self' ${teamsHosts}` }] },
+      {
+        source: "/:path((?!teams(?:/|$)).*)",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       // Everything except contract signing, which has its own route handler

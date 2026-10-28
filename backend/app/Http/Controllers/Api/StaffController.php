@@ -22,7 +22,7 @@ class StaffController extends Controller
     /** The signed-in staff member's own profile, supervisor, and leave entitlement. */
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user()->load('supervisor:id,name,email,job_title');
+        $user = $request->user()->load('supervisor:id,name,email,job_title,microsoft_email');
 
         return response()->json(['data' => [
             'id'                     => $user->id,
@@ -41,7 +41,9 @@ class StaffController extends Controller
                 'name'      => $user->supervisor->name,
                 'email'     => $user->supervisor->email,
                 'job_title' => $user->supervisor->job_title,
+                'teams_email' => $user->supervisor->teamsEmail(),
             ] : null,
+            'teams_email'            => $user->teamsEmail(),
             'is_supervisor'          => $user->reports()->exists(),
         ]]);
     }
@@ -51,9 +53,25 @@ class StaffController extends Controller
     {
         $reports = $request->user()->reports()
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'job_title', 'department', 'staff_status', 'start_date']);
+            ->get(['id', 'name', 'email', 'microsoft_email', 'job_title', 'department', 'staff_status', 'start_date']);
 
-        return response()->json(['data' => $reports]);
+        return response()->json(['data' => $reports->map(fn ($u) => [
+            ...$u->only(['id', 'name', 'email', 'job_title', 'department', 'staff_status', 'start_date']),
+            'teams_email' => $u->teamsEmail(),
+        ])]);
+    }
+
+    /** Everyone on staff (active), for "Chat in Teams". Work details only. */
+    public function directory(): JsonResponse
+    {
+        $people = User::whereIn('role', ['admin', 'ops', 'employee'])
+            ->where(fn ($q) => $q->whereNull('staff_status')->orWhere('staff_status', '!=', 'left'))
+            ->orderBy('name')->get(['id', 'name', 'email', 'microsoft_email', 'job_title', 'department']);
+
+        return response()->json(['data' => $people->map(fn ($u) => [
+            ...$u->only(['id', 'name', 'job_title', 'department']),
+            'teams_email' => $u->teamsEmail(),
+        ])]);
     }
 
     /** The signed-in staff member's own HR documents (metadata only). */

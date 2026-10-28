@@ -53,6 +53,8 @@ class EnquiryController extends Controller
         // reply-to (customer) is set in the mailable's envelope.
         $inbox = ($route['email'] ?? null) ?: config('mail.team_address');
         Mail::to($inbox)->send(new NewEnquiry($enquiry));
+        // And to the team's Teams channel, when configured (never blocks this).
+        app(\App\Services\Teams\TeamsAlerts::class)->newEnquiry($enquiry);
 
         return response()->json([
             'data'    => $enquiry,

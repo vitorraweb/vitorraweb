@@ -36,6 +36,7 @@ class SendExecutiveReport extends Command
             $mail->cc($cc);
         }
         $mail->send(new ExecutiveReport($summary));
+        app(\App\Services\Teams\TeamsAlerts::class)->executiveReport($summary);
 
         $this->info("Sent the {$period} executive report to {$to}".($cc ? ' (cc '.implode(', ', $cc).')' : '').'.');
 

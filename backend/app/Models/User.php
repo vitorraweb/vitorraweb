@@ -36,6 +36,7 @@ class User extends Authenticatable
         'documents',
         'notes',
         'email_signature',
+        'microsoft_email',
     ];
 
     protected $hidden = [
@@ -155,6 +156,22 @@ class User extends Authenticatable
         return $this->isAdmin() || in_array($module, $this->effectivePermissions(), true);
     }
 
+    /**
+     * The address Teams knows this person by: their Microsoft 365 email if
+     * set, otherwise their login when it is on a Microsoft 365 domain
+     * (vitorra.org). Null when we don't know one — "Chat in Teams" hides.
+     */
+    public function teamsEmail(): ?string
+    {
+        if (filled($this->microsoft_email)) {
+            return mb_strtolower($this->microsoft_email);
+        }
+        $email = mb_strtolower((string) $this->email);
+        $domain = substr(strrchr($email, '@') ?: '', 1);
+
+        return $domain !== '' && in_array($domain, config('teams.m365_domains', []), true) ? $email : null;
+    }
+
     /** Identity payload returned to the client (admin nav gates on this). */
     public function toAuthArray(): array
     {
@@ -163,6 +180,7 @@ class User extends Authenticatable
             [
                 'permissions'        => $this->effectivePermissions(),
                 'two_factor_enabled' => $this->hasTwoFactorEnabled(),
+                'teams_email'        => $this->teamsEmail(),
             ],
         );
     }

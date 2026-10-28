@@ -2,7 +2,7 @@ import {
   Handshake, ShoppingCart, Gauge, Wallet, LineChart, Users, ListChecks, Globe, Settings,
   MessageSquare, Workflow, Contact, Target, LayoutTemplate, CreditCard, FlaskConical,
   TrendingUp, LayoutDashboard, CalendarCheck, Hourglass, Briefcase, CalendarDays,
-  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame,
+  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame, Video,
 } from "lucide-react";
 import { canAccess, type AdminUser } from "@/lib/auth";
 
@@ -94,10 +94,11 @@ export const ADMIN_APPS: AdminApp[] = [
     ],
   },
   {
-    id: "operations", name: "Operations", blurb: "Team tasks and supplier onboarding", icon: ListChecks, area: "Run the company",
+    id: "operations", name: "Operations", blurb: "Team tasks, meetings and supplier onboarding", icon: ListChecks, area: "Run the company",
     items: [
       { label: "Tasks",     href: "/admin/tasks",     icon: CheckSquare, module: "tasks", keywords: "todo assignments" },
       { label: "Suppliers", href: "/admin/suppliers", icon: Truck,       module: "suppliers", keywords: "vendors onboarding" },
+      { label: "Meetings",  href: "/admin/meetings",  icon: Video,       keywords: "teams microsoft join call" },
     ],
   },
   {

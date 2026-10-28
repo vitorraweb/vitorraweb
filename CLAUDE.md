@@ -91,10 +91,13 @@ A multi-currency cash-ledger bookkeeping tool with **maker–checker** approvals
 - All amounts per currency (never summed across currencies). Tables: `finance_accounts`, `finance_categories`, `finance_transactions` (+`vat_rate`/`vat_amount`), `supplier_bills`, `finance_budgets`, `invoices`, `invoice_items`, `recurring_entries`. Default categories via `FinanceCategoriesSeeder`.
 
 ### Scheduled commands (ride the existing cPanel `schedule:run` cron)
-`holidays:notify`, `digest:send`, `executive:report` (monthly+weekly), `applications:purge` (6-month), `invoices:remind`, `finance:recurring`, **`campaigns:send`** (every minute — drains prospect outreach campaigns; no-op when idle), **`google-ads:sync`** (hourly 3 days + nightly 30; no-op until connected), **`leads:score`** (hourly decision engine), **`receipts:read`** (every minute; AI-reads scanned receipts), plus the spatie backups.
+`holidays:notify`, `digest:send`, `executive:report` (monthly+weekly), `applications:purge` (6-month), `invoices:remind`, `finance:recurring`, **`campaigns:send`** (every minute — drains prospect outreach campaigns; no-op when idle), **`google-ads:sync`** (hourly 3 days + nightly 30; no-op until connected), **`leads:score`** (hourly decision engine), **`receipts:read`** (every minute; AI-reads scanned receipts), **`teams:deliver`** (every minute; retries Teams channel alerts), plus the spatie backups.
 
 ### Pending (operations setup, not code)
 - Set executive-report recipients in `/admin/settings`; grant new modules to existing ops accounts (incl. **"Accounting — approve"** for the Senior Finance Officer); optionally link **Careers** + **Suppliers** in the public footer; set `ANTHROPIC_API_KEY` on prod to enable CV/receipt auto-read (both work manually without it).
+
+### Microsoft Teams (October 2026) — `docs/microsoft-teams.md`
+Chat-in-Teams deep-link buttons (staff/team/colleagues; address = `microsoft_email` or a `MICROSOFT_365_DOMAINS` login), **Meetings** (Operations app; pasted Teams join links, host-allowlisted), channel alerts via a **Workflows webhook** (`TEAMS_WORKFLOW_WEBHOOK_URL`, server-only; `teams_notifications` outbox, dedupe + bounded retries), and a **dashboard tab** (`/teams/dashboard`, only route frameable by M365 hosts) signed in with Entra SSO verified server-side (`POST /auth/teams`, single tenant, oid pinned, 2FA kept). Package: `scripts/build_teams_app.py` → `teams-app/dist/vitorra-teams.zip`. No Graph permissions.
 
 ---
 
