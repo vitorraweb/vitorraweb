@@ -98,7 +98,24 @@ export default function GoogleAdsPage() {
 
   const loadSummary = useCallback(async () => {
     setLoading(true);
-    try { setSummary((await apiAdmin<{ data: Summary }>(`/admin/google-ads/summary?period=${period}`)).data); setError(""); }
+    try {
+      const d = (await apiAdmin<{ data: Summary }>(`/admin/google-ads/summary?period=${period}`)).data;
+      // The website releases itself before the server is updated by hand, so
+      // tolerate a server one version behind: sections it doesn't send yet
+      // are empty rather than a crash.
+      setSummary({
+        ...d,
+        search_terms: d.search_terms ?? [],
+        recent_leads: d.recent_leads ?? [],
+        campaigns: d.campaigns ?? [],
+        daily: d.daily ?? [],
+        placements: d.placements ?? [],
+        placement_types: d.placement_types ?? [],
+        search_themes: d.search_themes ?? [],
+        insights_window: d.insights_window ?? null,
+      });
+      setError("");
+    }
     catch (e) { setError(e instanceof Error ? e.message : "Could not load"); }
     finally { setLoading(false); }
   }, [period]);
