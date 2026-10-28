@@ -7,6 +7,7 @@ use App\Models\ContactMessage;
 use App\Models\Enquiry;
 use App\Models\GoogleAdsAccount;
 use App\Models\GoogleAdsCampaignDay;
+use App\Models\GoogleAdsInsight;
 use App\Models\GoogleAdsSearchTerm;
 use App\Models\User;
 use App\Services\GoogleAds\GoogleAdsClient;
@@ -117,6 +118,7 @@ class GoogleAdsController extends Controller
             'campaigns'    => $this->campaigns($campaignDays, $leads),
             'daily'        => $this->daily($from, $to, $campaignDays, $leads, $tz),
             'search_terms' => $this->searchTerms($from, $to),
+            ...$this->insights(),
             'recent_leads' => $this->recentLeads(),
         ]]);
     }
@@ -275,6 +277,7 @@ class GoogleAdsController extends Controller
         if ($switching) {
             GoogleAdsCampaignDay::query()->delete();
             GoogleAdsSearchTerm::query()->delete();
+            GoogleAdsInsight::query()->delete();
         }
 
         Audit::log('google_ads.updated', 'Google Ads settings changed', $account, array_intersect_key($data, array_flip(['customer_id', 'conversion_action_id'])));
@@ -445,6 +448,45 @@ class GoogleAdsController extends Controller
                 'cost'        => round($t->cost_micros / 1_000_000, 2),
                 'conversions' => round((float) $t->conversions, 1),
             ])->all();
+    }
+
+    /**
+     * Where Display ads showed and what Performance Max matched. A rolling
+     * 30-day snapshot (see GoogleAdsSync::syncInsights), so it carries its
+     * own dates rather than following the period picker.
+     */
+    private function insights(): array
+    {
+        $rows = GoogleAdsInsight::query()->get();
+        $first = $rows->first();
+        $placements = $rows->where('kind', GoogleAdsInsight::PLACEMENT);
+
+        return [
+            'insights_window' => $first ? ['from' => $first->window_from->toDateString(), 'to' => $first->window_to->toDateString()] : null,
+            'placements' => $placements->sortByDesc('cost_micros')->take(25)->map(fn ($p) => [
+                'name'        => $p->label,
+                'type'        => $p->detail,
+                'url'         => $p->url,
+                'impressions' => $p->impressions,
+                'clicks'      => $p->clicks,
+                'cost'        => round(($p->cost_micros ?? 0) / 1_000_000, 2),
+                'conversions' => round($p->conversions, 1),
+            ])->values()->all(),
+            // Spend by kind of place (apps vs websites vs YouTube): the one
+            // number that says whether the Display budget lands anywhere useful.
+            'placement_types' => $placements->groupBy('detail')->map(fn ($g, $type) => [
+                'type'   => $type ?: 'UNKNOWN',
+                'clicks' => (int) $g->sum('clicks'),
+                'cost'   => round($g->sum('cost_micros') / 1_000_000, 2),
+            ])->sortByDesc('cost')->values()->all(),
+            'search_themes' => $rows->where('kind', GoogleAdsInsight::SEARCH_THEME)
+                ->groupBy('label')->map(fn ($g, $label) => [
+                    'theme'       => $label,
+                    'impressions' => (int) $g->sum('impressions'),
+                    'clicks'      => (int) $g->sum('clicks'),
+                    'conversions' => round((float) $g->sum('conversions'), 1),
+                ])->sortByDesc('clicks')->take(25)->values()->all(),
+        ];
     }
 
     private function recentLeads(): array

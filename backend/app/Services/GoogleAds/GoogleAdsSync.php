@@ -6,9 +6,11 @@ use App\Models\ContactMessage;
 use App\Models\Enquiry;
 use App\Models\GoogleAdsAccount;
 use App\Models\GoogleAdsCampaignDay;
+use App\Models\GoogleAdsInsight;
 use App\Models\GoogleAdsSearchTerm;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -25,6 +27,9 @@ use Illuminate\Support\Str;
  *   5. Won deals → Google: an enquiry converted to an order is uploaded as an
  *      offline conversion, so Google's bidding learns from sales rather than
  *      form fills. Only when a conversion action is chosen in the console.
+ *   6. Where Display ads showed, and the search themes Performance Max
+ *      matched — the "what are we paying for" answer for campaign types
+ *      that never fill the search-terms report. A rolling 30-day snapshot.
  *
  * Steps 2–3 replace their date window wholesale: Google restates recent days
  * as late conversions arrive, so upserting would leave stale rows behind.
@@ -41,6 +46,9 @@ class GoogleAdsSync
     private const CLICK_LOOKUPS_PER_RUN = 40;
     private const UPLOADS_PER_RUN = 20;
 
+    /** Placements and search themes are kept as one rolling window. */
+    private const INSIGHT_WINDOW_DAYS = 30;
+
     private GoogleAdsClient $client;
 
     public function __construct(private GoogleAdsAccount $account)
@@ -49,7 +57,7 @@ class GoogleAdsSync
     }
 
     /**
-     * @return array{campaign_days:int, search_terms:int, clicks_resolved:int, conversions_uploaded:int, conversion_errors:int}
+     * @return array{campaign_days:int, search_terms:int, clicks_resolved:int, conversions_uploaded:int, conversion_errors:int, placements:int, search_themes:int}
      */
     public function run(int $days = 3): array
     {
@@ -65,6 +73,7 @@ class GoogleAdsSync
                 'search_terms'         => $this->syncSearchTerms($from, $to),
                 'clicks_resolved'      => $this->resolveClicks(),
                 ...$this->uploadConversions(),
+                ...$this->syncInsights(),
             ];
 
             $this->account->forceFill(['last_synced_at' => now(), 'last_error' => null, 'last_error_at' => null])->save();
@@ -162,6 +171,91 @@ class GoogleAdsSync
         });
 
         return count($records);
+    }
+
+    /**
+     * Refresh the 30-day snapshot of Display placements and Performance Max
+     * search themes. These are extras: a failure here is logged and skipped,
+     * never allowed to fail the sync that carries the spend numbers.
+     *
+     * @return array{placements:int, search_themes:int}
+     */
+    public function syncInsights(): array
+    {
+        $tz = $this->timezone();
+        $to = CarbonImmutable::now($tz)->toDateString();
+        $from = CarbonImmutable::now($tz)->subDays(self::INSIGHT_WINDOW_DAYS - 1)->toDateString();
+        $now = now();
+        $base = ['window_from' => $from, 'window_to' => $to, 'created_at' => $now, 'updated_at' => $now];
+
+        $placements = $this->safely('placements', fn () => collect($this->client->search(
+            'SELECT campaign.id, group_placement_view.placement, group_placement_view.display_name, '
+            .'group_placement_view.placement_type, group_placement_view.target_url, '
+            .'metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions '
+            ."FROM group_placement_view WHERE segments.date BETWEEN '{$from}' AND '{$to}'"
+        ))->map(fn ($r) => $base + [
+            'kind'        => GoogleAdsInsight::PLACEMENT,
+            'campaign_id' => (string) ($r['campaign']['id'] ?? ''),
+            'label'       => Str::limit($r['groupPlacementView']['displayName'] ?? $r['groupPlacementView']['placement'] ?? 'Unknown', 250, ''),
+            'detail'      => $r['groupPlacementView']['placementType'] ?? null,
+            'url'         => Str::limit($r['groupPlacementView']['targetUrl'] ?? '', 490, '') ?: null,
+            'impressions' => (int) ($r['metrics']['impressions'] ?? 0),
+            'clicks'      => (int) ($r['metrics']['clicks'] ?? 0),
+            'cost_micros' => (int) ($r['metrics']['costMicros'] ?? 0),
+            'conversions' => (float) ($r['metrics']['conversions'] ?? 0),
+        ])->all());
+
+        // The insight is per campaign; ask for each Performance Max campaign
+        // that spent in the window.
+        $pmax = GoogleAdsCampaignDay::betweenDates($from, $to)->where('channel_type', 'PERFORMANCE_MAX')
+            ->distinct()->pluck('campaign_id');
+        $themes = $this->safely('search themes', fn () => $pmax->flatMap(fn ($cid) => collect($this->client->search(
+            'SELECT campaign_search_term_insight.category_label, metrics.impressions, metrics.clicks, metrics.conversions '
+            .'FROM campaign_search_term_insight '
+            ."WHERE campaign_search_term_insight.campaign_id = {$this->digitsOnly($cid)} AND segments.date BETWEEN '{$from}' AND '{$to}'"
+        ))->map(fn ($r) => $base + [
+            'kind'        => GoogleAdsInsight::SEARCH_THEME,
+            'campaign_id' => (string) $cid,
+            // Google files searches that fit no category under an empty label.
+            'label'       => Str::limit(($r['campaignSearchTermInsight']['categoryLabel'] ?? '') ?: 'Other searches', 250, ''),
+            'detail'      => null,
+            'url'         => null,
+            'impressions' => (int) ($r['metrics']['impressions'] ?? 0),
+            'clicks'      => (int) ($r['metrics']['clicks'] ?? 0),
+            'cost_micros' => null,
+            'conversions' => (float) ($r['metrics']['conversions'] ?? 0),
+        ]))->all());
+
+        foreach ([GoogleAdsInsight::PLACEMENT => $placements, GoogleAdsInsight::SEARCH_THEME => $themes] as $kind => $rows) {
+            if ($rows === null) {
+                continue; // the query failed: keep the previous snapshot
+            }
+            DB::transaction(function () use ($kind, $rows) {
+                GoogleAdsInsight::where('kind', $kind)->delete();
+                foreach (array_chunk($rows, 200) as $chunk) {
+                    GoogleAdsInsight::insert($chunk);
+                }
+            });
+        }
+
+        return ['placements' => count($placements ?? []), 'search_themes' => count($themes ?? [])];
+    }
+
+    /** Run an optional report; null (and a log line) if Google refuses it. */
+    private function safely(string $what, callable $fn): ?array
+    {
+        try {
+            return $fn();
+        } catch (GoogleAdsException $e) {
+            Log::warning("Google Ads {$what} skipped: ".$e->getMessage());
+
+            return null;
+        }
+    }
+
+    private function digitsOnly(string $id): string
+    {
+        return GoogleAdsClient::digits($id) ?: '0';
     }
 
     /** Tie Google-sourced leads to the campaign, ad group and keyword of their click. */

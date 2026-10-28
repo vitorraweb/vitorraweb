@@ -6,6 +6,7 @@ use App\Models\ContactMessage;
 use App\Models\Enquiry;
 use App\Models\GoogleAdsAccount;
 use App\Models\GoogleAdsCampaignDay;
+use App\Models\GoogleAdsInsight;
 use App\Models\GoogleAdsSearchTerm;
 use App\Models\Order;
 use App\Models\User;
@@ -175,6 +176,61 @@ class GoogleAdsTest extends TestCase
 
         $this->artisan('google-ads:sync')->assertFailed();
         $this->assertStringContainsString('Reconnect Google Ads', $account->refresh()->last_error);
+    }
+
+    /* ── Display placements & Performance Max themes ───────────────────── */
+
+    public function test_sync_stores_display_placements_and_pmax_search_themes(): void
+    {
+        $this->account();
+        $today = now('Africa/Kampala')->toDateString();
+        $this->fakeGoogle([
+            'campaign' => [[
+                'segments' => ['date' => $today],
+                'campaign' => ['id' => '222', 'name' => 'PMax FET', 'status' => 'ENABLED', 'advertisingChannelType' => 'PERFORMANCE_MAX'],
+                'metrics'  => ['clicks' => '900', 'costMicros' => '50000000'],
+            ]],
+            'group_placement_view' => [
+                ['campaign' => ['id' => '333'], 'groupPlacementView' => ['placement' => 'mobileapp::2-123', 'displayName' => 'Puzzle Game', 'placementType' => 'MOBILE_APPLICATION'], 'metrics' => ['clicks' => '800', 'costMicros' => '40000000']],
+                ['campaign' => ['id' => '333'], 'groupPlacementView' => ['placement' => 'monitor.co.ug', 'displayName' => 'monitor.co.ug', 'placementType' => 'WEBSITE', 'targetUrl' => 'monitor.co.ug'], 'metrics' => ['clicks' => '20', 'costMicros' => '5000000']],
+            ],
+            'campaign_search_term_insight' => [
+                ['campaignSearchTermInsight' => ['categoryLabel' => 'fuel saving devices'], 'metrics' => ['impressions' => '300', 'clicks' => '12']],
+                ['campaignSearchTermInsight' => ['categoryLabel' => ''], 'metrics' => ['impressions' => '50', 'clicks' => '1']],
+            ],
+        ]);
+
+        $this->artisan('google-ads:sync')->assertSuccessful();
+
+        $this->assertSame(2, GoogleAdsInsight::where('kind', 'placement')->count());
+        $this->assertEqualsCanonicalizing(['fuel saving devices', 'Other searches'], GoogleAdsInsight::where('kind', 'search_theme')->pluck('label')->all());
+        Http::assertSent(fn (Request $r) => str_contains((string) ($r['query'] ?? ''), 'campaign_search_term_insight.campaign_id = 222'));
+
+        $res = $this->withHeaders($this->headers())->getJson('/api/admin/google-ads/summary')->assertOk();
+        $res->assertJsonPath('data.placements.0.name', 'Puzzle Game')
+            ->assertJsonPath('data.placements.0.cost', 40)
+            ->assertJsonPath('data.placement_types.0.type', 'MOBILE_APPLICATION')
+            ->assertJsonPath('data.search_themes.0.theme', 'fuel saving devices');
+        $this->assertNotNull($res->json('data.insights_window.from'));
+    }
+
+    public function test_a_refused_insight_report_does_not_fail_the_sync(): void
+    {
+        $account = $this->account();
+        GoogleAdsInsight::create(['kind' => 'placement', 'label' => 'Kept from last time', 'window_from' => now(), 'window_to' => now()]);
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response(['access_token' => 'a', 'expires_in' => 3599]),
+            'googleads.googleapis.com/v26/customers/*/googleAds:search' => function (Request $r) {
+                return str_contains($r['query'], 'group_placement_view')
+                    ? Http::response(['error' => ['message' => 'Not available for this account']], 400)
+                    : Http::response(['results' => []]);
+            },
+        ]);
+
+        $this->artisan('google-ads:sync')->assertSuccessful();
+
+        $this->assertNull($account->refresh()->last_error);
+        $this->assertSame('Kept from last time', GoogleAdsInsight::sole()->label);
     }
 
     /* ── Won deals → Google ───────────────────────────────────────────────── */

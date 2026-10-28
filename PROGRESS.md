@@ -1743,6 +1743,39 @@ admin-only, and both are written to the activity log.
 
 ---
 
+## Google Ads: where the Display ads showed, what Performance Max matched (29 October 2026)
+
+The first real sync (28 October) showed **9,854 ad clicks for a spend of 131
+(account currency) over 30 days, and no enquiry traced to an ad**. Vitorra's
+campaigns are Display and Performance Max, which never fill the ordinary
+search-terms report, so the console could not say what the money bought.
+
+- **Where your Display ads showed** (Insights → Google Ads): spend split by
+  kind of place (mobile apps, websites, YouTube) and the top 25 placements
+  by spend, each flagged when it costs money without a conversion.
+- **What people searched** now falls back to **Performance Max search
+  themes** (Google's grouped categories; it shares no exact words or cost
+  per theme).
+- Both are a rolling 30-day snapshot refreshed on every sync, labelled with
+  their own dates. A report Google refuses is skipped and logged, never
+  allowed to stop the spend sync.
+
+**For Marketing:** check that auto-tagging is on; look at where the Display
+spend lands (apps vs websites); put the five conversion labels on Vercel so
+Performance Max optimises for enquiries, not cheap clicks; consider a Search
+campaign on buying keywords.
+
+**Server:** pull, `migrate --force` (`2026_10_29_000001`), then
+`google-ads:sync --days=30`.
+
+> Technical detail (engineering): `google_ads_insights` (`kind` placement |
+> search_theme, window_from/to), `GoogleAdsSync::syncInsights()` —
+> `group_placement_view` and `campaign_search_term_insight` (one query per
+> Performance Max campaign, filtered by campaign id and date range). Tests:
+> `GoogleAdsTest` now 17.
+
+---
+
 ## The console, redesigned like Odoo (28 October 2026)
 
 Asked for: the console to look and work like Odoo, easier to read, with

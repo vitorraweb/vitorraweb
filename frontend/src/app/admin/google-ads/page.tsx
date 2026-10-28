@@ -48,6 +48,11 @@ type Summary = {
   campaigns: Campaign[];
   daily: { date: string; cost: number; clicks: number; leads: number }[];
   search_terms: { term: string; impressions: number; clicks: number; cost: number; conversions: number }[];
+  /** Rolling 30-day snapshot (Display placements, Performance Max search themes). */
+  insights_window: { from: string; to: string } | null;
+  placements: { name: string; type: string | null; url: string | null; impressions: number; clicks: number; cost: number; conversions: number }[];
+  placement_types: { type: string; clicks: number; cost: number }[];
+  search_themes: { theme: string; impressions: number; clicks: number; conversions: number }[];
   recent_leads: {
     id: number; name: string; company: string | null; product: string | null; status: string; created_at: string;
     campaign: string | null; keyword: string | null; reported_to_google: boolean; report_error: string | null;
@@ -263,10 +268,13 @@ export default function GoogleAdsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* ── Search terms ───────────────────────────────────────────── */}
             <div className="c-panel overflow-x-auto">
-              <div className="c-panel-head"><span className="c-panel-title">What people searched</span></div>
-              {s.search_terms.length === 0 ? (
-                <p className="px-4 py-6 text-[13px] text-ink-muted">{s.connected ? "No search terms in this period yet." : "Search terms appear once Google Ads is connected."}</p>
-              ) : (
+              <div className="c-panel-head">
+                <span className="c-panel-title">What people searched</span>
+                {s.search_terms.length === 0 && s.search_themes.length > 0 && s.insights_window && (
+                  <span className="text-[12px] text-ink-muted">Performance Max · {formatDay(s.insights_window.from)} – {formatDay(s.insights_window.to)}</span>
+                )}
+              </div>
+              {s.search_terms.length > 0 ? (
                 <table className="c-table">
                   <thead><tr><th>Search</th><th className="text-right">Clicks</th><th className="text-right">Spent</th><th className="text-right">Conv.</th></tr></thead>
                   <tbody>
@@ -283,6 +291,30 @@ export default function GoogleAdsPage() {
                     ))}
                   </tbody>
                 </table>
+              ) : s.search_themes.length > 0 ? (
+                <>
+                  {/* Performance Max shares grouped search categories, not the
+                      exact words, and no cost per category. */}
+                  <table className="c-table">
+                    <thead><tr><th>Search theme</th><th className="text-right">Shown</th><th className="text-right">Clicks</th><th className="text-right">Conv.</th></tr></thead>
+                    <tbody>
+                      {s.search_themes.map((t) => (
+                        <tr key={t.theme}>
+                          <td className="max-w-[16rem]"><span className="block truncate text-ink">{t.theme}</span></td>
+                          <td className="text-right">{num(t.impressions)}</td>
+                          <td className="text-right">{num(t.clicks)}</td>
+                          <td className="text-right">{t.conversions}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="px-4 py-3 text-[12px] text-ink-muted border-t border-line">Performance Max groups searches into themes and does not say what each one cost.</p>
+                </>
+              ) : (
+                <p className="px-4 py-6 text-[13px] text-ink-muted">
+                  {!s.connected ? "Search terms appear once Google Ads is connected."
+                    : "No searches to show. Display ads are not triggered by searches; Performance Max themes appear after the next sync."}
+                </p>
               )}
             </div>
 
@@ -317,6 +349,46 @@ export default function GoogleAdsPage() {
             </div>
           </div>
 
+          {/* ── Where Display ads showed ─────────────────────────────────── */}
+          {s.placements.length > 0 && s.insights_window && (
+            <>
+              <h2 className="text-[16px] font-semibold text-ink pt-2">
+                Where your Display ads showed
+                <span className="ml-2 text-[13px] font-normal text-ink-muted">{formatDay(s.insights_window.from)} – {formatDay(s.insights_window.to)}</span>
+              </h2>
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                <GraphView
+                  title="Spend by kind of place"
+                  rows={s.placement_types.map((t) => ({ label: PLACEMENT_TYPE[t.type] ?? titleCase(t.type), values: { cost: t.cost, clicks: t.clicks } }))}
+                  measures={[{ key: "cost", label: "Spend", format: (v) => money(v, cur) }, { key: "clicks", label: "Clicks", format: num }]}
+                  types={["pie", "bar"]}
+                  defaultType="pie"
+                  note="Clicks inside mobile apps and games are cheap and often accidental. If most of the spend lands there, consider excluding app placements in Google Ads."
+                />
+                <div className="c-panel overflow-x-auto xl:col-span-2">
+                  <div className="c-panel-head"><span className="c-panel-title">Top placements by spend</span></div>
+                  <table className="c-table">
+                    <thead><tr><th>Placement</th><th>Kind</th><th className="text-right">Clicks</th><th className="text-right">Spent</th><th className="text-right">Conv.</th></tr></thead>
+                    <tbody>
+                      {s.placements.map((p, i) => (
+                        <tr key={`${p.name}-${i}`}>
+                          <td className="max-w-[18rem]">
+                            <span className="block truncate text-ink" title={p.url ?? p.name}>{p.name}</span>
+                            {p.cost > 0 && p.conversions === 0 && <span className="text-[11px] text-ink-muted">Costing money, no conversions yet</span>}
+                          </td>
+                          <td className="whitespace-nowrap text-ink-muted">{p.type ? PLACEMENT_TYPE[p.type] ?? titleCase(p.type) : "—"}</td>
+                          <td className="text-right">{num(p.clicks)}</td>
+                          <td className="text-right whitespace-nowrap">{money(p.cost, cur)}</td>
+                          <td className="text-right">{p.conversions}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+
           {status?.connected && status.can_manage && <Connection status={status} onChange={() => { loadStatus(); loadSummary(); }} />}
         </div>
       )}
@@ -325,6 +397,11 @@ export default function GoogleAdsPage() {
 }
 
 /* ─── Pieces ─────────────────────────────────────────────────────────────── */
+
+const PLACEMENT_TYPE: Record<string, string> = {
+  MOBILE_APPLICATION: "Mobile apps", MOBILE_APP_CATEGORY: "App categories", WEBSITE: "Websites",
+  YOUTUBE_CHANNEL: "YouTube channels", YOUTUBE_VIDEO: "YouTube videos", GOOGLE_PRODUCTS: "Google products", UNKNOWN: "Not reported",
+};
 
 function formatDay(iso: string): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });

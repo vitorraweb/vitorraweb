@@ -49,8 +49,8 @@ class GoogleAdsSyncCommand extends Command
         }
 
         $this->info(sprintf(
-            'Synced %d day(s): %d campaign-day rows, %d search terms, %d click(s) matched to campaigns, %d conversion(s) uploaded%s.',
-            $days, $r['campaign_days'], $r['search_terms'], $r['clicks_resolved'], $r['conversions_uploaded'],
+            'Synced %d day(s): %d campaign-day rows, %d search terms, %d placements, %d Performance Max search themes, %d click(s) matched to campaigns, %d conversion(s) uploaded%s.',
+            $days, $r['campaign_days'], $r['search_terms'], $r['placements'], $r['search_themes'], $r['clicks_resolved'], $r['conversions_uploaded'],
             $r['conversion_errors'] ? ", {$r['conversion_errors']} rejected (see the enquiry)" : ''
         ));
 
