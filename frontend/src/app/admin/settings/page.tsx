@@ -18,7 +18,7 @@ type Settings = {
 };
 
 const inputCls = "w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none";
-const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 export default function SettingsPage() {
   const [form, setForm] = useState<Settings | null>(null);
@@ -47,8 +47,8 @@ export default function SettingsPage() {
     finally { setSaving(false); }
   };
 
-  if (error && !form) return <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>;
-  if (!form) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (error && !form) return <p className="text-sm" style={{ color: "var(--o-danger)" }}>{error}</p>;
+  if (!form) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   return (
     <div className="max-w-2xl">
@@ -154,13 +154,13 @@ export default function SettingsPage() {
           </Row>
         </Section>
 
-        {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
+        {error && <p className="text-sm" style={{ color: "var(--o-danger)" }}>{error}</p>}
 
         <div className="flex items-center gap-3 pt-2">
-          <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: saving ? 0.7 : 1 }}>
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold" style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: saving ? 0.7 : 1 }}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Save settings
           </button>
-          {saved && <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#16A34A" }}><Check className="w-4 h-4" />Saved</span>}
+          {saved && <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--o-success)" }}><Check className="w-4 h-4" />Saved</span>}
         </div>
       </div>
     </div>
@@ -170,8 +170,8 @@ export default function SettingsPage() {
 function Section({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-[20px] border border-black/[0.05] p-6">
-      <h2 className="text-sm font-bold uppercase tracking-wide mb-1" style={{ color: "#1E1E1E" }}>{title}</h2>
-      {note && <p className="text-xs mb-4" style={{ color: "#999" }}>{note}</p>}
+      <h2 className="text-sm font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-text)" }}>{title}</h2>
+      {note && <p className="text-xs mb-4" style={{ color: "var(--o-faint)" }}>{note}</p>}
       <div className="space-y-4">{children}</div>
     </div>
   );
@@ -181,8 +181,8 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
   return (
     <div className="grid grid-cols-1 sm:grid-cols-[0.9fr_1.1fr] sm:items-center gap-2 sm:gap-4">
       <div>
-        <span className="block text-sm font-medium" style={{ color: "#1E1E1E" }}>{label}</span>
-        {hint && <span className="block text-xs" style={{ color: "#999" }}>{hint}</span>}
+        <span className="block text-sm font-medium" style={{ color: "var(--o-text)" }}>{label}</span>
+        {hint && <span className="block text-xs" style={{ color: "var(--o-faint)" }}>{hint}</span>}
       </div>
       {children}
     </div>
@@ -192,7 +192,7 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
 function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="text-sm font-medium" style={{ color: "#1E1E1E" }}>{label}</span>
+      <span className="text-sm font-medium" style={{ color: "var(--o-text)" }}>{label}</span>
       <button
         type="button"
         role="switch"

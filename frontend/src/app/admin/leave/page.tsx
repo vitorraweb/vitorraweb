@@ -22,10 +22,10 @@ const TYPE_LABEL: Record<string, string> = {
   annual: "Annual", sick: "Sick", unpaid: "Unpaid", compassionate: "Compassionate", maternity: "Maternity",
 };
 const STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
-  pending:   { bg: "rgba(197,178,122,0.16)", fg: "#7A6020" },
-  approved:  { bg: "rgba(34,197,94,0.12)", fg: "#16A34A" },
-  declined:  { bg: "rgba(192,57,43,0.1)", fg: "#C0392B" },
-  cancelled: { bg: "rgba(0,0,0,0.06)", fg: "#777" },
+  pending:   { bg: "rgba(197,178,122,0.16)", fg: "var(--o-accent-text)" },
+  approved:  { bg: "rgba(34,197,94,0.12)", fg: "var(--o-success)" },
+  declined:  { bg: "rgba(192,57,43,0.1)", fg: "var(--o-danger)" },
+  cancelled: { bg: "rgba(0,0,0,0.06)", fg: "var(--o-muted)" },
 };
 
 export default function AdminLeavePage() {
@@ -66,12 +66,12 @@ export default function AdminLeavePage() {
 
       <div className="flex flex-wrap gap-2 mb-5">
         {[["", "All"], ...(statuses.length ? statuses : ["pending", "approved", "declined", "cancelled"]).map((s) => [s, s[0].toUpperCase() + s.slice(1)])].map(([v, label]) => (
-          <button key={v} onClick={() => setStatus(v)} className="text-xs font-semibold px-3.5 py-2 rounded-full" style={status === v ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{label}</button>
+          <button key={v} onClick={() => setStatus(v)} className="text-xs font-semibold px-3.5 py-2 rounded-full" style={status === v ? { background: "var(--o-inverse)", color: "#fff" } : { background: "var(--o-surface)", color: "var(--o-muted)", border: "1px solid rgba(0,0,0,0.06)" }}>{label}</button>
         ))}
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : list.length === 0 ? (
         <Empty label="No leave requests in this view." />
       ) : (
@@ -83,29 +83,29 @@ export default function AdminLeavePage() {
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{l.user?.name ?? "Staff"}</span>
-                      {l.user?.department && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>{l.user.department}</span>}
+                      <span className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{l.user?.name ?? "Staff"}</span>
+                      {l.user?.department && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>{l.user.department}</span>}
                       <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: sc.bg, color: sc.fg }}>{l.status}</span>
                     </div>
-                    <p className="text-xs mt-1" style={{ color: "#999" }}>{TYPE_LABEL[l.type] ?? l.type} · {fmt(l.start_date)} → {fmt(l.end_date)} · {l.working_days} day{l.working_days === 1 ? "" : "s"}</p>
-                    {l.reason && <p className="text-xs mt-1" style={{ color: "#777" }}>{l.reason}</p>}
-                    {l.review_comment && <p className="text-xs mt-1" style={{ color: "#777" }}>Note: {l.review_comment}</p>}
+                    <p className="text-xs mt-1" style={{ color: "var(--o-faint)" }}>{TYPE_LABEL[l.type] ?? l.type} · {fmt(l.start_date)} → {fmt(l.end_date)} · {l.working_days} day{l.working_days === 1 ? "" : "s"}</p>
+                    {l.reason && <p className="text-xs mt-1" style={{ color: "var(--o-muted)" }}>{l.reason}</p>}
+                    {l.review_comment && <p className="text-xs mt-1" style={{ color: "var(--o-muted)" }}>Note: {l.review_comment}</p>}
                     {l.approvals?.length > 0 && (
-                      <p className="text-xs mt-1" style={{ color: "#777" }}>
+                      <p className="text-xs mt-1" style={{ color: "var(--o-muted)" }}>
                         {l.approvals.map((a) => `${a.label} ${a.decision}${a.by ? ` — ${a.by}` : ""}`).join(" · ")}
                       </p>
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {l.has_document && <button onClick={() => note(l)} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Download className="w-3.5 h-3.5" />Note</button>}
+                    {l.has_document && <button onClick={() => note(l)} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}><Download className="w-3.5 h-3.5" />Note</button>}
                     {l.status === "pending" && l.can_decide && (
                       <>
-                        <button onClick={() => decide(l.id, "approved")} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}><Check className="w-3.5 h-3.5" />Approve</button>
-                        <button onClick={() => decide(l.id, "declined")} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><X className="w-3.5 h-3.5" />Decline</button>
+                        <button onClick={() => decide(l.id, "approved")} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "var(--o-success)" }}><Check className="w-3.5 h-3.5" />Approve</button>
+                        <button onClick={() => decide(l.id, "declined")} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><X className="w-3.5 h-3.5" />Decline</button>
                       </>
                     )}
                     {l.status === "pending" && !l.can_decide && (
-                      <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>
+                      <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>
                         {l.user?.id === meId
                           ? "Your request — others decide"
                           : `Awaiting ${(l.awaiting ?? []).join(" + ") || "review"}`}

@@ -39,7 +39,7 @@ export default function ProductsAdminPage() {
     <div>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <PageHeader title="Products" subtitle="Manage the product catalogue — copy, prices, stock, and visibility." />
-        <Link href="/admin/products/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold" style={{ background: "#1E1E1E", color: "#fff" }}>
+        <Link href="/admin/products/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold" style={{ background: "var(--o-inverse)", color: "#fff" }}>
           <Plus className="w-4 h-4" />New product
         </Link>
       </div>
@@ -53,7 +53,7 @@ export default function ProductsAdminPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : list.length === 0 ? (
         <Empty label="No products yet. Add your first one." />
       ) : (
@@ -62,18 +62,18 @@ export default function ProductsAdminPage() {
             <div key={p.id} className="bg-white rounded-[18px] border border-black/[0.05] p-4 flex items-center gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2.5 mb-0.5 flex-wrap">
-                  <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{p.name}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>{p.category}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={p.is_published ? { background: "rgba(34,197,94,0.12)", color: "#16A34A" } : { background: "rgba(0,0,0,0.06)", color: "#777" }}>
+                  <span className="font-semibold text-sm" style={{ color: "var(--o-text)" }}>{p.name}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>{p.category}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={p.is_published ? { background: "rgba(34,197,94,0.12)", color: "var(--o-success)" } : { background: "rgba(0,0,0,0.06)", color: "var(--o-muted)" }}>
                     {p.is_published ? "published" : "draft"}
                   </span>
                 </div>
-                <p className="text-xs truncate" style={{ color: "#999" }}>
+                <p className="text-xs truncate" style={{ color: "var(--o-faint)" }}>
                   {fmtUGX(p.price_ugx)} · {fmtUSD(p.price_usd)}
                   {p.stock_quantity != null ? ` · ${p.stock_quantity} in stock` : " · made-to-order"}
                 </p>
               </div>
-              <Link href={`/admin/products/${p.id}/edit`} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#1E1E1E" }}>
+              <Link href={`/admin/products/${p.id}/edit`} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text)" }}>
                 <Pencil className="w-3.5 h-3.5" />Edit
               </Link>
             </div>

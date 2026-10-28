@@ -77,15 +77,15 @@ export function EmailSignaturePanel({ api }: { api: Api }) {
   return (
     <div className="bg-white rounded-[20px] border border-black/[0.06] p-6 mt-5">
       <div className="flex items-center gap-2 mb-1">
-        <PenLine className="w-4 h-4" style={{ color: "#C5B27A" }} />
-        <h2 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "#1E1E1E" }}>Email signature</h2>
+        <PenLine className="w-4 h-4" style={{ color: "var(--o-accent)" }} />
+        <h2 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "var(--o-text)" }}>Email signature</h2>
       </div>
-      <p className="text-xs mb-4" style={{ color: "#999" }}>
+      <p className="text-xs mb-4" style={{ color: "var(--o-faint)" }}>
         Appended to replies you send to customers from Customers → Conversation. Copy your signature from Outlook and paste it below — formatting and images come across exactly as they look there. Leave blank to use the default (your name, Vitorra Holdings).
       </p>
 
       {signature === null ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : (
         <>
           <div
@@ -94,7 +94,7 @@ export function EmailSignaturePanel({ api }: { api: Api }) {
             suppressContentEditableWarning
             onPaste={onPaste}
             data-placeholder="Paste your Outlook signature here…"
-            className="signature-editable w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none min-h-24 focus:border-[#C5B27A]"
+            className="signature-editable w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none min-h-24 focus:border-[var(--o-accent)]"
             style={{ borderColor: "rgba(0,0,0,0.12)" }}
           />
           <style>{`
@@ -107,10 +107,10 @@ export function EmailSignaturePanel({ api }: { api: Api }) {
           <div className="flex items-center gap-2 mt-3">
             <button onClick={save} disabled={saving}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-50"
-              style={{ background: "#1E1E1E", color: "#fff" }}>
+              style={{ background: "var(--o-inverse)", color: "#fff" }}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Save signature
             </button>
-            {saved && <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: "#16A34A" }}><Check className="w-3.5 h-3.5" />Saved</span>}
+            {saved && <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--o-success)" }}><Check className="w-3.5 h-3.5" />Saved</span>}
           </div>
         </>
       )}

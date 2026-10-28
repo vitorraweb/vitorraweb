@@ -9,7 +9,7 @@ import {
 } from "@/lib/fet-trials";
 
 const inputCls = "w-full text-sm rounded-xl px-3 py-2 border outline-none";
-const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 const EMPTY_TRIP = {
   route_label: "", trip_date: "", return_date: "", distance_km: "",
@@ -136,14 +136,14 @@ export default function FetTrialTrips({
   return (
     <div>
       <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-        <p className="text-xs" style={{ color: "#999" }}>
+        <p className="text-xs" style={{ color: "var(--o-faint)" }}>
           {baseline.length} before the device · {after.length} after
           {trial.installed_on ? ` · fitted ${fmtDate(trial.installed_on)}` : " · no installation date set, so nothing counts as “after” yet"}
         </p>
         <button
           onClick={() => setAddOpen((o) => !o)}
           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold"
-          style={{ background: "#F2F2F2", color: "#555" }}
+          style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}
         >
           <Plus className="w-3.5 h-3.5" />Add a trip by hand
         </button>
@@ -151,7 +151,7 @@ export default function FetTrialTrips({
 
       {addOpen && (
         <div className="bg-white rounded-[18px] border border-black/[0.06] p-4 mb-4">
-          <p className="text-sm font-semibold mb-3" style={{ color: "#1E1E1E" }}>New trip</p>
+          <p className="text-sm font-semibold mb-3" style={{ color: "var(--o-text)" }}>New trip</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Field label="Destination"><input value={add.route_label} onChange={(e) => setAdd({ ...add, route_label: e.target.value })} className={inputCls} style={inputStyle} /></Field>
             <Field label="Departed"><input value={add.trip_date} onChange={(e) => setAdd({ ...add, trip_date: e.target.value })} type="date" className={inputCls} style={inputStyle} /></Field>
@@ -165,10 +165,10 @@ export default function FetTrialTrips({
             <Field label="Weight back" hint="kg"><input value={add.load_in_kg} onChange={(e) => setAdd({ ...add, load_in_kg: e.target.value })} type="number" className={inputCls} style={inputStyle} /></Field>
             <Field label="Driver"><input value={add.driver_name} onChange={(e) => setAdd({ ...add, driver_name: e.target.value })} className={inputCls} style={inputStyle} /></Field>
           </div>
-          <p className="text-[11px] mt-2.5" style={{ color: "#AAA" }}>
+          <p className="text-[11px] mt-2.5" style={{ color: "var(--o-faint)" }}>
             Fuel used is worked out for you: fuel at departure + issued + top-up − fuel on return.
           </p>
-          <button onClick={createTrip} disabled={busy} className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: busy ? 0.7 : 1 }}>
+          <button onClick={createTrip} disabled={busy} className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: busy ? 0.7 : 1 }}>
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Add trip
           </button>
         </div>
@@ -177,7 +177,7 @@ export default function FetTrialTrips({
       {msg && <p className="text-sm mb-3" style={{ color: /save/i.test(msg) ? "#16A34A" : "#C0392B" }}>{msg}</p>}
 
       {trial.trips.length === 0 ? (
-        <p className="text-sm py-8 text-center" style={{ color: "#BBB" }}>
+        <p className="text-sm py-8 text-center" style={{ color: "var(--o-faint)" }}>
           No trips yet. Upload the client&rsquo;s own export from the Import tab, or add one by hand above.
         </p>
       ) : (
@@ -191,15 +191,15 @@ export default function FetTrialTrips({
             return (
               <div key={t.id} className="bg-white rounded-[16px] border border-black/[0.05] overflow-hidden">
                 <button onClick={() => expand(t)} className="w-full flex items-center gap-3 p-3.5 text-left">
-                  <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-full shrink-0 w-16 text-center" style={t.phase === "trial" ? { background: "rgba(59,130,246,0.1)", color: "#2563EB" } : { background: "rgba(0,0,0,0.05)", color: "#888" }}>
+                  <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-full shrink-0 w-16 text-center" style={t.phase === "trial" ? { background: "rgba(59,130,246,0.1)", color: "var(--o-info)" } : { background: "rgba(0,0,0,0.05)", color: "var(--o-muted)" }}>
                     {t.phase === "trial" ? "After" : "Before"}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{t.route_label ?? "No destination"}</span>
-                      <span className="text-xs" style={{ color: "#AAA" }}>{fmtDate(t.trip_date)}</span>
+                      <span className="font-semibold text-sm" style={{ color: "var(--o-text)" }}>{t.route_label ?? "No destination"}</span>
+                      <span className="text-xs" style={{ color: "var(--o-faint)" }}>{fmtDate(t.trip_date)}</span>
                     </div>
-                    <p className="text-xs" style={{ color: "#999" }}>
+                    <p className="text-xs" style={{ color: "var(--o-faint)" }}>
                       {t.distance_km ? `${fmtNumber(t.distance_km)} km` : "no distance"}
                       {t.fuel_used_l ? ` · ${fmtNumber(t.fuel_used_l, 1)} L` : ""}
                       {t.load_out_kg ? ` · ${fmtTonnes(t.load_out_kg)}` : ""}
@@ -207,8 +207,8 @@ export default function FetTrialTrips({
                   </div>
 
                   {t.l_per_100 !== null && (
-                    <span className="text-sm font-semibold tabular-nums shrink-0 hidden sm:block" style={{ color: "#454545" }}>
-                      {t.l_per_100}<span className="text-[10px] font-normal" style={{ color: "#BBB" }}> L/100km</span>
+                    <span className="text-sm font-semibold tabular-nums shrink-0 hidden sm:block" style={{ color: "var(--o-text-2)" }}>
+                      {t.l_per_100}<span className="text-[10px] font-normal" style={{ color: "var(--o-faint)" }}> L/100km</span>
                     </span>
                   )}
                   {tripFlags.length > 0 && (
@@ -217,7 +217,7 @@ export default function FetTrialTrips({
                     </span>
                   )}
                   <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full shrink-0" style={{ background: style.background, color: style.color }}>{style.label}</span>
-                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "#CCC" }} />
+                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "var(--o-faint)" }} />
                 </button>
 
                 {isOpen && d && (
@@ -227,16 +227,16 @@ export default function FetTrialTrips({
                         {tripFlags.map((f) => (
                           <div key={f.id} className="rounded-xl p-3" style={{ background: SEVERITY_STYLE[f.severity].background }}>
                             <p className="text-xs font-semibold mb-0.5" style={{ color: SEVERITY_STYLE[f.severity].color }}>{SEVERITY_STYLE[f.severity].label}</p>
-                            <p className="text-sm leading-relaxed" style={{ color: "#454545" }}>{f.message}</p>
-                            {f.suggested_action && <p className="text-xs mt-1.5" style={{ color: "#888" }}>{f.suggested_action}</p>}
+                            <p className="text-sm leading-relaxed" style={{ color: "var(--o-text-2)" }}>{f.message}</p>
+                            {f.suggested_action && <p className="text-xs mt-1.5" style={{ color: "var(--o-muted)" }}>{f.suggested_action}</p>}
                           </div>
                         ))}
-                        <p className="text-[11px]" style={{ color: "#AAA" }}>Settle these on the Data checks tab.</p>
+                        <p className="text-[11px]" style={{ color: "var(--o-faint)" }}>Settle these on the Data checks tab.</p>
                       </div>
                     )}
 
                     {t.status === "excluded" && t.exclusion_reason && (
-                      <p className="text-xs mt-3 rounded-xl p-3" style={{ background: "#F7F7F5", color: "#777" }}>
+                      <p className="text-xs mt-3 rounded-xl p-3" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>
                         <strong>Left out:</strong> {t.exclusion_reason}
                       </p>
                     )}
@@ -265,19 +265,19 @@ export default function FetTrialTrips({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 mt-4">
-                      <button onClick={saveTrip} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                      <button onClick={saveTrip} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>
                         <Save className="w-3.5 h-3.5" />Save
                       </button>
                       {t.status === "excluded" ? (
-                        <button onClick={() => setStatus(t, "valid")} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>
+                        <button onClick={() => setStatus(t, "valid")} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
                           <Eye className="w-3.5 h-3.5" />Put back in
                         </button>
                       ) : (
-                        <button onClick={() => setStatus(t, "excluded")} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>
+                        <button onClick={() => setStatus(t, "excluded")} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
                           <EyeOff className="w-3.5 h-3.5" />Leave out
                         </button>
                       )}
-                      <button onClick={() => deleteTrip(t)} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full ml-auto" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}>
+                      <button onClick={() => deleteTrip(t)} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full ml-auto" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}>
                         <Trash2 className="w-3.5 h-3.5" />Delete
                       </button>
                     </div>
@@ -295,8 +295,8 @@ export default function FetTrialTrips({
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium block mb-1" style={{ color: "#888" }}>
-        {label}{hint && <span style={{ color: "#BBB" }}> · {hint}</span>}
+      <span className="text-xs font-medium block mb-1" style={{ color: "var(--o-muted)" }}>
+        {label}{hint && <span style={{ color: "var(--o-faint)" }}> · {hint}</span>}
       </span>
       {children}
     </label>
@@ -305,10 +305,10 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 
 function Derived({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-xl p-3" style={{ background: "#F7F7F5" }}>
-      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#AAA" }}>{label}</p>
-      <p className="text-sm font-semibold tabular-nums" style={{ color: "#1E1E1E" }}>{value}</p>
-      {hint && <p className="text-[10px] mt-0.5" style={{ color: "#BBB" }}>{hint}</p>}
+    <div className="rounded-xl p-3" style={{ background: "var(--o-surface-2)" }}>
+      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>{label}</p>
+      <p className="text-sm font-semibold tabular-nums" style={{ color: "var(--o-text)" }}>{value}</p>
+      {hint && <p className="text-[10px] mt-0.5" style={{ color: "var(--o-faint)" }}>{hint}</p>}
     </div>
   );
 }

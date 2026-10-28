@@ -97,24 +97,24 @@ export default function FetTrialFindings({
 
   return (
     <div>
-      <p className="text-xs mb-4 leading-relaxed" style={{ color: "#999" }}>
+      <p className="text-xs mb-4 leading-relaxed" style={{ color: "var(--o-faint)" }}>
         Anything the system could not read with confidence is raised here rather than guessed at. A trip carrying an
         unsettled &ldquo;must settle&rdquo; question is held out of the calculation until it is answered — it stays visible, with
         the reason attached.
       </p>
 
-      {msg && <p className="text-sm mb-3" style={{ color: "#C0392B" }}>{msg}</p>}
+      {msg && <p className="text-sm mb-3" style={{ color: "var(--o-danger)" }}>{msg}</p>}
 
       {saved !== null && (
         <div className="flex items-center gap-2.5 rounded-2xl p-3.5 mb-4" style={{ background: "rgba(34,197,94,0.08)" }}>
-          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#16A34A" }} />
+          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "var(--o-success)" }} />
           <p className="text-sm" style={{ color: "#166534" }}>{saved}</p>
         </div>
       )}
 
       {outstanding.length === 0 ? (
         <div className="flex items-center gap-2.5 rounded-2xl p-4 mb-5" style={{ background: "rgba(34,197,94,0.08)" }}>
-          <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: "#16A34A" }} />
+          <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: "var(--o-success)" }} />
           <p className="text-sm" style={{ color: "#166534" }}>
             Nothing outstanding. Every question raised about this data has been settled.
           </p>
@@ -123,10 +123,10 @@ export default function FetTrialFindings({
         <div className="space-y-4 mb-6">
           {groups.map((g) => (
             <div key={g.key}>
-              <p className="text-xs font-semibold mb-1.5 px-1" style={{ color: "#777" }}>
+              <p className="text-xs font-semibold mb-1.5 px-1" style={{ color: "var(--o-muted)" }}>
                 {g.label}
                 {g.flags.length > 1 && (
-                  <span style={{ color: "#9E3B33" }}> · {g.flags.length} separate questions on this trip, each settled on its own</span>
+                  <span style={{ color: "var(--o-danger)" }}> · {g.flags.length} separate questions on this trip, each settled on its own</span>
                 )}
               </p>
               <div className="space-y-2.5">
@@ -141,9 +141,9 @@ export default function FetTrialFindings({
                     {style.label}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm leading-relaxed" style={{ color: "#1E1E1E" }}>{f.message}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: "var(--o-text)" }}>{f.message}</p>
                     {f.suggested_action && (
-                      <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "#888" }}>{f.suggested_action}</p>
+                      <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--o-muted)" }}>{f.suggested_action}</p>
                     )}
                   </div>
                 </div>
@@ -161,8 +161,8 @@ export default function FetTrialFindings({
                             background: choice === r.key ? "rgba(197,178,122,0.08)" : "#fff",
                           }}
                         >
-                          <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{r.label}</p>
-                          <p className="text-[11px] mt-0.5 leading-tight" style={{ color: "#999" }}>{r.hint}</p>
+                          <p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{r.label}</p>
+                          <p className="text-[11px] mt-0.5 leading-tight" style={{ color: "var(--o-faint)" }}>{r.hint}</p>
                         </button>
                       ))}
                     </div>
@@ -172,10 +172,10 @@ export default function FetTrialFindings({
                       rows={2}
                       placeholder="What did you find out? e.g. “Client confirmed the truck carried sugar back from Kinyara.”"
                       className="w-full text-sm rounded-xl px-3 py-2 border outline-none"
-                      style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" }}
+                      style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" }}
                     />
                     {formError?.id === f.id && (
-                      <p className="text-sm mt-2 rounded-lg px-3 py-2" style={{ background: "rgba(158,59,51,0.09)", color: "#9E3B33" }}>
+                      <p className="text-sm mt-2 rounded-lg px-3 py-2" style={{ background: "rgba(158,59,51,0.09)", color: "var(--o-danger)" }}>
                         {formError.text}
                       </p>
                     )}
@@ -184,11 +184,11 @@ export default function FetTrialFindings({
                         onClick={() => resolve(f)}
                         disabled={busy === f.id}
                         className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full"
-                        style={{ background: "#C5B27A", color: "#1E1E1E", opacity: busy === f.id ? 0.7 : 1 }}
+                        style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: busy === f.id ? 0.7 : 1 }}
                       >
                         {busy === f.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}Record it
                       </button>
-                      <button onClick={() => { setAnswering(null); setNote(""); }} className="text-sm font-medium px-3 py-1.5" style={{ color: "#999" }}>
+                      <button onClick={() => { setAnswering(null); setNote(""); }} className="text-sm font-medium px-3 py-1.5" style={{ color: "var(--o-faint)" }}>
                         Cancel
                       </button>
                     </div>
@@ -197,7 +197,7 @@ export default function FetTrialFindings({
                   <button
                     onClick={() => { setAnswering(f.id); setNote(""); setChoice("accepted"); setMsg(""); }}
                     className="mt-3 text-sm font-semibold px-3.5 py-1.5 rounded-full"
-                    style={{ background: "#F2F2F2", color: "#555" }}
+                    style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}
                   >
                     Settle this
                   </button>
@@ -213,18 +213,18 @@ export default function FetTrialFindings({
 
       {settled.length > 0 && (
         <>
-          <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: "#AAA" }}>Already settled</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--o-faint)" }}>Already settled</p>
           <div className="space-y-2">
             {settled.map((f) => (
               <div key={f.id} className="bg-white rounded-[14px] border border-black/[0.04] p-3.5 flex items-start gap-3">
-                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#16A34A" }} />
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--o-success)" }} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#AAA" }}>{tripLabel(f.trip_id)}</p>
-                  <p className="text-sm leading-snug" style={{ color: "#777" }}>{f.message}</p>
+                  <p className="text-[11px] font-semibold mb-0.5" style={{ color: "var(--o-faint)" }}>{tripLabel(f.trip_id)}</p>
+                  <p className="text-sm leading-snug" style={{ color: "var(--o-muted)" }}>{f.message}</p>
                   {f.resolution_note && (
-                    <p className="text-xs mt-1.5 rounded-lg px-2.5 py-1.5" style={{ background: "#F7F7F5", color: "#555" }}>
+                    <p className="text-xs mt-1.5 rounded-lg px-2.5 py-1.5" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
                       <strong style={{ textTransform: "capitalize" }}>{f.resolution}</strong> — {f.resolution_note}
-                      {f.resolved_at && <span style={{ color: "#AAA" }}> · {fmtDate(f.resolved_at)}</span>}
+                      {f.resolved_at && <span style={{ color: "var(--o-faint)" }}> · {fmtDate(f.resolved_at)}</span>}
                     </p>
                   )}
                 </div>
@@ -233,7 +233,7 @@ export default function FetTrialFindings({
                   disabled={busy === f.id}
                   title="Reopen this question"
                   className="p-1.5 rounded-lg shrink-0"
-                  style={{ background: "#F2F2F2", color: "#888" }}
+                  style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}
                 >
                   {busy === f.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                 </button>

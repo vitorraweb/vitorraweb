@@ -32,18 +32,18 @@ type Registry = {
 
 const ROLE_LABEL: Record<string, string> = { admin: "Admin", ops: "Ops", employee: "Employee" };
 const ROLE_BADGE: Record<string, { background: string; color: string }> = {
-  admin:    { background: "rgba(197,178,122,0.16)", color: "#7A6020" },
-  ops:      { background: "rgba(59,130,246,0.12)", color: "#2563EB" },
-  employee: { background: "rgba(0,0,0,0.06)", color: "#666" },
+  admin:    { background: "rgba(197,178,122,0.16)", color: "var(--o-accent-text)" },
+  ops:      { background: "rgba(59,130,246,0.12)", color: "var(--o-info)" },
+  employee: { background: "rgba(0,0,0,0.06)", color: "var(--o-text-2)" },
 };
 const STATUS = { active: "Active", on_leave: "On leave", left: "Left" } as const;
 const STATUS_STYLE: Record<string, { background: string; color: string }> = {
-  active:   { background: "rgba(34,197,94,0.12)", color: "#16A34A" },
-  on_leave: { background: "rgba(197,178,122,0.16)", color: "#7A6020" },
-  left:     { background: "rgba(0,0,0,0.06)", color: "#777" },
+  active:   { background: "rgba(34,197,94,0.12)", color: "var(--o-success)" },
+  on_leave: { background: "rgba(197,178,122,0.16)", color: "var(--o-accent-text)" },
+  left:     { background: "rgba(0,0,0,0.06)", color: "var(--o-muted)" },
 };
 const inputCls = "w-full text-sm rounded-xl px-3 py-2 border outline-none";
-const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 export default function StaffPage() {
   const me = auth.getUser();
@@ -181,7 +181,7 @@ export default function StaffPage() {
     <div>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <PageHeader title="Staff" subtitle="Your team directory and access. Each person sees only the areas their department or permissions allow." />
-        <button onClick={() => setAddOpen((o) => !o)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shrink-0" style={{ background: "#1E1E1E", color: "#fff" }}>
+        <button onClick={() => setAddOpen((o) => !o)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shrink-0" style={{ background: "var(--o-inverse)", color: "#fff" }}>
           <UserPlus className="w-4 h-4" />Add staff
         </button>
       </div>
@@ -189,7 +189,7 @@ export default function StaffPage() {
       {/* Add staff (onboarding) */}
       {addOpen && (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">
-          <p className="text-sm font-semibold mb-4" style={{ color: "#1E1E1E" }}>Onboard a staff member</p>
+          <p className="text-sm font-semibold mb-4" style={{ color: "var(--o-text)" }}>Onboard a staff member</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input value={add.name} onChange={(e) => setAdd({ ...add, name: e.target.value })} placeholder="Full name" className={inputCls} style={inputStyle} />
             <input value={add.email} onChange={(e) => setAdd({ ...add, email: e.target.value })} placeholder="Work email" type="email" className={inputCls} style={inputStyle} />
@@ -204,9 +204,9 @@ export default function StaffPage() {
             </select>
             <input value={add.password} onChange={(e) => setAdd({ ...add, password: e.target.value })} placeholder="Temporary password (8+ chars)" type="text" className={inputCls} style={inputStyle} />
           </div>
-          <p className="text-xs mt-3" style={{ color: "#999" }}>Access defaults to the department&apos;s screens. You can fine-tune it after creating the account.</p>
-          {addMsg && <p className="text-sm mt-2" style={{ color: "#C0392B" }}>{addMsg}</p>}
-          <button onClick={createStaff} disabled={adding} className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: adding ? 0.7 : 1 }}>
+          <p className="text-xs mt-3" style={{ color: "var(--o-faint)" }}>Access defaults to the department&apos;s screens. You can fine-tune it after creating the account.</p>
+          {addMsg && <p className="text-sm mt-2" style={{ color: "var(--o-danger)" }}>{addMsg}</p>}
+          <button onClick={createStaff} disabled={adding} className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: adding ? 0.7 : 1 }}>
             {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}Create account
           </button>
         </div>
@@ -216,7 +216,7 @@ export default function StaffPage() {
       {deptEntries.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-5">
           {[["all", "All"], ...deptEntries].map(([k, label]) => (
-            <button key={k} onClick={() => setFilterDept(k)} className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors" style={filterDept === k ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.08)" }}>
+            <button key={k} onClick={() => setFilterDept(k)} className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors" style={filterDept === k ? { background: "var(--o-inverse)", color: "#fff" } : { background: "var(--o-surface)", color: "var(--o-muted)", border: "1px solid rgba(0,0,0,0.08)" }}>
               {label}
             </button>
           ))}
@@ -224,7 +224,7 @@ export default function StaffPage() {
       )}
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : shown.length === 0 ? (
         <Empty label="No staff in this view yet." />
       ) : (
@@ -237,15 +237,15 @@ export default function StaffPage() {
                 <button onClick={() => expand(s)} className="w-full flex items-center gap-3 p-4 text-left">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{s.name}</span>
-                      {me?.id === s.id && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>you</span>}
+                      <span className="font-semibold text-sm" style={{ color: "var(--o-text)" }}>{s.name}</span>
+                      {me?.id === s.id && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>you</span>}
                     </div>
-                    <p className="text-xs truncate" style={{ color: "#999" }}>{s.job_title ? `${s.job_title} · ` : ""}{s.email}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--o-faint)" }}>{s.job_title ? `${s.job_title} · ` : ""}{s.email}</p>
                   </div>
-                  {s.department && <span className="text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0 hidden sm:inline" style={{ background: "#F2F2F2", color: "#666" }}>{reg.departments[s.department] ?? s.department}</span>}
+                  {s.department && <span className="text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0 hidden sm:inline" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>{reg.departments[s.department] ?? s.department}</span>}
                   <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0" style={STATUS_STYLE[s.staff_status ?? "active"] ?? STATUS_STYLE.active}>{STATUS[(s.staff_status ?? "active") as keyof typeof STATUS] ?? s.staff_status}</span>
                   <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0" style={ROLE_BADGE[s.role] ?? ROLE_BADGE.ops}>{ROLE_LABEL[s.role] ?? s.role}</span>
-                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "#BBB" }} />
+                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "var(--o-faint)" }} />
                 </button>
 
                 {isOpen && d && (
@@ -290,24 +290,24 @@ export default function StaffPage() {
                     {/* Access / permissions */}
                     <div className="mt-4 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
                       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-                        <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#777" }}>Access</span>
+                        <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--o-muted)" }}>Access</span>
                         {d.role === "admin" ? (
-                          <span className="text-xs" style={{ color: "#999" }}>Admins have full access.</span>
+                          <span className="text-xs" style={{ color: "var(--o-faint)" }}>Admins have full access.</span>
                         ) : usingDefault ? (
-                          <button onClick={() => setD("permissions", effective(d).filter((m) => m !== "dashboard"))} className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>Customise access</button>
+                          <button onClick={() => setD("permissions", effective(d).filter((m) => m !== "dashboard"))} className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>Customise access</button>
                         ) : (
-                          <button onClick={() => setD("permissions", null)} className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>Reset to department default</button>
+                          <button onClick={() => setD("permissions", null)} className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>Reset to department default</button>
                         )}
                       </div>
                       {d.role !== "admin" && (
                         <>
-                          {usingDefault && <p className="text-xs mb-3" style={{ color: "#999" }}>Inherited from {d.department ? (reg.departments[d.department] ?? d.department) : "department"}. Click “Customise access” to override per person.</p>}
+                          {usingDefault && <p className="text-xs mb-3" style={{ color: "var(--o-faint)" }}>Inherited from {d.department ? (reg.departments[d.department] ?? d.department) : "department"}. Click “Customise access” to override per person.</p>}
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {Object.entries(reg.modules).map(([key, label]) => {
                               const checked = effective(d).includes(key);
                               const locked = key === "dashboard" || usingDefault;
                               return (
-                                <label key={key} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl" style={{ background: checked ? "rgba(197,178,122,0.1)" : "#F7F7F5", color: "#1E1E1E", opacity: locked && !checked ? 0.5 : 1, cursor: locked ? "default" : "pointer" }}>
+                                <label key={key} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl" style={{ background: checked ? "rgba(197,178,122,0.1)" : "#F7F7F5", color: "var(--o-text)", opacity: locked && !checked ? 0.5 : 1, cursor: locked ? "default" : "pointer" }}>
                                   <input type="checkbox" checked={checked} disabled={locked} onChange={() => toggleModule(key)} />
                                   {label}
                                 </label>
@@ -320,34 +320,34 @@ export default function StaffPage() {
 
                     {/* Documents */}
                     <div className="mt-4 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#777" }}>Documents</span>
+                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--o-muted)" }}>Documents</span>
                       <div className="space-y-2 mt-2">
                         {(d.documents ?? []).map((doc, i) => (
                           <div key={i} className="flex items-center gap-2">
                             <input value={doc.label} onChange={(e) => setD("documents", (d.documents ?? []).map((x, j) => j === i ? { ...x, label: e.target.value } : x))} placeholder="Label (e.g. Contract)" className={inputCls} style={inputStyle} />
                             <input value={doc.url} onChange={(e) => setD("documents", (d.documents ?? []).map((x, j) => j === i ? { ...x, url: e.target.value } : x))} placeholder="Link (from Media library)" className={inputCls} style={inputStyle} />
-                            <button onClick={() => setD("documents", (d.documents ?? []).filter((_, j) => j !== i))} className="shrink-0 p-2 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><X className="w-4 h-4" /></button>
+                            <button onClick={() => setD("documents", (d.documents ?? []).filter((_, j) => j !== i))} className="shrink-0 p-2 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><X className="w-4 h-4" /></button>
                           </div>
                         ))}
-                        <button onClick={() => setD("documents", [...(d.documents ?? []), { label: "", url: "" }])} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Plus className="w-3.5 h-3.5" />Add document</button>
+                        <button onClick={() => setD("documents", [...(d.documents ?? []), { label: "", url: "" }])} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}><Plus className="w-3.5 h-3.5" />Add document</button>
                       </div>
                     </div>
 
                     {/* Private HR files (contract, ID) — uploaded to private storage, visible to the employee */}
                     <div className="mt-4 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: "#777" }}><FileLock2 className="w-3.5 h-3.5" />Private HR files</span>
-                      <p className="text-xs mt-1 mb-2" style={{ color: "#999" }}>Contract, ID, certificates. Stored privately and shown to {d.name.split(" ")[0]} in their staff portal.</p>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--o-muted)" }}><FileLock2 className="w-3.5 h-3.5" />Private HR files</span>
+                      <p className="text-xs mt-1 mb-2" style={{ color: "var(--o-faint)" }}>Contract, ID, certificates. Stored privately and shown to {d.name.split(" ")[0]} in their staff portal.</p>
                       <div className="space-y-2 mb-3">
-                        {privDocs.length === 0 && <p className="text-xs" style={{ color: "#bbb" }}>No private files yet.</p>}
+                        {privDocs.length === 0 && <p className="text-xs" style={{ color: "var(--o-faint)" }}>No private files yet.</p>}
                         {privDocs.map((doc) => (
-                          <div key={doc.id} className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "#F7F7F5" }}>
-                            <FileLock2 className="w-4 h-4 shrink-0" style={{ color: "#7A6020" }} />
+                          <div key={doc.id} className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "var(--o-surface-2)" }}>
+                            <FileLock2 className="w-4 h-4 shrink-0" style={{ color: "var(--o-accent-text)" }} />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate" style={{ color: "#1E1E1E" }}>{doc.title}</p>
-                              <p className="text-[11px]" style={{ color: "#999" }}>{doc.type} · {new Date(doc.created_at).toLocaleDateString("en-GB")}</p>
+                              <p className="text-sm font-medium truncate" style={{ color: "var(--o-text)" }}>{doc.title}</p>
+                              <p className="text-[11px]" style={{ color: "var(--o-faint)" }}>{doc.type} · {new Date(doc.created_at).toLocaleDateString("en-GB")}</p>
                             </div>
-                            <button onClick={() => downloadPrivateDoc(doc)} className="shrink-0 p-2 rounded-lg" style={{ background: "#fff", color: "#555" }} title="Download"><Download className="w-4 h-4" /></button>
-                            <button onClick={() => deletePrivateDoc(doc.id)} className="shrink-0 p-2 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }} title="Delete"><X className="w-4 h-4" /></button>
+                            <button onClick={() => downloadPrivateDoc(doc)} className="shrink-0 p-2 rounded-lg" style={{ background: "var(--o-surface)", color: "var(--o-text-2)" }} title="Download"><Download className="w-4 h-4" /></button>
+                            <button onClick={() => deletePrivateDoc(doc.id)} className="shrink-0 p-2 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }} title="Delete"><X className="w-4 h-4" /></button>
                           </div>
                         ))}
                       </div>
@@ -357,7 +357,7 @@ export default function StaffPage() {
                         </select>
                         <input value={upTitle} onChange={(e) => setUpTitle(e.target.value)} placeholder="Title (e.g. Employment contract)" className="text-sm rounded-xl px-3 py-2 border flex-1 min-w-[12rem]" style={inputStyle} />
                         <input ref={open === d.id ? fileRef : undefined} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="text-sm" />
-                        <button onClick={() => uploadPrivateDoc(d.id)} disabled={uploading} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "#1E1E1E", color: "#fff", opacity: uploading ? 0.7 : 1 }}>
+                        <button onClick={() => uploadPrivateDoc(d.id)} disabled={uploading} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "var(--o-inverse)", color: "#fff", opacity: uploading ? 0.7 : 1 }}>
                           {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}Upload
                         </button>
                       </div>
@@ -370,13 +370,13 @@ export default function StaffPage() {
 
                     {/* Actions */}
                     <div className="flex flex-wrap items-center gap-2 mt-4">
-                      <button onClick={saveStaff} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}><Save className="w-3.5 h-3.5" />Save</button>
-                      <button onClick={() => removeStaff(d.id)} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><Trash2 className="w-3.5 h-3.5" />Remove</button>
+                      <button onClick={saveStaff} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)" }}><Save className="w-3.5 h-3.5" />Save</button>
+                      <button onClick={() => removeStaff(d.id)} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><Trash2 className="w-3.5 h-3.5" />Remove</button>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#777" }}><KeyRound className="w-3.5 h-3.5" />Reset password</span>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--o-muted)" }}><KeyRound className="w-3.5 h-3.5" />Reset password</span>
                       <input value={pw} onChange={(e) => setPw(e.target.value)} type="text" placeholder="New password (8+)" className="text-sm rounded-xl px-3 py-1.5 border" style={inputStyle} />
-                      <button onClick={() => resetPassword(d.id)} className="text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>Set</button>
+                      <button onClick={() => resetPassword(d.id)} className="text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>Set</button>
                     </div>
                     {rowMsg && <p className="text-sm mt-3" style={{ color: /fail|cannot|must|invalid/i.test(rowMsg) ? "#C0392B" : "#16A34A" }}>{rowMsg}</p>}
                   </div>
@@ -393,7 +393,7 @@ export default function StaffPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium block mb-1" style={{ color: "#888" }}>{label}</span>
+      <span className="text-xs font-medium block mb-1" style={{ color: "var(--o-muted)" }}>{label}</span>
       {children}
     </label>
   );

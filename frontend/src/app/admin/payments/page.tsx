@@ -39,8 +39,8 @@ export default function PaymentsHealthPage() {
     }
   };
 
-  if (error) return <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>;
-  if (!health) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (error) return <p className="text-sm" style={{ color: "var(--o-danger)" }}>{error}</p>;
+  if (!health) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   // Everything that must be true for customers to actually pay online.
   const checks = [
@@ -59,12 +59,12 @@ export default function PaymentsHealthPage() {
       <div className="rounded-2xl p-5 mb-6 flex items-start gap-3" style={live
         ? { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.35)" }
         : { background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.35)" }}>
-        {live ? <CheckCircle2 className="w-6 h-6 shrink-0" style={{ color: "#16A34A" }} /> : <AlertTriangle className="w-6 h-6 shrink-0" style={{ color: "#B45309" }} />}
+        {live ? <CheckCircle2 className="w-6 h-6 shrink-0" style={{ color: "var(--o-success)" }} /> : <AlertTriangle className="w-6 h-6 shrink-0" style={{ color: "var(--o-warning)" }} />}
         <div>
           <p className="font-bold" style={{ color: live ? "#15803D" : "#92400E" }}>
             {live ? "Online payments are LIVE" : "Online payments are not live yet"}
           </p>
-          <p className="text-sm mt-0.5" style={{ color: "#555" }}>
+          <p className="text-sm mt-0.5" style={{ color: "var(--o-text-2)" }}>
             {live
               ? `Customers can pay online now (${health.environment === "live" ? "live" : "sandbox / testing"} mode).`
               : "Customers currently can't pay online — see the steps below."}
@@ -77,11 +77,11 @@ export default function PaymentsHealthPage() {
         {checks.map((c) => (
           <div key={c.label} className="flex items-start gap-3 p-4">
             {c.ok
-              ? <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#16A34A" }} />
-              : <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#D97706" }} />}
+              ? <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "var(--o-success)" }} />
+              : <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "var(--o-warning)" }} />}
             <div>
-              <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{c.label}</p>
-              <p className="text-xs mt-0.5" style={{ color: "#777" }}>{c.detail}</p>
+              <p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{c.label}</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--o-muted)" }}>{c.detail}</p>
             </div>
           </div>
         ))}
@@ -91,9 +91,9 @@ export default function PaymentsHealthPage() {
       <div className="mt-6 bg-white rounded-2xl border border-black/[0.06] p-5" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
-            <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>Connection test</p>
-            <p className="text-xs mt-0.5" style={{ color: "#777" }}>
-              Mode: <strong style={{ color: "#1E1E1E" }}>{health.environment === "live" ? "Live" : "Sandbox (testing)"}</strong> · runs a real test payment request and reports exactly what Flutterwave says (the test link is never charged).
+            <p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>Connection test</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--o-muted)" }}>
+              Mode: <strong style={{ color: "var(--o-text)" }}>{health.environment === "live" ? "Live" : "Sandbox (testing)"}</strong> · runs a real test payment request and reports exactly what Flutterwave says (the test link is never charged).
             </p>
           </div>
           <button
@@ -109,8 +109,8 @@ export default function PaymentsHealthPage() {
         </div>
         {testResult && (
           <div className="mt-4 rounded-xl p-3.5 flex items-start gap-2.5 text-sm" style={testResult.ok
-            ? { background: "rgba(34,197,94,0.1)", color: "#15803D" }
-            : { background: "rgba(192,57,43,0.08)", color: "#B91C1C" }}>
+            ? { background: "rgba(34,197,94,0.1)", color: "var(--o-success)" }
+            : { background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}>
             {testResult.ok ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" /> : <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />}
             <span>{testResult.message}</span>
           </div>

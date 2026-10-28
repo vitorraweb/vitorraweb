@@ -36,7 +36,7 @@ export default function BlogAdminPage() {
     <div>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <PageHeader title="Blog" subtitle="Write, edit, and publish posts for the public blog." />
-        <Link href="/admin/blog/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold" style={{ background: "#1E1E1E", color: "#fff" }}>
+        <Link href="/admin/blog/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold" style={{ background: "var(--o-inverse)", color: "#fff" }}>
           <Plus className="w-4 h-4" />New post
         </Link>
       </div>
@@ -50,7 +50,7 @@ export default function BlogAdminPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : list.length === 0 ? (
         <Empty label="No posts yet. Create your first one." />
       ) : (
@@ -59,27 +59,27 @@ export default function BlogAdminPage() {
             <div key={p.id} className="bg-white rounded-[18px] border border-black/[0.05] p-4 flex items-center gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2.5 mb-0.5 flex-wrap">
-                  <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{p.title}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={p.status === "published" ? { background: "rgba(34,197,94,0.12)", color: "#16A34A" } : { background: "rgba(0,0,0,0.06)", color: "#777" }}>
+                  <span className="font-semibold text-sm" style={{ color: "var(--o-text)" }}>{p.title}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={p.status === "published" ? { background: "rgba(34,197,94,0.12)", color: "var(--o-success)" } : { background: "rgba(0,0,0,0.06)", color: "var(--o-muted)" }}>
                     {p.status}
                   </span>
                   {(p.origin === "auto" || p.origin === "claude") && (
-                    <span title="Written with Claude from the week's news — check it before sending for review" className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(197,178,122,0.18)", color: "#7A6020" }}>
+                    <span title="Written with Claude from the week's news — check it before sending for review" className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(197,178,122,0.18)", color: "var(--o-accent-text)" }}>
                       {p.origin === "claude" ? "Claude draft" : "Auto draft"}
                     </span>
                   )}
                 </div>
-                <p className="text-xs truncate" style={{ color: "#999" }}>
+                <p className="text-xs truncate" style={{ color: "var(--o-faint)" }}>
                   {p.author?.name ? `${p.author.name} · ` : ""}
                   {p.status === "published" && p.published_at ? `Published ${formatDate(p.published_at)}` : `Updated ${formatDate(p.updated_at)}`}
                 </p>
               </div>
               {p.status === "published" && (
-                <a href={`/blog/${p.slug}`} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#777" }}>
+                <a href={`/blog/${p.slug}`} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--o-muted)" }}>
                   View<ExternalLink className="w-3.5 h-3.5" />
                 </a>
               )}
-              <Link href={`/admin/blog/${p.id}/edit`} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#1E1E1E" }}>
+              <Link href={`/admin/blog/${p.id}/edit`} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text)" }}>
                 <Pencil className="w-3.5 h-3.5" />Edit
               </Link>
             </div>

@@ -2,19 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { MessageSquare, Mail, ShoppingCart, Loader2, ArrowRight, Target, Inbox, Clock, AlertTriangle } from "lucide-react";
+import { MessageSquare, Mail, ShoppingCart, Loader2, ArrowRight, AlertTriangle } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
-import { Sparkline, LiveDot, formatRelativeTime } from "@/components/admin/admin-ui";
+import { LiveDot, PageHeader, formatRelativeTime } from "@/components/admin/admin-ui";
+import { GraphView, KpiTile } from "@/components/admin/reporting";
+
+/* ─── Insights → Overview ─────────────────────────────────────────────────────
+   The company at a glance, as an Odoo-style dashboard: headline numbers with
+   their comparison, then reporting views (graph ⇄ pivot) for the enquiry
+   funnel, demand, lead sources and outreach. Refreshes itself.           */
 
 type Money = { UGX: number; USD: number };
 
-type ActivityItem = {
-  type: "enquiry" | "order" | "message";
-  title: string;
-  meta: string;
-  created_at: string;
-  href: string;
-};
+type ActivityItem = { type: "enquiry" | "order" | "message"; title: string; meta: string; created_at: string; href: string };
 
 type Stats = {
   messages_unread: number;
@@ -26,504 +26,252 @@ type Stats = {
     avg_response_hours: number | null;
   };
   orders: {
-    total: number; pending: number;
-    by_status: Record<string, number>;
-    this_month: number; last_month: number;
-    pending_value: Money; revenue: Money;
+    total: number; pending: number; by_status: Record<string, number>;
+    this_month: number; last_month: number; pending_value: Money; revenue: Money;
   };
   prospects: {
     total: number; reached: number; converted: number; needs_fixing: number;
-    by_status: Record<string, number>;
-    by_category: Record<string, number>;
+    by_status: Record<string, number>; by_category: Record<string, number>;
   };
   lead_sources?: {
     by_source: { source: string; count: number; converted: number }[];
     by_campaign: { campaign: string; count: number }[];
     tracked_from: string | null;
   };
-  trends?: {
-    labels: string[];
-    enquiries: number[];
-    orders: number[];
-  };
+  trends?: { labels: string[]; enquiries: number[]; orders: number[] };
   recent_activity?: ActivityItem[];
 };
 
 type Alerts = {
-  stale_contacts: {
-    count: number;
-    items: { email: string; name: string; stage: string; owner: { id: number; name: string } | null; last_activity: string; days_idle: number }[];
-  };
-  overdue_tasks: {
-    count: number;
-    items: { id: number; title: string; due_date: string; assignee: { id: number; name: string } | null }[];
-  };
-  unactioned_enquiries: {
-    count: number;
-    items: { id: number; name: string; product_category: string | null; created_at: string }[];
-  };
+  stale_contacts: { count: number; items: { email: string; name: string }[] };
+  overdue_tasks: { count: number; items: { id: number; title: string }[] };
+  unactioned_enquiries: { count: number; items: { id: number; name: string }[] };
 };
 
-/** The slice of /admin/google-ads/summary the overview shows. 403 for staff without the module. */
+/** The slice of /admin/google-ads/summary shown here. 403 for staff without the module. */
 type AdsGlance = {
   connected: boolean;
   currency: string | null;
   totals: { cost: number; clicks: number; leads: number; won: number; cost_per_lead: number | null };
+  previous: { cost: number; leads: number };
 };
 
 const POLL_MS = 45_000;
 const ADS_POLL_MS = 5 * 60_000;
 
-const ACTIVITY_ICON: Record<ActivityItem["type"], typeof Mail> = {
-  enquiry: MessageSquare,
-  order: ShoppingCart,
-  message: Mail,
-};
+const ACTIVITY_ICON: Record<ActivityItem["type"], typeof Mail> = { enquiry: MessageSquare, order: ShoppingCart, message: Mail };
 
 const PRODUCTS: [string, string][] = [
-  ["FET", "Fuel Eco Tech"],
-  ["SEAL", "SEAL Wound Spray"],
-  ["COFFEE", "Coffee (wholesale/export)"],
-  ["LOGISTICS", "Logistics"],
-  ["GENERAL", "General"],
+  ["FET", "Fuel Eco Tech"], ["SEAL", "SEAL Wound Spray"], ["COFFEE", "Coffee"], ["LOGISTICS", "Logistics"], ["GENERAL", "General"],
 ];
-
 const PIPELINE: [string, string][] = [
-  ["new", "New"],
-  ["in_progress", "In progress"],
-  ["quoted", "Quoted"],
-  ["converted", "Converted"],
-  ["closed", "Closed"],
+  ["new", "New"], ["in_progress", "In progress"], ["quoted", "Quoted"], ["converted", "Converted"], ["closed", "Closed"],
 ];
+const INDUSTRY: Record<string, string> = {
+  CARGO: "Cargo", DISTRIBUTOR: "Distributors", CONSTRUCTION: "Construction", MANUFACTURING: "Manufacturing",
+  PUBLIC_TRANSPORT: "Public transport", SCHOOL: "Schools", FARMER: "Farmers", SPARE_PARTS: "Spare parts", CAR_BOND: "Car bonds", FUNERAL: "Funeral",
+};
 
-const fmtUGX = (n: number) => `UGX ${n.toLocaleString("en-US")}`;
-const fmtUSD = (n: number) => `$${(n / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+/** "TRAVEL_COMPANY" → "Travel company" for categories without a label above. */
+const pretty = (k: string) => k.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+const num = (n: number) => n.toLocaleString("en-US");
+const ugx = (n: number) => `UGX ${Math.round(n).toLocaleString("en-US")}`;
+const usd = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const money = (m: Money) => [m.UGX ? ugx(m.UGX) : "", m.USD ? usd(m.USD) : ""].filter(Boolean).join(" · ") || "—";
+const adsMoney = (n: number | null, cur: string | null) =>
+  n == null ? "—" : (cur ?? "UGX") === "UGX" ? ugx(n) : `${cur} ${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 
-/** Show both currencies, or a dash when there's nothing yet. */
-function money(m: Money): string {
-  const parts: string[] = [];
-  if (m.UGX) parts.push(fmtUGX(m.UGX));
-  if (m.USD) parts.push(fmtUSD(m.USD));
-  return parts.length ? parts.join("  ·  ") : "—";
-}
-
-export default function AdminDashboard() {
+export default function AdminOverview() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [alerts, setAlerts] = useState<Alerts | null>(null);
+  const [ads, setAds] = useState<AdsGlance | null>(null);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [now, setNow] = useState<number | null>(null);
-  const [ads, setAds] = useState<AdsGlance | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const res = await apiAdmin<{ data: Stats }>("/admin/stats");
-      setStats(res.data);
+      setStats((await apiAdmin<{ data: Stats }>("/admin/stats")).data);
       setLastUpdated(Date.now());
       setError("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     }
-    try {
-      const res = await apiAdmin<{ data: Alerts }>("/admin/alerts");
-      setAlerts(res.data);
-    } catch {
-      setAlerts(null);
-    }
+    apiAdmin<{ data: Alerts }>("/admin/alerts").then((r) => setAlerts(r.data)).catch(() => setAlerts(null));
   }, []);
 
   const loadAds = useCallback(async () => {
-    try {
-      const res = await apiAdmin<{ data: AdsGlance }>("/admin/google-ads/summary?period=7d");
-      setAds(res.data);
-    } catch {
-      setAds(null); // no google_ads module, or the API is down: the card hides
-    }
+    try { setAds((await apiAdmin<{ data: AdsGlance }>("/admin/google-ads/summary?period=30d")).data); }
+    catch { setAds(null); } // no google_ads module, or the API is down: the tiles hide
   }, []);
 
-  useEffect(() => {
-    load();
-    const id = setInterval(load, POLL_MS);
-    return () => clearInterval(id);
-  }, [load]);
+  useEffect(() => { load(); const id = setInterval(load, POLL_MS); return () => clearInterval(id); }, [load]);
+  useEffect(() => { loadAds(); const id = setInterval(loadAds, ADS_POLL_MS); return () => clearInterval(id); }, [loadAds]);
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
 
-  useEffect(() => {
-    loadAds();
-    const id = setInterval(loadAds, ADS_POLL_MS);
-    return () => clearInterval(id);
-  }, [loadAds]);
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
+  const attention = alerts ? [
+    { n: alerts.unactioned_enquiries.count, label: "new enquiries unactioned for 24h+", href: "/admin/enquiries", items: alerts.unactioned_enquiries.items.map((e) => e.name) },
+    { n: alerts.stale_contacts.count, label: "contacts going cold", href: "/admin/pipeline", items: alerts.stale_contacts.items.map((c) => c.name || c.email) },
+    { n: alerts.overdue_tasks.count, label: "overdue tasks", href: "/admin/tasks", items: alerts.overdue_tasks.items.map((t) => t.title) },
+  ].filter((a) => a.n > 0) : [];
 
   return (
     <div>
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
-        <h1 className="c-title">Overview</h1>
-        {lastUpdated && (
-          <div className="flex items-center gap-2 text-xs" style={{ color: "#999" }}>
-            <LiveDot />
-            Live · updated {now ? formatRelativeTime(new Date(lastUpdated).toISOString(), now) : "just now"}
-          </div>
-        )}
-      </div>
-      <p className="text-sm mb-8" style={{ color: "#777777" }}>Enquiry funnel, conversion, and orders at a glance. Refreshes automatically.</p>
+      <PageHeader
+        title="Overview"
+        subtitle="Enquiries, sales and outreach at a glance."
+        actions={lastUpdated ? (
+          <span className="flex items-center gap-2 text-[13px] text-ink-muted">
+            <LiveDot />Live · updated {now ? formatRelativeTime(new Date(lastUpdated).toISOString(), now) : "just now"}
+          </span>
+        ) : undefined}
+      />
 
-      {error && (
-        <div className="rounded-2xl p-5 mb-6" style={{ background: "rgba(192,57,43,0.08)", border: "1px solid rgba(192,57,43,0.25)" }}>
-          <p className="text-sm" style={{ color: "#C0392B" }}>Couldn&apos;t load stats: {error}. Is the backend running?</p>
-        </div>
-      )}
-
-      {!stats && !error && (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777777" }}>
-          <Loader2 className="w-4 h-4 animate-spin" />Loading…
-        </div>
-      )}
+      {error && <p className="c-panel px-4 py-3 mb-4 text-[14px] text-alert-ink">Couldn&apos;t load the numbers: {error}</p>}
+      {!stats && !error && <p className="flex items-center gap-2 text-[14px] text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</p>}
 
       {stats && (
-        <div className="space-y-6">
-          {/* ── Headline KPIs ─────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <Kpi
-              icon={MessageSquare}
-              value={stats.enquiries.total}
-              label="Total enquiries"
-              sub={deltaLabel(stats.enquiries.this_month, stats.enquiries.last_month)}
-              href="/admin/enquiries"
-              trend={stats.trends?.enquiries}
-              trendColor="#C5B27A"
-            />
-            <Kpi
-              icon={Target}
-              value={`${stats.enquiries.conversion_rate}%`}
-              label="Conversion rate"
-              sub={`${stats.enquiries.converted} converted to order`}
-            />
-            <Kpi
-              icon={Inbox}
-              value={stats.enquiries.open}
-              label="Open enquiries"
-              sub="New + in progress"
-              href="/admin/enquiries"
-            />
-            <Kpi
-              icon={Clock}
-              value={stats.enquiries.avg_response_hours != null ? `${stats.enquiries.avg_response_hours}h` : "—"}
-              label="Avg first response"
-              sub={stats.enquiries.avg_response_hours != null ? "Submission → first reply" : "No replies yet"}
-            />
+        <div className="space-y-4">
+          {/* ── Headline numbers ─────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+            <KpiTile label="Enquiries this month" value={num(stats.enquiries.this_month)} now={stats.enquiries.this_month} before={stats.enquiries.last_month} href="/admin/enquiries" />
+            <KpiTile label="Open enquiries" value={num(stats.enquiries.open)} sub="New + in progress" href="/admin/enquiries" />
+            <KpiTile label="Conversion rate" value={`${stats.enquiries.conversion_rate}%`} sub={`${stats.enquiries.converted} of ${num(stats.enquiries.total)} became orders`} />
+            <KpiTile label="First reply" value={stats.enquiries.avg_response_hours != null ? `${stats.enquiries.avg_response_hours} h` : "—"} sub="Average, submission → reply" />
+            <KpiTile label="Orders this month" value={num(stats.orders.this_month)} now={stats.orders.this_month} before={stats.orders.last_month} href="/admin/orders" />
+            <KpiTile label="Revenue received" value={money(stats.orders.revenue)} sub="Paid orders, all time" />
           </div>
 
-          {/* ── Needs attention ───────────────────────────────────────────── */}
-          {alerts && (alerts.stale_contacts.count > 0 || alerts.overdue_tasks.count > 0 || alerts.unactioned_enquiries.count > 0) && (
-            <Card title="Needs attention">
-              <div className="space-y-4">
-                {alerts.stale_contacts.count > 0 && (
-                  <AlertRow
-                    href="/admin/pipeline"
-                    label={`${alerts.stale_contacts.count} contact${alerts.stale_contacts.count === 1 ? "" : "s"} going cold`}
-                    items={alerts.stale_contacts.items.map((c) => c.name || c.email)}
-                  />
-                )}
-                {alerts.overdue_tasks.count > 0 && (
-                  <AlertRow
-                    href="/admin/tasks"
-                    label={`${alerts.overdue_tasks.count} overdue task${alerts.overdue_tasks.count === 1 ? "" : "s"}`}
-                    items={alerts.overdue_tasks.items.map((t) => t.title)}
-                  />
-                )}
-                {alerts.unactioned_enquiries.count > 0 && (
-                  <AlertRow
-                    href="/admin/enquiries"
-                    label={`${alerts.unactioned_enquiries.count} new enquir${alerts.unactioned_enquiries.count === 1 ? "y" : "ies"} unactioned (24h+)`}
-                    items={alerts.unactioned_enquiries.items.map((e) => e.name)}
-                  />
-                )}
-              </div>
-            </Card>
-          )}
-
-          {/* ── Enquiries by product + pipeline ──────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card title="Enquiries by product">
-              {(() => {
-                const max = Math.max(1, ...PRODUCTS.map(([k]) => stats.enquiries.by_product[k] ?? 0));
-                return (
-                  <div className="space-y-3.5">
-                    {PRODUCTS.map(([key, label]) => {
-                      const n = stats.enquiries.by_product[key] ?? 0;
-                      return (
-                        <div key={key}>
-                          <div className="flex items-baseline justify-between mb-1.5">
-                            <span className="text-xs font-medium" style={{ color: "#555" }}>{label}</span>
-                            <span className="text-xs font-bold" style={{ color: "#1E1E1E" }}>{n}</span>
-                          </div>
-                          <div style={{ height: "8px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${(n / max) * 100}%`, borderRadius: "999px", background: "linear-gradient(90deg, #C5B27A, #D4C49A)", transition: "width .4s" }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </Card>
-
-            <Card title="Enquiry pipeline">
-              <div className="grid grid-cols-5 gap-2">
-                {PIPELINE.map(([key, label]) => (
-                  <div key={key} className="text-center rounded-xl py-4" style={{ background: "#F8F7F5" }}>
-                    <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "28px", fontWeight: 700, lineHeight: 1, color: "#1E1E1E" }}>
-                      {stats.enquiries.by_status[key] ?? 0}
-                    </p>
-                    <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#999" }}>{label}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-4 text-xs" style={{ color: "#999" }}>
-                Quote-based products (FET, SEAL, Logistics) and coffee wholesale move through this pipeline.
-              </p>
-            </Card>
-          </div>
-
-          {/* ── Where enquiries come from ────────────────────────────────
-              The channel breakdown. Added after the August operations review,
-              where "how much are we spending on Google Ads and what did it
-              produce?" turned out to be unanswerable. `converted` is shown
-              beside every channel because volume on its own is what made the
-              ad spend look like it was working. */}
-          {stats.lead_sources && stats.lead_sources.by_source.length > 0 && (
-            <Card title="Where enquiries come from">
-              {(() => {
-                const rows = stats.lead_sources!.by_source;
-                const max = Math.max(1, ...rows.map((r) => r.count));
-                return (
-                  <>
-                    <div className="space-y-3.5">
-                      {rows.map((r) => (
-                        <div key={r.source}>
-                          <div className="flex items-baseline justify-between mb-1.5 gap-3">
-                            <span className="text-xs font-medium truncate" style={{ color: r.source === "unknown" ? "#AAA" : "#555" }}>
-                              {r.source}
-                            </span>
-                            <span className="text-xs shrink-0" style={{ color: "#999" }}>
-                              <span className="font-bold" style={{ color: "#1E1E1E" }}>{r.count}</span>
-                              {r.converted > 0 && <> · {r.converted} won</>}
-                            </span>
-                          </div>
-                          <div style={{ height: "8px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
-                            <div style={{
-                              height: "100%",
-                              width: `${(r.count / max) * 100}%`,
-                              borderRadius: "999px",
-                              background: r.source === "unknown"
-                                ? "#E2E2E2"
-                                : "linear-gradient(90deg, #C5B27A, #D4C49A)",
-                              transition: "width .4s",
-                            }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="mt-4 text-xs leading-relaxed" style={{ color: "#999" }}>
-                      &ldquo;Unknown&rdquo; is every enquiry taken before source tracking was added
-                      &mdash; not the same thing as &ldquo;direct&rdquo;. &ldquo;Direct&rdquo; means no campaign tag and
-                      no referring site, which also covers links opened from WhatsApp,
-                      a PDF, or a typed address.
-                    </p>
-                  </>
-                );
-              })()}
-            </Card>
-          )}
-
-          {/* ── Orders & revenue ─────────────────────────────────────────── */}
-          <Card title="Orders & revenue" href="/admin/orders">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <Metric label="Orders this month" value={String(stats.orders.this_month)} sub={`${stats.orders.total} all-time`} trend={stats.trends?.orders} trendColor="#7A6020" />
-              <Metric label="Awaiting fulfilment" value={String(stats.orders.pending)} sub={money(stats.orders.pending_value)} />
-              <Metric label="Revenue (paid)" value={money(stats.orders.revenue)} sub="UGX & USD shown separately" />
-            </div>
-            <p className="mt-5 text-xs leading-relaxed" style={{ color: "#999" }}>
-              Coffee retail checkout is currently switched off pending confirmed prices, so order volume is light by design.
-              Quote-based sales (FET, SEAL, Logistics) are tracked through enquiries above.
-            </p>
-          </Card>
-
-          {/* ── FET prospect outreach ────────────────────────────────────── */}
-          <Card title="FET prospect outreach" href="/admin/prospects">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-              <Metric label="Total prospects" value={String(stats.prospects.total)} sub="Across all industries" />
-              <Metric label="Reached" value={String(stats.prospects.reached)} sub="Contacted / responded" />
-              <Metric label="Converted" value={String(stats.prospects.converted)} sub="Became enquiries" />
-              <Metric label="Need fixing" value={String(stats.prospects.needs_fixing)} sub="Bad / missing contact" />
-            </div>
-            {(() => {
-              const top = Object.entries(stats.prospects.by_category).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
-              const max = Math.max(1, ...top.map(([, n]) => n));
-              const LABEL: Record<string, string> = { CARGO: "Cargo", DISTRIBUTOR: "Distributors", CONSTRUCTION: "Construction", MANUFACTURING: "Manufacturing", PUBLIC_TRANSPORT: "Public transport", SCHOOL: "Schools", FARMER: "Farmers", SPARE_PARTS: "Spare parts", CAR_BOND: "Car bonds", FUNERAL: "Funeral" };
-              return (
-                <div className="mt-6 space-y-2.5">
-                  <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: "#999" }}>Top industries</p>
-                  {top.map(([k, n]) => (
-                    <div key={k}>
-                      <div className="flex items-baseline justify-between mb-1"><span className="text-xs" style={{ color: "#555" }}>{LABEL[k] ?? k}</span><span className="text-xs font-bold" style={{ color: "#1E1E1E" }}>{n}</span></div>
-                      <div style={{ height: "6px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}><div style={{ height: "100%", width: `${(n / max) * 100}%`, background: "linear-gradient(90deg,#C5B27A,#D4C49A)" }} /></div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
-          </Card>
-
-          {/* ── Google Ads (last 7 days) ─────────────────────────────────
-              Replaced the Plausible traffic card when Marketing moved the
-              budget to Google Ads. Full picture: /admin/google-ads. */}
-          {ads && (
-            <Card title="Google Ads · last 7 days" href="/admin/google-ads">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-                <Metric label="Spent" value={ads.connected ? adsMoney(ads.totals.cost, ads.currency) : "—"} sub={ads.connected ? `${ads.totals.clicks} clicks` : "Not connected yet"} />
-                <Metric label="Leads from ads" value={String(ads.totals.leads)} sub="Enquiries + messages" />
-                <Metric label="Cost per lead" value={adsMoney(ads.totals.cost_per_lead, ads.currency)} sub="Spend ÷ leads" />
-                <Metric label="Won" value={String(ads.totals.won)} sub="Converted to an order" />
-              </div>
-            </Card>
-          )}
-
-          {/* ── Recent activity ──────────────────────────────────────────── */}
-          <Card title="Recent activity">
-            {!stats.recent_activity || stats.recent_activity.length === 0 ? (
-              <p className="text-sm" style={{ color: "#999" }}>Nothing yet — new enquiries, orders, and messages will appear here.</p>
-            ) : (
-              <div className="space-y-1">
-                {stats.recent_activity.map((a, i) => {
-                  const Icon = ACTIVITY_ICON[a.type];
-                  return (
-                    <Link
-                      key={`${a.type}-${i}-${a.created_at}`}
-                      href={a.href}
-                      className="flex items-center gap-3 -mx-2 px-2 py-2.5 rounded-xl transition-colors hover:bg-black/[0.02]"
-                    >
-                      <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-                        <Icon className="w-4 h-4" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate" style={{ color: "#1E1E1E" }}>{a.title}</p>
-                        <p className="text-xs" style={{ color: "#999" }}>{a.meta}</p>
-                      </div>
-                      <span className="text-xs shrink-0" style={{ color: "#BBBBBB" }}>
-                        {now ? formatRelativeTime(a.created_at, now) : "—"}
-                      </span>
+          {/* ── Needs attention ──────────────────────────────────────────── */}
+          {attention.length > 0 && (
+            <section className="c-panel">
+              <div className="c-panel-head"><h3 className="c-panel-title">Needs attention</h3></div>
+              <ul className="divide-y divide-line">
+                {attention.map((a) => (
+                  <li key={a.label}>
+                    <Link href={a.href} className="group flex items-center gap-3 px-4 py-2.5 hover:bg-paper-deep transition-colors">
+                      <AlertTriangle className="w-4 h-4 text-alert-ink shrink-0" />
+                      <span className="text-[14px] text-ink"><strong className="font-semibold">{a.n}</strong> {a.label}</span>
+                      <span className="text-[13px] text-ink-muted truncate hidden md:inline">{a.items.slice(0, 3).filter(Boolean).join(", ")}</span>
+                      <ArrowRight className="w-4 h-4 ml-auto text-ink-muted group-hover:text-ink" />
                     </Link>
-                  );
-                })}
-              </div>
-            )}
-          </Card>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
-          {/* ── Quick links ──────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <QuickLink href="/admin/enquiries" icon={MessageSquare} label="Enquiries" sub={`${stats.enquiries.open} open`} />
-            <QuickLink href="/admin/messages" icon={Mail} label="Messages" sub={`${stats.messages_unread} unread`} />
-            <QuickLink href="/admin/orders" icon={ShoppingCart} label="Orders" sub={`${stats.orders.pending} pending`} />
+          {/* ── Day by day ───────────────────────────────────────────────── */}
+          {stats.trends && (
+            <GraphView
+              title="Enquiries and orders — last 30 days"
+              rows={stats.trends.labels.map((label, i) => ({ label, values: { enquiries: stats.trends!.enquiries[i] ?? 0, orders: stats.trends!.orders[i] ?? 0 } }))}
+              series={[{ key: "enquiries", label: "Enquiries" }, { key: "orders", label: "Orders" }]}
+              types={["line", "bar"]}
+              defaultType="line"
+              format={num}
+            />
+          )}
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <GraphView
+              title="Enquiries by product"
+              rows={PRODUCTS.map(([k, label]) => ({ label, values: { count: stats.enquiries.by_product[k] ?? 0 } }))}
+              measures={[{ key: "count", label: "Enquiries", format: num }]}
+            />
+            <GraphView
+              title="Enquiry pipeline"
+              rows={PIPELINE.map(([k, label]) => ({ label, values: { count: stats.enquiries.by_status[k] ?? 0 } }))}
+              measures={[{ key: "count", label: "Enquiries", format: num }]}
+              types={["bar", "pie"]}
+              note="Quote-based products (FET, SEAL, Logistics) and coffee wholesale move through these stages."
+            />
+          </div>
+
+          {/* ── Where leads come from ────────────────────────────────────── */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {stats.lead_sources && (
+              <GraphView
+                title="Where enquiries come from"
+                rows={stats.lead_sources.by_source.map((r) => ({ label: r.source, values: { count: r.count, converted: r.converted } }))}
+                measures={[{ key: "count", label: "Enquiries", format: num }, { key: "converted", label: "Won", format: num }]}
+                types={["bar", "pie"]}
+                note={<>&ldquo;Unknown&rdquo; is every enquiry taken before source tracking began, not &ldquo;direct&rdquo;. &ldquo;Direct&rdquo; also covers links opened from WhatsApp, a PDF or a typed address.</>}
+              />
+            )}
+            {ads ? (
+              <section className="c-panel">
+                <div className="c-panel-head">
+                  <h3 className="c-panel-title">Google Ads — last 30 days</h3>
+                  <Link href="/admin/google-ads" className="text-[13.5px] font-medium text-gold-ink hover:underline">Open report</Link>
+                </div>
+                <div className="grid grid-cols-2 gap-3 p-4">
+                  <KpiTile label="Spent" value={ads.connected ? adsMoney(ads.totals.cost, ads.currency) : "—"} sub={ads.connected ? `${num(ads.totals.clicks)} clicks` : "Google Ads not connected yet"} now={ads.connected ? ads.totals.cost : undefined} before={ads.connected ? ads.previous.cost : undefined} upIsGood={false} />
+                  <KpiTile label="Leads from ads" value={num(ads.totals.leads)} now={ads.totals.leads} before={ads.previous.leads} />
+                  <KpiTile label="Cost per lead" value={adsMoney(ads.totals.cost_per_lead, ads.currency)} sub="Spend ÷ leads" />
+                  <KpiTile label="Won" value={num(ads.totals.won)} sub="Converted to an order" />
+                </div>
+              </section>
+            ) : (
+              <GraphView
+                title="Top campaigns (tagged links)"
+                rows={(stats.lead_sources?.by_campaign ?? []).map((c) => ({ label: c.campaign, values: { count: c.count } }))}
+                measures={[{ key: "count", label: "Enquiries", format: num }]}
+                empty="No tagged campaign links yet."
+              />
+            )}
+          </div>
+
+          {/* ── Outreach ─────────────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KpiTile label="Prospects" value={num(stats.prospects.total)} sub="Across all industries" href="/admin/prospects" />
+            <KpiTile label="Reached" value={num(stats.prospects.reached)} sub="Contacted or responded" />
+            <KpiTile label="Became enquiries" value={num(stats.prospects.converted)} sub="From outreach" />
+            <KpiTile label="Need fixing" value={num(stats.prospects.needs_fixing)} sub="Bad or missing contact" href="/admin/prospects" />
+          </div>
+          <GraphView
+            title="Prospects by industry"
+            rows={Object.entries(stats.prospects.by_category).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([k, n]) => ({ label: INDUSTRY[k] ?? pretty(k), values: { count: n } }))}
+            measures={[{ key: "count", label: "Prospects", format: num }]}
+            types={["bar", "pie"]}
+          />
+
+          {/* ── Orders & recent activity ─────────────────────────────────── */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <GraphView
+              title="Orders by status"
+              rows={Object.entries(stats.orders.by_status).map(([k, n]) => ({ label: pretty(k), values: { count: n } }))}
+              measures={[{ key: "count", label: "Orders", format: num }]}
+              types={["bar", "pie"]}
+              note="Coffee retail checkout is off until prices are confirmed, so order volume is light by design."
+            />
+            <section className="c-panel xl:col-span-2">
+              <div className="c-panel-head"><h3 className="c-panel-title">Recent activity</h3></div>
+              {!stats.recent_activity?.length ? (
+                <p className="px-4 py-6 text-[14px] text-ink-muted">Nothing yet. New enquiries, orders and messages appear here.</p>
+              ) : (
+                <ul className="divide-y divide-line">
+                  {stats.recent_activity.map((a, i) => {
+                    const Icon = ACTIVITY_ICON[a.type];
+                    return (
+                      <li key={`${a.type}-${i}-${a.created_at}`}>
+                        <Link href={a.href} className="flex items-center gap-3 px-4 py-2.5 hover:bg-paper-deep transition-colors">
+                          <Icon className="w-4 h-4 text-ink-muted shrink-0" />
+                          <span className="flex-1 min-w-0">
+                            <span className="block text-[14px] text-ink truncate">{a.title}</span>
+                            <span className="block text-[13px] text-ink-muted">{a.meta}</span>
+                          </span>
+                          <span className="text-[13px] text-ink-muted shrink-0">{now ? formatRelativeTime(a.created_at, now) : ""}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
           </div>
         </div>
       )}
     </div>
-  );
-}
-
-/* ─── Bits ──────────────────────────────────────────────────────────────── */
-
-function adsMoney(n: number | null, currency: string | null): string {
-  if (n == null) return "—";
-  const cur = currency || "UGX";
-  return cur === "UGX" ? fmtUGX(Math.round(n)) : `${cur} ${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
-}
-
-function deltaLabel(thisMonth: number, lastMonth: number): string {
-  const d = thisMonth - lastMonth;
-  const arrow = d > 0 ? "▲" : d < 0 ? "▼" : "•";
-  return `${thisMonth} this month  ${arrow} ${d >= 0 ? "+" : ""}${d} vs last`;
-}
-
-function Kpi({ icon: Icon, value, label, sub, href, trend, trendColor }: { icon: typeof Target; value: string | number; label: string; sub: string; href?: string; trend?: number[]; trendColor?: string }) {
-  const inner = (
-    <>
-      <div className="flex items-center justify-between mb-4">
-        <span className="flex items-center justify-center w-11 h-11 rounded-xl" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-          <Icon className="w-5 h-5" />
-        </span>
-        {href && <ArrowRight className="w-4 h-4 arrow-nudge" style={{ color: "#CCCCCC" }} />}
-      </div>
-      <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "40px", fontWeight: 700, lineHeight: 1, color: "#1E1E1E" }}>{value}</p>
-      <p className="mt-2 text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
-      <p className="text-xs" style={{ color: "#999999" }}>{sub}</p>
-      {trend && <Sparkline data={trend} color={trendColor} />}
-    </>
-  );
-  const cls = "block bg-white rounded-[24px] p-6 border border-black/[0.05]";
-  return href ? <Link href={href} className={`group ${cls} hover-lift`}>{inner}</Link> : <div className={cls}>{inner}</div>;
-}
-
-function Card({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-white rounded-[24px] p-6 border border-black/[0.05]">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#777" }}>{title}</h2>
-        {href && <Link href={href} className="text-xs font-semibold inline-flex items-center gap-1 hover:underline" style={{ color: "#7A6020" }}>View<ArrowRight className="w-3 h-3" /></Link>}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function Metric({ label, value, sub, trend, trendColor }: { label: string; value: string; sub: string; trend?: number[]; trendColor?: string }) {
-  return (
-    <div className="rounded-xl p-5" style={{ background: "#F8F7F5" }}>
-      <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "26px", fontWeight: 700, lineHeight: 1.1, color: "#1E1E1E" }}>{value}</p>
-      <p className="mt-2 text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
-      <p className="text-xs" style={{ color: "#999" }}>{sub}</p>
-      {trend && <Sparkline data={trend} color={trendColor} />}
-    </div>
-  );
-}
-
-function AlertRow({ href, label, items }: { href: string; label: string; items: string[] }) {
-  const shown = items.slice(0, 3).filter(Boolean);
-  const extra = items.length - shown.length;
-  return (
-    <Link href={href} className="flex items-start gap-3 -mx-2 px-2 py-2.5 rounded-xl transition-colors hover:bg-black/[0.02]">
-      <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: "rgba(192,57,43,0.1)", color: "#C0392B" }}>
-        <AlertTriangle className="w-4 h-4" />
-      </span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
-        {shown.length > 0 && (
-          <p className="text-xs truncate" style={{ color: "#999" }}>
-            {shown.join(", ")}{extra > 0 ? `, +${extra} more` : ""}
-          </p>
-        )}
-      </div>
-      <ArrowRight className="w-4 h-4 arrow-nudge shrink-0 mt-2.5" style={{ color: "#CCCCCC" }} />
-    </Link>
-  );
-}
-
-function QuickLink({ href, icon: Icon, label, sub }: { href: string; icon: typeof Mail; label: string; sub: string }) {
-  return (
-    <Link href={href} className="group flex items-center gap-3 bg-white rounded-[20px] p-4 border border-black/[0.05] hover-lift">
-      <span className="flex items-center justify-center w-10 h-10 rounded-xl" style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
-        <Icon className="w-5 h-5" />
-      </span>
-      <div className="flex-1">
-        <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{label}</p>
-        <p className="text-xs" style={{ color: "#999" }}>{sub}</p>
-      </div>
-      <ArrowRight className="w-4 h-4 arrow-nudge" style={{ color: "#CCCCCC" }} />
-    </Link>
   );
 }

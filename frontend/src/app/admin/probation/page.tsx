@@ -19,7 +19,7 @@ export default function ProbationPage() {
     apiAdmin<{ data: Row[] }>("/admin/probation").then((r) => setRows(r.data)).catch(() => setRows([])).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   return (
     <div className="pb-12">
@@ -35,13 +35,13 @@ export default function ProbationPage() {
               <div key={r.id} className="bg-white rounded-[16px] border p-4 flex items-center gap-4 flex-wrap" style={{ borderColor: urgent ? "#C0392B" : "rgba(0,0,0,0.06)" }}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{r.name}</span>
-                    {r.department && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>{r.department}</span>}
+                    <span className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{r.name}</span>
+                    {r.department && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>{r.department}</span>}
                   </div>
-                  <p className="text-xs mt-1" style={{ color: "#999" }}>
+                  <p className="text-xs mt-1" style={{ color: "var(--o-faint)" }}>
                     {r.job_title ?? "—"} · started {fmt(r.start_date)} · supervisor {r.supervisor ?? "— none —"}
                   </p>
-                  <p className="text-xs mt-1" style={{ color: "#777" }}>
+                  <p className="text-xs mt-1" style={{ color: "var(--o-muted)" }}>
                     Reports: <strong>{r.reports_submitted}</strong> submitted, <strong>{r.reports_reviewed}</strong> reviewed
                   </p>
                 </div>
@@ -49,7 +49,7 @@ export default function ProbationPage() {
                   <div className="inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-full" style={{ background: urgent ? "rgba(192,57,43,0.1)" : "rgba(197,178,122,0.16)", color: urgent ? "#C0392B" : "#7A6020" }}>
                     <Hourglass className="w-3.5 h-3.5" />{r.days_remaining} day{r.days_remaining === 1 ? "" : "s"} left
                   </div>
-                  <p className="text-[11px] mt-1" style={{ color: "#999" }}>ends {fmt(r.probation_ends)}</p>
+                  <p className="text-[11px] mt-1" style={{ color: "var(--o-faint)" }}>ends {fmt(r.probation_ends)}</p>
                 </div>
               </div>
             );

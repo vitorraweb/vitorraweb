@@ -39,7 +39,7 @@ export default function MessagesPage() {
       <PageHeader title="Messages" subtitle="General messages from the contact form." />
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : list.length === 0 ? (
         <Empty label="No messages yet." />
       ) : (
@@ -50,22 +50,22 @@ export default function MessagesPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5 mb-1">
                     <span className="font-semibold text-sm" style={{ color: m.status === "unread" ? "#1E1E1E" : "#666" }}>{m.name}</span>
-                    {m.subject && <span className="text-xs truncate" style={{ color: "#999" }}>— {m.subject}</span>}
+                    {m.subject && <span className="text-xs truncate" style={{ color: "var(--o-faint)" }}>— {m.subject}</span>}
                   </div>
-                  <p className="text-xs truncate" style={{ color: "#999999" }}>{m.email} · {formatDate(m.created_at)}</p>
+                  <p className="text-xs truncate" style={{ color: "var(--o-faint)" }}>{m.email} · {formatDate(m.created_at)}</p>
                 </div>
                 <StatusBadge status={m.status} />
-                <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === m.id ? "rotate-180" : ""}`} style={{ color: "#BBBBBB" }} />
+                <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === m.id ? "rotate-180" : ""}`} style={{ color: "var(--o-faint)" }} />
               </button>
 
               {open === m.id && (
                 <div className="px-5 pb-5 pt-1 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-                  <a href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject ?? "Your message")}`} className="flex items-center gap-1.5 text-xs mb-4 mt-4 hover:underline" style={{ color: "#7A6020" }}>
+                  <a href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject ?? "Your message")}`} className="flex items-center gap-1.5 text-xs mb-4 mt-4 hover:underline" style={{ color: "var(--o-accent-text)" }}>
                     <Mail className="w-3.5 h-3.5" />Reply to {m.email}
                   </a>
-                  <p className="text-sm leading-relaxed p-4 rounded-xl" style={{ color: "#444", background: "#F8F7F5" }}>{m.message}</p>
+                  <p className="text-sm leading-relaxed p-4 rounded-xl" style={{ color: "var(--o-text-2)", background: "var(--o-surface-2)" }}>{m.message}</p>
                   {m.status !== "unread" && (
-                    <p className="flex items-center gap-1.5 text-xs mt-3" style={{ color: "#16A34A" }}><Check className="w-3.5 h-3.5" />Marked as read</p>
+                    <p className="flex items-center gap-1.5 text-xs mt-3" style={{ color: "var(--o-success)" }}><Check className="w-3.5 h-3.5" />Marked as read</p>
                   )}
                 </div>
               )}

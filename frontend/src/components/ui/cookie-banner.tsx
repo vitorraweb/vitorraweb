@@ -31,7 +31,8 @@ export function CookieBanner() {
   }, []);
 
   // Unattended reception kiosk — nobody is present to dismiss a consent banner.
-  if (pathname?.startsWith("/display")) return null;
+  // Staff tools set no optional cookies (the Google tag never runs there).
+  if (["/display", "/admin", "/staff"].some((p) => pathname === p || pathname?.startsWith(`${p}/`))) return null;
 
   const choose = (value: CookieConsent) => {
     writeConsent(value);

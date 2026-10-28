@@ -1271,123 +1271,296 @@
 .q-inline-link:hover { color: var(--color-gold-ink); }
 
 /* ═══ Admin console ════════════════════════════════════════════════════════════
-   The back office is a work tool, not a brochure: dense, quiet, fast to scan.
-   Same palette and type as the public site, tighter rhythm. The `c-` classes
-   are the console's primitives; the scoped rules below bring older screens
-   (soft 20px cards, pill buttons) into the same flat, squared language
-   without rewriting each one.                                               */
-@layer components {
-  .c-icon-btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 2.25rem; height: 2.25rem; border-radius: var(--radius-frame);
-    color: var(--color-ink-soft); transition: background-color .15s, color .15s;
-  }
-  .c-icon-btn:hover, .c-icon-btn[aria-current="page"] { background: var(--color-paper-deep); color: var(--color-ink); }
+   An Odoo-style back office: a dark top bar carrying the current app and its
+   menu, a control panel per screen (breadcrumb, actions, search), dense list
+   views, flat white sheets on a grey canvas, and reporting views for the
+   numbers. System fonts at readable sizes — a work tool, not a brochure.
 
-  .c-menu-link {
-    display: inline-flex; align-items: center; padding: 0 .75rem;
-    font-size: 13px; color: var(--color-ink-soft);
-    border-bottom: 2px solid transparent; margin-bottom: -1px;
-    transition: color .15s, border-color .15s;
-  }
-  .c-menu-link:hover { color: var(--color-ink); }
-  .c-menu-link[aria-current="page"] { color: var(--color-ink); border-bottom-color: var(--color-gold); font-weight: 500; }
+   Colour comes from the --o-* tokens only, so light and dark are one switch:
+   `data-theme` on .admin-console (set by the layout from the viewer's choice
+   or the system setting). The tokens are also defined at :root, so console
+   components reused by the staff portal still render in light.          */
 
-  .c-search-trigger {
-    display: inline-flex; align-items: center; gap: .5rem; height: 2rem; padding: 0 .625rem;
-    border: 1px solid var(--color-line); border-radius: var(--radius-frame);
-    background: var(--color-paper-deep); color: var(--color-ink-muted); font-size: 12.5px;
-    transition: border-color .15s, color .15s;
-  }
-  .c-search-trigger:hover { border-color: var(--color-line-strong); color: var(--color-ink); }
-  @media (min-width: 1024px) { .c-search-trigger { min-width: 15rem; } .c-search-trigger .c-kbd { margin-left: auto; } }
-
-  .c-kbd {
-    display: inline-flex; align-items: center; height: 1.25rem; padding: 0 .35rem;
-    border: 1px solid var(--color-line); border-radius: var(--radius-edge);
-    background: var(--color-paper); font: 500 10.5px/1 var(--font-sans, inherit); color: var(--color-ink-muted);
-  }
-
-  /* Page furniture */
-  .c-page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .75rem 1.5rem; margin-bottom: 1.25rem; }
-  .c-title { font-family: var(--font-playfair), Georgia, serif; font-size: 24px; line-height: 1.15; font-weight: 400; color: var(--color-ink); letter-spacing: -0.01em; }
-  .c-subtitle { font-size: 13px; color: var(--color-ink-muted); margin-top: .25rem; }
-
-  .c-panel { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-frame); }
-  .c-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; border-bottom: 1px solid var(--color-line); }
-  .c-panel-title { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--color-ink-muted); }
-
-  .c-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .5rem; background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-frame); margin-bottom: .75rem; }
-
-  .c-input, .c-select {
-    height: 2rem; padding: 0 .625rem; font-size: 13px; color: var(--color-ink);
-    background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-edge);
-    outline: none; transition: border-color .15s;
-  }
-  .c-input:focus, .c-select:focus { border-color: var(--color-ink); }
-  .c-select { padding-right: 1.75rem; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%236B6B6B' stroke-width='1.5'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .6rem center; }
-  .c-select[data-active="true"], .c-btn[data-active="true"] { border-color: var(--color-gold); background-color: color-mix(in oklab, var(--color-gold) 10%, var(--color-paper)); }
-  /* The open list always reads ink on paper. A select styled light-on-dark
-     (the bulk-action bar) otherwise passes its white text to the options,
-     which the browser draws on its own white menu: invisible words. */
-  .c-select option, .c-select optgroup { color: var(--color-ink); background-color: var(--color-paper); }
-
-  .c-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: .4rem; height: 2rem; padding: 0 .75rem;
-    font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--color-ink);
-    background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-edge);
-    transition: background-color .15s, border-color .15s, color .15s;
-  }
-  .c-btn:hover { border-color: var(--color-line-strong); background: var(--color-paper-deep); }
-  .c-btn:disabled { opacity: .55; cursor: not-allowed; }
-  .c-btn-primary { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-paper); }
-  .c-btn-primary:hover { background: #000; border-color: #000; }
-  .c-btn-ghost { border-color: transparent; background: transparent; }
-
-  .c-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
-  .c-table thead th {
-    position: sticky; top: 0; z-index: 1; background: var(--color-paper-deep);
-    text-align: left; font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-ink-muted);
-    padding: .5rem .75rem; border-bottom: 1px solid var(--color-line); white-space: nowrap;
-  }
-  .c-table tbody td { padding: .5rem .75rem; border-bottom: 1px solid var(--color-line); vertical-align: middle; color: var(--color-ink-soft); }
-  .c-table tbody tr:last-child td { border-bottom: 0; }
-  .c-table tbody tr.c-row { cursor: pointer; }
-  .c-table tbody tr.c-row:hover td { background: color-mix(in oklab, var(--color-paper-deep) 70%, var(--color-paper)); }
-  .c-table tbody tr[data-open="true"] td { background: color-mix(in oklab, var(--color-gold) 7%, var(--color-paper)); }
-
-  .c-chip {
-    display: inline-flex; align-items: center; gap: .3rem; height: 1.25rem; padding: 0 .45rem;
-    font-size: 11px; font-weight: 500; white-space: nowrap; border-radius: var(--radius-edge);
-    border: 1px solid var(--color-line); color: var(--color-ink-soft); background: var(--color-paper);
-  }
-  .c-chip::before { content: ""; width: 6px; height: 6px; border-radius: 9999px; background: currentColor; opacity: .9; }
-  .c-chip[data-tone="gold"]  { color: var(--color-gold-ink); border-color: color-mix(in oklab, var(--color-gold) 45%, transparent); background: color-mix(in oklab, var(--color-gold) 9%, var(--color-paper)); }
-  .c-chip[data-tone="blue"]  { color: #2B5797; border-color: #C9D6EA; background: #F3F6FB; }
-  .c-chip[data-tone="violet"]{ color: #5B3E96; border-color: #DCD2EE; background: #F7F4FC; }
-  .c-chip[data-tone="ok"]    { color: var(--color-ok-ink); border-color: #C9DECB; background: #F3F8F3; }
-  .c-chip[data-tone="alert"] { color: var(--color-alert-ink); border-color: #E8CACA; background: #FBF4F4; }
-  .c-chip[data-tone="muted"] { color: var(--color-ink-muted); }
-  .c-chip[data-plain]::before { display: none; }
+:root, .admin-console {
+  --o-canvas:       #F2F3F5;
+  --o-surface:      #FFFFFF;
+  --o-surface-2:    #F7F8F9;
+  --o-hover:        #EEF0F3;
+  --o-selected:     #F6F1E2;
+  --o-text:         #1F2328;
+  --o-text-2:       #3D434B;
+  --o-muted:        #59606A;   /* 6.3:1 on white */
+  --o-faint:        #6B727C;   /* 4.8:1 on white — the floor for any text */
+  --o-line:         #E1E4E8;
+  --o-line-strong:  #C7CCD3;
+  --o-accent:       #C5B27A;
+  --o-accent-text:  #7A6020;
+  --o-accent-bg:    #F7F2E3;
+  --o-brand:        #7A6020;   /* primary buttons — white text 5.9:1 */
+  --o-brand-hover:  #634E1A;
+  --o-on-brand:     #FFFFFF;
+  --o-inverse:      #1E1E1E;
+  --o-on-inverse:   #F3F1EC;
+  --o-nav-bg:       #1E1E1E;
+  --o-nav-text:     #F3F1EC;
+  --o-nav-muted:    #BDB8AD;
+  --o-nav-hover:    rgba(255,255,255,0.09);
+  --o-success:      #1F7A3A;  --o-success-bg: #E8F5EC;
+  --o-danger:       #B42318;  --o-danger-bg:  #FDECEA;
+  --o-warning:      #8A5A00;  --o-warning-bg: #FFF4D6;
+  --o-info:         #2457A6;  --o-info-bg:    #EAF1FB;
+  --o-violet:       #5B3E96;  --o-violet-bg:  #F3EFFA;
+  --o-shadow:       0 1px 2px rgba(16,24,40,0.06);
+  --o-shadow-pop:   0 12px 32px rgba(16,24,40,0.16);
+  --o-radius:       6px;
+  /* Chart series — the validated categorical order (dataviz reference). */
+  --o-series-1: #2a78d6; --o-series-2: #eb6834; --o-series-3: #1baf7a; --o-series-4: #eda100;
+  --o-series-5: #e87ba4; --o-series-6: #008300; --o-series-7: #6250d6; --o-series-8: #e34948;
+  --o-grid:         #E8EAED;
+  --o-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
 
-/* Older screens: square off the soft cards and pills so every app speaks the
-   same language. Scoped to the console so the public site is untouched. */
-.admin-console main :is(.rounded-\[24px\], .rounded-\[20px\], .rounded-\[18px\], .rounded-\[16px\], .rounded-3xl, .rounded-2xl) { border-radius: var(--radius-frame); }
-.admin-console main :is(.rounded-\[14px\], .rounded-xl) { border-radius: var(--radius-edge); }
-.admin-console main :is(button, a).rounded-full:not(.w-8, .w-7, .w-6, .w-9, .w-10) { border-radius: var(--radius-edge); }
-.admin-console main .bg-white { background-color: var(--color-paper); }
-.admin-console main :is(.shadow-sm, .shadow-md, .shadow-lg) { box-shadow: 0 1px 0 rgba(0,0,0,0.02); }
-.admin-console main .border-black\/\[0\.05\], .admin-console main .border-black\/\[0\.06\] { border-color: var(--color-line); }
-/* Serif figures and titles in older screens were set at 700; Fraunces reads
-   best light at console sizes. */
-.admin-console main [style*="font-playfair"] { font-weight: 400 !important; letter-spacing: -0.01em; }
-/* In-page section tabs (Accounting, Settings…): an underline bar, the same
-   gesture as the app menu in the top bar. */
-.c-tabs { display: flex; gap: .25rem; overflow-x: auto; border-bottom: 1px solid var(--color-line); scrollbar-width: none; }
-.c-tab { flex-shrink: 0; padding: .5rem .75rem; font-size: 13px; color: var(--color-ink-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; }
-.c-tab:hover { color: var(--color-ink); }
-.c-tab[aria-selected="true"] { color: var(--color-ink); font-weight: 500; border-bottom-color: var(--color-gold); }
-/* Small uppercase labels written as headings should not pick up the serif. */
-.admin-console main :is(h2, h3, h4, h5)[class*="uppercase"] { font-family: var(--font-inter), system-ui, sans-serif; font-weight: 600; letter-spacing: .12em; }
-.admin-console main :is(input, select, textarea).rounded-full { border-radius: var(--radius-edge); }
+.admin-console[data-theme="dark"] {
+  color-scheme: dark;
+  --o-canvas:       #111214;
+  --o-surface:      #1B1C1F;
+  --o-surface-2:    #222428;
+  --o-hover:        #2A2C31;
+  --o-selected:     #2E2818;
+  --o-text:         #ECEAE6;
+  --o-text-2:       #D2CFC9;
+  --o-muted:        #ABA79F;
+  --o-faint:        #96928B;   /* 5.4:1 on surface */
+  --o-line:         #2F3136;
+  --o-line-strong:  #464950;
+  --o-accent:       #C5B27A;
+  --o-accent-text:  #D9C995;
+  --o-accent-bg:    #2E2818;
+  --o-brand:        #C5B27A;
+  --o-brand-hover:  #D4C49A;
+  --o-on-brand:     #1E1E1E;
+  --o-inverse:      #2A2C31;
+  --o-on-inverse:   #F3F1EC;
+  --o-nav-bg:       #17181B;
+  --o-nav-text:     #F3F1EC;
+  --o-nav-muted:    #ABA79F;
+  --o-nav-hover:    rgba(255,255,255,0.07);
+  --o-success:      #6CCB8A;  --o-success-bg: #16301F;
+  --o-danger:       #F28B82;  --o-danger-bg:  #3A1D1B;
+  --o-warning:      #E8B54A;  --o-warning-bg: #33290F;
+  --o-info:         #7DB0F5;  --o-info-bg:    #18263B;
+  --o-violet:       #B9A6EE;  --o-violet-bg:  #272038;
+  --o-shadow:       0 1px 2px rgba(0,0,0,0.4);
+  --o-shadow-pop:   0 12px 32px rgba(0,0,0,0.55);
+  --o-series-1: #3987e5; --o-series-2: #d95926; --o-series-3: #199e70; --o-series-4: #c98500;
+  --o-series-5: #d55181; --o-series-6: #008300; --o-series-7: #9085e9; --o-series-8: #e66767;
+  --o-grid:         #2C2E33;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+.admin-console {
+  font-family: var(--o-font);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--o-text-2);
+  background: var(--o-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+.admin-console :is(h1, h2, h3, h4, h5, h6, .font-serif, [style*="font-playfair"]) { font-family: var(--o-font) !important; }
+.admin-console [style*="font-playfair"] { font-weight: 600 !important; letter-spacing: -0.01em; }
+.admin-console ::placeholder { color: var(--o-faint); }
+
+/* Readability: every small size used by the older screens steps up one notch. */
+.admin-console .text-\[10px\]   { font-size: 11.5px; }
+.admin-console .text-\[10\.5px\] { font-size: 12px; }
+.admin-console .text-\[11px\]   { font-size: 12px; }
+.admin-console .text-\[11\.5px\] { font-size: 12.5px; }
+.admin-console .text-xs, .admin-console .text-\[12px\] { font-size: 13px; }
+.admin-console .text-\[12\.5px\] { font-size: 13.5px; }
+.admin-console .text-\[13px\]   { font-size: 14px; }
+.admin-console .text-\[13\.5px\] { font-size: 14.5px; }
+/* Tracked uppercase micro-labels read as decoration; Odoo labels are plain. */
+.admin-console :is(.uppercase)[class*="tracking-"] { letter-spacing: .04em; }
+
+/* The control panel sits flush under the top bar. */
+.admin-console main:has(> .c-page-head:first-child, > div:first-child > .c-page-head:first-child) { padding-top: 0; }
+
+/* ── Token utilities, re-pointed at the theme ─────────────────────────────── */
+.admin-console :is(.bg-white, .bg-paper)        { background-color: var(--o-surface); }
+.admin-console .bg-paper-deep                   { background-color: var(--o-surface-2); }
+.admin-console.bg-paper-deep                    { background-color: var(--o-canvas); }
+.admin-console .bg-ink                          { background-color: var(--o-inverse); }
+.admin-console .bg-gold                         { background-color: var(--o-accent); }
+.admin-console .bg-line                         { background-color: var(--o-line); }
+.admin-console .bg-line-strong                  { background-color: var(--o-line-strong); }
+.admin-console .bg-ok-ink                       { background-color: var(--o-success); }
+.admin-console .bg-alert-ink                    { background-color: var(--o-danger); }
+.admin-console .text-ink                        { color: var(--o-text); }
+.admin-console .text-ink-soft                   { color: var(--o-text-2); }
+.admin-console .text-ink-muted                  { color: var(--o-muted); }
+.admin-console .text-ink-fg-muted               { color: var(--o-nav-muted); }
+.admin-console .text-paper                      { color: var(--o-on-inverse); }
+.admin-console .text-gold                       { color: var(--o-accent); }
+.admin-console .text-gold-ink                   { color: var(--o-accent-text); }
+.admin-console .text-ok-ink                     { color: var(--o-success); }
+.admin-console .text-alert-ink                  { color: var(--o-danger); }
+.admin-console .fill-gold                       { fill: var(--o-accent); }
+.admin-console :is(.border-line, .divide-line > * + *, [class*="border-black/"]) { border-color: var(--o-line); }
+.admin-console :is(.border-line-strong, .border-ink-line) { border-color: var(--o-line-strong); }
+.admin-console .border-ink                      { border-color: var(--o-text); }
+.admin-console .border-gold                     { border-color: var(--o-accent); }
+.admin-console .border-ok-ink                   { border-color: var(--o-success); }
+.admin-console :is(.hover\:bg-paper-deep, [class*="hover:bg-black/"]):hover { background-color: var(--o-hover); }
+.admin-console .hover\:text-ink:hover, .admin-console .group:hover .group-hover\:text-ink { color: var(--o-text); }
+.admin-console .hover\:border-ink:hover          { border-color: var(--o-text); }
+.admin-console .hover\:border-line-strong:hover  { border-color: var(--o-line-strong); }
+.admin-console .focus\:border-ink:focus          { border-color: var(--o-accent); }
+.admin-console .placeholder\:text-ink-muted::placeholder { color: var(--o-faint); }
+.admin-console :is(.shadow-sm, .shadow-md, .shadow-lg) { box-shadow: var(--o-shadow); }
+
+/* Older screens: square the soft cards and pills to the console radius. */
+.admin-console main :is(.rounded-\[24px\], .rounded-\[20px\], .rounded-\[18px\], .rounded-\[16px\], .rounded-3xl, .rounded-2xl) { border-radius: var(--o-radius); }
+.admin-console main :is(.rounded-\[14px\], .rounded-xl) { border-radius: calc(var(--o-radius) - 2px); }
+.admin-console main :is(button, a).rounded-full:not(.w-8, .w-7, .w-6, .w-9, .w-10) { border-radius: calc(var(--o-radius) - 2px); }
+.admin-console main :is(input, select, textarea).rounded-full { border-radius: calc(var(--o-radius) - 2px); }
+.admin-console :is(input, select, textarea):not([type="checkbox"], [type="radio"], [type="range"]) {
+  background-color: var(--o-surface); color: var(--o-text); border-color: var(--o-line-strong);
+}
+.admin-console :is(input, select, textarea):focus { border-color: var(--o-accent) !important; outline: none; box-shadow: 0 0 0 3px color-mix(in oklab, var(--o-accent) 22%, transparent); }
+.admin-console :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--o-brand); }
+
+@layer components {
+  /* ── Top bar (Odoo's main navbar) ─────────────────────────────────────── */
+  .o-navbar { background: var(--o-nav-bg); color: var(--o-nav-text); }
+  .c-icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2.375rem; height: 2.375rem; border-radius: var(--o-radius);
+    color: var(--o-nav-muted); transition: background-color .15s, color .15s;
+  }
+  .c-icon-btn:hover, .c-icon-btn[aria-current="page"] { background: var(--o-nav-hover); color: var(--o-nav-text); }
+  .o-brand-name { font-size: 16px; font-weight: 600; color: var(--o-nav-text); letter-spacing: -0.005em; }
+  .c-menu-link {
+    display: inline-flex; align-items: center; padding: 0 .85rem;
+    font-size: 14px; color: var(--o-nav-muted);
+    transition: color .15s, background-color .15s;
+  }
+  .c-menu-link:hover { color: var(--o-nav-text); background: var(--o-nav-hover); }
+  .c-menu-link[aria-current="page"] { color: var(--o-nav-text); background: var(--o-nav-hover); box-shadow: inset 0 -2px 0 var(--o-accent); font-weight: 500; }
+
+  .c-search-trigger {
+    display: inline-flex; align-items: center; gap: .5rem; height: 2.125rem; padding: 0 .7rem;
+    border: 1px solid rgba(255,255,255,0.14); border-radius: var(--o-radius);
+    background: rgba(255,255,255,0.06); color: var(--o-nav-muted); font-size: 13.5px;
+    transition: border-color .15s, color .15s;
+  }
+  .c-search-trigger:hover { border-color: rgba(255,255,255,0.28); color: var(--o-nav-text); }
+  @media (min-width: 1024px) { .c-search-trigger { min-width: 16rem; } .c-search-trigger .c-kbd { margin-left: auto; } }
+
+  .c-kbd {
+    display: inline-flex; align-items: center; height: 1.375rem; padding: 0 .4rem;
+    border: 1px solid var(--o-line); border-radius: 4px;
+    background: var(--o-surface-2); font: 500 11.5px/1 var(--o-font); color: var(--o-muted);
+  }
+  .o-navbar .c-kbd { background: transparent; border-color: rgba(255,255,255,0.18); color: var(--o-nav-muted); }
+
+  /* ── Control panel (title/breadcrumb · actions) ───────────────────────── */
+  /* A white band across the full window, whatever container it sits in:
+     the border-image paints past the box without widening the layout (no
+     horizontal scroll), and the bottom 1px of it is the hairline. */
+  .c-page-head {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem;
+    margin-bottom: 1.25rem; padding: .85rem 0;
+    border-image: linear-gradient(to top, var(--o-line) 1px, var(--o-surface) 1px) fill 0 // 0 100vmax;
+  }
+  .o-breadcrumb { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem; font-size: 19px; line-height: 1.25; }
+  .o-breadcrumb a { color: var(--o-accent-text); font-weight: 500; }
+  .o-breadcrumb a:hover { text-decoration: underline; }
+  .o-breadcrumb .o-sep { color: var(--o-faint); }
+  .c-title { font-family: var(--o-font); font-size: 19px; line-height: 1.25; font-weight: 600; color: var(--o-text); letter-spacing: -0.005em; }
+  .c-subtitle { font-size: 13.5px; color: var(--o-muted); margin-top: .2rem; }
+
+  /* ── Sheets & panels ──────────────────────────────────────────────────── */
+  .c-panel { background: var(--o-surface); border: 1px solid var(--o-line); border-radius: var(--o-radius); box-shadow: var(--o-shadow); }
+  .c-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; border-bottom: 1px solid var(--o-line); }
+  .c-panel-title { font-size: 14.5px; font-weight: 600; color: var(--o-text); letter-spacing: 0; text-transform: none; }
+
+  .c-toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .5rem;
+    background: var(--o-surface); border: 1px solid var(--o-line); border-radius: var(--o-radius); margin-bottom: .75rem;
+    box-shadow: var(--o-shadow);
+  }
+
+  /* ── Fields & buttons ─────────────────────────────────────────────────── */
+  .c-input, .c-select {
+    height: 2.25rem; padding: 0 .7rem; font-size: 14px; color: var(--o-text);
+    background: var(--o-surface); border: 1px solid var(--o-line-strong); border-radius: calc(var(--o-radius) - 2px);
+    outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .c-select { padding-right: 2rem; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%23888' stroke-width='1.5'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .7rem center; }
+  .c-select[data-active="true"], .c-btn[data-active="true"] { border-color: var(--o-accent); background-color: var(--o-accent-bg); }
+  .c-select option, .c-select optgroup { color: var(--o-text); background-color: var(--o-surface); }
+
+  .c-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .45rem; height: 2.25rem; padding: 0 .9rem;
+    font-size: 14px; font-weight: 500; white-space: nowrap; color: var(--o-text);
+    background: var(--o-surface); border: 1px solid var(--o-line-strong); border-radius: calc(var(--o-radius) - 2px);
+    transition: background-color .15s, border-color .15s, color .15s;
+  }
+  .c-btn:hover { background: var(--o-hover); }
+  .c-btn:disabled { opacity: .55; cursor: not-allowed; }
+  .c-btn-primary { background: var(--o-brand); border-color: var(--o-brand); color: var(--o-on-brand); }
+  .c-btn-primary:hover { background: var(--o-brand-hover); border-color: var(--o-brand-hover); }
+  .c-btn-ghost { border-color: transparent; background: transparent; }
+
+  /* ── List view ────────────────────────────────────────────────────────── */
+  .c-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+  .c-table thead th {
+    position: sticky; top: 0; z-index: 1; background: var(--o-surface-2);
+    text-align: left; font-size: 13.5px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--o-text);
+    padding: .6rem .8rem; border-bottom: 1px solid var(--o-line-strong); white-space: nowrap;
+  }
+  .c-table tbody td { padding: .55rem .8rem; border-bottom: 1px solid var(--o-line); vertical-align: middle; color: var(--o-text-2); }
+  .c-table tbody tr:last-child td { border-bottom: 0; }
+  .c-table tbody tr.c-row { cursor: pointer; }
+  .c-table tbody tr:hover td { background: var(--o-hover); }
+  .c-table tbody tr[data-open="true"] td { background: var(--o-selected); }
+  .c-table tfoot td { padding: .6rem .8rem; font-weight: 600; color: var(--o-text); border-top: 1px solid var(--o-line-strong); background: var(--o-surface-2); }
+
+  /* ── Status badges (Odoo's pill tags) ─────────────────────────────────── */
+  .c-chip {
+    display: inline-flex; align-items: center; gap: .35rem; height: 1.5rem; padding: 0 .55rem;
+    font-size: 12.5px; font-weight: 500; white-space: nowrap; border-radius: 999px;
+    border: 1px solid transparent; color: var(--o-text-2); background: var(--o-surface-2);
+  }
+  .c-chip::before { content: ""; width: 6px; height: 6px; border-radius: 9999px; background: currentColor; opacity: .9; }
+  .c-chip[data-tone="gold"]   { color: var(--o-warning); background: var(--o-warning-bg); }
+  .c-chip[data-tone="blue"]   { color: var(--o-info);    background: var(--o-info-bg); }
+  .c-chip[data-tone="violet"] { color: var(--o-violet);  background: var(--o-violet-bg); }
+  .c-chip[data-tone="ok"]     { color: var(--o-success); background: var(--o-success-bg); }
+  .c-chip[data-tone="alert"]  { color: var(--o-danger);  background: var(--o-danger-bg); }
+  .c-chip[data-tone="muted"]  { color: var(--o-muted); }
+  .c-chip[data-plain]::before { display: none; }
+
+  /* ── Reporting (graph / pivot) ────────────────────────────────────────── */
+  .o-seg { display: inline-flex; border: 1px solid var(--o-line-strong); border-radius: calc(var(--o-radius) - 2px); overflow: hidden; }
+  .o-seg > button { display: inline-flex; align-items: center; gap: .35rem; height: 2.125rem; padding: 0 .7rem; font-size: 13.5px; color: var(--o-text-2); background: var(--o-surface); }
+  .o-seg > button + button { border-left: 1px solid var(--o-line-strong); }
+  .o-seg > button:hover { background: var(--o-hover); }
+  .o-seg > button[aria-pressed="true"] { background: var(--o-accent-bg); color: var(--o-text); font-weight: 600; }
+  .o-kpi { background: var(--o-surface); border: 1px solid var(--o-line); border-radius: var(--o-radius); box-shadow: var(--o-shadow); padding: .9rem 1rem; }
+  .o-kpi-label { font-size: 13.5px; color: var(--o-muted); }
+  .o-kpi-value { font-size: 26px; line-height: 1.15; font-weight: 600; color: var(--o-text); margin-top: .2rem; font-variant-numeric: tabular-nums; }
+  .o-kpi-sub { font-size: 13px; color: var(--o-muted); margin-top: .15rem; }
+  .o-up { color: var(--o-success); } .o-down { color: var(--o-danger); }
+  .o-tooltip {
+    position: absolute; pointer-events: none; z-index: 5; min-width: 9rem;
+    background: var(--o-surface); color: var(--o-text); border: 1px solid var(--o-line-strong);
+    border-radius: calc(var(--o-radius) - 2px); box-shadow: var(--o-shadow-pop); padding: .5rem .65rem; font-size: 13px;
+  }
+}
+
+/* In-page section tabs (Accounting, Settings…): Odoo's notebook tabs. */
+.c-tabs { display: flex; gap: .25rem; overflow-x: auto; border-bottom: 1px solid var(--o-line); scrollbar-width: none; }
+.c-tab { flex-shrink: 0; padding: .6rem .9rem; font-size: 14px; color: var(--o-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; }
+.c-tab:hover { color: var(--o-text); }
+.c-tab[aria-selected="true"] { color: var(--o-text); font-weight: 600; border-bottom-color: var(--o-accent); }

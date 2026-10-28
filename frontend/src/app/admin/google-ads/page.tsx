@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Loader2, RefreshCw, Link2, Unlink, CheckCircle2, Circle, AlertTriangle } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { PageHeader, StatusBadge, formatDate, formatRelativeTime } from "@/components/admin/admin-ui";
+import { GraphView, KpiTile } from "@/components/admin/reporting";
 
 /* ─── Google Ads ──────────────────────────────────────────────────────────────
    What the ad money bought: Google's numbers (spend, clicks, search terms)
@@ -56,8 +57,6 @@ type Summary = {
 type AdAccount = { customer_id: string; name: string; manager: boolean; login_customer_id: string | null; currency: string | null };
 type ConversionAction = { id: string; name: string };
 
-/** Bar fill: brand gold stepped to pass the chart-colour checks (chroma + 3:1 on paper). */
-const BAR = "#A7862E";
 
 function money(n: number | null | undefined, currency: string | null | undefined): string {
   if (n == null) return "—";
@@ -76,11 +75,6 @@ function moneyMap(m: Money): string {
 
 const num = (n: number) => n.toLocaleString("en-US");
 
-function delta(now: number, before: number): string | null {
-  if (!before) return null;
-  const pct = Math.round(((now - before) / before) * 100);
-  return `${pct > 0 ? "▲" : pct < 0 ? "▼" : "•"} ${pct > 0 ? "+" : ""}${pct}% vs previous`;
-}
 
 export default function GoogleAdsPage() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -163,7 +157,7 @@ export default function GoogleAdsPage() {
       {status && !status.connected && <Setup status={status} onChange={() => { loadStatus(); loadSummary(); }} />}
 
       {status?.account?.last_error && status.connected && (
-        <div className="c-panel px-4 py-3 mb-4 flex items-start gap-2 text-[13px]" style={{ borderColor: "#E8CACA" }}>
+        <div className="c-panel px-4 py-3 mb-4 flex items-start gap-2 text-[13px]" style={{ borderColor: "var(--o-danger-bg)" }}>
           <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-alert-ink" />
           <span className="text-ink-soft">
             The last sync with Google failed: <strong className="text-ink">{status.account.last_error}</strong>
@@ -182,24 +176,49 @@ export default function GoogleAdsPage() {
           </p>
 
           {/* ── Headline numbers ─────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-            <Stat label="Spent" value={s.connected ? money(s.totals.cost, cur) : "—"} sub={s.connected ? delta(s.totals.cost, s.previous.cost) ?? "Google Ads cost" : "Connect to see spend"} />
-            <Stat label="Clicks" value={s.connected ? num(s.totals.clicks) : "—"} sub={s.totals.ctr != null ? `${s.totals.ctr}% of ${num(s.totals.impressions)} views` : "—"} />
-            <Stat label="Leads from ads" value={num(s.totals.leads)} sub={delta(s.totals.leads, s.previous.leads) ?? `${s.totals.enquiries} enquiries · ${s.totals.messages} messages`} />
-            <Stat label="Cost per lead" value={money(s.totals.cost_per_lead, cur)} sub="Spend ÷ leads" />
-            <Stat label="Won" value={num(s.totals.won)} sub={moneyMap(s.totals.won_value)} />
-            <Stat label="Cost per sale" value={money(s.totals.cost_per_won, cur)} sub="Spend ÷ won enquiries" />
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+            <KpiTile label="Spent" value={s.connected ? money(s.totals.cost, cur) : "—"} sub={s.connected ? undefined : "Connect to see spend"} now={s.connected ? s.totals.cost : undefined} before={s.connected ? s.previous.cost : undefined} upIsGood={false} />
+            <KpiTile label="Clicks" value={s.connected ? num(s.totals.clicks) : "—"} sub={s.totals.ctr != null ? `${s.totals.ctr}% of ${num(s.totals.impressions)} views` : undefined} now={s.connected ? s.totals.clicks : undefined} before={s.connected ? s.previous.clicks : undefined} />
+            <KpiTile label="Leads from ads" value={num(s.totals.leads)} sub={`${s.totals.enquiries} enquiries · ${s.totals.messages} messages`} now={s.totals.leads} before={s.previous.leads} />
+            <KpiTile label="Cost per lead" value={money(s.totals.cost_per_lead, cur)} sub="Spend ÷ leads" />
+            <KpiTile label="Won" value={num(s.totals.won)} sub={moneyMap(s.totals.won_value)} />
+            <KpiTile label="Cost per sale" value={money(s.totals.cost_per_won, cur)} sub="Spend ÷ won enquiries" />
           </div>
-          <p className="text-[12px] leading-relaxed text-ink-muted">
+          <p className="text-[13px] leading-relaxed text-ink-muted">
             Leads are counted by the site when a visitor arrives from a Google ad and then sends an enquiry or message. Google&apos;s own
             conversion count ({s.totals.google_conversions}) can differ: it counts calls and form starts too, and models visitors who declined cookies.
           </p>
 
           {/* ── Day by day ───────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <DailyBars title="Spend per day" rows={s.daily} pick={(d) => d.cost} format={(v) => money(v, cur)} empty={!s.connected ? "Connect Google Ads to see spend." : undefined} />
-            <DailyBars title="Leads from ads per day" rows={s.daily} pick={(d) => d.leads} format={(v) => num(v)} />
-          </div>
+          <GraphView
+            title="Day by day"
+            rows={s.daily.map((d) => ({ label: formatDay(d.date), values: { cost: d.cost, clicks: d.clicks, leads: d.leads } }))}
+            measures={[
+              ...(s.connected ? [{ key: "cost", label: "Spend", format: (v: number) => money(v, cur) }, { key: "clicks", label: "Clicks", format: num }] : []),
+              { key: "leads", label: "Leads from ads", format: num },
+            ]}
+            types={["bar", "line"]}
+            defaultType="bar"
+          />
+
+          {s.connected && s.campaigns.some((c) => c.campaign_id) && (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <GraphView
+                title="Spend by campaign"
+                rows={s.campaigns.filter((c) => c.campaign_id).map((c) => ({ label: c.name, values: { cost: c.cost, clicks: c.clicks } }))}
+                measures={[{ key: "cost", label: "Spend", format: (v) => money(v, cur) }, { key: "clicks", label: "Clicks", format: num }]}
+                types={["pie", "bar"]}
+                defaultType="pie"
+              />
+              <GraphView
+                title="Leads by campaign"
+                rows={s.campaigns.map((c) => ({ label: c.name, values: { leads: c.leads, won: c.won } }))}
+                series={[{ key: "leads", label: "Leads" }, { key: "won", label: "Won" }]}
+                types={["bar"]}
+                format={num}
+              />
+            </div>
+          )}
 
           {/* ── Campaigns ────────────────────────────────────────────────── */}
           <div className="c-panel overflow-x-auto">
@@ -315,89 +334,6 @@ function titleCase(s: string): string {
   return s.toLowerCase().replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 }
 
-function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return (
-    <div className="c-panel px-4 py-3.5">
-      <p className="text-[11px] font-semibold uppercase tracking-[.12em] text-ink-muted">{label}</p>
-      <p className="mt-1.5 text-[20px] font-semibold text-ink leading-tight">{value}</p>
-      <p className="mt-0.5 text-[11.5px] text-ink-muted truncate">{sub}</p>
-    </div>
-  );
-}
-
-/**
- * One measure per day as columns. Single series, so no legend: the title
- * names it. Hover or focus a day for its numbers; the table view below
- * carries every value for anyone not using the chart.
- */
-function DailyBars<T extends { date: string; cost: number; clicks: number; leads: number }>({
-  title, rows, pick, format, empty,
-}: { title: string; rows: T[]; pick: (r: T) => number; format: (v: number) => string; empty?: string }) {
-  const [hover, setHover] = useState<number | null>(null);
-  const values = rows.map(pick);
-  const max = Math.max(0, ...values);
-  const h = hover != null ? rows[hover] : null;
-
-  return (
-    <div className="c-panel">
-      <div className="c-panel-head">
-        <span className="c-panel-title">{title}</span>
-        <span className="text-[12px] text-ink-muted tabular-nums">
-          {h ? `${formatDay(h.date)}: ${format(pick(h))} · ${h.clicks} clicks · ${h.leads} leads` : `Total ${format(values.reduce((a, b) => a + b, 0))}`}
-        </span>
-      </div>
-      <div className="px-4 pt-4 pb-3">
-        {empty || max === 0 ? (
-          <p className="h-[140px] flex items-center justify-center text-[13px] text-ink-muted">{empty ?? "Nothing in this period."}</p>
-        ) : (
-          <>
-            <div className="relative h-[140px] flex items-end gap-[2px] border-b border-line" onMouseLeave={() => setHover(null)}>
-              <span className="absolute right-0 -top-1 text-[10.5px] text-ink-muted tabular-nums">{format(max)}</span>
-              {rows.map((r, i) => {
-                const v = pick(r);
-                return (
-                  <button
-                    key={r.date}
-                    type="button"
-                    aria-label={`${formatDay(r.date)}: ${format(v)}`}
-                    onMouseEnter={() => setHover(i)}
-                    onFocus={() => setHover(i)}
-                    onBlur={() => setHover(null)}
-                    className="flex-1 h-full flex items-end justify-center focus:outline-none"
-                  >
-                    <span
-                      className="block w-full max-w-[24px] rounded-t-[4px] transition-opacity"
-                      style={{
-                        height: v > 0 ? `${Math.max(2, (v / max) * 100)}%` : 0,
-                        background: BAR,
-                        opacity: hover == null || hover === i ? 1 : 0.35,
-                      }}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-            <div className="flex justify-between mt-1.5 text-[10.5px] text-ink-muted">
-              <span>{rows[0] && formatDay(rows[0].date)}</span>
-              <span>{rows.length > 0 && formatDay(rows[rows.length - 1].date)}</span>
-            </div>
-          </>
-        )}
-        <details className="mt-2">
-          <summary className="text-[11.5px] text-ink-muted cursor-pointer select-none">Show as table</summary>
-          <table className="c-table mt-2">
-            <thead><tr><th>Day</th><th className="text-right">{title}</th><th className="text-right">Clicks</th><th className="text-right">Leads</th></tr></thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.date}><td>{formatDay(r.date)}</td><td className="text-right">{format(pick(r))}</td><td className="text-right">{r.clicks}</td><td className="text-right">{r.leads}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </details>
-      </div>
-    </div>
-  );
-}
 
 /** First-time setup, step by step. Steps 2–4 are admin actions. */
 function Setup({ status, onChange }: { status: Status; onChange: () => void }) {

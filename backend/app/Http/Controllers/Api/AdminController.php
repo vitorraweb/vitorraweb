@@ -109,8 +109,8 @@ class AdminController extends Controller
             ->selectRaw('utm_campaign, COUNT(*) c')
             ->groupBy('utm_campaign')->orderByDesc('c')->take(10)->get();
 
-        /* ── 7-day trend lines (for KPI sparklines) ─────────────────────── */
-        $sevenDaysAgo = $now->copy()->subDays(6)->startOfDay();
+        /* ── 30-day trend (the overview's day-by-day graph) ──────────────── */
+        $sevenDaysAgo = $now->copy()->subDays(29)->startOfDay();
         $enqTrendRaw = Enquiry::where('created_at', '>=', $sevenDaysAgo)
             ->selectRaw('DATE(created_at) d, COUNT(*) c')->groupBy('d')->pluck('c', 'd');
         $ordTrendRaw = Order::where('created_at', '>=', $sevenDaysAgo)
@@ -119,10 +119,10 @@ class AdminController extends Controller
         $trendLabels = [];
         $enqTrend = [];
         $ordTrend = [];
-        for ($i = 6; $i >= 0; $i--) {
+        for ($i = 29; $i >= 0; $i--) {
             $day = $now->copy()->subDays($i);
             $key = $day->format('Y-m-d');
-            $trendLabels[] = $day->format('D');
+            $trendLabels[] = $day->format('j M');
             $enqTrend[] = (int) ($enqTrendRaw[$key] ?? 0);
             $ordTrend[] = (int) ($ordTrendRaw[$key] ?? 0);
         }

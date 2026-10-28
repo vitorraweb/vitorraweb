@@ -37,7 +37,7 @@ type ImportRun = {
 };
 
 const selectCls = "w-full text-sm rounded-xl px-3 py-2 border outline-none";
-const selectStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const selectStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 /**
  * Upload the client's own export, confirm how it should be read, then commit.
@@ -151,8 +151,8 @@ export default function FetTrialImport({
     <div className="space-y-5">
       {stage === "upload" && (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-6">
-          <p className="text-sm font-semibold mb-1" style={{ color: "#1E1E1E" }}>Upload the client&rsquo;s file</p>
-          <p className="text-xs mb-5 leading-relaxed" style={{ color: "#999" }}>
+          <p className="text-sm font-semibold mb-1" style={{ color: "var(--o-text)" }}>Upload the client&rsquo;s file</p>
+          <p className="text-xs mb-5 leading-relaxed" style={{ color: "var(--o-faint)" }}>
             Send whatever they already produce — their own Excel or CSV export, in their own layout. There is no need to
             copy it into a template first; that is what caused the mistakes this replaces.
             {trial.trips.length > 0 && " Re-uploading an updated file is safe: trips are matched on destination and date, so anything you have already decided is kept."}
@@ -160,11 +160,11 @@ export default function FetTrialImport({
 
           <label
             className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed py-10 cursor-pointer"
-            style={{ borderColor: "rgba(0,0,0,0.12)", background: "#FAFAF8" }}
+            style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface-2)" }}
           >
-            {busy ? <Loader2 className="w-7 h-7 animate-spin" style={{ color: "#C5B27A" }} /> : <Upload className="w-7 h-7" style={{ color: "#C5B27A" }} />}
-            <span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{busy ? "Reading the file…" : "Choose a file"}</span>
-            <span className="text-xs" style={{ color: "#AAA" }}>Excel or CSV, up to 8 MB</span>
+            {busy ? <Loader2 className="w-7 h-7 animate-spin" style={{ color: "var(--o-accent)" }} /> : <Upload className="w-7 h-7" style={{ color: "var(--o-accent)" }} />}
+            <span className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{busy ? "Reading the file…" : "Choose a file"}</span>
+            <span className="text-xs" style={{ color: "var(--o-faint)" }}>Excel or CSV, up to 8 MB</span>
             <input
               type="file"
               accept=".xlsx,.xls,.csv"
@@ -173,7 +173,7 @@ export default function FetTrialImport({
               onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }}
             />
           </label>
-          {msg && <p className="text-sm mt-3" style={{ color: "#C0392B" }}>{msg}</p>}
+          {msg && <p className="text-sm mt-3" style={{ color: "var(--o-danger)" }}>{msg}</p>}
         </div>
       )}
 
@@ -181,23 +181,23 @@ export default function FetTrialImport({
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-6">
           <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
             <div>
-              <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>Check before importing</p>
-              <p className="text-xs mt-0.5" style={{ color: "#999" }}>
+              <p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>Check before importing</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--o-faint)" }}>
                 <FileSpreadsheet className="w-3 h-3 inline mr-1" />{res.filename} · {res.preview.row_count} trips found
               </p>
             </div>
-            <button onClick={restart} className="text-sm font-medium" style={{ color: "#999" }}>Use a different file</button>
+            <button onClick={restart} className="text-sm font-medium" style={{ color: "var(--o-faint)" }}>Use a different file</button>
           </div>
 
           {res.saved_template && (
-            <p className="text-xs rounded-xl px-3 py-2 mb-4" style={{ background: "rgba(197,178,122,0.1)", color: "#7A6020" }}>
+            <p className="text-xs rounded-xl px-3 py-2 mb-4" style={{ background: "rgba(197,178,122,0.1)", color: "var(--o-accent-text)" }}>
               Using the layout saved for {trial.client_company} — no mapping needed unless their format has changed.
             </p>
           )}
 
           {res.sheets.length > 1 && (
             <div className="mb-5">
-              <p className="text-xs font-medium mb-1.5" style={{ color: "#888" }}>Which sheet holds the trips?</p>
+              <p className="text-xs font-medium mb-1.5" style={{ color: "var(--o-muted)" }}>Which sheet holds the trips?</p>
               <div className="flex flex-wrap gap-2">
                 {res.sheets.map((s) => (
                   <button
@@ -210,8 +210,8 @@ export default function FetTrialImport({
                       background: s.name === sheet ? "rgba(197,178,122,0.08)" : "#fff",
                     }}
                   >
-                    <span className="text-sm font-semibold block" style={{ color: "#1E1E1E" }}>{s.name}</span>
-                    <span className="text-[11px]" style={{ color: "#AAA" }}>
+                    <span className="text-sm font-semibold block" style={{ color: "var(--o-text)" }}>{s.name}</span>
+                    <span className="text-[11px]" style={{ color: "var(--o-faint)" }}>
                       {s.header_row === null ? "no headings found" : `${s.data_rows} rows`}
                     </span>
                   </button>
@@ -223,12 +223,12 @@ export default function FetTrialImport({
           {/* Ambiguous units — asked, never assumed. */}
           {res.preview.unit_questions.length > 0 && (
             <div className="rounded-2xl p-4 mb-5" style={{ background: "rgba(138,90,24,0.07)" }}>
-              <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "#8A5A18" }}>
+              <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--o-accent-text)" }}>
                 <AlertTriangle className="w-3.5 h-3.5" />One thing to confirm
               </p>
               {res.preview.unit_questions.map((q) => (
                 <div key={q.field} className="mb-3 last:mb-0">
-                  <p className="text-sm leading-relaxed mb-2" style={{ color: "#454545" }}>{q.question}</p>
+                  <p className="text-sm leading-relaxed mb-2" style={{ color: "var(--o-text-2)" }}>{q.question}</p>
                   <div className="flex gap-2">
                     {q.options.map((o) => (
                       <button
@@ -253,19 +253,19 @@ export default function FetTrialImport({
 
           {res.preview.diagnosis && (
             <div className="rounded-2xl p-4 mb-5" style={{ background: "rgba(158,59,51,0.07)" }}>
-              <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "#9E3B33" }}>
+              <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--o-danger)" }}>
                 <AlertTriangle className="w-3.5 h-3.5" />No trips could be read
               </p>
-              <p className="text-sm leading-relaxed" style={{ color: "#454545" }}>{res.preview.diagnosis}</p>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--o-text-2)" }}>{res.preview.diagnosis}</p>
             </div>
           )}
 
-          <p className="text-xs font-medium mb-2" style={{ color: "#888" }}>How the columns will be read</p>
+          <p className="text-xs font-medium mb-2" style={{ color: "var(--o-muted)" }}>How the columns will be read</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
             {res.fields.map((f) => (
               <label key={f.field} className="flex items-center gap-2">
                 <span className="text-xs w-40 shrink-0" style={{ color: f.required ? "#1E1E1E" : "#999" }}>
-                  {f.label}{f.required && <span style={{ color: "#C0392B" }}> *</span>}
+                  {f.label}{f.required && <span style={{ color: "var(--o-danger)" }}> *</span>}
                 </span>
                 <select
                   value={mapping[f.field] ?? ""}
@@ -287,21 +287,21 @@ export default function FetTrialImport({
           </div>
 
           {Object.keys(res.preview.rejected).length > 0 && (
-            <div className="rounded-2xl p-4 mb-4" style={{ background: "#F7F7F5" }}>
-              <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "#8A5A18" }}>
+            <div className="rounded-2xl p-4 mb-4" style={{ background: "var(--o-surface-2)" }}>
+              <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--o-accent-text)" }}>
                 {Object.keys(res.preview.rejected).length} row{Object.keys(res.preview.rejected).length === 1 ? "" : "s"} cannot be read
               </p>
               <ul className="space-y-1">
                 {Object.entries(res.preview.rejected).map(([ref, why]) => (
-                  <li key={ref} className="text-xs" style={{ color: "#777" }}><strong>{ref}</strong> — {why}</li>
+                  <li key={ref} className="text-xs" style={{ color: "var(--o-muted)" }}><strong>{ref}</strong> — {why}</li>
                 ))}
               </ul>
             </div>
           )}
 
-          {msg && <p className="text-sm mb-3" style={{ color: "#C0392B" }}>{msg}</p>}
+          {msg && <p className="text-sm mb-3" style={{ color: "var(--o-danger)" }}>{msg}</p>}
 
-          <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer" style={{ color: "#454545" }}>
+          <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer" style={{ color: "var(--o-text-2)" }}>
             <input type="checkbox" checked={saveTemplate} onChange={(e) => setSaveTemplate(e.target.checked)} />
             Remember this layout for {trial.client_company}&rsquo;s future files
           </label>
@@ -310,7 +310,7 @@ export default function FetTrialImport({
             onClick={commit}
             disabled={busy || res.preview.row_count === 0}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold"
-            style={{ background: "#C5B27A", color: "#1E1E1E", opacity: busy || res.preview.row_count === 0 ? 0.5 : 1 }}
+            style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: busy || res.preview.row_count === 0 ? 0.5 : 1 }}
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
             Import {res.preview.row_count} trips
@@ -320,7 +320,7 @@ export default function FetTrialImport({
 
       {stage === "done" && result && (
         <div className="bg-white rounded-[20px] border p-6" style={{ borderColor: "rgba(34,197,94,0.3)" }}>
-          <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide mb-3" style={{ color: "#16A34A" }}>
+          <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide mb-3" style={{ color: "var(--o-success)" }}>
             <CheckCircle2 className="w-4 h-4" />Imported
           </span>
           <div className="grid grid-cols-3 gap-2.5 mb-4">
@@ -328,12 +328,12 @@ export default function FetTrialImport({
             <Bucket label="Need a look" value={result.rows_flagged} tone={result.rows_flagged > 0 ? "warn" : "plain"} />
             <Bucket label="Could not read" value={result.rows_rejected} tone={result.rows_rejected > 0 ? "bad" : "plain"} />
           </div>
-          <p className="text-sm leading-relaxed" style={{ color: "#454545" }}>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--o-text-2)" }}>
             {result.rows_flagged > 0
               ? `${result.rows_flagged} trip${result.rows_flagged === 1 ? " has a question" : "s have questions"} against ${result.rows_flagged === 1 ? "it" : "them"} — see the Data checks tab. ${result.rows_flagged === 1 ? "It is" : "They are"} held out of the calculation until settled.`
               : "Every trip read cleanly."}
           </p>
-          <button onClick={restart} className="mt-4 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>
+          <button onClick={restart} className="mt-4 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
             Import another file
           </button>
         </div>
@@ -341,15 +341,15 @@ export default function FetTrialImport({
 
       {history.length > 0 && (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5">
-          <p className="text-sm font-semibold mb-3" style={{ color: "#1E1E1E" }}>Previous imports</p>
+          <p className="text-sm font-semibold mb-3" style={{ color: "var(--o-text)" }}>Previous imports</p>
           <div className="space-y-2">
             {history.map((h) => (
               <div key={h.id} className="flex items-center gap-3 text-xs py-1.5 border-b last:border-0" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-                <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" style={{ color: "#CCC" }} />
-                <span className="flex-1 min-w-0 truncate" style={{ color: "#454545" }}>{h.filename}</span>
-                <span style={{ color: "#999" }}>{h.rows_imported} trips</span>
-                {h.rows_rejected > 0 && <span style={{ color: "#9E3B33" }}>{h.rows_rejected} skipped</span>}
-                <span style={{ color: "#BBB" }}>{h.imported_by ?? "—"} · {fmtDate(h.created_at)}</span>
+                <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--o-faint)" }} />
+                <span className="flex-1 min-w-0 truncate" style={{ color: "var(--o-text-2)" }}>{h.filename}</span>
+                <span style={{ color: "var(--o-faint)" }}>{h.rows_imported} trips</span>
+                {h.rows_rejected > 0 && <span style={{ color: "var(--o-danger)" }}>{h.rows_rejected} skipped</span>}
+                <span style={{ color: "var(--o-faint)" }}>{h.imported_by ?? "—"} · {fmtDate(h.created_at)}</span>
               </div>
             ))}
           </div>
@@ -361,10 +361,10 @@ export default function FetTrialImport({
 
 function Bucket({ label, value, tone }: { label: string; value: number; tone: "good" | "warn" | "bad" | "plain" }) {
   const colours = {
-    good: { background: "rgba(34,197,94,0.1)", color: "#16A34A" },
-    warn: { background: "rgba(138,90,24,0.1)", color: "#8A5A18" },
-    bad: { background: "rgba(158,59,51,0.09)", color: "#9E3B33" },
-    plain: { background: "#F7F7F5", color: "#999" },
+    good: { background: "rgba(34,197,94,0.1)", color: "var(--o-success)" },
+    warn: { background: "rgba(138,90,24,0.1)", color: "var(--o-accent-text)" },
+    bad: { background: "rgba(158,59,51,0.09)", color: "var(--o-danger)" },
+    plain: { background: "var(--o-surface-2)", color: "var(--o-faint)" },
   }[tone];
 
   return (

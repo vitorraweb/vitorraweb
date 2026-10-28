@@ -37,18 +37,18 @@ type Task = {
 const STATUSES = ["todo", "in_progress", "blocked", "done"] as const;
 const STATUS_LABEL: Record<string, string> = { todo: "To do", in_progress: "In progress", blocked: "Blocked", done: "Done" };
 const STATUS_STYLE: Record<string, { background: string; color: string }> = {
-  todo:        { background: "rgba(0,0,0,0.06)", color: "#777" },
-  in_progress: { background: "rgba(59,130,246,0.12)", color: "#2563EB" },
-  blocked:     { background: "rgba(192,57,43,0.1)", color: "#C0392B" },
-  done:        { background: "rgba(34,197,94,0.12)", color: "#16A34A" },
+  todo:        { background: "rgba(0,0,0,0.06)", color: "var(--o-muted)" },
+  in_progress: { background: "rgba(59,130,246,0.12)", color: "var(--o-info)" },
+  blocked:     { background: "rgba(192,57,43,0.1)", color: "var(--o-danger)" },
+  done:        { background: "rgba(34,197,94,0.12)", color: "var(--o-success)" },
 };
 const PRIORITY_STYLE: Record<string, { background: string; color: string }> = {
-  low:    { background: "rgba(0,0,0,0.05)", color: "#888" },
-  normal: { background: "rgba(197,178,122,0.14)", color: "#7A6020" },
-  high:   { background: "rgba(192,57,43,0.1)", color: "#C0392B" },
+  low:    { background: "rgba(0,0,0,0.05)", color: "var(--o-muted)" },
+  normal: { background: "rgba(197,178,122,0.14)", color: "var(--o-accent-text)" },
+  high:   { background: "rgba(192,57,43,0.1)", color: "var(--o-danger)" },
 };
 const inputCls = "w-full text-sm rounded-xl px-3 py-2 border outline-none";
-const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 const blankNew = { title: "", description: "", assigned_to: "", priority: "normal", due_date: "", department: "" };
 
@@ -154,7 +154,7 @@ export default function TasksPage() {
     <div>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <PageHeader title="Tasks" subtitle="Assign and track work across the team. You see tasks assigned to you, created by you, or in your department." />
-        <button onClick={() => setAddOpen((o) => !o)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shrink-0" style={{ background: "#1E1E1E", color: "#fff" }}>
+        <button onClick={() => setAddOpen((o) => !o)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shrink-0" style={{ background: "var(--o-inverse)", color: "#fff" }}>
           <Plus className="w-4 h-4" />New task
         </button>
       </div>
@@ -173,7 +173,7 @@ export default function TasksPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {stats.by_person.length > 0 && (
                 <div className="bg-white rounded-[20px] border border-black/[0.05] p-5">
-                  <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "#999" }}>Workload by person</p>
+                  <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "var(--o-faint)" }}>Workload by person</p>
                   <div className="space-y-3">
                     {stats.by_person.map((p) => <WorkloadRow key={p.id} label={p.name} {...p} />)}
                   </div>
@@ -181,7 +181,7 @@ export default function TasksPage() {
               )}
               {stats.by_department.length > 0 && (
                 <div className="bg-white rounded-[20px] border border-black/[0.05] p-5">
-                  <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "#999" }}>Workload by department</p>
+                  <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "var(--o-faint)" }}>Workload by department</p>
                   <div className="space-y-3">
                     {stats.by_department.map((d) => <WorkloadRow key={d.department} {...d} />)}
                   </div>
@@ -194,7 +194,7 @@ export default function TasksPage() {
 
       {addOpen && (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">
-          <p className="text-sm font-semibold mb-4" style={{ color: "#1E1E1E" }}>New task</p>
+          <p className="text-sm font-semibold mb-4" style={{ color: "var(--o-text)" }}>New task</p>
           <div className="grid grid-cols-1 gap-3">
             <input value={add.title} onChange={(e) => setAdd({ ...add, title: e.target.value })} placeholder="What needs doing?" className={inputCls} style={inputStyle} />
             <textarea value={add.description} onChange={(e) => setAdd({ ...add, description: e.target.value })} placeholder="Details (optional)" rows={2} className={inputCls} style={inputStyle} />
@@ -209,8 +209,8 @@ export default function TasksPage() {
               <input value={add.due_date} onChange={(e) => setAdd({ ...add, due_date: e.target.value })} type="date" className={inputCls} style={inputStyle} />
             </div>
           </div>
-          {addMsg && <p className="text-sm mt-3" style={{ color: "#C0392B" }}>{addMsg}</p>}
-          <button onClick={createTask} disabled={adding} className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: adding ? 0.7 : 1 }}>
+          {addMsg && <p className="text-sm mt-3" style={{ color: "var(--o-danger)" }}>{addMsg}</p>}
+          <button onClick={createTask} disabled={adding} className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: adding ? 0.7 : 1 }}>
             {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Create task
           </button>
         </div>
@@ -219,17 +219,17 @@ export default function TasksPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mb-5">
         {[["all", "All"], ...STATUSES.map((s) => [s, STATUS_LABEL[s]] as const)].map(([k, label]) => (
-          <button key={k} onClick={() => setStatusFilter(k)} className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors" style={statusFilter === k ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.08)" }}>
+          <button key={k} onClick={() => setStatusFilter(k)} className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors" style={statusFilter === k ? { background: "var(--o-inverse)", color: "#fff" } : { background: "var(--o-surface)", color: "var(--o-muted)", border: "1px solid rgba(0,0,0,0.08)" }}>
             {label}
           </button>
         ))}
-        <button onClick={() => setMine((m) => !m)} className="ml-1 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors" style={mine ? { background: "#C5B27A", color: "#1E1E1E" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.08)" }}>
+        <button onClick={() => setMine((m) => !m)} className="ml-1 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors" style={mine ? { background: "var(--o-accent)", color: "var(--o-text)" } : { background: "var(--o-surface)", color: "var(--o-muted)", border: "1px solid rgba(0,0,0,0.08)" }}>
           Assigned to me
         </button>
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : list.length === 0 ? (
         <Empty label="No tasks here yet. Create one to get started." />
       ) : (
@@ -246,13 +246,13 @@ export default function TasksPage() {
                   </select>
                   <button onClick={() => expand(t)} className="flex-1 min-w-0 text-left">
                     <p className="font-semibold text-sm truncate" style={{ color: t.status === "done" ? "#999" : "#1E1E1E", textDecoration: t.status === "done" ? "line-through" : "none" }}>{t.title}</p>
-                    <div className="flex items-center gap-3 mt-0.5 text-xs" style={{ color: "#999" }}>
+                    <div className="flex items-center gap-3 mt-0.5 text-xs" style={{ color: "var(--o-faint)" }}>
                       <span className="inline-flex items-center gap-1"><UserIcon className="w-3 h-3" />{t.assignee?.name ?? "Unassigned"}</span>
                       {t.due_date && <span className="inline-flex items-center gap-1" style={{ color: overdue ? "#C0392B" : "#999" }}><CalendarClock className="w-3 h-3" />{fmt(t.due_date)}</span>}
                     </div>
                   </button>
                   <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0 hidden sm:inline" style={PRIORITY_STYLE[t.priority] ?? PRIORITY_STYLE.normal}>{t.priority}</span>
-                  <button onClick={() => expand(t)}><ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "#BBB" }} /></button>
+                  <button onClick={() => expand(t)}><ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "var(--o-faint)" }} /></button>
                 </div>
 
                 {isOpen && d && (
@@ -274,12 +274,12 @@ export default function TasksPage() {
                         <input value={d.due_date ?? ""} onChange={(e) => setD("due_date", e.target.value)} type="date" className={inputCls} style={inputStyle} />
                       </div>
                     </div>
-                    <p className="text-xs mb-3" style={{ color: "#AAA" }}>
+                    <p className="text-xs mb-3" style={{ color: "var(--o-faint)" }}>
                       {t.creator?.name ? `Created by ${t.creator.name}` : ""}{t.creator?.name && me?.id ? " · " : ""}
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
-                      <button onClick={saveTask} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}><Save className="w-3.5 h-3.5" />Save</button>
-                      <button onClick={() => removeTask(d.id)} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><Trash2 className="w-3.5 h-3.5" />Delete</button>
+                      <button onClick={saveTask} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)" }}><Save className="w-3.5 h-3.5" />Save</button>
+                      <button onClick={() => removeTask(d.id)} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><Trash2 className="w-3.5 h-3.5" />Delete</button>
                     </div>
                     {rowMsg && <p className="text-sm mt-3" style={{ color: /fail|only|cannot/i.test(rowMsg) ? "#C0392B" : "#16A34A" }}>{rowMsg}</p>}
                   </div>
@@ -297,7 +297,7 @@ function MiniStat({ label, value, alert }: { label: string; value: string | numb
   return (
     <div className="bg-white rounded-[18px] p-4 border border-black/[0.05]">
       <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "28px", fontWeight: 700, lineHeight: 1, color: alert ? "#C0392B" : "#1E1E1E" }}>{value}</p>
-      <p className="mt-1 text-xs font-semibold" style={{ color: "#999" }}>{label}</p>
+      <p className="mt-1 text-xs font-semibold" style={{ color: "var(--o-faint)" }}>{label}</p>
     </div>
   );
 }
@@ -306,13 +306,13 @@ function WorkloadRow({ label, total, done, overdue, completion_rate }: { label: 
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5 gap-2">
-        <span className="text-sm font-medium truncate" style={{ color: "#1E1E1E" }}>{label}</span>
+        <span className="text-sm font-medium truncate" style={{ color: "var(--o-text)" }}>{label}</span>
         <span className="text-xs shrink-0">
-          <span style={{ color: "#999" }}>{done}/{total} done</span>
-          {overdue > 0 && <span style={{ color: "#C0392B", fontWeight: 600 }}> · {overdue} overdue</span>}
+          <span style={{ color: "var(--o-faint)" }}>{done}/{total} done</span>
+          {overdue > 0 && <span style={{ color: "var(--o-danger)", fontWeight: 600 }}> · {overdue} overdue</span>}
         </span>
       </div>
-      <div style={{ height: "6px", borderRadius: "999px", background: "#F2F2F2", overflow: "hidden" }}>
+      <div style={{ height: "6px", borderRadius: "999px", background: "var(--o-surface-2)", overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${completion_rate}%`, borderRadius: "999px", background: overdue > 0 ? "linear-gradient(90deg,#C0392B,#E8A39A)" : "linear-gradient(90deg,#C5B27A,#D4C49A)", transition: "width .4s" }} />
       </div>
     </div>

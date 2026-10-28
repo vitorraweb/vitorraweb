@@ -42,11 +42,11 @@ type Fleet = {
 };
 
 const inputCls = "w-full text-sm rounded-xl px-3 py-2 border outline-none";
-const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 const STATUS_STYLE: Record<string, { background: string; color: string }> = {
-  active:  { background: "rgba(34,197,94,0.12)", color: "#16A34A" },
-  paused:  { background: "rgba(197,178,122,0.16)", color: "#7A6020" },
-  removed: { background: "rgba(0,0,0,0.06)", color: "#777" },
+  active:  { background: "rgba(34,197,94,0.12)", color: "var(--o-success)" },
+  paused:  { background: "rgba(197,178,122,0.16)", color: "var(--o-accent-text)" },
+  removed: { background: "rgba(0,0,0,0.06)", color: "var(--o-muted)" },
 };
 
 const money = (currency: string, amount: number | null): string => {
@@ -159,13 +159,13 @@ export default function FetPage() {
 
   const downloadCert = (i: Install) => downloadFile(`/admin/fet/${i.id}/certificate`, `fet-savings-${i.reference}.pdf`).catch(() => { /* ignore */ });
 
-  if (!list) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (!list) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   return (
     <div className="pb-12">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <PageHeader title="FET proven savings" subtitle="Record each device fitted to a customer's vehicle, log fuel readings, and show the measured savings — real proof, per vehicle." />
-        <button onClick={() => setAddOpen((o) => !o)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shrink-0" style={{ background: "#1E1E1E", color: "#fff" }}>
+        <button onClick={() => setAddOpen((o) => !o)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shrink-0" style={{ background: "var(--o-inverse)", color: "#fff" }}>
           <Plus className="w-4 h-4" />Add installation
         </button>
       </div>
@@ -182,7 +182,7 @@ export default function FetPage() {
 
       {addOpen && (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">
-          <p className="text-sm font-semibold mb-4" style={{ color: "#1E1E1E" }}>New installation</p>
+          <p className="text-sm font-semibold mb-4" style={{ color: "var(--o-text)" }}>New installation</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input value={add.customer_name} onChange={(e) => setAdd({ ...add, customer_name: e.target.value })} placeholder="Customer name" className={inputCls} style={inputStyle} />
             <input value={add.customer_email} onChange={(e) => setAdd({ ...add, customer_email: e.target.value })} placeholder="Customer email (links their portal)" className={inputCls} style={inputStyle} />
@@ -200,11 +200,11 @@ export default function FetPage() {
               <option value="UGX">UGX</option><option value="USD">USD</option><option value="EUR">EUR</option>
             </select>
             <input value={add.baseline_l_per_100} onChange={(e) => setAdd({ ...add, baseline_l_per_100: e.target.value })} placeholder="Baseline l/100km (optional)" type="number" step="0.1" className={inputCls} style={inputStyle} />
-            <label className="text-xs flex flex-col gap-1" style={{ color: "#888" }}>Installed on<input value={add.installed_on} onChange={(e) => setAdd({ ...add, installed_on: e.target.value })} type="date" className={inputCls} style={inputStyle} /></label>
+            <label className="text-xs flex flex-col gap-1" style={{ color: "var(--o-muted)" }}>Installed on<input value={add.installed_on} onChange={(e) => setAdd({ ...add, installed_on: e.target.value })} type="date" className={inputCls} style={inputStyle} /></label>
           </div>
-          <p className="text-xs mt-3" style={{ color: "#999" }}>Leave baseline blank to use the typical figure for the vehicle class, or record &ldquo;before&rdquo; fuel readings later for a measured baseline.</p>
-          {addMsg && <p className="text-sm mt-2" style={{ color: "#C0392B" }}>{addMsg}</p>}
-          <button onClick={createInstall} disabled={adding} className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: adding ? 0.7 : 1 }}>
+          <p className="text-xs mt-3" style={{ color: "var(--o-faint)" }}>Leave baseline blank to use the typical figure for the vehicle class, or record &ldquo;before&rdquo; fuel readings later for a measured baseline.</p>
+          {addMsg && <p className="text-sm mt-2" style={{ color: "var(--o-danger)" }}>{addMsg}</p>}
+          <button onClick={createInstall} disabled={adding} className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full text-sm font-semibold" style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: adding ? 0.7 : 1 }}>
             {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Create
           </button>
         </div>
@@ -221,23 +221,23 @@ export default function FetPage() {
             return (
               <div key={i.id} className="bg-white rounded-[18px] border border-black/[0.05] overflow-hidden">
                 <button onClick={() => expand(i)} className="w-full flex items-center gap-3 p-4 text-left">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.12)", color: "#7A6020" }}><Gauge className="w-5 h-5" /></span>
+                  <span className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.12)", color: "var(--o-accent-text)" }}><Gauge className="w-5 h-5" /></span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{i.customer_name}</span>
-                      <span className="text-[11px]" style={{ color: "#BBB" }}>{i.reference}</span>
+                      <span className="font-semibold text-sm" style={{ color: "var(--o-text)" }}>{i.customer_name}</span>
+                      <span className="text-[11px]" style={{ color: "var(--o-faint)" }}>{i.reference}</span>
                     </div>
-                    <p className="text-xs truncate" style={{ color: "#999" }}>{i.vehicle ? `${i.vehicle} · ` : ""}{i.tier_label} · {i.device_model}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--o-faint)" }}>{i.vehicle ? `${i.vehicle} · ` : ""}{i.tier_label} · {i.device_model}</p>
                   </div>
                   {s.has_enough_data ? (
-                    <span className="inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-full shrink-0" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}>
+                    <span className="inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-full shrink-0" style={{ background: "rgba(34,197,94,0.12)", color: "var(--o-success)" }}>
                       <TrendingDown className="w-3.5 h-3.5" />{s.reduction_pct}% saved
                     </span>
                   ) : (
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0" style={{ background: "#F2F2F2", color: "#999" }}>collecting data</span>
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0" style={{ background: "var(--o-surface-2)", color: "var(--o-faint)" }}>collecting data</span>
                   )}
                   <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0 hidden sm:inline" style={STATUS_STYLE[i.status] ?? STATUS_STYLE.active}>{i.status}</span>
-                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "#BBB" }} />
+                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "var(--o-faint)" }} />
                 </button>
 
                 {isOpen && d && (
@@ -252,13 +252,13 @@ export default function FetPage() {
 
                     {/* Fuel logs */}
                     <div className="mt-4 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#777" }}><Fuel className="w-3.5 h-3.5" />Fuel readings</span>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--o-muted)" }}><Fuel className="w-3.5 h-3.5" />Fuel readings</span>
                       {d.logs.length === 0 ? (
-                        <p className="text-xs mb-2" style={{ color: "#bbb" }}>No readings yet. Add fill-ups below — two odometer readings give the first measured result.</p>
+                        <p className="text-xs mb-2" style={{ color: "var(--o-faint)" }}>No readings yet. Add fill-ups below — two odometer readings give the first measured result.</p>
                       ) : (
                         <div className="overflow-x-auto">
-                          <table className="w-full text-sm" style={{ color: "#454545" }}>
-                            <thead><tr className="text-[10px] uppercase tracking-wide" style={{ color: "#999" }}>
+                          <table className="w-full text-sm" style={{ color: "var(--o-text-2)" }}>
+                            <thead><tr className="text-[10px] uppercase tracking-wide" style={{ color: "var(--o-faint)" }}>
                               <th className="text-left font-semibold py-1.5">Date</th><th className="text-right font-semibold">Odometer</th><th className="text-right font-semibold">Litres</th><th className="text-right font-semibold">Cost</th><th className="text-left font-semibold pl-3">Phase</th><th></th>
                             </tr></thead>
                             <tbody>
@@ -269,7 +269,7 @@ export default function FetPage() {
                                   <td className="text-right">{l.litres}</td>
                                   <td className="text-right">{money(d.currency, l.cost)}</td>
                                   <td className="pl-3"><span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ background: l.phase === "before" ? "rgba(197,178,122,0.16)" : "rgba(59,130,246,0.1)", color: l.phase === "before" ? "#7A6020" : "#2563EB" }}>{l.phase}</span></td>
-                                  <td className="text-right"><button onClick={() => deleteLog(d.id, l.id)} className="p-1.5 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><X className="w-3.5 h-3.5" /></button></td>
+                                  <td className="text-right"><button onClick={() => deleteLog(d.id, l.id)} className="p-1.5 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><X className="w-3.5 h-3.5" /></button></td>
                                 </tr>
                               ))}
                             </tbody>
@@ -278,12 +278,12 @@ export default function FetPage() {
                       )}
                       {/* Add reading */}
                       <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mt-3 items-end">
-                        <label className="text-[11px] flex flex-col gap-1" style={{ color: "#999" }}>Date<input value={log.logged_on} onChange={(e) => setLog({ ...log, logged_on: e.target.value })} type="date" className={inputCls} style={inputStyle} /></label>
-                        <label className="text-[11px] flex flex-col gap-1" style={{ color: "#999" }}>Odometer<input value={log.odometer_km} onChange={(e) => setLog({ ...log, odometer_km: e.target.value })} type="number" placeholder="km" className={inputCls} style={inputStyle} /></label>
-                        <label className="text-[11px] flex flex-col gap-1" style={{ color: "#999" }}>Litres<input value={log.litres} onChange={(e) => setLog({ ...log, litres: e.target.value })} type="number" step="0.1" className={inputCls} style={inputStyle} /></label>
-                        <label className="text-[11px] flex flex-col gap-1" style={{ color: "#999" }}>Cost<input value={log.cost} onChange={(e) => setLog({ ...log, cost: e.target.value })} type="number" placeholder={d.currency} className={inputCls} style={inputStyle} /></label>
-                        <label className="text-[11px] flex flex-col gap-1" style={{ color: "#999" }}>Phase<select value={log.phase} onChange={(e) => setLog({ ...log, phase: e.target.value })} className={inputCls} style={inputStyle}><option value="after">After install</option><option value="before">Before (baseline)</option></select></label>
-                        <button onClick={() => addLog(d.id)} disabled={logging} className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-xl" style={{ background: "#1E1E1E", color: "#fff", opacity: logging ? 0.7 : 1 }}>{logging ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Add</button>
+                        <label className="text-[11px] flex flex-col gap-1" style={{ color: "var(--o-faint)" }}>Date<input value={log.logged_on} onChange={(e) => setLog({ ...log, logged_on: e.target.value })} type="date" className={inputCls} style={inputStyle} /></label>
+                        <label className="text-[11px] flex flex-col gap-1" style={{ color: "var(--o-faint)" }}>Odometer<input value={log.odometer_km} onChange={(e) => setLog({ ...log, odometer_km: e.target.value })} type="number" placeholder="km" className={inputCls} style={inputStyle} /></label>
+                        <label className="text-[11px] flex flex-col gap-1" style={{ color: "var(--o-faint)" }}>Litres<input value={log.litres} onChange={(e) => setLog({ ...log, litres: e.target.value })} type="number" step="0.1" className={inputCls} style={inputStyle} /></label>
+                        <label className="text-[11px] flex flex-col gap-1" style={{ color: "var(--o-faint)" }}>Cost<input value={log.cost} onChange={(e) => setLog({ ...log, cost: e.target.value })} type="number" placeholder={d.currency} className={inputCls} style={inputStyle} /></label>
+                        <label className="text-[11px] flex flex-col gap-1" style={{ color: "var(--o-faint)" }}>Phase<select value={log.phase} onChange={(e) => setLog({ ...log, phase: e.target.value })} className={inputCls} style={inputStyle}><option value="after">After install</option><option value="before">Before (baseline)</option></select></label>
+                        <button onClick={() => addLog(d.id)} disabled={logging} className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-xl" style={{ background: "var(--o-inverse)", color: "#fff", opacity: logging ? 0.7 : 1 }}>{logging ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Add</button>
                       </div>
                     </div>
 
@@ -306,7 +306,7 @@ export default function FetPage() {
                       <Field label="Baseline l/100km"><input value={d.baseline_l_per_100 ?? ""} onChange={(e) => setD("baseline_l_per_100", e.target.value ? Number(e.target.value) : null)} type="number" step="0.1" className={inputCls} style={inputStyle} /></Field>
                       <Field label="Installed on"><input value={d.installed_on ?? ""} onChange={(e) => setD("installed_on", e.target.value)} type="date" className={inputCls} style={inputStyle} /></Field>
                     </div>
-                    <label className="flex items-center gap-2 text-sm mt-3 cursor-pointer" style={{ color: "#454545" }}>
+                    <label className="flex items-center gap-2 text-sm mt-3 cursor-pointer" style={{ color: "var(--o-text-2)" }}>
                       <input type="checkbox" checked={d.consent_to_publish} onChange={(e) => setD("consent_to_publish", e.target.checked)} />
                       Customer consents to publish this as an (anonymised) case study
                     </label>
@@ -314,9 +314,9 @@ export default function FetPage() {
 
                     {/* Actions */}
                     <div className="flex flex-wrap items-center gap-2 mt-4">
-                      <button onClick={saveInstall} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}><Save className="w-3.5 h-3.5" />Save</button>
-                      <button onClick={() => downloadCert(i)} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><FileDown className="w-3.5 h-3.5" />Savings certificate</button>
-                      <button onClick={() => removeInstall(d.id)} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full ml-auto" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><Trash2 className="w-3.5 h-3.5" />Remove</button>
+                      <button onClick={saveInstall} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)" }}><Save className="w-3.5 h-3.5" />Save</button>
+                      <button onClick={() => downloadCert(i)} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}><FileDown className="w-3.5 h-3.5" />Savings certificate</button>
+                      <button onClick={() => removeInstall(d.id)} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full ml-auto" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><Trash2 className="w-3.5 h-3.5" />Remove</button>
                     </div>
                     {rowMsg && <p className="text-sm mt-3" style={{ color: /fail|cannot|require|invalid|could/i.test(rowMsg) ? "#C0392B" : "#16A34A" }}>{rowMsg}</p>}
                   </div>
@@ -333,13 +333,13 @@ export default function FetPage() {
 function Stat({ label, value, hint, highlight }: { label: string; value: string; hint?: string; highlight?: boolean }) {
   return (
     <div className="rounded-2xl p-3.5" style={{ background: highlight ? "rgba(197,178,122,0.1)" : "#F7F7F5" }}>
-      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>{label}</p>
+      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>{label}</p>
       <p className="font-bold" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "20px", color: highlight ? "#7A6020" : "#1E1E1E" }}>{value}</p>
-      {hint && <p className="text-[11px] mt-0.5" style={{ color: "#aaa" }}>{hint}</p>}
+      {hint && <p className="text-[11px] mt-0.5" style={{ color: "var(--o-faint)" }}>{hint}</p>}
     </div>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="block"><span className="text-xs font-medium block mb-1" style={{ color: "#888" }}>{label}</span>{children}</label>;
+  return <label className="block"><span className="text-xs font-medium block mb-1" style={{ color: "var(--o-muted)" }}>{label}</span>{children}</label>;
 }

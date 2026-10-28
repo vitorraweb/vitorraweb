@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, TrendingUp, TrendingDown, ArrowDownToLine, ShoppingCart, MessageSquare, Target, Clock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/admin-ui";
+import { GraphView, KpiTile } from "@/components/admin/reporting";
 
 type Delta = { current: number; previous: number; delta_pct: number | null };
 type Summary = {
@@ -40,169 +41,102 @@ export default function ExecutivePage() {
   }, [period]);
   useEffect(() => { load(); }, [load]);
 
+  const booksMoney = (c: string, a: number) => (c === "UGX" ? ugx(a) : `${c === "USD" ? "$" : "€"}${(a / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+  const bookCurrencies = s?.books?.has_data
+    ? ["UGX", "USD", "EUR"].filter((c) => s.books.income[c] || s.books.expense[c] || s.books.cash[c] || s.books.payables[c])
+    : [];
+
   return (
     <div className="pb-12">
-      <PageHeader title="Executive summary" subtitle="The health of the business at a glance — money in, money owed, sales, and demand." />
-
-      <div className="flex gap-2 mb-6">
-        {PERIODS.map(([v, label]) => (
-          <button key={v} onClick={() => setPeriod(v)} className="text-sm font-semibold px-4 py-2 rounded-full" style={period === v ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{label}</button>
-        ))}
-      </div>
+      <PageHeader
+        title="CEO report"
+        subtitle="The health of the business at a glance: money in, money owed, sales and demand."
+        actions={
+          <div className="o-seg" role="group" aria-label="Period">
+            {PERIODS.map(([v, label]) => (
+              <button key={v} type="button" aria-pressed={period === v} onClick={() => setPeriod(v)}>{label}</button>
+            ))}
+          </div>
+        }
+      />
 
       {loading || !s ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-[14px] text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : (
-        <>
-          <p className="text-xs mb-4" style={{ color: "#999" }}>Showing <strong style={{ color: "#7A6020" }}>{s.period_label}</strong></p>
+        <div className="space-y-4">
+          <p className="text-[13.5px] text-ink-muted">Showing <strong className="text-ink">{s.period_label}</strong>, compared with the period before.</p>
 
-          {/* Money received — hero */}
-          <div className="rounded-[24px] p-7 mb-4 relative overflow-hidden" style={{ background: "#1E1E1E" }}>
-            <div className="hero-aurora-right" aria-hidden="true" />
-            <div className="relative z-10">
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: "rgba(197,178,122,0.9)" }}>Money received (paid)</p>
-              <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
-                <Money label="Uganda (UGX)" value={ugx(s.revenue.UGX.current)} delta={s.revenue.UGX.delta_pct} />
-                {(s.revenue.USD.current > 0 || s.revenue.USD.previous > 0) && (
-                  <Money label="International (USD)" value={usd(s.revenue.USD.current)} delta={s.revenue.USD.delta_pct} />
-                )}
+          {/* Money */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KpiTile label="Money received (UGX)" value={ugx(s.revenue.UGX.current)} now={s.revenue.UGX.current} before={s.revenue.UGX.previous} />
+            <KpiTile label="Money received (USD)" value={usd(s.revenue.USD.current)} now={s.revenue.USD.current} before={s.revenue.USD.previous} />
+            <KpiTile label="Owed to us" value={ugx(s.outstanding.UGX)} sub={s.outstanding.USD > 0 ? `plus ${usd(s.outstanding.USD)} · orders not yet paid` : "Orders placed, not yet paid"} />
+            <KpiTile label="First reply" value={s.avg_response_hours !== null ? `${s.avg_response_hours} h` : "—"} sub="Average time to answer an enquiry" />
+          </div>
+
+          {/* Sales */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KpiTile label="New enquiries" value={s.enquiries.current.toLocaleString()} now={s.enquiries.current} before={s.enquiries.previous} />
+            <KpiTile label="Became sales" value={s.enquiries_converted.current.toLocaleString()} now={s.enquiries_converted.current} before={s.enquiries_converted.previous} />
+            <KpiTile label="New orders" value={s.orders.current.toLocaleString()} now={s.orders.current} before={s.orders.previous} />
+            <KpiTile label="Conversion rate" value={`${s.conversion_rate}%`} sub="Of all enquiries ever received" />
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <GraphView
+              title="This period against the one before"
+              rows={[
+                { label: "Enquiries", values: { now: s.enquiries.current, before: s.enquiries.previous } },
+                { label: "Became sales", values: { now: s.enquiries_converted.current, before: s.enquiries_converted.previous } },
+                { label: "Orders", values: { now: s.orders.current, before: s.orders.previous } },
+              ]}
+              series={[{ key: "now", label: s.period_label }, { key: "before", label: "Previous period" }]}
+              types={["bar"]}
+              format={(v) => v.toLocaleString()}
+            />
+            <GraphView
+              title="What customers are asking about"
+              rows={s.top_interest.map((i) => ({ label: PRODUCT_LABEL[i.product] ?? i.product, values: { count: i.count } }))}
+              measures={[{ key: "count", label: "Enquiries", format: (v) => v.toLocaleString() }]}
+              types={["bar", "pie"]}
+              empty="No new enquiries in this period."
+            />
+          </div>
+
+          {/* From the books — one chart per currency; amounts never cross currencies. */}
+          {bookCurrencies.length > 0 && (
+            <>
+              <h2 className="text-[16px] font-semibold text-ink pt-2">From the books (approved income and spending)</h2>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {bookCurrencies.map((c) => (
+                  <GraphView
+                    key={c}
+                    title={`${c}: income, spending and profit`}
+                    rows={[
+                      { label: "Income", values: { amount: s.books.income[c] ?? 0 } },
+                      { label: "Spent", values: { amount: s.books.expense[c] ?? 0 } },
+                      { label: "Profit", values: { amount: s.books.net[c] ?? 0 } },
+                      { label: "Cash on hand", values: { amount: s.books.cash[c] ?? 0 } },
+                      { label: "We owe", values: { amount: s.books.payables[c] ?? 0 } },
+                    ]}
+                    measures={[{ key: "amount", label: c, format: (v) => booksMoney(c, v) }]}
+                    types={["bar"]}
+                    defaultType="bar"
+                    note={(s.books.net[c] ?? 0) < 0 ? "Spending was higher than income in this period." : undefined}
+                  />
+                ))}
               </div>
-            </div>
+            </>
+          )}
+
+          {/* Outreach */}
+          <div className="grid grid-cols-3 gap-3">
+            <KpiTile label="Sales leads" value={s.prospects.total.toLocaleString()} sub="Prospects on file" href="/admin/prospects" />
+            <KpiTile label="Reached out" value={s.prospects.reached.toLocaleString()} sub="Contacted or responded" />
+            <KpiTile label="Converted" value={s.prospects.converted.toLocaleString()} sub="Became enquiries" />
           </div>
-
-          {/* Money owed + sales */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-            <Card icon={ArrowDownToLine} label="Money owed to us" hint="Orders placed, not yet paid">
-              <p className="text-xl font-bold" style={{ color: "#1E1E1E" }}>{ugx(s.outstanding.UGX)}</p>
-              {s.outstanding.USD > 0 && <p className="text-sm" style={{ color: "#777" }}>{usd(s.outstanding.USD)}</p>}
-            </Card>
-            <Card icon={ShoppingCart} label="New orders">
-              <Headline value={s.orders.current} delta={s.orders.delta_pct} />
-            </Card>
-            <Card icon={MessageSquare} label="New enquiries">
-              <Headline value={s.enquiries.current} delta={s.enquiries.delta_pct} />
-            </Card>
-            <Card icon={Target} label="Became sales" hint="Enquiries converted">
-              <Headline value={s.enquiries_converted.current} delta={s.enquiries_converted.delta_pct} />
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            <Card icon={Target} label="Overall conversion rate" hint="Of all enquiries ever received">
-              <p className="text-2xl font-bold" style={{ color: "#1E1E1E" }}>{s.conversion_rate}%</p>
-            </Card>
-            <Card icon={Clock} label="Average time to first reply">
-              <p className="text-2xl font-bold" style={{ color: "#1E1E1E" }}>{s.avg_response_hours !== null ? `${s.avg_response_hours} hrs` : "—"}</p>
-            </Card>
-          </div>
-
-          {/* From the books (accounting ledger) */}
-          {s.books?.has_data && (() => {
-            const cur = ["UGX", "USD", "EUR"].filter((c) => s.books.income[c] || s.books.expense[c] || s.books.cash[c] || s.books.payables[c]);
-            const moneyB = (c: string, a: number) => (c === "UGX" ? `UGX ${a.toLocaleString()}` : `${c === "USD" ? "$" : "€"}${(a / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
-            if (!cur.length) return null;
-            return (
-              <div className="bg-white rounded-[20px] border border-black/[0.06] p-6 mb-6">
-                <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] mb-4" style={{ color: "#bbb" }}>From the books (recorded income & spending)</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {cur.map((c) => (
-                    <div key={c} className="rounded-[16px] p-4" style={{ background: "#FAFAF8" }}>
-                      <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "#bbb" }}>{c}</p>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between"><span style={{ color: "#16A34A" }}>Income</span><span className="tabular-nums">{moneyB(c, s.books.income[c] ?? 0)}</span></div>
-                        <div className="flex justify-between"><span style={{ color: "#C0392B" }}>Spent</span><span className="tabular-nums">{moneyB(c, s.books.expense[c] ?? 0)}</span></div>
-                        <div className="flex justify-between font-semibold pt-1 mt-1 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}><span>Profit</span><span className="tabular-nums" style={{ color: (s.books.net[c] ?? 0) >= 0 ? "#16A34A" : "#C0392B" }}>{moneyB(c, s.books.net[c] ?? 0)}</span></div>
-                        <div className="flex justify-between text-xs pt-1" style={{ color: "#999" }}><span>Cash on hand</span><span className="tabular-nums">{moneyB(c, s.books.cash[c] ?? 0)}</span></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* What customers want */}
-            <div className="bg-white rounded-[20px] border border-black/[0.06] p-6">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] mb-4" style={{ color: "#bbb" }}>What customers are asking about</h3>
-              {s.top_interest.length === 0 ? <p className="text-sm" style={{ color: "#999" }}>No new enquiries in this period.</p> : (
-                <div className="space-y-2.5">
-                  {s.top_interest.map((i) => {
-                    const max = Math.max(...s.top_interest.map((x) => x.count));
-                    return (
-                      <div key={i.product}>
-                        <div className="flex justify-between text-sm mb-1"><span style={{ color: "#454545" }}>{PRODUCT_LABEL[i.product] ?? i.product}</span><span className="font-semibold" style={{ color: "#1E1E1E" }}>{i.count}</span></div>
-                        <div className="h-2 rounded-full" style={{ background: "#F2F2F2" }}><div className="h-2 rounded-full" style={{ width: `${(i.count / max) * 100}%`, background: "#C5B27A" }} /></div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Sales pipeline */}
-            <div className="bg-white rounded-[20px] border border-black/[0.06] p-6">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] mb-4" style={{ color: "#bbb" }}>Sales pipeline (leads)</h3>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <Pipe label="Total leads" value={s.prospects.total} />
-                <Pipe label="Reached out" value={s.prospects.reached} />
-                <Pipe label="Converted" value={s.prospects.converted} highlight />
-              </div>
-            </div>
-          </div>
-        </>
+        </div>
       )}
-    </div>
-  );
-}
-
-function Money({ label, value, delta }: { label: string; value: string; delta: number | null }) {
-  return (
-    <div>
-      <p className="text-[11px] uppercase tracking-wide mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>{label}</p>
-      <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "30px", fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>{value}</p>
-      <DeltaBadge delta={delta} dark />
-    </div>
-  );
-}
-
-function Headline({ value, delta }: { value: number; delta: number | null }) {
-  return (
-    <div>
-      <p className="text-2xl font-bold" style={{ color: "#1E1E1E" }}>{value.toLocaleString()}</p>
-      <DeltaBadge delta={delta} />
-    </div>
-  );
-}
-
-function DeltaBadge({ delta, dark }: { delta: number | null; dark?: boolean }) {
-  if (delta === null) return <span className="text-[11px]" style={{ color: dark ? "rgba(255,255,255,0.45)" : "#bbb" }}>vs previous: n/a</span>;
-  if (delta === 0) return <span className="text-[11px]" style={{ color: dark ? "rgba(255,255,255,0.45)" : "#999" }}>no change</span>;
-  const up = delta > 0;
-  const Icon = up ? TrendingUp : TrendingDown;
-  const color = up ? "#16A34A" : "#C0392B";
-  return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-semibold mt-0.5" style={{ color }}>
-      <Icon className="w-3.5 h-3.5" />{up ? "+" : ""}{delta}% vs previous
-    </span>
-  );
-}
-
-function Card({ icon: Icon, label, hint, children }: { icon: typeof ShoppingCart; label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-white rounded-[20px] border border-black/[0.06] p-5">
-      <div className="flex items-center gap-2 mb-2"><Icon className="w-4 h-4" style={{ color: "#C5B27A" }} /><span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: "#bbb" }}>{label}</span></div>
-      {children}
-      {hint && <p className="text-[11px] mt-1" style={{ color: "#bbb" }}>{hint}</p>}
-    </div>
-  );
-}
-
-function Pipe({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
-  return (
-    <div className="rounded-xl p-3" style={{ background: highlight ? "rgba(34,197,94,0.1)" : "#F7F7F5" }}>
-      <p className="text-xl font-bold" style={{ color: highlight ? "#16A34A" : "#1E1E1E" }}>{value.toLocaleString()}</p>
-      <p className="text-[11px] mt-0.5" style={{ color: "#999" }}>{label}</p>
     </div>
   );
 }

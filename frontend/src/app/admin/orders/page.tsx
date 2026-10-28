@@ -103,7 +103,7 @@ export default function OrdersPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : list.length === 0 ? (
         <Empty label="No orders yet — they'll appear here once the Coffee Shop is live." />
       ) : (
@@ -113,13 +113,13 @@ export default function OrdersPage() {
               <button onClick={() => setOpen(open === o.id ? null : o.id)} className="w-full flex items-center gap-4 p-5 text-left">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5 mb-1">
-                    <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{o.reference}</span>
-                    <span className="text-xs" style={{ color: "#999" }}>{itemSummary(o.items)}</span>
+                    <span className="font-semibold text-sm" style={{ color: "var(--o-text)" }}>{o.reference}</span>
+                    <span className="text-xs" style={{ color: "var(--o-faint)" }}>{itemSummary(o.items)}</span>
                   </div>
-                  <p className="text-xs truncate" style={{ color: "#999999" }}>{o.customer_name ?? o.user?.name ?? "Guest"} · {money(o.total, o.currency)} · {formatDate(o.created_at)}</p>
+                  <p className="text-xs truncate" style={{ color: "var(--o-faint)" }}>{o.customer_name ?? o.user?.name ?? "Guest"} · {money(o.total, o.currency)} · {formatDate(o.created_at)}</p>
                 </div>
                 <StatusBadge status={o.status} label={isFetOrder(o) ? statusLabel(o.status, true) : undefined} />
-                <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === o.id ? "rotate-180" : ""}`} style={{ color: "#BBBBBB" }} />
+                <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === o.id ? "rotate-180" : ""}`} style={{ color: "var(--o-faint)" }} />
               </button>
 
               {open === o.id && (
@@ -128,15 +128,15 @@ export default function OrdersPage() {
                   <ul className="mb-5 space-y-1.5">
                     {o.items?.map((it, idx) => (
                       <li key={idx} className="flex items-center justify-between gap-3 text-xs">
-                        <span style={{ color: "#444" }}>
+                        <span style={{ color: "var(--o-text-2)" }}>
                           <span className="font-semibold">{it.quantity}×</span> {it.product_name}
                           {(it.options?.weight || it.options?.grind) && (
-                            <span style={{ color: "#999" }}>
+                            <span style={{ color: "var(--o-faint)" }}>
                               {" "}— {[it.options?.weight, it.options?.grind].filter(Boolean).join(", ")}
                             </span>
                           )}
                         </span>
-                        <span className="tabular-nums shrink-0" style={{ color: "#777" }}>{money(it.line_total, o.currency)}</span>
+                        <span className="tabular-nums shrink-0" style={{ color: "var(--o-muted)" }}>{money(it.line_total, o.currency)}</span>
                       </li>
                     ))}
                   </ul>
@@ -150,7 +150,7 @@ export default function OrdersPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <span className="text-xs font-semibold" style={{ color: "#777" }}>Status:</span>
+                    <span className="text-xs font-semibold" style={{ color: "var(--o-muted)" }}>Status:</span>
                     {STATUSES.map((s) => (
                       <button key={s} onClick={() => updateStatus(o.id, s)} className="text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize transition-colors" style={{ background: o.status === s ? "#C5B27A" : "#F2F2F2", color: o.status === s ? "#1E1E1E" : "#888" }}>
                         {statusLabel(s, isFetOrder(o))}
@@ -159,7 +159,7 @@ export default function OrdersPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <span className="text-xs font-semibold" style={{ color: "#777" }}>Payment:</span>
+                    <span className="text-xs font-semibold" style={{ color: "var(--o-muted)" }}>Payment:</span>
                     {PAYMENT_STATUSES.map((s) => (
                       <button key={s} onClick={() => updatePaymentStatus(o.id, s)} className="text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize transition-colors" style={{ background: o.payment_status === s ? "#C5B27A" : "#F2F2F2", color: o.payment_status === s ? "#1E1E1E" : "#888" }}>
                         {s}
@@ -171,12 +171,12 @@ export default function OrdersPage() {
 
                   {o.documents && o.documents.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-semibold" style={{ color: "#777" }}>Documents:</span>
+                      <span className="text-xs font-semibold" style={{ color: "var(--o-muted)" }}>Documents:</span>
                       {o.documents.map((d) => (
                         <a
                           key={d.id} href={d.url} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-colors"
-                          style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}
+                          style={{ background: "rgba(197,178,122,0.14)", color: "var(--o-accent-text)" }}
                         >
                           <FileText className="w-3 h-3" />
                           {DOC_LABELS[d.type] ?? d.title}
@@ -197,8 +197,8 @@ export default function OrdersPage() {
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#AAA" }}>{label}</p>
-      <p className="font-medium" style={{ color: "#444" }}>{value}</p>
+      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>{label}</p>
+      <p className="font-medium" style={{ color: "var(--o-text-2)" }}>{value}</p>
     </div>
   );
 }
@@ -270,62 +270,62 @@ function Installments({ orderId, total, currency, onPaymentStatus }: { orderId: 
   const draftTotal = rows?.reduce((n, r) => n + (Number(r.amount) || 0), 0) ?? 0;
 
   return (
-    <div className="mb-4 rounded-[16px] p-4" style={{ background: "#FAFAF8", border: "1px solid rgba(0,0,0,0.05)" }}>
+    <div className="mb-4 rounded-[16px] p-4" style={{ background: "var(--o-surface-2)", border: "1px solid rgba(0,0,0,0.05)" }}>
       <div className="flex items-center gap-2 mb-3">
-        <CreditCard className="w-4 h-4" style={{ color: "#C5B27A" }} />
-        <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "#777" }}>Payment plan (pay in parts)</span>
+        <CreditCard className="w-4 h-4" style={{ color: "var(--o-accent)" }} />
+        <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--o-muted)" }}>Payment plan (pay in parts)</span>
       </div>
 
       {data?.plan ? (
         <>
           <div className="flex flex-wrap gap-x-6 gap-y-1 mb-3 text-xs">
-            <span style={{ color: "#777" }}>Total: <strong style={{ color: "#1E1E1E" }}>{money(data.total, currency)}</strong></span>
-            <span style={{ color: "#16A34A" }}>Paid: <strong>{money(data.paid, currency)}</strong></span>
-            <span style={{ color: "#C0392B" }}>Balance: <strong>{money(data.balance, currency)}</strong></span>
+            <span style={{ color: "var(--o-muted)" }}>Total: <strong style={{ color: "var(--o-text)" }}>{money(data.total, currency)}</strong></span>
+            <span style={{ color: "var(--o-success)" }}>Paid: <strong>{money(data.paid, currency)}</strong></span>
+            <span style={{ color: "var(--o-danger)" }}>Balance: <strong>{money(data.balance, currency)}</strong></span>
           </div>
           <div className="space-y-1.5 mb-3">
             {data.plan.payments.map((p) => (
               <div key={p.id} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 text-xs">
-                <span className="flex-1 min-w-0" style={{ color: "#444" }}>
+                <span className="flex-1 min-w-0" style={{ color: "var(--o-text-2)" }}>
                   <span className="font-semibold">{p.label}</span> · {money(p.amount, currency)}
-                  {p.due_date && <span style={{ color: "#999" }}> · due {formatDate(p.due_date)}</span>}
+                  {p.due_date && <span style={{ color: "var(--o-faint)" }}> · due {formatDate(p.due_date)}</span>}
                 </span>
                 {p.paid ? (
                   <>
-                    <span className="inline-flex items-center gap-1 font-semibold" style={{ color: "#16A34A" }}><Check className="w-3.5 h-3.5" />Paid</span>
-                    <button onClick={() => mark(p.id, "unpay")} className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>Undo</button>
+                    <span className="inline-flex items-center gap-1 font-semibold" style={{ color: "var(--o-success)" }}><Check className="w-3.5 h-3.5" />Paid</span>
+                    <button onClick={() => mark(p.id, "unpay")} className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>Undo</button>
                   </>
                 ) : (
-                  <button onClick={() => mark(p.id, "pay")} className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}>Record payment</button>
+                  <button onClick={() => mark(p.id, "pay")} className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>Record payment</button>
                 )}
               </div>
             ))}
           </div>
-          <button onClick={del} className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><Trash2 className="w-3 h-3" />Delete plan</button>
+          <button onClick={del} className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><Trash2 className="w-3 h-3" />Delete plan</button>
         </>
       ) : rows ? (
         <>
-          <p className="text-[11px] mb-2" style={{ color: "#999" }}>Adjust amounts/dates if needed, then save. Scheduled: {money(draftTotal, currency)} of {money(total, currency)}.</p>
+          <p className="text-[11px] mb-2" style={{ color: "var(--o-faint)" }}>Adjust amounts/dates if needed, then save. Scheduled: {money(draftTotal, currency)} of {money(total, currency)}.</p>
           <div className="space-y-1.5 mb-3">
             {rows.map((r, i) => (
               <div key={i} className="flex items-center gap-2 text-xs">
-                <input value={r.label} onChange={(e) => setRow(i, { label: e.target.value })} className="rounded-lg px-2 py-1 border w-28" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-                <input type="number" value={r.amount} onChange={(e) => setRow(i, { amount: Number(e.target.value) })} className="rounded-lg px-2 py-1 border w-28 tabular-nums" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-                <input type="date" value={r.due_date} onChange={(e) => setRow(i, { due_date: e.target.value })} className="rounded-lg px-2 py-1 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                <input value={r.label} onChange={(e) => setRow(i, { label: e.target.value })} className="rounded-lg px-2 py-1 border w-28" style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
+                <input type="number" value={r.amount} onChange={(e) => setRow(i, { amount: Number(e.target.value) })} className="rounded-lg px-2 py-1 border w-28 tabular-nums" style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
+                <input type="date" value={r.due_date} onChange={(e) => setRow(i, { due_date: e.target.value })} className="rounded-lg px-2 py-1 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
               </div>
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full disabled:opacity-50" style={{ background: "#1E1E1E", color: "#fff" }}>{saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}Save plan</button>
-            <button onClick={() => setRows(null)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>Cancel</button>
+            <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full disabled:opacity-50" style={{ background: "var(--o-inverse)", color: "#fff" }}>{saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}Save plan</button>
+            <button onClick={() => setRows(null)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>Cancel</button>
           </div>
         </>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs" style={{ color: "#999" }}>Split {money(total, currency)} into</span>
-          <input type="number" min={1} max={24} value={parts} onChange={(e) => setParts(Number(e.target.value))} className="rounded-lg px-2 py-1 border w-16 text-xs" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-          <span className="text-xs" style={{ color: "#999" }}>parts (monthly)</span>
-          <button onClick={generate} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}><Plus className="w-3.5 h-3.5" />Set up plan</button>
+          <span className="text-xs" style={{ color: "var(--o-faint)" }}>Split {money(total, currency)} into</span>
+          <input type="number" min={1} max={24} value={parts} onChange={(e) => setParts(Number(e.target.value))} className="rounded-lg px-2 py-1 border w-16 text-xs" style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
+          <span className="text-xs" style={{ color: "var(--o-faint)" }}>parts (monthly)</span>
+          <button onClick={generate} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)" }}><Plus className="w-3.5 h-3.5" />Set up plan</button>
         </div>
       )}
     </div>

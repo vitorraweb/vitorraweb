@@ -747,8 +747,8 @@ export default function ProspectsPage() {
           <div className="bg-white rounded-[24px] w-full max-w-xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b shrink-0" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
               <div>
-                <p className="font-semibold text-base" style={{ color: "#1E1E1E" }}>Email campaign</p>
-                <p className="text-xs mt-0.5" style={{ color: "#999" }}>
+                <p className="font-semibold text-base" style={{ color: "var(--o-text)" }}>Email campaign</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--o-faint)" }}>
                   {campaign
                     ? `Sending to ${campaign.total} recipient${campaign.total === 1 ? "" : "s"}`
                     : allMatching
@@ -756,8 +756,8 @@ export default function ProspectsPage() {
                       : `${selectedWithEmail} of ${selected.size} selected have an email address · ${productLabel}`}
                 </p>
               </div>
-              <button onClick={closeComposer} className="p-1.5 rounded-full" style={{ background: "#F2F2F2" }}>
-                <X className="w-4 h-4" style={{ color: "#777" }} />
+              <button onClick={closeComposer} className="p-1.5 rounded-full" style={{ background: "var(--o-surface-2)" }}>
+                <X className="w-4 h-4" style={{ color: "var(--o-muted)" }} />
               </button>
             </div>
 
@@ -766,8 +766,8 @@ export default function ProspectsPage() {
                 <CampaignProgress campaign={campaign} />
               ) : (
                 <>
-                  <p className="text-xs rounded-xl px-3.5 py-2.5" style={{ background: "#FAFAF8", color: "#777" }}>
-                    Sent from <strong style={{ color: "#7A6020" }}>support@vitorra.org</strong> with support copied, so every
+                  <p className="text-xs rounded-xl px-3.5 py-2.5" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>
+                    Sent from <strong style={{ color: "var(--o-accent-text)" }}>support@vitorra.org</strong> with support copied, so every
                     reply comes back to the shared inbox, not a personal mailbox. Use <code>{"{name}"}</code> to drop in each
                     company&apos;s name. Just type the message: the Vitorra letterhead, greeting, sign-off, <strong>your own
                     email signature</strong> (from your profile) and contact details are added for you. Blank lines start new paragraphs, lines starting &ldquo;-&rdquo; become bullet points.
@@ -778,24 +778,24 @@ export default function ProspectsPage() {
                     <div className="relative">
                       <button onClick={() => setTemplateOpen((o) => !o)}
                         className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
-                        style={{ background: "#F2F2F2", color: "#555" }}>
+                        style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
                         Use template <ChevronDown className={`w-3 h-3 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
                       </button>
                       {templateOpen && (
                         <div className="absolute left-0 top-full mt-1 z-10 rounded-xl border shadow-lg overflow-hidden w-72 max-h-64 overflow-y-auto"
-                          style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
+                          style={{ background: "var(--o-surface)", borderColor: "rgba(0,0,0,0.08)" }}>
                           {templates.map((t) => (
                             <button key={t.id} onClick={() => { setSubject(t.subject); setBody(t.body); setTemplateOpen(false); }}
                               className="w-full text-left px-3.5 py-2.5 hover:bg-black/[0.03] transition-colors border-b last:border-0"
                               style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-                              <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: "#1E1E1E" }}>
+                              <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: "var(--o-text)" }}>
                                 {t.name}
                                 {t.category && (
                                   <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full"
-                                    style={{ background: "#F2F2F2", color: "#999" }}>{t.category}</span>
+                                    style={{ background: "var(--o-surface-2)", color: "var(--o-faint)" }}>{t.category}</span>
                                 )}
                               </p>
-                              <p className="text-[11px] truncate" style={{ color: "#999" }}>{t.subject}</p>
+                              <p className="text-[11px] truncate" style={{ color: "var(--o-faint)" }}>{t.subject}</p>
                             </button>
                           ))}
                         </div>
@@ -804,23 +804,23 @@ export default function ProspectsPage() {
                   )}
 
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1" style={{ color: "#bbb" }}>Subject</label>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1" style={{ color: "var(--o-faint)" }}>Subject</label>
                     <input value={subject} onChange={(e) => setSubject(e.target.value)}
                       placeholder="Email subject…"
                       className="w-full text-sm rounded-xl px-3 py-2 border outline-none"
-                      style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                      style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1" style={{ color: "#bbb" }}>Message</label>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1" style={{ color: "var(--o-faint)" }}>Message</label>
                     <textarea value={body} onChange={(e) => setBody(e.target.value)}
                       placeholder={"Type the message itself. \"Dear {name},\", the sign-off and the Vitorra letterhead are added for you.\n\nBlank line = new paragraph.\n- Lines starting with a dash become bullet points"}
                       className="w-full text-sm rounded-xl px-3 py-2 border min-h-32 outline-none"
-                      style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                      style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
                   </div>
 
                   {/* Attachments */}
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1.5" style={{ color: "#bbb" }}>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1.5" style={{ color: "var(--o-faint)" }}>
                       Attachments <span style={{ textTransform: "none", letterSpacing: 0 }}>· up to {MAX_FILES} files, {MAX_FILE_MB} MB each</span>
                     </label>
                     <input ref={attachRef} type="file" multiple hidden
@@ -828,32 +828,32 @@ export default function ProspectsPage() {
                       onChange={(e) => addFiles(e.target.files)} />
                     <button onClick={() => attachRef.current?.click()}
                       className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-full"
-                      style={{ background: "#F2F2F2", color: "#555" }}>
+                      style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
                       <Paperclip className="w-3.5 h-3.5" />Attach a file
                     </button>
                     {files.length > 0 && (
                       <ul className="mt-2 space-y-1.5">
                         {files.map((f) => (
-                          <li key={`${f.name}-${f.size}`} className="flex items-center gap-2 text-xs rounded-xl px-3 py-2" style={{ background: "#FAFAF8", color: "#555" }}>
-                            <Paperclip className="w-3 h-3 shrink-0" style={{ color: "#C5B27A" }} />
+                          <li key={`${f.name}-${f.size}`} className="flex items-center gap-2 text-xs rounded-xl px-3 py-2" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
+                            <Paperclip className="w-3 h-3 shrink-0" style={{ color: "var(--o-accent)" }} />
                             <span className="flex-1 truncate">{f.name}</span>
-                            <span style={{ color: "#aaa" }}>{fmtSize(f.size)}</span>
+                            <span style={{ color: "var(--o-faint)" }}>{fmtSize(f.size)}</span>
                             <button onClick={() => removeFile(f.name, f.size)} className="p-0.5 rounded-full hover:bg-black/[0.06]">
-                              <X className="w-3 h-3" style={{ color: "#999" }} />
+                              <X className="w-3 h-3" style={{ color: "var(--o-faint)" }} />
                             </button>
                           </li>
                         ))}
                       </ul>
                     )}
-                    {fileError && <p className="text-xs mt-2" style={{ color: "#C0392B" }}>{fileError}</p>}
+                    {fileError && <p className="text-xs mt-2" style={{ color: "var(--o-danger)" }}>{fileError}</p>}
                   </div>
 
                   {/* Preview + test before the full release */}
-                  <div className="rounded-xl px-3.5 py-3 space-y-2.5" style={{ background: "#FAFAF8", border: "1px solid rgba(0,0,0,0.06)" }}>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#7A6020" }}>Check it before it goes out</p>
+                  <div className="rounded-xl px-3.5 py-3 space-y-2.5" style={{ background: "var(--o-surface-2)", border: "1px solid rgba(0,0,0,0.06)" }}>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "var(--o-accent-text)" }}>Check it before it goes out</p>
                     <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                       {testPeople.map((p) => (
-                        <label key={p.email} className="flex items-center gap-1.5 text-xs" style={{ color: "#555" }}>
+                        <label key={p.email} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--o-text-2)" }}>
                           <input type="checkbox" checked={testTo.has(p.email)}
                             onChange={(e) => setTestTo((s) => { const n = new Set(s); if (e.target.checked) n.add(p.email); else n.delete(p.email); return n; })} />
                           {p.me ? `Me (${p.email})` : p.name}
@@ -863,39 +863,39 @@ export default function ProspectsPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <button onClick={sendTest} disabled={testing || !subject.trim() || !body.trim() || testTo.size === 0}
                         className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full disabled:opacity-40"
-                        style={{ background: "#1E1E1E", color: "#fff" }}>
+                        style={{ background: "var(--o-inverse)", color: "#fff" }}>
                         {testing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FlaskConical className="w-3.5 h-3.5" />}Send test
                       </button>
                       <button onClick={showPreview} disabled={previewing || !body.trim()}
                         className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full disabled:opacity-40"
-                        style={{ background: "#F2F2F2", color: "#555" }}>
+                        style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
                         {previewing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />}Preview
                       </button>
-                      {tested && <span className="text-[11px] flex items-center gap-1" style={{ color: "#16A34A" }}><CheckCircle2 className="w-3.5 h-3.5" />Tested</span>}
+                      {tested && <span className="text-[11px] flex items-center gap-1" style={{ color: "var(--o-success)" }}><CheckCircle2 className="w-3.5 h-3.5" />Tested</span>}
                     </div>
                     {testMsg && <p className="text-[11px]" style={{ color: testMsg.ok ? "#16A34A" : "#C0392B" }}>{testMsg.text}</p>}
-                    <p className="text-[11px]" style={{ color: "#999" }}>
+                    <p className="text-[11px]" style={{ color: "var(--o-faint)" }}>
                       The test is marked [TEST], uses {sampleName ? `“${sampleName}”` : "a sample company"} for {"{name}"}, and carries the attachments. Nothing is recorded against any customer.
                     </p>
                   </div>
 
-                  <label className="flex items-center gap-2 text-xs" style={{ color: "#555" }}>
+                  <label className="flex items-center gap-2 text-xs" style={{ color: "var(--o-text-2)" }}>
                     <input type="checkbox" checked={followUpAfterSend} onChange={(e) => setFollowUpAfterSend(e.target.checked)} />
                     Remind us to follow up with everyone in a week (shows under <strong>Follow-ups due</strong>)
                   </label>
 
                   {/* Save as a reusable template */}
                   <div className="pt-1">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1.5" style={{ color: "#bbb" }}>Save as template</label>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-1.5" style={{ color: "var(--o-faint)" }}>Save as template</label>
                     <div className="flex items-center gap-2">
                       <input value={tplName} onChange={(e) => setTplName(e.target.value)}
                         placeholder="Template name, e.g. SEAL intro — hospitals"
                         className="flex-1 text-sm rounded-xl px-3 py-2 border outline-none"
-                        style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                        style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
                       <button onClick={saveAsTemplate}
                         disabled={tplSaving || !tplName.trim() || !subject.trim() || !body.trim()}
                         className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full disabled:opacity-40 shrink-0"
-                        style={{ background: "#F2F2F2", color: "#555" }}>
+                        style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
                         {tplSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}Save
                       </button>
                     </div>
@@ -909,20 +909,20 @@ export default function ProspectsPage() {
               )}
 
               {sendError && (
-                <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}>
+                <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}>
                   {sendError}
                 </div>
               )}
             </div>
 
             <div className="flex items-center justify-end gap-2 px-6 pb-5 pt-2 border-t shrink-0" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-              <button onClick={closeComposer} className="text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>
+              <button onClick={closeComposer} className="text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
                 {campaign ? "Close" : "Cancel"}
               </button>
               {!campaign && (
                 <button onClick={releaseCampaign} disabled={sending || !subject.trim() || !body.trim() || (!allMatching && selectedWithEmail === 0)}
                   className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50"
-                  style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                  style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>
                   {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                   {confirmUntested && !tested
                     ? "Not tested yet. Send anyway?"
@@ -939,8 +939,8 @@ export default function ProspectsPage() {
           <div className="bg-white w-full max-w-[680px] h-[90vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
               <p className="text-sm font-semibold text-ink">Preview · as {sampleName || "a sample company"} will see it</p>
-              <button onClick={() => setPreviewHtml(null)} aria-label="Close preview" className="p-1.5 rounded-full" style={{ background: "#F2F2F2" }}>
-                <X className="w-4 h-4" style={{ color: "#777" }} />
+              <button onClick={() => setPreviewHtml(null)} aria-label="Close preview" className="p-1.5 rounded-full" style={{ background: "var(--o-surface-2)" }}>
+                <X className="w-4 h-4" style={{ color: "var(--o-muted)" }} />
               </button>
             </div>
             <iframe title="Email preview" srcDoc={previewHtml} sandbox="" className="flex-1 w-full border-0" />
@@ -961,18 +961,18 @@ function CampaignProgress({ campaign }: { campaign: Campaign }) {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         {finished
-          ? <CheckCircle2 className="w-5 h-5" style={{ color: "#16A34A" }} />
-          : <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#C5B27A" }} />}
-        <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>
+          ? <CheckCircle2 className="w-5 h-5" style={{ color: "var(--o-success)" }} />
+          : <Loader2 className="w-5 h-5 animate-spin" style={{ color: "var(--o-accent)" }} />}
+        <p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>
           {finished
             ? campaign.status === "cancelled" ? "Campaign cancelled" : "Campaign sent"
             : `Sending… ${done} of ${campaign.total}`}
         </p>
       </div>
 
-      <div className="h-2 rounded-full overflow-hidden" style={{ background: "#F2F2F2" }}>
+      <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--o-surface-2)" }}>
         <div className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, background: "#C5B27A" }} />
+          style={{ width: `${pct}%`, background: "var(--o-accent)" }} />
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-xs">
@@ -983,14 +983,14 @@ function CampaignProgress({ campaign }: { campaign: Campaign }) {
       </div>
 
       {campaign.attachments.length > 0 && (
-        <p className="text-xs flex items-center gap-1.5" style={{ color: "#888" }}>
-          <Paperclip className="w-3 h-3" style={{ color: "#C5B27A" }} />
+        <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--o-muted)" }}>
+          <Paperclip className="w-3 h-3" style={{ color: "var(--o-accent)" }} />
           {campaign.attachments.map((a) => a.name).join(", ")}
         </p>
       )}
 
       {!finished && (
-        <p className="text-[11px]" style={{ color: "#aaa" }}>
+        <p className="text-[11px]" style={{ color: "var(--o-faint)" }}>
           You can close this — sending carries on in the background and finishes on its own.
         </p>
       )}
@@ -1000,9 +1000,9 @@ function CampaignProgress({ campaign }: { campaign: Campaign }) {
 
 function Stat({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
-    <div className="rounded-xl px-3 py-2" style={{ background: "#FAFAF8" }}>
+    <div className="rounded-xl px-3 py-2" style={{ background: "var(--o-surface-2)" }}>
       <p className="font-bold text-base" style={{ color: tone }}>{value}</p>
-      <p style={{ color: "#999" }}>{label}</p>
+      <p style={{ color: "var(--o-faint)" }}>{label}</p>
     </div>
   );
 }

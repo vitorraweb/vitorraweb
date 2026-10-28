@@ -40,7 +40,7 @@ export default function FetTrialLenses({ trial }: { trial: Trial }) {
               tone={work.change_pct > 0 ? "good" : "bad"}
             />
           </div>
-          <p className="text-xs leading-relaxed" style={{ color: "#777" }}>{work.note}</p>
+          <p className="text-xs leading-relaxed" style={{ color: "var(--o-muted)" }}>{work.note}</p>
         </Panel>
       )}
 
@@ -50,15 +50,15 @@ export default function FetTrialLenses({ trial }: { trial: Trial }) {
           title={`How much of the ${sens.route_label} result is the extra load?`}
           subtitle={`That trip hauled ${sens.trial_mass_t} tonnes on average against ${sens.baseline_mass_t} before — ${sens.mass_gap_pct}% more.`}
         >
-          <p className="text-xs leading-relaxed mb-3" style={{ color: "#777" }}>
+          <p className="text-xs leading-relaxed mb-3" style={{ color: "var(--o-muted)" }}>
             Some of a truck&rsquo;s fuel goes on moving weight and some does not, and nobody knows the exact split without
             leg-by-leg records. So rather than pick a figure, here is the whole range — the answer, and whether it is
             good or bad news, depends on where the truth sits.
           </p>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{ color: "#454545" }}>
+            <table className="w-full text-sm" style={{ color: "var(--o-text-2)" }}>
               <thead>
-                <tr className="text-[10px] uppercase tracking-wide" style={{ color: "#999" }}>
+                <tr className="text-[10px] uppercase tracking-wide" style={{ color: "var(--o-faint)" }}>
                   <th className="text-left font-semibold py-2">If this much fuel scales with weight</th>
                   <th className="text-right font-semibold px-3">Adjusted fuel</th>
                   <th className="text-right font-semibold px-3">Adjusted economy</th>
@@ -80,7 +80,7 @@ export default function FetTrialLenses({ trial }: { trial: Trial }) {
             </table>
           </div>
           {sens.break_even_pct !== null && (
-            <p className="text-xs leading-relaxed mt-3 rounded-xl p-3" style={{ background: "rgba(138,90,24,0.07)", color: "#8A5A18" }}>
+            <p className="text-xs leading-relaxed mt-3 rounded-xl p-3" style={{ background: "rgba(138,90,24,0.07)", color: "var(--o-accent-text)" }}>
               The result turns from worse to better at about <strong>{sens.break_even_pct}%</strong>. That the answer flips
               inside a plausible range is the finding: this trip cannot settle the question either way. Only leg-by-leg
               fuel records, or trips carrying the same load as the baseline, can.
@@ -99,7 +99,7 @@ export default function FetTrialLenses({ trial }: { trial: Trial }) {
             <Figure label="Before the device" value={pct(ref.baseline_pct)} tone={tone(ref.baseline_pct)} />
             <Figure label="After the device" value={pct(ref.trial_pct)} tone={tone(ref.trial_pct)} />
           </div>
-          <p className="text-xs leading-relaxed mt-3" style={{ color: "#777" }}>
+          <p className="text-xs leading-relaxed mt-3" style={{ color: "var(--o-muted)" }}>
             This is the number their operation already plans against, so it is the one they will judge by — worth knowing
             where you stand on it before the conversation, not during it.
           </p>
@@ -117,7 +117,7 @@ export default function FetTrialLenses({ trial }: { trial: Trial }) {
             <Figure label="After" value={`${second.trial.km_per_l}`} unit="km/L" />
             <Figure label="Change" value={`${second.change_pct > 0 ? "+" : ""}${second.change_pct}%`} tone={second.change_pct > 0 ? "good" : "bad"} />
           </div>
-          <p className="text-xs leading-relaxed mt-3" style={{ color: "#777" }}>
+          <p className="text-xs leading-relaxed mt-3" style={{ color: "var(--o-muted)" }}>
             Two measurements pointing the same way is far stronger evidence than one. Two pointing different ways needs
             settling before anything is shown to the client.
           </p>
@@ -133,10 +133,10 @@ const tone = (v: number | null): "good" | "bad" | undefined => (v === null ? und
 function Panel({ icon, title, subtitle, children }: { icon: React.ReactNode; title: string; subtitle?: string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-[20px] border border-black/[0.06] p-5">
-      <p className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: "#1E1E1E" }}>
-        <span style={{ color: "#7A6020" }}>{icon}</span>{title}
+      <p className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--o-text)" }}>
+        <span style={{ color: "var(--o-accent-text)" }}>{icon}</span>{title}
       </p>
-      {subtitle && <p className="text-xs mt-0.5 mb-3.5" style={{ color: "#999" }}>{subtitle}</p>}
+      {subtitle && <p className="text-xs mt-0.5 mb-3.5" style={{ color: "var(--o-faint)" }}>{subtitle}</p>}
       {children}
     </div>
   );
@@ -145,12 +145,12 @@ function Panel({ icon, title, subtitle, children }: { icon: React.ReactNode; tit
 function Figure({ label, value, unit, hint, tone }: { label: string; value: string; unit?: string; hint?: string; tone?: "good" | "bad" }) {
   const colour = tone === "good" ? "#16A34A" : tone === "bad" ? "#9E3B33" : "#1E1E1E";
   return (
-    <div className="rounded-2xl p-3.5" style={{ background: "#F7F7F5" }}>
-      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>{label}</p>
+    <div className="rounded-2xl p-3.5" style={{ background: "var(--o-surface-2)" }}>
+      <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>{label}</p>
       <p className="font-bold tabular-nums" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "20px", color: colour }}>
-        {value}{unit && <span className="text-[11px] font-normal ml-1" style={{ color: "#AAA" }}>{unit}</span>}
+        {value}{unit && <span className="text-[11px] font-normal ml-1" style={{ color: "var(--o-faint)" }}>{unit}</span>}
       </p>
-      {hint && <p className="text-[11px] mt-0.5" style={{ color: "#AAA" }}>{hint}</p>}
+      {hint && <p className="text-[11px] mt-0.5" style={{ color: "var(--o-faint)" }}>{hint}</p>}
     </div>
   );
 }

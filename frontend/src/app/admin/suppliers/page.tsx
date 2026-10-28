@@ -16,10 +16,10 @@ type Doc = { id: number; type: string; title: string; original_name: string | nu
 type Detail = ListItem & { address: string | null; description: string | null; review_note: string | null; bank: Bank; documents: Doc[] };
 
 const STATUS: Record<string, { bg: string; fg: string; label: string }> = {
-  pending:        { bg: "rgba(197,178,122,0.16)", fg: "#7A6020", label: "Pending" },
-  approved:       { bg: "rgba(34,197,94,0.12)", fg: "#16A34A", label: "Approved" },
-  rejected:       { bg: "rgba(192,57,43,0.1)", fg: "#C0392B", label: "Rejected" },
-  info_requested: { bg: "rgba(59,130,246,0.12)", fg: "#2563EB", label: "Info requested" },
+  pending:        { bg: "rgba(197,178,122,0.16)", fg: "var(--o-accent-text)", label: "Pending" },
+  approved:       { bg: "rgba(34,197,94,0.12)", fg: "var(--o-success)", label: "Approved" },
+  rejected:       { bg: "rgba(192,57,43,0.1)", fg: "var(--o-danger)", label: "Rejected" },
+  info_requested: { bg: "rgba(59,130,246,0.12)", fg: "var(--o-info)", label: "Info requested" },
 };
 
 export default function AdminSuppliersPage() {
@@ -73,12 +73,12 @@ export default function AdminSuppliersPage() {
 
       <div className="flex flex-wrap gap-2 mb-5">
         {[["", "All"], ...(statuses.length ? statuses : ["pending"]).map((s) => [s, STATUS[s]?.label ?? s])].map(([v, label]) => (
-          <button key={v} onClick={() => setStatus(v)} className="text-xs font-semibold px-3.5 py-2 rounded-full" style={status === v ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{label}</button>
+          <button key={v} onClick={() => setStatus(v)} className="text-xs font-semibold px-3.5 py-2 rounded-full" style={status === v ? { background: "var(--o-inverse)", color: "#fff" } : { background: "var(--o-surface)", color: "var(--o-muted)", border: "1px solid rgba(0,0,0,0.06)" }}>{label}</button>
         ))}
       </div>
-      {msg && <p className="text-sm mb-3" style={{ color: "#7A6020" }}>{msg}</p>}
+      {msg && <p className="text-sm mb-3" style={{ color: "var(--o-accent-text)" }}>{msg}</p>}
 
-      {loading ? <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+      {loading ? <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       : list.length === 0 ? <Empty label="No suppliers in this view." /> : (
         <div className="space-y-2.5">
           {list.map((s) => {
@@ -88,32 +88,32 @@ export default function AdminSuppliersPage() {
                 <button onClick={() => expand(s.id)} className="w-full flex items-center gap-3 p-4 text-left">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{s.company_name}</span>
+                      <span className="font-semibold text-sm" style={{ color: "var(--o-text)" }}>{s.company_name}</span>
                       <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: sc.bg, color: sc.fg }}>{sc.label}</span>
                     </div>
-                    <p className="text-xs truncate" style={{ color: "#999" }}>{[s.category, s.email, `${s.documents_count} doc${s.documents_count === 1 ? "" : "s"}`].filter(Boolean).join(" · ")}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--o-faint)" }}>{[s.category, s.email, `${s.documents_count} doc${s.documents_count === 1 ? "" : "s"}`].filter(Boolean).join(" · ")}</p>
                   </div>
-                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === s.id ? "rotate-180" : ""}`} style={{ color: "#BBB" }} />
+                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open === s.id ? "rotate-180" : ""}`} style={{ color: "var(--o-faint)" }} />
                 </button>
 
                 {open === s.id && (
                   <div className="px-4 pb-4 pt-1 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
                     {!detail || detail.id !== s.id ? (
-                      <div className="flex items-center gap-2 text-sm py-3" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+                      <div className="flex items-center gap-2 text-sm py-3" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
                     ) : (
                       <>
-                        <div className="flex flex-wrap gap-x-5 gap-y-1 my-3 text-xs" style={{ color: "#555" }}>
+                        <div className="flex flex-wrap gap-x-5 gap-y-1 my-3 text-xs" style={{ color: "var(--o-text-2)" }}>
                           {detail.contact_name && <span>{detail.contact_name}</span>}
                           {detail.phone && <span>📞 {detail.phone}</span>}
                           {detail.country && <span>🌍 {detail.country}</span>}
                           {detail.address && <span>📍 {detail.address}</span>}
                         </div>
-                        {detail.description && <p className="text-sm mb-3" style={{ color: "#454545" }}>{detail.description}</p>}
+                        {detail.description && <p className="text-sm mb-3" style={{ color: "var(--o-text-2)" }}>{detail.description}</p>}
 
                         {/* Bank details */}
-                        <div className="rounded-xl p-4 mb-3" style={{ background: "#FAFAF8" }}>
-                          <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "#7A6020" }}><Landmark className="w-3.5 h-3.5" />Bank details</p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm" style={{ color: "#454545" }}>
+                        <div className="rounded-xl p-4 mb-3" style={{ background: "var(--o-surface-2)" }}>
+                          <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--o-accent-text)" }}><Landmark className="w-3.5 h-3.5" />Bank details</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm" style={{ color: "var(--o-text-2)" }}>
                             <span><strong>Bank:</strong> {detail.bank.bank_name || "—"}</span>
                             <span><strong>Account name:</strong> {detail.bank.account_name || "—"}</span>
                             <span><strong>Account no.:</strong> {detail.bank.account_number || "—"}</span>
@@ -124,29 +124,29 @@ export default function AdminSuppliersPage() {
 
                         {/* Documents */}
                         <div className="mb-3">
-                          <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "#bbb" }}>Documents</p>
-                          {detail.documents.length === 0 ? <p className="text-xs" style={{ color: "#bbb" }}>None provided.</p> : (
+                          <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--o-faint)" }}>Documents</p>
+                          {detail.documents.length === 0 ? <p className="text-xs" style={{ color: "var(--o-faint)" }}>None provided.</p> : (
                             <div className="space-y-1.5">
                               {detail.documents.map((d) => (
-                                <button key={d.id} onClick={() => doc(d)} className="flex items-center gap-2 text-sm w-full text-left rounded-lg px-3 py-2" style={{ background: "#F7F7F5", color: "#454545" }}>
-                                  <Download className="w-4 h-4 shrink-0" style={{ color: "#C5B27A" }} /><span className="truncate">{d.title}</span>
+                                <button key={d.id} onClick={() => doc(d)} className="flex items-center gap-2 text-sm w-full text-left rounded-lg px-3 py-2" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
+                                  <Download className="w-4 h-4 shrink-0" style={{ color: "var(--o-accent)" }} /><span className="truncate">{d.title}</span>
                                 </button>
                               ))}
                             </div>
                           )}
                         </div>
 
-                        {detail.review_note && <p className="text-xs mb-3" style={{ color: "#777" }}>Note: {detail.review_note}</p>}
+                        {detail.review_note && <p className="text-xs mb-3" style={{ color: "var(--o-muted)" }}>Note: {detail.review_note}</p>}
 
                         {/* Actions */}
                         <div className="flex flex-wrap items-center gap-2 mb-3">
-                          <button onClick={() => setStatusFor(s.id, "approved")} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}><Check className="w-3.5 h-3.5" />Approve</button>
-                          <button onClick={() => setStatusFor(s.id, "info_requested")} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "rgba(59,130,246,0.12)", color: "#2563EB" }}><HelpCircle className="w-3.5 h-3.5" />Request info</button>
-                          <button onClick={() => setStatusFor(s.id, "rejected")} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><X className="w-3.5 h-3.5" />Reject</button>
+                          <button onClick={() => setStatusFor(s.id, "approved")} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "var(--o-success)" }}><Check className="w-3.5 h-3.5" />Approve</button>
+                          <button onClick={() => setStatusFor(s.id, "info_requested")} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "rgba(59,130,246,0.12)", color: "var(--o-info)" }}><HelpCircle className="w-3.5 h-3.5" />Request info</button>
+                          <button onClick={() => setStatusFor(s.id, "rejected")} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><X className="w-3.5 h-3.5" />Reject</button>
                         </div>
                         <div className="flex items-center gap-2 pt-3 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#777" }}><UserCheck className="w-3.5 h-3.5" />Assign approver</span>
-                          <select onChange={(e) => { assign(s.id, e.target.value); e.target.value = ""; }} defaultValue="" className="text-sm rounded-xl px-3 py-1.5 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }}>
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--o-muted)" }}><UserCheck className="w-3.5 h-3.5" />Assign approver</span>
+                          <select onChange={(e) => { assign(s.id, e.target.value); e.target.value = ""; }} defaultValue="" className="text-sm rounded-xl px-3 py-1.5 border" style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }}>
                             <option value="" disabled>Choose someone…</option>
                             {assignees.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                           </select>

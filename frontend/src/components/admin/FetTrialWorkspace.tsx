@@ -63,14 +63,14 @@ export default function FetTrialWorkspace({ trialId }: { trialId: number }) {
     return (
       <div className="pb-12">
         <BackLink />
-        <p className="text-sm mt-4" style={{ color: "#C0392B" }}>{error}</p>
+        <p className="text-sm mt-4" style={{ color: "var(--o-danger)" }}>{error}</p>
       </div>
     );
   }
 
   if (!trial) {
     return (
-      <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}>
+      <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}>
         <Loader2 className="w-4 h-4 animate-spin" />Loading…
       </div>
     );
@@ -93,10 +93,10 @@ export default function FetTrialWorkspace({ trialId }: { trialId: number }) {
 
       <div className="flex items-start justify-between gap-4 flex-wrap mt-3 mb-1">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "#1E1E1E" }}>
+          <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "var(--o-text)" }}>
             {trial.client_company}
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#999" }}>
+          <p className="text-sm mt-1" style={{ color: "var(--o-faint)" }}>
             {trial.reference}
             {trial.registration ? ` · ${trial.registration}` : ""}
             {trial.vehicle_make ? ` · ${trial.vehicle_make}` : ""}
@@ -112,7 +112,7 @@ export default function FetTrialWorkspace({ trialId }: { trialId: number }) {
             disabled={busy}
             title="Run the data checks again"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
-            style={{ background: "#F2F2F2", color: "#555", opacity: busy ? 0.6 : 1 }}
+            style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)", opacity: busy ? 0.6 : 1 }}
           >
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}Re-check
           </button>
@@ -133,20 +133,20 @@ export default function FetTrialWorkspace({ trialId }: { trialId: number }) {
                 className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                 style={
                   t.key === "findings" && outstanding > 0
-                    ? { background: "rgba(158,59,51,0.1)", color: "#9E3B33" }
-                    : { background: "rgba(0,0,0,0.06)", color: "#888" }
+                    ? { background: "rgba(158,59,51,0.1)", color: "var(--o-danger)" }
+                    : { background: "rgba(0,0,0,0.06)", color: "var(--o-muted)" }
                 }
               >
                 {t.badge}
               </span>
             )}
-            {tab === t.key && <span className="absolute left-0 right-0 -bottom-px h-0.5" style={{ background: "#C5B27A" }} />}
+            {tab === t.key && <span className="absolute left-0 right-0 -bottom-px h-0.5" style={{ background: "var(--o-accent)" }} />}
           </button>
         ))}
       </div>
 
       {error && (
-        <p className="flex items-center gap-2 text-sm mb-4" style={{ color: "#C0392B" }}>
+        <p className="flex items-center gap-2 text-sm mb-4" style={{ color: "var(--o-danger)" }}>
           <AlertCircle className="w-4 h-4" />{error}
         </p>
       )}
@@ -162,7 +162,7 @@ export default function FetTrialWorkspace({ trialId }: { trialId: number }) {
 
 function BackLink() {
   return (
-    <Link href="/admin/fet-trials" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: "#999" }}>
+    <Link href="/admin/fet-trials" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: "var(--o-faint)" }}>
       <ArrowLeft className="w-4 h-4" />All trials
     </Link>
   );

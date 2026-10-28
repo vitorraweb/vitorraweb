@@ -29,7 +29,7 @@ const EMPTY: Form = {
 
 const CATS: Cat[] = ["FET", "SEAL", "COFFEE", "LOGISTICS"];
 const inputCls = "w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none";
-const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 function slugify(s: string) { return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
 const num = (s: string) => (s.trim() === "" ? null : Number(s));
@@ -85,16 +85,16 @@ export default function ProductEditor({ productId }: { productId?: number }) {
     catch (e) { setError(e instanceof Error ? e.message : "Delete failed"); setSaving(false); }
   };
 
-  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   const slugPreview = form.slug.trim() || slugify(form.name) || "your-product";
 
   return (
     <div className="max-w-3xl">
-      <Link href="/admin/products" className="inline-flex items-center gap-1.5 text-sm mb-5" style={{ color: "#777" }}>
+      <Link href="/admin/products" className="inline-flex items-center gap-1.5 text-sm mb-5" style={{ color: "var(--o-muted)" }}>
         <ArrowLeft className="w-4 h-4" />All products
       </Link>
-      <h1 className="mb-6" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "26px", fontWeight: 700, color: "#1E1E1E" }}>
+      <h1 className="mb-6" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "26px", fontWeight: 700, color: "var(--o-text)" }}>
         {productId ? "Edit product" : "New product"}
       </h1>
 
@@ -130,8 +130,8 @@ export default function ProductEditor({ productId }: { productId?: number }) {
 
         <div className="bg-white rounded-[16px] border p-4 flex items-center justify-between" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
           <div>
-            <span className="block text-sm font-medium" style={{ color: "#1E1E1E" }}>Published</span>
-            <span className="block text-xs" style={{ color: "#999" }}>Visible on the public site when on.</span>
+            <span className="block text-sm font-medium" style={{ color: "var(--o-text)" }}>Published</span>
+            <span className="block text-xs" style={{ color: "var(--o-faint)" }}>Visible on the public site when on.</span>
           </div>
           <button type="button" role="switch" aria-checked={form.is_published} onClick={() => set("is_published", !form.is_published)} className="relative w-11 h-6 rounded-full transition-colors shrink-0" style={{ background: form.is_published ? "#C5B27A" : "#D8D8D8" }}>
             <span className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform" style={{ transform: form.is_published ? "translateX(20px)" : "translateX(0)" }} />
@@ -143,7 +143,7 @@ export default function ProductEditor({ productId }: { productId?: number }) {
         </Field>
 
         <details className="rounded-xl border" style={{ borderColor: "rgba(0,0,0,0.1)" }}>
-          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold" style={{ color: "#555" }}>Product details (coffee &amp; specs)</summary>
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold" style={{ color: "var(--o-text-2)" }}>Product details (coffee &amp; specs)</summary>
           <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Tagline"><input value={form.tagline} onChange={(e) => set("tagline", e.target.value)} className={inputCls} style={inputStyle} /></Field>
             <Field label="Badge" hint="e.g. Bestseller"><input value={form.badge} onChange={(e) => set("badge", e.target.value)} className={inputCls} style={inputStyle} /></Field>
@@ -154,14 +154,14 @@ export default function ProductEditor({ productId }: { productId?: number }) {
           </div>
         </details>
 
-        {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
+        {error && <p className="text-sm" style={{ color: "var(--o-danger)" }}>{error}</p>}
 
         <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-          <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: saving ? 0.7 : 1 }}>
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold" style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: saving ? 0.7 : 1 }}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Save product
           </button>
           {productId && (
-            <button onClick={remove} disabled={saving} className="ml-auto inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#C0392B" }}>
+            <button onClick={remove} disabled={saving} className="ml-auto inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--o-danger)" }}>
               <Trash2 className="w-4 h-4" />Delete
             </button>
           )}
@@ -174,11 +174,11 @@ export default function ProductEditor({ productId }: { productId?: number }) {
 function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "#999" }}>
-        {label}{required && <span style={{ color: "#C5B27A" }}> *</span>}
+      <label className="block text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "var(--o-faint)" }}>
+        {label}{required && <span style={{ color: "var(--o-accent)" }}> *</span>}
       </label>
       {children}
-      {hint && <p className="mt-1.5 text-xs" style={{ color: "#999" }}>{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs" style={{ color: "var(--o-faint)" }}>{hint}</p>}
     </div>
   );
 }

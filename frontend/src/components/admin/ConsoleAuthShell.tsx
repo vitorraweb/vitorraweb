@@ -104,9 +104,9 @@ export function PasswordInput({ value, onChange, autoComplete, autoFocus, show, 
 
 export function AuthNotice({ tone = "info", children }: { tone?: "info" | "error" | "ok"; children: React.ReactNode }) {
   const cls = tone === "error"
-    ? "border-[#E8CACA] bg-[#FBF4F4] text-alert-ink"
+    ? "border-[var(--o-danger-bg)] bg-[var(--o-danger-bg)] text-alert-ink"
     : tone === "ok"
-      ? "border-[#C9DECB] bg-[#F3F8F3] text-ok-ink"
+      ? "border-[var(--o-success-bg)] bg-[var(--o-success-bg)] text-ok-ink"
       : "border-[color-mix(in_oklab,var(--color-gold)_45%,transparent)] bg-[color-mix(in_oklab,var(--color-gold)_9%,var(--color-paper))] text-gold-ink";
   return <div role={tone === "error" ? "alert" : "status"} className={`border rounded-edge px-3 py-2 text-[12.5px] leading-snug ${cls}`}>{children}</div>;
 }

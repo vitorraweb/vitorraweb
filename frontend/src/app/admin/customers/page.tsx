@@ -342,31 +342,31 @@ export default function CustomersPage() {
                     {/* Contact info row + edit */}
                     <div className="flex items-start justify-between gap-2 my-3">
                       {!editingInfo ? (
-                        <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs" style={{ color: "#555" }}>
-                          <a href={`mailto:${c.email}`} className="flex items-center gap-1.5 hover:underline"><Mail className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.email}</a>
-                          {c.phone   && <span className="flex items-center gap-1.5"><Phone     className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.phone}</span>}
-                          {c.company && <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.company}</span>}
-                          {c.country && <span className="flex items-center gap-1.5"><MapPin     className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{c.country}</span>}
+                        <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs" style={{ color: "var(--o-text-2)" }}>
+                          <a href={`mailto:${c.email}`} className="flex items-center gap-1.5 hover:underline"><Mail className="w-3.5 h-3.5" style={{ color: "var(--o-accent)" }} />{c.email}</a>
+                          {c.phone   && <span className="flex items-center gap-1.5"><Phone     className="w-3.5 h-3.5" style={{ color: "var(--o-accent)" }} />{c.phone}</span>}
+                          {c.company && <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" style={{ color: "var(--o-accent)" }} />{c.company}</span>}
+                          {c.country && <span className="flex items-center gap-1.5"><MapPin     className="w-3.5 h-3.5" style={{ color: "var(--o-accent)" }} />{c.country}</span>}
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 text-sm">
                           {(["name", "phone", "company", "country"] as const).map((field) => (
                             <div key={field}>
-                              <label className="text-[10px] font-bold uppercase tracking-[0.08em] mb-0.5 block" style={{ color: "#bbb" }}>{field}</label>
+                              <label className="text-[10px] font-bold uppercase tracking-[0.08em] mb-0.5 block" style={{ color: "var(--o-faint)" }}>{field}</label>
                               <input value={infoForm[field]} onChange={(e) => setInfoForm((f) => ({ ...f, [field]: e.target.value }))}
                                 placeholder={`Override ${field}…`}
                                 className="w-full rounded-xl px-3 py-1.5 border text-sm outline-none"
-                                style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                                style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
                             </div>
                           ))}
                           <div className="sm:col-span-2 flex items-center gap-2 mt-1">
                             <button onClick={() => saveInfo(c.email)} disabled={savingInfo}
                               className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full disabled:opacity-50"
-                              style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                              style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>
                               {savingInfo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}Save
                             </button>
                             <button onClick={() => setEditingInfo(false)} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full"
-                              style={{ background: "#F2F2F2", color: "#555" }}>
+                              style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
                               <X className="w-3.5 h-3.5" />Cancel
                             </button>
                           </div>
@@ -374,7 +374,7 @@ export default function CustomersPage() {
                       )}
                       {!editingInfo && (
                         <button onClick={() => setEditingInfo(true)} className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0"
-                          style={{ background: "#F2F2F2", color: "#777" }}>
+                          style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>
                           <Pencil className="w-3 h-3" />Edit info
                         </button>
                       )}
@@ -382,13 +382,13 @@ export default function CustomersPage() {
 
                     {/* Tags */}
                     <div className="mb-3">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#999" }}>
-                        <Tag className="w-3 h-3 inline mr-1" style={{ color: "#C5B27A" }} />Labels
+                      <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "var(--o-faint)" }}>
+                        <Tag className="w-3 h-3 inline mr-1" style={{ color: "var(--o-accent)" }} />Labels
                       </p>
                       <div className="flex flex-wrap items-center gap-1.5">
                         {tags.map((tag) => (
                           <span key={tag} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full"
-                            style={{ background: "rgba(197,178,122,0.15)", color: "#7A6020", border: "1px solid rgba(197,178,122,0.3)" }}>
+                            style={{ background: "rgba(197,178,122,0.15)", color: "var(--o-accent-text)", border: "1px solid rgba(197,178,122,0.3)" }}>
                             {tag}
                             <button onClick={() => removeTag(c.email, tag)} disabled={savingTags}
                               className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity">
@@ -401,10 +401,10 @@ export default function CustomersPage() {
                             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(c.email); } }}
                             placeholder="Add label…"
                             className="text-[11px] rounded-full px-2.5 py-1 border outline-none w-28"
-                            style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
+                            style={{ borderColor: "rgba(0,0,0,0.1)", background: "var(--o-surface)" }} />
                           <button onClick={() => addTag(c.email)} disabled={!tagInput.trim() || savingTags}
                             className="p-1 rounded-full disabled:opacity-40"
-                            style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                            style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>
                             {savingTags ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
                           </button>
                         </div>
@@ -412,7 +412,7 @@ export default function CustomersPage() {
                     </div>
 
                     {detailLoading ? (
-                      <div className="flex items-center gap-2 text-sm py-3" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading history…</div>
+                      <div className="flex items-center gap-2 text-sm py-3" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading history…</div>
                     ) : detail && detail.email.toLowerCase() === c.email.toLowerCase() ? (
                       <div className="space-y-4">
                         {detail.orders.length > 0 && (
@@ -425,7 +425,7 @@ export default function CustomersPage() {
 
                         {/* Conversation thread */}
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#999" }}>Conversation</p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "var(--o-faint)" }}>Conversation</p>
                           {(() => {
                             const thread: ThreadItem[] = [
                               ...detail.enquiries.map((e) => ({ key: `e${e.id}`, direction: "in" as const, label: e.product_category ?? "Enquiry", text: e.message, date: e.created_at })),
@@ -444,20 +444,20 @@ export default function CustomersPage() {
                                 {thread.map((t) => <ThreadBubble key={t.key} item={t} />)}
                               </div>
                             ) : (
-                              <p className="text-xs mb-3" style={{ color: "#999" }}>No messages yet.</p>
+                              <p className="text-xs mb-3" style={{ color: "var(--o-faint)" }}>No messages yet.</p>
                             );
                           })()}
 
                           {/* Reply composer */}
-                          <div className="rounded-xl border p-3" style={{ borderColor: "rgba(0,0,0,0.08)", background: "#F8F7F5" }}>
+                          <div className="rounded-xl border p-3" style={{ borderColor: "rgba(0,0,0,0.08)", background: "var(--o-surface-2)" }}>
                             {/* Sending-as identity strip */}
                             {me && (
                               <div className="flex items-center gap-2 mb-2.5">
                                 <span className="flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold shrink-0"
-                                  style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                                  style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>
                                   {me.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}
                                 </span>
-                                <span className="text-[11px]" style={{ color: "#999" }}>Sending as <strong style={{ color: "#555" }}>{me.name}</strong></span>
+                                <span className="text-[11px]" style={{ color: "var(--o-faint)" }}>Sending as <strong style={{ color: "var(--o-text-2)" }}>{me.name}</strong></span>
                               </div>
                             )}
 
@@ -467,18 +467,18 @@ export default function CustomersPage() {
                                 <div className="relative">
                                   <button onClick={() => setTemplateOpen((o) => !o)}
                                     className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
-                                    style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", color: "#555" }}>
+                                    style={{ background: "var(--o-surface)", border: "1px solid rgba(0,0,0,0.1)", color: "var(--o-text-2)" }}>
                                     Use template <ChevronDown className={`w-3 h-3 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
                                   </button>
                                   {templateOpen && (
                                     <div className="absolute left-0 top-full mt-1 z-20 rounded-xl border shadow-lg overflow-hidden w-72"
-                                      style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
+                                      style={{ background: "var(--o-surface)", borderColor: "rgba(0,0,0,0.08)" }}>
                                       {templates.map((t) => (
                                         <button key={t.id} onClick={() => applyTemplate(t)}
                                           className="w-full text-left px-3.5 py-2.5 hover:bg-black/[0.03] transition-colors border-b last:border-0"
                                           style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-                                          <p className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>{t.name}</p>
-                                          <p className="text-[11px] truncate" style={{ color: "#999" }}>{t.subject}</p>
+                                          <p className="text-xs font-semibold" style={{ color: "var(--o-text)" }}>{t.name}</p>
+                                          <p className="text-[11px] truncate" style={{ color: "var(--o-faint)" }}>{t.subject}</p>
                                         </button>
                                       ))}
                                     </div>
@@ -490,25 +490,25 @@ export default function CustomersPage() {
                               <div className="relative">
                                 <button onClick={() => setCcPickerOpen((o) => !o)}
                                   className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
-                                  style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", color: "#555" }}>
+                                  style={{ background: "var(--o-surface)", border: "1px solid rgba(0,0,0,0.1)", color: "var(--o-text-2)" }}>
                                   <Users className="w-3 h-3" />CC{ccList.length > 0 ? ` (${ccList.length})` : ""}
                                   <ChevronDown className={`w-3 h-3 transition-transform ${ccPickerOpen ? "rotate-180" : ""}`} />
                                 </button>
                                 {ccPickerOpen && (
                                   <div className="absolute left-0 top-full mt-1 z-20 rounded-xl border shadow-lg overflow-hidden w-64"
-                                    style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
+                                    style={{ background: "var(--o-surface)", borderColor: "rgba(0,0,0,0.08)" }}>
                                     <button onClick={() => toggleCc("support@vitorra.org")}
                                       className="w-full flex items-center justify-between text-left px-3.5 py-2 hover:bg-black/[0.03] transition-colors border-b"
                                       style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-                                      <span className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>Support inbox</span>
-                                      {ccList.includes("support@vitorra.org") && <span style={{ color: "#C5B27A" }}>✓</span>}
+                                      <span className="text-xs font-semibold" style={{ color: "var(--o-text)" }}>Support inbox</span>
+                                      {ccList.includes("support@vitorra.org") && <span style={{ color: "var(--o-accent)" }}>✓</span>}
                                     </button>
                                     {assignees.filter((a) => a.email).map((a) => (
                                       <button key={a.id} onClick={() => toggleCc(a.email)}
                                         className="w-full flex items-center justify-between text-left px-3.5 py-2 hover:bg-black/[0.03] transition-colors border-b last:border-0"
                                         style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-                                        <span className="text-xs" style={{ color: "#1E1E1E" }}>{a.name}</span>
-                                        {ccList.includes(a.email) && <span style={{ color: "#C5B27A" }}>✓</span>}
+                                        <span className="text-xs" style={{ color: "var(--o-text)" }}>{a.name}</span>
+                                        {ccList.includes(a.email) && <span style={{ color: "var(--o-accent)" }}>✓</span>}
                                       </button>
                                     ))}
                                   </div>
@@ -520,7 +520,7 @@ export default function CustomersPage() {
                               <div className="flex flex-wrap gap-1.5 mb-2">
                                 {ccList.map((cc) => (
                                   <span key={cc} className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
-                                    style={{ background: "rgba(197,178,122,0.14)", color: "#7A6020" }}>
+                                    style={{ background: "rgba(197,178,122,0.14)", color: "var(--o-accent-text)" }}>
                                     {cc}
                                     <button onClick={() => toggleCc(cc)}><X className="w-2.5 h-2.5" /></button>
                                   </span>
@@ -531,18 +531,18 @@ export default function CustomersPage() {
                             <input value={replySubject} onChange={(e) => setReplySubject(e.target.value)}
                               placeholder="Subject (optional)"
                               className="w-full text-sm rounded-lg px-3 py-1.5 border mb-2 outline-none"
-                              style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
+                              style={{ borderColor: "rgba(0,0,0,0.1)", background: "var(--o-surface)" }} />
                             <textarea value={replyBody} onChange={(e) => setReplyBody(e.target.value)}
                               placeholder={`Reply to ${c.name || c.email}…`}
                               className="w-full text-sm rounded-lg px-3 py-2 border min-h-20 outline-none"
-                              style={{ borderColor: "rgba(0,0,0,0.1)", background: "#fff" }} />
+                              style={{ borderColor: "rgba(0,0,0,0.1)", background: "var(--o-surface)" }} />
 
                             {me?.email_signature && (
                               <div className="mt-1.5 px-1">
-                                <p className="text-[10px] uppercase tracking-wide font-semibold mb-0.5" style={{ color: "#bbb" }}>Signature (appended automatically)</p>
+                                <p className="text-[10px] uppercase tracking-wide font-semibold mb-0.5" style={{ color: "var(--o-faint)" }}>Signature (appended automatically)</p>
                                 <div
                                   className="text-[11px] [&_img]:max-w-[160px] [&_img]:h-auto"
-                                  style={{ color: "#999" }}
+                                  style={{ color: "var(--o-faint)" }}
                                   dangerouslySetInnerHTML={{ __html: me.email_signature }}
                                 />
                               </div>
@@ -552,7 +552,7 @@ export default function CustomersPage() {
                               <div className="flex flex-wrap gap-1.5 mt-2">
                                 {attachFiles.map((f, i) => (
                                   <span key={i} className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
-                                    style={{ background: "rgba(0,0,0,0.04)", color: "#555" }}>
+                                    style={{ background: "rgba(0,0,0,0.04)", color: "var(--o-text-2)" }}>
                                     <Paperclip className="w-2.5 h-2.5" />{f.name}
                                     <button onClick={() => setAttachFiles((fs) => fs.filter((_, idx) => idx !== i))}><X className="w-2.5 h-2.5" /></button>
                                   </span>
@@ -565,12 +565,12 @@ export default function CustomersPage() {
                                 onChange={(e) => setAttachFiles((fs) => [...fs, ...Array.from(e.target.files ?? [])])} />
                               <button onClick={() => fileRef.current?.click()}
                                 className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
-                                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", color: "#555" }}>
+                                style={{ background: "var(--o-surface)", border: "1px solid rgba(0,0,0,0.1)", color: "var(--o-text-2)" }}>
                                 <Paperclip className="w-3.5 h-3.5" />Attach
                               </button>
                               <button onClick={() => sendReply(c.email, c.name)} disabled={sendingReply || !replyBody.trim()}
                                 className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-full disabled:opacity-50"
-                                style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+                                style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>
                                 {sendingReply ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}Send reply
                               </button>
                             </div>
@@ -579,14 +579,14 @@ export default function CustomersPage() {
 
                         {/* Internal note */}
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "#999" }}>Internal note</p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "var(--o-faint)" }}>Internal note</p>
                           <textarea value={note} onChange={(e) => setNote(e.target.value)}
                             placeholder="Private note about this customer…"
                             className="w-full text-sm rounded-xl px-3 py-2 border min-h-16"
-                            style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+                            style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
                           <button onClick={() => saveNote(c.email)} disabled={savingNote}
                             className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold px-3.5 py-1.5 rounded-full"
-                            style={{ background: "#C5B27A", color: "#1E1E1E", opacity: savingNote ? 0.7 : 1 }}>
+                            style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: savingNote ? 0.7 : 1 }}>
                             {savingNote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}Save note
                           </button>
                         </div>
@@ -613,7 +613,7 @@ function CountChip({ icon: Icon, n }: { icon: typeof Mail; n: number }) {
 function HistoryBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#999" }}>{title}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "var(--o-faint)" }}>{title}</p>
       <div className="space-y-1.5">{children}</div>
     </div>
   );
@@ -624,12 +624,12 @@ function ThreadBubble({ item }: { item: ThreadItem }) {
   return (
     <div className="rounded-xl px-3.5 py-2.5" style={{ background: isOut ? "rgba(197,178,122,0.12)" : "#F8F7F5", borderLeft: isOut ? "3px solid #C5B27A" : "3px solid transparent" }}>
       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#fff", color: "#888" }}>{item.label}</span>
-        <span className="text-[11px]" style={{ color: "#999" }}>
+        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface)", color: "var(--o-muted)" }}>{item.label}</span>
+        <span className="text-[11px]" style={{ color: "var(--o-faint)" }}>
           {isOut ? `Reply${item.sender ? ` · ${item.sender}` : ""}` : "Received"} · {formatDate(item.date)}
         </span>
         {item.channel && (
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.05)", color: "#999" }}>
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.05)", color: "var(--o-faint)" }}>
             {item.channel === "portal" ? "via portal" : "via email"}
           </span>
         )}
@@ -638,10 +638,10 @@ function ThreadBubble({ item }: { item: ThreadItem }) {
         item.direction === "in" && item.channel === "portal" ? (
           // Customer portal replies are sanitized HTML (rich paste) — see
           // App\Support\SignatureHtml — safe to render raw.
-          <div className="text-xs [&_img]:max-w-[220px] [&_img]:h-auto [&_p]:my-1" style={{ color: "#555" }}
+          <div className="text-xs [&_img]:max-w-[220px] [&_img]:h-auto [&_p]:my-1" style={{ color: "var(--o-text-2)" }}
             dangerouslySetInnerHTML={{ __html: item.text }} />
         ) : (
-          <p className="text-xs whitespace-pre-line" style={{ color: "#555" }}>{item.text}</p>
+          <p className="text-xs whitespace-pre-line" style={{ color: "var(--o-text-2)" }}>{item.text}</p>
         )
       )}
       {item.attachments && item.attachments.length > 0 && item.communicationId && (
@@ -650,7 +650,7 @@ function ThreadBubble({ item }: { item: ThreadItem }) {
             <button key={a.index}
               onClick={() => downloadFile(`/admin/communications/${item.communicationId}/attachments/${a.index}`, a.name)}
               className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
-              style={{ background: "#fff", color: "#7A6020", border: "1px solid rgba(197,178,122,0.3)" }}>
+              style={{ background: "var(--o-surface)", color: "var(--o-accent-text)", border: "1px solid rgba(197,178,122,0.3)" }}>
               <Paperclip className="w-2.5 h-2.5" />{a.name}
             </button>
           ))}
@@ -662,12 +662,12 @@ function ThreadBubble({ item }: { item: ThreadItem }) {
 
 function Item({ tag, status, date, text }: { tag: string; status: string; date: string; text: string }) {
   return (
-    <div className="rounded-xl px-3.5 py-2.5" style={{ background: "#F8F7F5" }}>
+    <div className="rounded-xl px-3.5 py-2.5" style={{ background: "var(--o-surface-2)" }}>
       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#fff", color: "#888" }}>{tag}</span>
-        <span className="text-[11px]" style={{ color: "#999" }}>{status.replace(/_/g, " ")} · {formatDate(date)}</span>
+        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface)", color: "var(--o-muted)" }}>{tag}</span>
+        <span className="text-[11px]" style={{ color: "var(--o-faint)" }}>{status.replace(/_/g, " ")} · {formatDate(date)}</span>
       </div>
-      {text && <p className="text-xs line-clamp-2" style={{ color: "#555" }}>{text}</p>}
+      {text && <p className="text-xs line-clamp-2" style={{ color: "var(--o-text-2)" }}>{text}</p>}
     </div>
   );
 }

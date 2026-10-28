@@ -26,13 +26,13 @@ export default function NewsletterPage() {
     <div>
       <PageHeader title="Newsletter" subtitle="Manage subscribers and send broadcasts to your list." />
 
-      <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: "#F2F2F2" }}>
+      <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: "var(--o-surface-2)" }}>
         {(["subscribers", "compose", "history"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className="text-sm font-semibold px-4 py-1.5 rounded-lg capitalize transition-colors"
-            style={tab === t ? { background: "#fff", color: "#1E1E1E", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" } : { color: "#777" }}
+            style={tab === t ? { background: "var(--o-surface)", color: "var(--o-text)", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" } : { color: "var(--o-muted)" }}
           >
             {t === "compose" ? "Compose & Send" : t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
@@ -79,31 +79,31 @@ function SubscriberList() {
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <select value={status} onChange={(e) => { setLoading(true); setPage(1); setStatus(e.target.value); }}
           className="text-sm rounded-full px-3 py-1.5 border outline-none"
-          style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }}>
+          style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }}>
           <option value="">All statuses</option>
           <option value="subscribed">Subscribed</option>
           <option value="unsubscribed">Unsubscribed</option>
         </select>
         <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") search(); }}
           placeholder="Search email…" className="text-sm rounded-full px-4 py-1.5 border w-56 outline-none"
-          style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
+          style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
         <button onClick={search} className="text-sm font-semibold px-3.5 py-1.5 rounded-full"
-          style={{ background: "#F2F2F2", color: "#555" }}>Search</button>
+          style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>Search</button>
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : list.length === 0 ? (
         <Empty label="No subscribers yet." />
       ) : (
         <>
-          <p className="text-xs mb-3" style={{ color: "#999" }}>{meta.total} subscriber{meta.total === 1 ? "" : "s"}</p>
+          <p className="text-xs mb-3" style={{ color: "var(--o-faint)" }}>{meta.total} subscriber{meta.total === 1 ? "" : "s"}</p>
           <div className="bg-white rounded-[18px] border border-black/[0.05] overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
                   {["Email", "Status", "Source", "Subscribed"].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-[0.08em]" style={{ color: "#999" }}>{h}</th>
+                    <th key={h} className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-[0.08em]" style={{ color: "var(--o-faint)" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -111,17 +111,17 @@ function SubscriberList() {
                 {list.map((s) => (
                   <tr key={s.id} className="border-b last:border-0 hover:bg-black/[0.015] transition-colors"
                     style={{ borderColor: "rgba(0,0,0,0.04)" }}>
-                    <td className="px-4 py-3 font-medium" style={{ color: "#1E1E1E" }}>{s.email}</td>
+                    <td className="px-4 py-3 font-medium" style={{ color: "var(--o-text)" }}>{s.email}</td>
                     <td className="px-4 py-3">
                       <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
                         style={s.status === "subscribed"
-                          ? { background: "rgba(34,197,94,0.12)", color: "#16A34A" }
-                          : { background: "rgba(0,0,0,0.06)", color: "#777" }}>
+                          ? { background: "rgba(34,197,94,0.12)", color: "var(--o-success)" }
+                          : { background: "rgba(0,0,0,0.06)", color: "var(--o-muted)" }}>
                         {s.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "#777" }}>{s.source ?? "—"}</td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "#999" }}>{formatDate(s.consent_at ?? s.created_at)}</td>
+                    <td className="px-4 py-3 text-xs" style={{ color: "var(--o-muted)" }}>{s.source ?? "—"}</td>
+                    <td className="px-4 py-3 text-xs" style={{ color: "var(--o-faint)" }}>{formatDate(s.consent_at ?? s.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -131,11 +131,11 @@ function SubscriberList() {
             <div className="flex items-center justify-center gap-3 mt-4">
               <button disabled={meta.current_page <= 1} onClick={() => { setLoading(true); setPage((p) => p - 1); }}
                 className="inline-flex items-center gap-1 text-sm font-semibold px-3 py-1.5 rounded-full disabled:opacity-40"
-                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}><ChevronLeft className="w-4 h-4" />Prev</button>
-              <span className="text-xs" style={{ color: "#777" }}>Page {meta.current_page} of {meta.last_page}</span>
+                style={{ background: "var(--o-surface)", border: "1px solid rgba(0,0,0,0.08)" }}><ChevronLeft className="w-4 h-4" />Prev</button>
+              <span className="text-xs" style={{ color: "var(--o-muted)" }}>Page {meta.current_page} of {meta.last_page}</span>
               <button disabled={meta.current_page >= meta.last_page} onClick={() => { setLoading(true); setPage((p) => p + 1); }}
                 className="inline-flex items-center gap-1 text-sm font-semibold px-3 py-1.5 rounded-full disabled:opacity-40"
-                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>Next<ChevronRight className="w-4 h-4" /></button>
+                style={{ background: "var(--o-surface)", border: "1px solid rgba(0,0,0,0.08)" }}>Next<ChevronRight className="w-4 h-4" /></button>
             </div>
           )}
         </>
@@ -188,13 +188,13 @@ function ComposeBroadcast({ onSent }: { onSent: () => void }) {
   };
 
   const inputCls = "w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none";
-  const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+  const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
   return (
     <div className="max-w-2xl">
       {count !== null && (
         <div className="flex items-center gap-2 mb-5 text-sm px-4 py-3 rounded-xl"
-          style={{ background: "rgba(197,178,122,0.12)", color: "#7A6020" }}>
+          style={{ background: "rgba(197,178,122,0.12)", color: "var(--o-accent-text)" }}>
           <Users className="w-4 h-4 shrink-0" />
           This broadcast will be sent to <strong>{count}</strong> active subscriber{count === 1 ? "" : "s"}.
         </div>
@@ -206,18 +206,18 @@ function ComposeBroadcast({ onSent }: { onSent: () => void }) {
           <div className="relative w-fit">
             <button onClick={() => setTemplateOpen((o) => !o)}
               className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
-              style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", color: "#555" }}>
+              style={{ background: "var(--o-surface)", border: "1px solid rgba(0,0,0,0.1)", color: "var(--o-text-2)" }}>
               Use template <ChevronDown className={`w-3 h-3 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
             </button>
             {templateOpen && (
               <div className="absolute left-0 top-full mt-1 z-20 rounded-xl border shadow-lg overflow-hidden w-72"
-                style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}>
+                style={{ background: "var(--o-surface)", borderColor: "rgba(0,0,0,0.08)" }}>
                 {templates.map((t) => (
                   <button key={t.id} onClick={() => applyTemplate(t)}
                     className="w-full text-left px-3.5 py-2.5 hover:bg-black/[0.03] transition-colors border-b last:border-0"
                     style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-                    <p className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>{t.name}</p>
-                    <p className="text-[11px] truncate" style={{ color: "#999" }}>{t.subject}</p>
+                    <p className="text-xs font-semibold" style={{ color: "var(--o-text)" }}>{t.name}</p>
+                    <p className="text-[11px] truncate" style={{ color: "var(--o-faint)" }}>{t.subject}</p>
                   </button>
                 ))}
               </div>
@@ -226,24 +226,24 @@ function ComposeBroadcast({ onSent }: { onSent: () => void }) {
         )}
 
         <div>
-          <label className="text-xs font-bold uppercase tracking-[0.08em] mb-1.5 block" style={{ color: "#999" }}>Subject line</label>
+          <label className="text-xs font-bold uppercase tracking-[0.08em] mb-1.5 block" style={{ color: "var(--o-faint)" }}>Subject line</label>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. New update from Vitorra Holdings"
             className={inputCls} style={inputStyle} />
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-bold uppercase tracking-[0.08em]" style={{ color: "#999" }}>Message body</label>
-            <button onClick={() => setPreview((p) => !p)} className="text-xs font-semibold" style={{ color: "#C5B27A" }}>
+            <label className="text-xs font-bold uppercase tracking-[0.08em]" style={{ color: "var(--o-faint)" }}>Message body</label>
+            <button onClick={() => setPreview((p) => !p)} className="text-xs font-semibold" style={{ color: "var(--o-accent)" }}>
               {preview ? "Edit" : "Preview"}
             </button>
           </div>
           {preview ? (
             <div className="rounded-xl border p-4 text-sm whitespace-pre-line min-h-[200px]"
-              style={{ borderColor: "rgba(0,0,0,0.12)", background: "#FAFAF8", color: "#454545" }}>
-              {body || <span style={{ color: "#bbb" }}>Nothing to preview yet.</span>}
+              style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
+              {body || <span style={{ color: "var(--o-faint)" }}>Nothing to preview yet.</span>}
               <hr className="my-3" style={{ borderColor: "rgba(0,0,0,0.08)" }} />
-              <p className="text-xs" style={{ color: "#aaa" }}>
+              <p className="text-xs" style={{ color: "var(--o-faint)" }}>
                 — An unsubscribe link will be appended to each email automatically.
               </p>
             </div>
@@ -252,16 +252,16 @@ function ComposeBroadcast({ onSent }: { onSent: () => void }) {
               placeholder={"Write your message here. Plain text is fine.\n\nYou can use line breaks for paragraphs."}
               className={inputCls + " min-h-[200px] resize-y"} style={inputStyle} />
           )}
-          <p className="text-[11px] mt-1.5" style={{ color: "#bbb" }}>
+          <p className="text-[11px] mt-1.5" style={{ color: "var(--o-faint)" }}>
             A personalised unsubscribe link is added automatically to every email.
           </p>
         </div>
 
-        {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
+        {error && <p className="text-sm" style={{ color: "var(--o-danger)" }}>{error}</p>}
 
         <button onClick={send} disabled={sending || !subject.trim() || !body.trim()}
           className="inline-flex items-center gap-2 font-semibold px-5 py-2.5 rounded-full disabled:opacity-50"
-          style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+          style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>
           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           {sending ? "Sending…" : "Send broadcast"}
         </button>
@@ -281,7 +281,7 @@ function BroadcastHistory() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
   if (list.length === 0) return <Empty label="No broadcasts sent yet." />;
 
   return (
@@ -290,8 +290,8 @@ function BroadcastHistory() {
         <div key={b.id} className="bg-white rounded-[18px] border border-black/[0.05] px-5 py-4">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0">
-              <p className="font-semibold text-sm mb-0.5" style={{ color: "#1E1E1E" }}>{b.subject}</p>
-              <div className="flex items-center gap-3 flex-wrap text-xs" style={{ color: "#999" }}>
+              <p className="font-semibold text-sm mb-0.5" style={{ color: "var(--o-text)" }}>{b.subject}</p>
+              <div className="flex items-center gap-3 flex-wrap text-xs" style={{ color: "var(--o-faint)" }}>
                 <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{b.recipient_count} recipient{b.recipient_count === 1 ? "" : "s"}</span>
                 <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{formatDate(b.created_at)}</span>
                 {b.sender && <span>by {b.sender.name}</span>}

@@ -247,22 +247,22 @@ export default function EnquiriesPage() {
               {open === e.id && (
                 <tr><td colSpan={8} className="!bg-paper-deep !px-5 !pb-5 !pt-1">
                 <div>
-                  <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4 mt-4 text-xs" style={{ color: "#555" }}>
-                    <a href={`mailto:${e.email}`} className="flex items-center gap-1.5 hover:underline"><Mail className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{e.email}</a>
-                    {e.phone && <a href={`tel:${e.phone}`} className="flex items-center gap-1.5 hover:underline"><Phone className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{e.phone}</a>}
-                    {e.company && <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />{e.company}</span>}
-                    {e.assigned_to && <span className="flex items-center gap-1.5"><UserCheck className="w-3.5 h-3.5" style={{ color: "#C5B27A" }} />Routed to {e.assigned_to}</span>}
+                  <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4 mt-4 text-xs" style={{ color: "var(--o-text-2)" }}>
+                    <a href={`mailto:${e.email}`} className="flex items-center gap-1.5 hover:underline"><Mail className="w-3.5 h-3.5" style={{ color: "var(--o-accent)" }} />{e.email}</a>
+                    {e.phone && <a href={`tel:${e.phone}`} className="flex items-center gap-1.5 hover:underline"><Phone className="w-3.5 h-3.5" style={{ color: "var(--o-accent)" }} />{e.phone}</a>}
+                    {e.company && <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" style={{ color: "var(--o-accent)" }} />{e.company}</span>}
+                    {e.assigned_to && <span className="flex items-center gap-1.5"><UserCheck className="w-3.5 h-3.5" style={{ color: "var(--o-accent)" }} />Routed to {e.assigned_to}</span>}
                   </div>
 
                   {/* Structured brief — the quote-ready answers captured on the form */}
                   {e.requirements && e.requirements.length > 0 && (
                     <div className="mb-4 rounded-xl overflow-hidden" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
-                      <p className="text-[10px] font-bold uppercase tracking-wide px-4 py-2" style={{ background: "#F8F7F5", color: "#999" }}>Requirements</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wide px-4 py-2" style={{ background: "var(--o-surface-2)", color: "var(--o-faint)" }}>Requirements</p>
                       <dl>
                         {e.requirements.map((r, i) => (
                           <div key={r.key} className="flex gap-4 px-4 py-2.5" style={{ borderTop: i === 0 ? "none" : "1px solid rgba(0,0,0,0.04)" }}>
-                            <dt className="text-xs w-40 shrink-0" style={{ color: "#999" }}>{r.label}</dt>
-                            <dd className="text-xs font-medium" style={{ color: "#1E1E1E" }}>{r.value}</dd>
+                            <dt className="text-xs w-40 shrink-0" style={{ color: "var(--o-faint)" }}>{r.label}</dt>
+                            <dd className="text-xs font-medium" style={{ color: "var(--o-text)" }}>{r.value}</dd>
                           </div>
                         ))}
                       </dl>
@@ -270,17 +270,17 @@ export default function EnquiriesPage() {
                   )}
 
                   {e.message && (
-                    <p className="text-sm leading-relaxed mb-5 p-4 rounded-xl" style={{ color: "#444", background: "#F8F7F5" }}>{e.message}</p>
+                    <p className="text-sm leading-relaxed mb-5 p-4 rounded-xl" style={{ color: "var(--o-text-2)", background: "var(--o-surface-2)" }}>{e.message}</p>
                   )}
 
                   {/* Reassign — overrides the auto-routed team to a team or person */}
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs font-semibold" style={{ color: "#777" }}>Assigned to:</span>
+                    <span className="text-xs font-semibold" style={{ color: "var(--o-muted)" }}>Assigned to:</span>
                     <select
                       value={e.assigned_user_id ? String(e.assigned_user_id) : (e.assigned_to ?? "")}
                       onChange={(ev) => assign(e.id, ev.target.value)}
                       className="text-xs rounded-full px-3 py-1.5 border outline-none cursor-pointer"
-                      style={{ borderColor: "rgba(0,0,0,0.12)", background: "#FFFFFF", color: "#1E1E1E" }}
+                      style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" }}
                     >
                       <option value="">— Unassigned —</option>
                       {e.assigned_to && !e.assigned_user_id && !TEAMS.includes(e.assigned_to) && (
@@ -296,7 +296,7 @@ export default function EnquiriesPage() {
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-semibold" style={{ color: "#777" }}>Status:</span>
+                    <span className="text-xs font-semibold" style={{ color: "var(--o-muted)" }}>Status:</span>
                     {STATUSES.map((s) => (
                       <button key={s} onClick={() => updateStatus(e.id, s)} className={`c-btn !h-7 capitalize ${e.status === s ? "!bg-ink !text-paper !border-ink" : ""}`}>
                         {s.replace(/_/g, " ")}
@@ -308,9 +308,9 @@ export default function EnquiriesPage() {
                   {e.status === "quoted" && (
                     <div className="mt-4 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
                       {convertedRefs[e.id] && (
-                        <p className="text-xs mb-3 inline-flex items-center gap-1.5" style={{ color: "#16A34A" }}>
+                        <p className="text-xs mb-3 inline-flex items-center gap-1.5" style={{ color: "var(--o-success)" }}>
                           Converted to order <strong>{convertedRefs[e.id]}</strong> —{" "}
-                          <Link href="/admin/orders" className="inline-flex items-center gap-1 font-semibold hover:underline" style={{ color: "#7A6020" }}>
+                          <Link href="/admin/orders" className="inline-flex items-center gap-1 font-semibold hover:underline" style={{ color: "var(--o-accent-text)" }}>
                             view in Orders <ArrowRight className="w-3 h-3" />
                           </Link>
                         </p>
@@ -320,7 +320,7 @@ export default function EnquiriesPage() {
                         <button
                           onClick={() => toggleConvert(e)}
                           className="text-[11px] font-semibold px-3 py-1.5 rounded-full transition-colors"
-                          style={{ background: "#1E1E1E", color: "#FFFFFF" }}
+                          style={{ background: "var(--o-inverse)", color: "#FFFFFF" }}
                         >
                           Convert to Order
                         </button>
@@ -361,7 +361,7 @@ export default function EnquiriesPage() {
 }
 
 const FIELD_CLS = "w-full text-xs rounded-lg px-3 py-2 border outline-none";
-const FIELD_STYLE = { borderColor: "rgba(0,0,0,0.12)", background: "#FFFFFF", color: "#1E1E1E" } as const;
+const FIELD_STYLE = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 function ConvertForm({
   form, status, onChange, onSubmit, onCancel,
@@ -373,21 +373,21 @@ function ConvertForm({
   onCancel: () => void;
 }) {
   return (
-    <div className="rounded-xl p-4" style={{ background: "#F8F7F5", border: "1px solid rgba(0,0,0,0.06)" }}>
-      <p className="text-xs font-semibold mb-3" style={{ color: "#1E1E1E" }}>
+    <div className="rounded-xl p-4" style={{ background: "var(--o-surface-2)", border: "1px solid rgba(0,0,0,0.06)" }}>
+      <p className="text-xs font-semibold mb-3" style={{ color: "var(--o-text)" }}>
         Convert to order — &ldquo;Reserve online, pay cash before installation&rdquo;
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>Currency</label>
+          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>Currency</label>
           <select value={form.currency} onChange={(ev) => onChange({ currency: ev.target.value as ConvertForm["currency"] })} className={FIELD_CLS} style={FIELD_STYLE}>
             <option value="UGX">UGX</option>
             <option value="USD">USD</option>
           </select>
         </div>
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>
+          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>
             Agreed total ({form.currency === "USD" ? "$" : "UGX"})
           </label>
           <input
@@ -399,7 +399,7 @@ function ConvertForm({
           />
         </div>
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>FET device tier</label>
+          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>FET device tier</label>
           <select value={form.tier} onChange={(ev) => onChange({ tier: ev.target.value as ConvertForm["tier"] })} className={FIELD_CLS} style={FIELD_STYLE}>
             <option value="">Custom / fleet (no tier)</option>
             {FET_TIERS.map((t) => (
@@ -408,7 +408,7 @@ function ConvertForm({
           </select>
         </div>
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>Quantity</label>
+          <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>Quantity</label>
           <input
             type="number" min={1} max={50}
             value={form.quantity}
@@ -419,7 +419,7 @@ function ConvertForm({
       </div>
 
       <div className="mb-3">
-        <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>Description</label>
+        <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>Description</label>
         <input
           type="text"
           value={form.product_name}
@@ -430,7 +430,7 @@ function ConvertForm({
       </div>
 
       <div className="mb-3">
-        <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "#999" }}>Internal notes (optional)</label>
+        <label className="block text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>Internal notes (optional)</label>
         <textarea
           value={form.notes}
           onChange={(ev) => onChange({ notes: ev.target.value })}
@@ -439,7 +439,7 @@ function ConvertForm({
       </div>
 
       {status === "error" && (
-        <p className="text-xs mb-3" style={{ color: "#C0392B" }}>
+        <p className="text-xs mb-3" style={{ color: "var(--o-danger)" }}>
           Enter a valid agreed total, then try again.
         </p>
       )}
@@ -449,11 +449,11 @@ function ConvertForm({
           onClick={onSubmit}
           disabled={status === "submitting"}
           className="text-[11px] font-semibold px-3.5 py-1.5 rounded-full transition-opacity"
-          style={{ background: "#C5B27A", color: "#1E1E1E", opacity: status === "submitting" ? 0.7 : 1 }}
+          style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: status === "submitting" ? 0.7 : 1 }}
         >
           {status === "submitting" ? "Converting…" : "Create order"}
         </button>
-        <button onClick={onCancel} className="text-[11px] font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>
+        <button onClick={onCancel} className="text-[11px] font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>
           Cancel
         </button>
       </div>

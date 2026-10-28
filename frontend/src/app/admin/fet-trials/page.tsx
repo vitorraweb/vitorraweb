@@ -11,7 +11,7 @@ import {
 } from "@/lib/fet-trials";
 
 const inputCls = "w-full text-sm rounded-xl px-3 py-2 border outline-none";
-const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 const EMPTY = {
   client_company: "", contact_name: "", contact_email: "", contact_phone: "",
@@ -65,7 +65,7 @@ export default function FetTrialsPage() {
 
   if (!list) {
     return (
-      <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}>
+      <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}>
         <Loader2 className="w-4 h-4 animate-spin" />Loading…
       </div>
     );
@@ -81,7 +81,7 @@ export default function FetTrialsPage() {
         <button
           onClick={() => setAddOpen((o) => !o)}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shrink-0"
-          style={{ background: "#1E1E1E", color: "#fff" }}
+          style={{ background: "var(--o-inverse)", color: "#fff" }}
         >
           <Plus className="w-4 h-4" />Start a trial
         </button>
@@ -89,8 +89,8 @@ export default function FetTrialsPage() {
 
       {addOpen && (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">
-          <p className="text-sm font-semibold mb-1" style={{ color: "#1E1E1E" }}>New trial</p>
-          <p className="text-xs mb-4" style={{ color: "#999" }}>
+          <p className="text-sm font-semibold mb-1" style={{ color: "var(--o-text)" }}>New trial</p>
+          <p className="text-xs mb-4" style={{ color: "var(--o-faint)" }}>
             Only the company name is needed to start. Everything else can be filled in as you learn it — but the
             installation date matters most, because it decides which trips count as &ldquo;before&rdquo; and which as &ldquo;after&rdquo;.
           </p>
@@ -126,12 +126,12 @@ export default function FetTrialsPage() {
             </Field>
           </div>
 
-          {msg && <p className="text-sm mt-3" style={{ color: "#C0392B" }}>{msg}</p>}
+          {msg && <p className="text-sm mt-3" style={{ color: "var(--o-danger)" }}>{msg}</p>}
           <button
             onClick={create}
             disabled={adding}
             className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full text-sm font-semibold"
-            style={{ background: "#C5B27A", color: "#1E1E1E", opacity: adding ? 0.7 : 1 }}
+            style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: adding ? 0.7 : 1 }}
           >
             {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Start trial
           </button>
@@ -148,15 +148,15 @@ export default function FetTrialsPage() {
               href={`/admin/fet-trials/${t.id}`}
               className="flex items-center gap-3 p-4 bg-white rounded-[18px] border border-black/[0.05] hover:border-black/[0.12] transition-colors"
             >
-              <span className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.12)", color: "#7A6020" }}>
+              <span className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0" style={{ background: "rgba(197,178,122,0.12)", color: "var(--o-accent-text)" }}>
                 <FlaskConical className="w-5 h-5" />
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                  <span className="font-semibold text-sm" style={{ color: "#1E1E1E" }}>{t.client_company}</span>
-                  <span className="text-[11px]" style={{ color: "#BBB" }}>{t.reference}</span>
+                  <span className="font-semibold text-sm" style={{ color: "var(--o-text)" }}>{t.client_company}</span>
+                  <span className="text-[11px]" style={{ color: "var(--o-faint)" }}>{t.reference}</span>
                 </div>
-                <p className="text-xs truncate" style={{ color: "#999" }}>
+                <p className="text-xs truncate" style={{ color: "var(--o-faint)" }}>
                   {t.registration ? `${t.registration} · ` : ""}
                   {STATUS_LABEL[t.status] ?? t.status}
                   {t.installed_on ? ` · fitted ${fmtDate(t.installed_on)}` : ""}
@@ -165,7 +165,7 @@ export default function FetTrialsPage() {
               </div>
 
               {t.open_findings > 0 && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0" style={{ background: "rgba(158,59,51,0.09)", color: "#9E3B33" }}>
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0" style={{ background: "rgba(158,59,51,0.09)", color: "var(--o-danger)" }}>
                   <AlertCircle className="w-3 h-3" />{t.open_findings}
                 </span>
               )}
@@ -181,7 +181,7 @@ export default function FetTrialsPage() {
                 </span>
               )}
 
-              <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#CCC" }} />
+              <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "var(--o-faint)" }} />
             </Link>
           ))}
         </div>
@@ -191,14 +191,14 @@ export default function FetTrialsPage() {
 }
 
 function Section({ label }: { label: string }) {
-  return <p className="text-[10px] font-bold uppercase tracking-wide mt-4 mb-2" style={{ color: "#AAA" }}>{label}</p>;
+  return <p className="text-[10px] font-bold uppercase tracking-wide mt-4 mb-2" style={{ color: "var(--o-faint)" }}>{label}</p>;
 }
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium block mb-1" style={{ color: "#888" }}>
-        {label}{hint && <span style={{ color: "#BBB" }}> · {hint}</span>}
+      <span className="text-xs font-medium block mb-1" style={{ color: "var(--o-muted)" }}>
+        {label}{hint && <span style={{ color: "var(--o-faint)" }}> · {hint}</span>}
       </span>
       {children}
     </label>

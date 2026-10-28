@@ -70,13 +70,13 @@ export default function MediaPage() {
         <PageHeader title="Media library" subtitle="Upload images, PDFs, and videos — then copy a URL to use anywhere." />
         <div>
           <input ref={fileRef} type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.svg,.pdf,.mp4,.webm" className="hidden" onChange={(e) => upload(e.target.files)} />
-          <button onClick={() => fileRef.current?.click()} disabled={uploading} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold" style={{ background: "#1E1E1E", color: "#fff", opacity: uploading ? 0.7 : 1 }}>
+          <button onClick={() => fileRef.current?.click()} disabled={uploading} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold" style={{ background: "var(--o-inverse)", color: "#fff", opacity: uploading ? 0.7 : 1 }}>
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}Upload
           </button>
         </div>
       </div>
 
-      {msg && <p className="text-sm mb-4" style={{ color: "#7A6020" }}>{msg}</p>}
+      {msg && <p className="text-sm mb-4" style={{ color: "var(--o-accent-text)" }}>{msg}</p>}
 
       <div className="flex flex-wrap gap-2 mb-5">
         {TYPES.map((t) => (
@@ -87,31 +87,31 @@ export default function MediaPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : list.length === 0 ? (
         <Empty label="No media yet. Upload your first file." />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {list.map((m) => (
             <div key={m.id} className="bg-white rounded-[16px] border border-black/[0.05] overflow-hidden flex flex-col">
-              <div className="aspect-[4/3] flex items-center justify-center" style={{ background: "#F2F2F2" }}>
+              <div className="aspect-[4/3] flex items-center justify-center" style={{ background: "var(--o-surface-2)" }}>
                 {m.type === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={m.url} alt={m.original_name} className="w-full h-full object-cover" />
                 ) : m.type === "video" ? (
-                  <Video className="w-10 h-10" style={{ color: "#BBB" }} />
+                  <Video className="w-10 h-10" style={{ color: "var(--o-faint)" }} />
                 ) : (
-                  <FileText className="w-10 h-10" style={{ color: "#BBB" }} />
+                  <FileText className="w-10 h-10" style={{ color: "var(--o-faint)" }} />
                 )}
               </div>
               <div className="p-3 flex-1 flex flex-col">
-                <p className="text-xs font-semibold truncate" style={{ color: "#1E1E1E" }} title={m.original_name}>{m.original_name}</p>
-                <p className="text-[11px] mb-3" style={{ color: "#999" }}>{m.type} · {fmtSize(m.size)}</p>
+                <p className="text-xs font-semibold truncate" style={{ color: "var(--o-text)" }} title={m.original_name}>{m.original_name}</p>
+                <p className="text-[11px] mb-3" style={{ color: "var(--o-faint)" }}>{m.type} · {fmtSize(m.size)}</p>
                 <div className="mt-auto flex items-center gap-1.5">
-                  <button onClick={() => copy(m)} className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}>
-                    {copied === m.id ? <><Check className="w-3.5 h-3.5" style={{ color: "#16A34A" }} />Copied</> : <><Copy className="w-3.5 h-3.5" />Copy URL</>}
+                  <button onClick={() => copy(m)} className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
+                    {copied === m.id ? <><Check className="w-3.5 h-3.5" style={{ color: "var(--o-success)" }} />Copied</> : <><Copy className="w-3.5 h-3.5" />Copy URL</>}
                   </button>
-                  <button onClick={() => remove(m.id)} aria-label="Delete" className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}>
+                  <button onClick={() => remove(m.id)} aria-label="Delete" className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}>
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>

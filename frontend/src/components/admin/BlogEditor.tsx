@@ -34,7 +34,7 @@ function slugify(s: string): string {
 }
 
 const inputCls = "w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none transition-colors";
-const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 export default function BlogEditor({ postId }: { postId?: number }) {
   const router = useRouter();
@@ -109,7 +109,7 @@ export default function BlogEditor({ postId }: { postId?: number }) {
   };
 
   if (loading) {
-    return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+    return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
   }
 
   const slugPreview = form.slug.trim() || slugify(form.title) || "your-post";
@@ -117,17 +117,17 @@ export default function BlogEditor({ postId }: { postId?: number }) {
   return (
     <div className="max-w-3xl">
       <div className="flex items-center justify-between mb-5">
-        <Link href="/admin/blog" className="inline-flex items-center gap-1.5 text-sm" style={{ color: "#777" }}>
+        <Link href="/admin/blog" className="inline-flex items-center gap-1.5 text-sm" style={{ color: "var(--o-muted)" }}>
           <ArrowLeft className="w-4 h-4" />All posts
         </Link>
         {postId && form.status === "published" && (
-          <a href={`/blog/${slugPreview}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#7A6020" }}>
+          <a href={`/blog/${slugPreview}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--o-accent-text)" }}>
             View live<ExternalLink className="w-3.5 h-3.5" />
           </a>
         )}
       </div>
 
-      <h1 className="mb-6" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "26px", fontWeight: 700, color: "#1E1E1E" }}>
+      <h1 className="mb-6" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "26px", fontWeight: 700, color: "var(--o-text)" }}>
         {postId ? "Edit post" : "New post"}
       </h1>
 
@@ -153,7 +153,7 @@ export default function BlogEditor({ postId }: { postId?: number }) {
         </Field>
 
         <details className="rounded-xl border" style={{ borderColor: "rgba(0,0,0,0.1)" }}>
-          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold" style={{ color: "#555" }}>SEO (optional)</summary>
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold" style={{ color: "var(--o-text-2)" }}>SEO (optional)</summary>
           <div className="px-4 pb-4 space-y-4">
             <Field label="SEO title" hint="Defaults to the post title if left blank.">
               <input value={form.seo_title} onChange={(e) => set("seo_title", e.target.value)} className={inputCls} style={inputStyle} />
@@ -167,11 +167,11 @@ export default function BlogEditor({ postId }: { postId?: number }) {
         {/* Swahili translation — what /sw/blog serves. Any field left blank
             falls back to the English version above for that field. */}
         <details className="rounded-xl border" style={{ borderColor: "rgba(197,178,122,0.4)", background: "rgba(197,178,122,0.05)" }}>
-          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold" style={{ color: "#7A6020" }}>
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold" style={{ color: "var(--o-accent-text)" }}>
             Swahili translation (optional)
           </summary>
           <div className="px-4 pb-4 space-y-4">
-            <p className="text-xs" style={{ color: "#999" }}>
+            <p className="text-xs" style={{ color: "var(--o-faint)" }}>
               Shown to visitors on the Swahili (/sw) site. Leave a field blank to fall back to the English version above.
             </p>
             <Field label="Title — Swahili">
@@ -192,24 +192,24 @@ export default function BlogEditor({ postId }: { postId?: number }) {
           </div>
         </details>
 
-        {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
-        {notice && <p className="text-sm" style={{ color: "#16A34A" }}>{notice}</p>}
+        {error && <p className="text-sm" style={{ color: "var(--o-danger)" }}>{error}</p>}
+        {notice && <p className="text-sm" style={{ color: "var(--o-success)" }}>{notice}</p>}
 
         <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-          <button onClick={() => save("published")} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: saving ? 0.7 : 1 }}>
+          <button onClick={() => save("published")} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold" style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: saving ? 0.7 : 1 }}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {form.status === "published" ? "Save & keep published" : "Publish"}
           </button>
-          <button onClick={() => save("draft")} disabled={saving} className="px-5 py-2.5 rounded-full text-sm font-semibold" style={{ background: "#F2F2F2", color: "#555" }}>
+          <button onClick={() => save("draft")} disabled={saving} className="px-5 py-2.5 rounded-full text-sm font-semibold" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
             Save as draft
           </button>
           {form.status === "draft" && (
-            <button onClick={sendForReview} disabled={saving} title="Saves the draft and emails Marketing a link to read and publish it" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border" style={{ borderColor: "rgba(197,178,122,0.6)", color: "#7A6020" }}>
+            <button onClick={sendForReview} disabled={saving} title="Saves the draft and emails Marketing a link to read and publish it" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border" style={{ borderColor: "rgba(197,178,122,0.6)", color: "var(--o-accent-text)" }}>
               <Send className="w-4 h-4" />Send for review
             </button>
           )}
           {postId && (
-            <button onClick={remove} disabled={saving} className="ml-auto inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#C0392B" }}>
+            <button onClick={remove} disabled={saving} className="ml-auto inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--o-danger)" }}>
               <Trash2 className="w-4 h-4" />Delete
             </button>
           )}
@@ -222,11 +222,11 @@ export default function BlogEditor({ postId }: { postId?: number }) {
 function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "#999" }}>
-        {label}{required && <span style={{ color: "#C5B27A" }}> *</span>}
+      <label className="block text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "var(--o-faint)" }}>
+        {label}{required && <span style={{ color: "var(--o-accent)" }}> *</span>}
       </label>
       {children}
-      {hint && <p className="mt-1.5 text-xs" style={{ color: "#999" }}>{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs" style={{ color: "var(--o-faint)" }}>{hint}</p>}
     </div>
   );
 }

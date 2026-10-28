@@ -27,7 +27,7 @@ const money = (currency: string, total: number) =>
   currency === "USD" ? `$${(total / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `UGX ${total.toLocaleString("en-US")}`;
 
 const selectCls = "text-[11px] font-semibold rounded-full px-2 py-1 border outline-none";
-const selectStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#454545" } as const;
+const selectStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text-2)" } as const;
 
 export default function PipelinePage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -120,12 +120,12 @@ export default function PipelinePage() {
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search name, email, company…"
           className="text-sm rounded-full px-4 py-2 border w-64 max-w-full outline-none"
-          style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }}
+          style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }}
         />
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       ) : filtered.length === 0 ? (
         <Empty label="No contacts yet." />
       ) : (
@@ -134,10 +134,10 @@ export default function PipelinePage() {
             {activeStages.map((stage) => {
               const items = filtered.filter((c) => c.stage === stage);
               return (
-                <div key={stage} className="shrink-0 w-72 rounded-[18px] p-3" style={{ background: "#F8F7F5" }}>
+                <div key={stage} className="shrink-0 w-72 rounded-[18px] p-3" style={{ background: "var(--o-surface-2)" }}>
                   <div className="flex items-center justify-between px-1 mb-2">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: "#999" }}>{stageLabels[stage] ?? stage}</p>
-                    <span className="text-[11px] font-semibold rounded-full px-2 py-0.5" style={{ background: "#fff", color: "#777" }}>{items.length}</span>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: "var(--o-faint)" }}>{stageLabels[stage] ?? stage}</p>
+                    <span className="text-[11px] font-semibold rounded-full px-2 py-0.5" style={{ background: "var(--o-surface)", color: "var(--o-muted)" }}>{items.length}</span>
                   </div>
                   <div className="space-y-2.5">
                     {items.map((c) => (
@@ -166,7 +166,7 @@ export default function PipelinePage() {
                         )}
                       </ContactCard>
                     ))}
-                    {items.length === 0 && <p className="text-xs text-center py-4" style={{ color: "#BBB" }}>—</p>}
+                    {items.length === 0 && <p className="text-xs text-center py-4" style={{ color: "var(--o-faint)" }}>—</p>}
                   </div>
                 </div>
               );
@@ -177,7 +177,7 @@ export default function PipelinePage() {
             <button
               onClick={() => setShowLost((v) => !v)}
               className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full"
-              style={{ background: "#F2F2F2", color: "#777" }}
+              style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}
             >
               {showLost ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               Lost ({lostContacts.length})
@@ -185,7 +185,7 @@ export default function PipelinePage() {
 
             {showLost && (
               <div className="mt-3 flex gap-4 overflow-x-auto pb-2 board-scroll-x">
-                <div className="shrink-0 w-72 rounded-[18px] p-3" style={{ background: "#F8F7F5" }}>
+                <div className="shrink-0 w-72 rounded-[18px] p-3" style={{ background: "var(--o-surface-2)" }}>
                   <div className="space-y-2.5">
                     {lostContacts.map((c) => (
                       <ContactCard
@@ -213,7 +213,7 @@ export default function PipelinePage() {
                         )}
                       </ContactCard>
                     ))}
-                    {lostContacts.length === 0 && <p className="text-xs text-center py-4" style={{ color: "#BBB" }}>—</p>}
+                    {lostContacts.length === 0 && <p className="text-xs text-center py-4" style={{ color: "var(--o-faint)" }}>—</p>}
                   </div>
                 </div>
               </div>
@@ -244,12 +244,12 @@ function ContactCard({
             {contact.owner ? initials(contact.owner.name) : "—"}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold truncate" style={{ color: "#1E1E1E" }}>{contact.name || contact.email}</p>
-            {contact.company && <p className="text-[11px] truncate" style={{ color: "#999" }}>{contact.company}</p>}
+            <p className="text-sm font-semibold truncate" style={{ color: "var(--o-text)" }}>{contact.name || contact.email}</p>
+            {contact.company && <p className="text-[11px] truncate" style={{ color: "var(--o-faint)" }}>{contact.company}</p>}
           </div>
-          {contact.has_note && <StickyNote className="w-3.5 h-3.5 shrink-0" style={{ color: "#C5B27A" }} />}
+          {contact.has_note && <StickyNote className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--o-accent)" }} />}
         </div>
-        <p className="text-[11px] truncate mb-1.5" style={{ color: "#999" }}>{contact.email}</p>
+        <p className="text-[11px] truncate mb-1.5" style={{ color: "var(--o-faint)" }}>{contact.email}</p>
         <div className="flex items-center gap-1.5 mb-1.5">
           {contact.prospects > 0 && <CountChip icon={Users} n={contact.prospects} />}
           {contact.enquiries > 0 && <CountChip icon={MessageSquare} n={contact.enquiries} />}
@@ -257,9 +257,9 @@ function ContactCard({
           {contact.messages > 0 && <CountChip icon={FileText} n={contact.messages} />}
         </div>
         <div className="flex items-center gap-1.5">
-          <p className="text-[10px]" style={{ color: "#BBB" }}>{now ? `Active ${formatRelativeTime(contact.last_activity, now)}` : ""}</p>
+          <p className="text-[10px]" style={{ color: "var(--o-faint)" }}>{now ? `Active ${formatRelativeTime(contact.last_activity, now)}` : ""}</p>
           {contact.stale && (
-            <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "#C0392B" }}>● Cold</span>
+            <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "var(--o-danger)" }}>● Cold</span>
           )}
         </div>
       </button>
@@ -296,14 +296,14 @@ function DetailPanel({
   note: string; setNote: (v: string) => void; savingNote: boolean; onSaveNote: () => void;
 }) {
   if (loading) {
-    return <div className="flex items-center gap-2 text-sm px-3 pb-3" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading history…</div>;
+    return <div className="flex items-center gap-2 text-sm px-3 pb-3" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading history…</div>;
   }
   if (!detail || detail.email.toLowerCase() !== email.toLowerCase()) return null;
 
   return (
     <div className="px-3 pb-3 pt-1 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }} onClick={(e) => e.stopPropagation()}>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 my-2 text-[11px]" style={{ color: "#555" }}>
-        <a href={`mailto:${email}`} className="flex items-center gap-1 hover:underline"><Mail className="w-3 h-3" style={{ color: "#C5B27A" }} />{email}</a>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 my-2 text-[11px]" style={{ color: "var(--o-text-2)" }}>
+        <a href={`mailto:${email}`} className="flex items-center gap-1 hover:underline"><Mail className="w-3 h-3" style={{ color: "var(--o-accent)" }} />{email}</a>
       </div>
 
       <div className="space-y-3">
@@ -337,9 +337,9 @@ function DetailPanel({
         )}
 
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "#999" }}>Internal note</p>
-          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Private note about this contact…" className="w-full text-sm rounded-xl px-3 py-2 border min-h-16" style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-          <button onClick={onSaveNote} disabled={savingNote} className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E", opacity: savingNote ? 0.7 : 1 }}>
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "var(--o-faint)" }}>Internal note</p>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Private note about this contact…" className="w-full text-sm rounded-xl px-3 py-2 border min-h-16" style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
+          <button onClick={onSaveNote} disabled={savingNote} className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: savingNote ? 0.7 : 1 }}>
             {savingNote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}Save note
           </button>
         </div>
@@ -350,7 +350,7 @@ function DetailPanel({
 
 function CountChip({ icon: Icon, n }: { icon: typeof Mail; n: number }) {
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#777" }}>
+    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>
       <Icon className="w-3 h-3" />{n}
     </span>
   );
@@ -359,7 +359,7 @@ function CountChip({ icon: Icon, n }: { icon: typeof Mail; n: number }) {
 function HistoryBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#999" }}>{title}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "var(--o-faint)" }}>{title}</p>
       <div className="space-y-1.5">{children}</div>
     </div>
   );
@@ -367,12 +367,12 @@ function HistoryBlock({ title, children }: { title: string; children: React.Reac
 
 function Item({ tag, status, date, text }: { tag: string; status: string; date: string; text: string }) {
   return (
-    <div className="rounded-xl px-3.5 py-2.5" style={{ background: "#F8F7F5" }}>
+    <div className="rounded-xl px-3.5 py-2.5" style={{ background: "var(--o-surface-2)" }}>
       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#fff", color: "#888" }}>{tag}</span>
-        <span className="text-[11px]" style={{ color: "#999" }}>{status.replace(/_/g, " ")} · {formatDate(date)}</span>
+        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface)", color: "var(--o-muted)" }}>{tag}</span>
+        <span className="text-[11px]" style={{ color: "var(--o-faint)" }}>{status.replace(/_/g, " ")} · {formatDate(date)}</span>
       </div>
-      {text && <p className="text-xs line-clamp-2" style={{ color: "#555" }}>{text}</p>}
+      {text && <p className="text-xs line-clamp-2" style={{ color: "var(--o-text-2)" }}>{text}</p>}
     </div>
   );
 }

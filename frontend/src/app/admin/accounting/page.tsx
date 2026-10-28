@@ -5,13 +5,14 @@ import { useEffect, useState, useCallback } from "react";
 import { Loader2, Check, X, Plus, Download, Wallet, Landmark, Banknote, Sparkles, Send, FileText, Repeat, Trash2 } from "lucide-react";
 import { apiAdmin, uploadAdmin, downloadFile, auth, canAccess } from "@/lib/auth";
 import { PageHeader, Empty } from "@/components/admin/admin-ui";
+import { GraphView, KpiTile } from "@/components/admin/reporting";
 import { Stock } from "@/components/admin/FetStock";
 import { SendDocumentDialog } from "@/components/admin/SendDocument";
 
 const CURRENCIES = ["UGX", "USD", "EUR"];
 const money = (c: string, a: number) => (c === "UGX" ? `UGX ${a.toLocaleString()}` : `${c === "USD" ? "$" : "€"}${(a / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
-const cls = "w-full text-sm rounded-xl px-3 py-2 border outline-none focus:border-[#C5B27A]";
-const st = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const cls = "w-full text-sm rounded-xl px-3 py-2 border outline-none focus:border-[var(--o-accent)]";
+const st = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 type Tab = "overview" | "invoices" | "transactions" | "accounts" | "bills" | "budgets" | "recurring" | "stock";
 
@@ -81,7 +82,7 @@ function Overview() {
   }, [period]);
   useEffect(() => { load(); }, [load]);
 
-  if (loading || !r) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (loading || !r) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   const nonZero = CURRENCIES.filter((c) => r.income.by_currency[c] || r.expense.by_currency[c] || r.cash.by_currency[c] || r.payables[c]);
   const cur = nonZero.length ? nonZero : ["UGX"];
@@ -89,40 +90,53 @@ function Overview() {
   const vatRows = vat ? Object.entries(vat.by_currency) : [];
 
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-5 flex-wrap">
-        {[["mtd", "This month"], ["last_month", "Last month"], ["week", "Last 7 days"]].map(([v, l]) => (
-          <button key={v} onClick={() => setPeriod(v)} className="text-xs font-semibold px-3.5 py-2 rounded-full" style={period === v ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{l}</button>
-        ))}
-        <button onClick={() => downloadFile("/admin/accounting/transactions/export", `vitorra-transactions-${new Date().toISOString().slice(0, 10)}.csv`)} className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Download className="w-3.5 h-3.5" />Export for accountant</button>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="o-seg" role="group" aria-label="Period">
+          {[["mtd", "This month"], ["last_month", "Last month"], ["week", "Last 7 days"]].map(([v, l]) => (
+            <button key={v} type="button" aria-pressed={period === v} onClick={() => setPeriod(v)}>{l}</button>
+          ))}
+        </div>
+        <span className="text-[13.5px] text-ink-muted">Showing <strong className="text-ink">{r.period_label}</strong></span>
+        <button onClick={() => downloadFile("/admin/accounting/transactions/export", `vitorra-transactions-${new Date().toISOString().slice(0, 10)}.csv`)} className="c-btn ml-auto"><Download className="w-4 h-4" />Export for accountant</button>
       </div>
-      <p className="text-xs mb-4" style={{ color: "#999" }}>Showing <strong style={{ color: "#7A6020" }}>{r.period_label}</strong></p>
 
-      {/* P&L per currency */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        {cur.map((c) => (
-          <div key={c} className="bg-white rounded-[18px] border border-black/[0.06] p-5">
-            <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "#bbb" }}>Profit &amp; loss · {c}</p>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between"><span style={{ color: "#16A34A" }}>Income</span><span className="tabular-nums" style={{ color: "#1E1E1E" }}>{money(c, r.income.by_currency[c] ?? 0)}</span></div>
-              <div className="flex justify-between"><span style={{ color: "#C0392B" }}>Expenses</span><span className="tabular-nums" style={{ color: "#1E1E1E" }}>{money(c, r.expense.by_currency[c] ?? 0)}</span></div>
-              <div className="flex justify-between pt-1 mt-1 border-t font-semibold" style={{ borderColor: "rgba(0,0,0,0.06)" }}><span style={{ color: "#1E1E1E" }}>Net</span><span className="tabular-nums" style={{ color: (r.net[c] ?? 0) >= 0 ? "#16A34A" : "#C0392B" }}>{money(c, r.net[c] ?? 0)}</span></div>
-            </div>
+      {/* Profit & loss — per currency, never summed across currencies */}
+      {cur.map((c) => (
+        <div key={c} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiTile label={`Income · ${c}`} value={money(c, r.income.by_currency[c] ?? 0)} />
+          <KpiTile label={`Expenses · ${c}`} value={money(c, r.expense.by_currency[c] ?? 0)} />
+          <KpiTile label={`Net profit · ${c}`} value={money(c, r.net[c] ?? 0)} sub={(r.net[c] ?? 0) < 0 ? "Spending exceeded income" : "Income less expenses"} />
+          <KpiTile label={`Cash on hand · ${c}`} value={money(c, r.cash.by_currency[c] ?? 0)} sub={r.payables[c] ? `Owed to suppliers: ${money(c, r.payables[c])}` : "No unpaid bills"} />
+        </div>
+      ))}
+
+      {cur.map((c) => {
+        const inc = r.income.by_category.filter((x) => x.currency === c);
+        const exp = r.expense.by_category.filter((x) => x.currency === c);
+        const sec = r.by_sector.filter((x) => x.currency === c);
+        if (!inc.length && !exp.length && !sec.length) return null;
+        const fmt = (v: number) => money(c, v);
+        return (
+          <div key={`charts-${c}`} className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <GraphView title={`Income by category · ${c}`} rows={inc.map((x) => ({ label: x.name, values: { amount: x.amount } }))} measures={[{ key: "amount", label: "Income", format: fmt }]} types={["pie", "bar"]} defaultType="pie" empty="No approved income in this period." />
+            <GraphView title={`Expenses by category · ${c}`} rows={exp.map((x) => ({ label: x.name, values: { amount: x.amount } }))} measures={[{ key: "amount", label: "Expenses", format: fmt }]} types={["pie", "bar"]} defaultType="pie" empty="No approved spending in this period." />
+            <GraphView title={`By business line · ${c}`} rows={sec.map((x) => ({ label: x.sector, values: { income: x.income, expense: x.expense } }))} series={[{ key: "income", label: "Income" }, { key: "expense", label: "Expenses" }]} types={["bar"]} format={fmt} empty="No sector-tagged activity yet." />
           </div>
-        ))}
-      </div>
+        );
+      })}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Cash position */}
         <Panel icon={Wallet} title="Cash on hand">
-          {r.cash.accounts.length === 0 ? <p className="text-sm" style={{ color: "#999" }}>No accounts yet — add them under Accounts.</p> : (
+          {r.cash.accounts.length === 0 ? <p className="text-sm" style={{ color: "var(--o-faint)" }}>No accounts yet — add them under Accounts.</p> : (
             <div className="space-y-1.5">
               {r.cash.accounts.map((a, i) => (
-                <div key={i} className="flex justify-between text-sm"><span style={{ color: "#454545" }}>{a.name}</span><span className="tabular-nums font-medium" style={{ color: "#1E1E1E" }}>{money(a.currency, a.balance)}</span></div>
+                <div key={i} className="flex justify-between text-sm"><span style={{ color: "var(--o-text-2)" }}>{a.name}</span><span className="tabular-nums font-medium" style={{ color: "var(--o-text)" }}>{money(a.currency, a.balance)}</span></div>
               ))}
               <div className="flex justify-between pt-2 mt-1 border-t text-sm font-semibold" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-                <span style={{ color: "#1E1E1E" }}>Total</span>
-                <span className="tabular-nums" style={{ color: "#7A6020" }}>{cur.map((c) => r.cash.by_currency[c] ? money(c, r.cash.by_currency[c]) : null).filter(Boolean).join(" · ") || money("UGX", 0)}</span>
+                <span style={{ color: "var(--o-text)" }}>Total</span>
+                <span className="tabular-nums" style={{ color: "var(--o-accent-text)" }}>{cur.map((c) => r.cash.by_currency[c] ? money(c, r.cash.by_currency[c]) : null).filter(Boolean).join(" · ") || money("UGX", 0)}</span>
               </div>
             </div>
           )}
@@ -130,12 +144,12 @@ function Overview() {
 
         {/* Payables + per sector */}
         <Panel icon={Banknote} title="Owed to suppliers (unpaid bills)">
-          <p className="text-lg font-bold mb-3" style={{ color: "#C0392B" }}>{cur.map((c) => r.payables[c] ? money(c, r.payables[c]) : null).filter(Boolean).join(" · ") || money("UGX", 0)}</p>
-          <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "#bbb" }}>Profit by business line</p>
-          {r.by_sector.length === 0 ? <p className="text-sm" style={{ color: "#999" }}>No sector-tagged activity yet.</p> : (
+          <p className="text-lg font-bold mb-3" style={{ color: "var(--o-danger)" }}>{cur.map((c) => r.payables[c] ? money(c, r.payables[c]) : null).filter(Boolean).join(" · ") || money("UGX", 0)}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--o-faint)" }}>Profit by business line</p>
+          {r.by_sector.length === 0 ? <p className="text-sm" style={{ color: "var(--o-faint)" }}>No sector-tagged activity yet.</p> : (
             <div className="space-y-1 text-sm">
               {r.by_sector.map((s, i) => (
-                <div key={i} className="flex justify-between"><span style={{ color: "#454545" }}>{s.sector} · {s.currency}</span><span className="tabular-nums" style={{ color: s.net >= 0 ? "#16A34A" : "#C0392B" }}>{money(s.currency, s.net)}</span></div>
+                <div key={i} className="flex justify-between"><span style={{ color: "var(--o-text-2)" }}>{s.sector} · {s.currency}</span><span className="tabular-nums" style={{ color: s.net >= 0 ? "#16A34A" : "#C0392B" }}>{money(s.currency, s.net)}</span></div>
               ))}
             </div>
           )}
@@ -145,11 +159,11 @@ function Overview() {
       {/* VAT summary */}
       {vatRows.length > 0 && (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-6 mt-4">
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] mb-3" style={{ color: "#bbb" }}>VAT this period</h3>
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] mb-3" style={{ color: "var(--o-faint)" }}>VAT this period</h3>
           <div className="space-y-1.5 text-sm">
             {vatRows.map(([c, v]) => (
               <div key={c} className="flex justify-between">
-                <span style={{ color: "#454545" }}>{c}: charged {money(c, v.output)} − paid {money(c, v.input)}</span>
+                <span style={{ color: "var(--o-text-2)" }}>{c}: charged {money(c, v.output)} − paid {money(c, v.input)}</span>
                 <span className="tabular-nums font-semibold" style={{ color: v.payable >= 0 ? "#C0392B" : "#16A34A" }}>{v.payable >= 0 ? "Payable " : "Reclaim "}{money(c, Math.abs(v.payable))}</span>
               </div>
             ))}
@@ -167,7 +181,7 @@ type Acct = { id: number; name: string; type: string; currency: string; opening_
 type Cat = { id: number; name: string; kind: string; is_active: boolean };
 
 const TX_STATUS: Record<string, { bg: string; fg: string }> = {
-  draft: { bg: "rgba(197,178,122,0.16)", fg: "#7A6020" }, approved: { bg: "rgba(34,197,94,0.12)", fg: "#16A34A" }, void: { bg: "rgba(0,0,0,0.06)", fg: "#999" },
+  draft: { bg: "rgba(197,178,122,0.16)", fg: "var(--o-accent-text)" }, approved: { bg: "rgba(34,197,94,0.12)", fg: "var(--o-success)" }, void: { bg: "rgba(0,0,0,0.06)", fg: "var(--o-faint)" },
 };
 
 function Transactions({ canApprove }: { canApprove: boolean }) {
@@ -245,7 +259,7 @@ function Transactions({ canApprove }: { canApprove: boolean }) {
     <div>
       {/* Record form */}
       <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">
-        <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "#1E1E1E" }}>Record a transaction</p>
+        <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "var(--o-text)" }}>Record a transaction</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className={cls} style={st}>
             <option value="expense">Money out</option><option value="income">Money in</option><option value="transfer">Transfer</option>
@@ -279,21 +293,21 @@ function Transactions({ canApprove }: { canApprove: boolean }) {
         <div className="flex items-center gap-3 mt-3 flex-wrap">
           <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setReceipt(e.target.files?.[0] ?? null)} className="text-xs" />
           {receipt && form.type !== "transfer" && (
-            <button onClick={autofill} disabled={extracting} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(197,178,122,0.16)", color: "#7A6020" }}>{extracting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}Auto-fill from receipt</button>
+            <button onClick={autofill} disabled={extracting} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "rgba(197,178,122,0.16)", color: "var(--o-accent-text)" }}>{extracting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}Auto-fill from receipt</button>
           )}
-          <button onClick={submit} disabled={adding} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full ml-auto" style={{ background: "#1E1E1E", color: "#fff", opacity: adding ? 0.6 : 1 }}>{adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Record (draft)</button>
+          <button onClick={submit} disabled={adding} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full ml-auto" style={{ background: "var(--o-inverse)", color: "#fff", opacity: adding ? 0.6 : 1 }}>{adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Record (draft)</button>
         </div>
         {msg && <p className="text-sm mt-2" style={{ color: /Filled|recorded/.test(msg) ? "#16A34A" : "#C0392B" }}>{msg}</p>}
-        <p className="text-[11px] mt-2" style={{ color: "#bbb" }}>Amounts are whole shillings for UGX, or cents for USD/EUR. Recorded as draft until a senior officer approves. Attach a receipt and tap “Auto-fill” to read it automatically.</p>
+        <p className="text-[11px] mt-2" style={{ color: "var(--o-faint)" }}>Amounts are whole shillings for UGX, or cents for USD/EUR. Recorded as draft until a senior officer approves. Attach a receipt and tap “Auto-fill” to read it automatically.</p>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
         {[["", "All"], ["draft", "Draft"], ["approved", "Approved"], ["void", "Void"]].map(([v, l]) => (
-          <button key={v} onClick={() => setStatus(v)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={status === v ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{l}</button>
+          <button key={v} onClick={() => setStatus(v)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={status === v ? { background: "var(--o-inverse)", color: "#fff" } : { background: "var(--o-surface)", color: "var(--o-muted)", border: "1px solid rgba(0,0,0,0.06)" }}>{l}</button>
         ))}
       </div>
 
-      {loading ? <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
+      {loading ? <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
       : list.length === 0 ? <Empty label="No transactions in this view." /> : (
         <div className="space-y-2">
           {list.map((t) => {
@@ -303,21 +317,21 @@ function Transactions({ canApprove }: { canApprove: boolean }) {
               <div key={t.id} className="bg-white rounded-[14px] border border-black/[0.05] p-3.5 flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{t.type === "transfer" ? `${t.account} → ${t.to_account}` : t.category ?? t.type}</span>
+                    <span className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{t.type === "transfer" ? `${t.account} → ${t.to_account}` : t.category ?? t.type}</span>
                     <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: sc.bg, color: sc.fg }}>{t.status}</span>
-                    {t.sector && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>{t.sector}</span>}
+                    {t.sector && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>{t.sector}</span>}
                   </div>
-                  <p className="text-xs truncate" style={{ color: "#999" }}>{t.account}{t.type !== "transfer" ? "" : ""} · {new Date(t.occurred_on).toLocaleDateString("en-GB")}{t.description ? ` · ${t.description}` : ""}</p>
+                  <p className="text-xs truncate" style={{ color: "var(--o-faint)" }}>{t.account}{t.type !== "transfer" ? "" : ""} · {new Date(t.occurred_on).toLocaleDateString("en-GB")}{t.description ? ` · ${t.description}` : ""}</p>
                 </div>
                 <span className="tabular-nums font-semibold text-sm shrink-0" style={{ color: out ? "#C0392B" : "#16A34A" }}>{out ? "−" : "+"}{money(t.currency, t.amount)}</span>
-                {t.has_receipt && <button onClick={() => downloadFile(`/admin/accounting/transactions/${t.id}/receipt`, `receipt-${t.id}`)} className="p-1.5 rounded-lg shrink-0" style={{ background: "#F2F2F2", color: "#777" }}><Download className="w-3.5 h-3.5" /></button>}
+                {t.has_receipt && <button onClick={() => downloadFile(`/admin/accounting/transactions/${t.id}/receipt`, `receipt-${t.id}`)} className="p-1.5 rounded-lg shrink-0" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}><Download className="w-3.5 h-3.5" /></button>}
                 {canApprove && t.status === "draft" && (
                   <span className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => act(t.id, "approve")} className="p-1.5 rounded-lg" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }} title="Approve"><Check className="w-4 h-4" /></button>
-                    <button onClick={() => act(t.id, "void")} className="p-1.5 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }} title="Void"><X className="w-4 h-4" /></button>
+                    <button onClick={() => act(t.id, "approve")} className="p-1.5 rounded-lg" style={{ background: "rgba(34,197,94,0.12)", color: "var(--o-success)" }} title="Approve"><Check className="w-4 h-4" /></button>
+                    <button onClick={() => act(t.id, "void")} className="p-1.5 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }} title="Void"><X className="w-4 h-4" /></button>
                   </span>
                 )}
-                {canApprove && t.status === "approved" && <button onClick={() => act(t.id, "void")} className="text-[11px] font-semibold px-2 py-1 rounded-full shrink-0" style={{ background: "#F2F2F2", color: "#888" }}>Void</button>}
+                {canApprove && t.status === "approved" && <button onClick={() => act(t.id, "void")} className="text-[11px] font-semibold px-2 py-1 rounded-full shrink-0" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>Void</button>}
               </div>
             );
           })}
@@ -347,33 +361,33 @@ function Accounts({ canApprove }: { canApprove: boolean }) {
     catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); }
   };
 
-  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   return (
     <div>
       <div className="space-y-2 mb-5">
         {list.map((a) => (
           <div key={a.id} className="bg-white rounded-[14px] border border-black/[0.05] p-4 flex items-center gap-3">
-            <Landmark className="w-4 h-4 shrink-0" style={{ color: "#C5B27A" }} />
-            <div className="flex-1 min-w-0"><p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{a.name}</p><p className="text-xs" style={{ color: "#999" }}>{a.type.replace("_", " ")} · {a.currency}</p></div>
-            <span className="tabular-nums font-semibold text-sm" style={{ color: "#1E1E1E" }}>{money(a.currency, a.balance)}</span>
+            <Landmark className="w-4 h-4 shrink-0" style={{ color: "var(--o-accent)" }} />
+            <div className="flex-1 min-w-0"><p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{a.name}</p><p className="text-xs" style={{ color: "var(--o-faint)" }}>{a.type.replace("_", " ")} · {a.currency}</p></div>
+            <span className="tabular-nums font-semibold text-sm" style={{ color: "var(--o-text)" }}>{money(a.currency, a.balance)}</span>
           </div>
         ))}
         {list.length === 0 && <Empty label="No accounts yet." />}
       </div>
       {canApprove ? (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5">
-          <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "#1E1E1E" }}>Add account</p>
+          <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "var(--o-text)" }}>Add account</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Stanbic UGX" className={cls} style={st} />
             <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className={cls} style={st}><option value="bank">Bank</option><option value="cash">Cash</option><option value="mobile_money">Mobile money</option></select>
             <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={cls} style={st}>{CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>
             <input type="number" value={form.opening_balance} onChange={(e) => setForm({ ...form, opening_balance: e.target.value })} placeholder="Opening balance" className={cls} style={st} />
           </div>
-          {msg && <p className="text-sm mt-2" style={{ color: "#C0392B" }}>{msg}</p>}
-          <button onClick={add} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full mt-3" style={{ background: "#1E1E1E", color: "#fff" }}><Plus className="w-4 h-4" />Add</button>
+          {msg && <p className="text-sm mt-2" style={{ color: "var(--o-danger)" }}>{msg}</p>}
+          <button onClick={add} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full mt-3" style={{ background: "var(--o-inverse)", color: "#fff" }}><Plus className="w-4 h-4" />Add</button>
         </div>
-      ) : <p className="text-xs" style={{ color: "#bbb" }}>Only a senior finance officer can add or edit accounts.</p>}
+      ) : <p className="text-xs" style={{ color: "var(--o-faint)" }}>Only a senior finance officer can add or edit accounts.</p>}
     </div>
   );
 }
@@ -416,12 +430,12 @@ function Bills({ canApprove }: { canApprove: boolean }) {
     catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); }
   };
 
-  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   return (
     <div>
       <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-5">
-        <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "#1E1E1E" }}>Add a bill (money we owe)</p>
+        <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "var(--o-text)" }}>Add a bill (money we owe)</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <select value={form.supplier_id} onChange={(e) => setForm({ ...form, supplier_id: e.target.value })} className={cls} style={st}><option value="">Supplier…</option>{suppliers.map((s) => <option key={s.id} value={s.id}>{s.company_name}</option>)}</select>
           <input value={form.vendor_name} onChange={(e) => setForm({ ...form, vendor_name: e.target.value })} placeholder="…or vendor name" className={cls} style={st} />
@@ -432,7 +446,7 @@ function Bills({ canApprove }: { canApprove: boolean }) {
           <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" className={`${cls} sm:col-span-2`} style={st} />
         </div>
         {msg && <p className="text-sm mt-2" style={{ color: /recorded/.test(msg) ? "#16A34A" : "#C0392B" }}>{msg}</p>}
-        <button onClick={add} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full mt-3" style={{ background: "#1E1E1E", color: "#fff" }}><Plus className="w-4 h-4" />Add bill</button>
+        <button onClick={add} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full mt-3" style={{ background: "var(--o-inverse)", color: "#fff" }}><Plus className="w-4 h-4" />Add bill</button>
       </div>
 
       {list.length === 0 ? <Empty label="No bills recorded." /> : (
@@ -441,14 +455,14 @@ function Bills({ canApprove }: { canApprove: boolean }) {
             <div key={b.id} className="bg-white rounded-[14px] border border-black/[0.05] p-4 flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{b.vendor}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={b.status === "paid" ? { background: "rgba(34,197,94,0.12)", color: "#16A34A" } : b.status === "void" ? { background: "rgba(0,0,0,0.06)", color: "#999" } : { background: "rgba(192,57,43,0.1)", color: "#C0392B" }}>{b.status}</span>
+                  <span className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{b.vendor}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={b.status === "paid" ? { background: "rgba(34,197,94,0.12)", color: "var(--o-success)" } : b.status === "void" ? { background: "rgba(0,0,0,0.06)", color: "var(--o-faint)" } : { background: "rgba(192,57,43,0.1)", color: "var(--o-danger)" }}>{b.status}</span>
                 </div>
-                <p className="text-xs" style={{ color: "#999" }}>{b.category ?? "—"}{b.due_date ? ` · due ${new Date(b.due_date).toLocaleDateString("en-GB")}` : ""}{b.description ? ` · ${b.description}` : ""}</p>
+                <p className="text-xs" style={{ color: "var(--o-faint)" }}>{b.category ?? "—"}{b.due_date ? ` · due ${new Date(b.due_date).toLocaleDateString("en-GB")}` : ""}{b.description ? ` · ${b.description}` : ""}</p>
               </div>
-              <span className="tabular-nums font-semibold text-sm shrink-0" style={{ color: "#1E1E1E" }}>{money(b.currency, b.amount)}</span>
-              {b.status === "unpaid" && <button onClick={() => pay(b)} className="text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0" style={{ background: "#C5B27A", color: "#1E1E1E" }}>Pay</button>}
-              {canApprove && b.status === "unpaid" && <button onClick={async () => { await apiAdmin(`/admin/accounting/bills/${b.id}/void`, { method: "POST" }); load(); }} className="text-[11px] font-semibold px-2 py-1 rounded-full shrink-0" style={{ background: "#F2F2F2", color: "#888" }}>Void</button>}
+              <span className="tabular-nums font-semibold text-sm shrink-0" style={{ color: "var(--o-text)" }}>{money(b.currency, b.amount)}</span>
+              {b.status === "unpaid" && <button onClick={() => pay(b)} className="text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0" style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>Pay</button>}
+              {canApprove && b.status === "unpaid" && <button onClick={async () => { await apiAdmin(`/admin/accounting/bills/${b.id}/void`, { method: "POST" }); load(); }} className="text-[11px] font-semibold px-2 py-1 rounded-full shrink-0" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>Void</button>}
             </div>
           ))}
         </div>
@@ -486,32 +500,32 @@ function Budgets({ canApprove }: { canApprove: boolean }) {
   return (
     <div>
       <div className="flex items-center gap-2 mb-5">
-        <span className="text-xs" style={{ color: "#999" }}>Month:</span>
+        <span className="text-xs" style={{ color: "var(--o-faint)" }}>Month:</span>
         <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} className="text-sm rounded-xl px-3 py-1.5 border" style={st} />
       </div>
-      {loading ? <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div> : (
+      {loading ? <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div> : (
         <div className="space-y-2 mb-5">
           {rows.length === 0 && <Empty label="No budgets set for this month." />}
           {rows.map((b) => (
             <div key={b.id} className="bg-white rounded-[14px] border border-black/[0.05] p-4">
-              <div className="flex items-center justify-between mb-2"><span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{b.category}</span><span className="text-xs" style={{ color: b.over ? "#C0392B" : "#16A34A" }}>{money(b.currency, b.actual)} of {money(b.currency, b.budget)}{b.over ? " · over" : ""}</span></div>
-              <div className="h-2 rounded-full" style={{ background: "#F2F2F2" }}><div className="h-2 rounded-full" style={{ width: `${Math.min(100, b.budget ? (b.actual / b.budget) * 100 : 0)}%`, background: b.over ? "#C0392B" : "#C5B27A" }} /></div>
+              <div className="flex items-center justify-between mb-2"><span className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{b.category}</span><span className="text-xs" style={{ color: b.over ? "#C0392B" : "#16A34A" }}>{money(b.currency, b.actual)} of {money(b.currency, b.budget)}{b.over ? " · over" : ""}</span></div>
+              <div className="h-2 rounded-full" style={{ background: "var(--o-surface-2)" }}><div className="h-2 rounded-full" style={{ width: `${Math.min(100, b.budget ? (b.actual / b.budget) * 100 : 0)}%`, background: b.over ? "#C0392B" : "#C5B27A" }} /></div>
             </div>
           ))}
         </div>
       )}
       {canApprove ? (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5">
-          <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "#1E1E1E" }}>Set a budget</p>
+          <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "var(--o-text)" }}>Set a budget</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <select value={form.finance_category_id} onChange={(e) => setForm({ ...form, finance_category_id: e.target.value })} className={cls} style={st}><option value="">Category…</option>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
             <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={cls} style={st}>{CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>
             <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="Monthly cap" className={cls} style={st} />
           </div>
-          {msg && <p className="text-sm mt-2" style={{ color: "#C0392B" }}>{msg}</p>}
-          <button onClick={save} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full mt-3" style={{ background: "#1E1E1E", color: "#fff" }}><Plus className="w-4 h-4" />Save budget</button>
+          {msg && <p className="text-sm mt-2" style={{ color: "var(--o-danger)" }}>{msg}</p>}
+          <button onClick={save} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full mt-3" style={{ background: "var(--o-inverse)", color: "#fff" }}><Plus className="w-4 h-4" />Save budget</button>
         </div>
-      ) : <p className="text-xs" style={{ color: "#bbb" }}>Only a senior finance officer can set budgets.</p>}
+      ) : <p className="text-xs" style={{ color: "var(--o-faint)" }}>Only a senior finance officer can set budgets.</p>}
     </div>
   );
 }
@@ -519,7 +533,7 @@ function Budgets({ canApprove }: { canApprove: boolean }) {
 function Panel({ icon: Icon, title, children }: { icon: typeof Wallet; title: string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-[20px] border border-black/[0.06] p-6">
-      <div className="flex items-center gap-2 mb-4"><Icon className="w-4 h-4" style={{ color: "#C5B27A" }} /><h3 className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: "#bbb" }}>{title}</h3></div>
+      <div className="flex items-center gap-2 mb-4"><Icon className="w-4 h-4" style={{ color: "var(--o-accent)" }} /><h3 className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: "var(--o-faint)" }}>{title}</h3></div>
       {children}
     </div>
   );
@@ -531,8 +545,8 @@ type Inv = { id: number; number: string; customer_name: string; customer_email: 
 type Line = { description: string; quantity: number; unit_price: number; vat_rate: number };
 
 const INV_STATUS: Record<string, { bg: string; fg: string }> = {
-  draft: { bg: "rgba(0,0,0,0.06)", fg: "#777" }, sent: { bg: "rgba(59,130,246,0.12)", fg: "#2563EB" },
-  partial: { bg: "rgba(197,178,122,0.16)", fg: "#7A6020" }, paid: { bg: "rgba(34,197,94,0.12)", fg: "#16A34A" }, void: { bg: "rgba(0,0,0,0.06)", fg: "#999" },
+  draft: { bg: "rgba(0,0,0,0.06)", fg: "var(--o-muted)" }, sent: { bg: "rgba(59,130,246,0.12)", fg: "var(--o-info)" },
+  partial: { bg: "rgba(197,178,122,0.16)", fg: "var(--o-accent-text)" }, paid: { bg: "rgba(34,197,94,0.12)", fg: "var(--o-success)" }, void: { bg: "rgba(0,0,0,0.06)", fg: "var(--o-faint)" },
 };
 
 function Invoices({ canApprove }: { canApprove: boolean }) {
@@ -583,13 +597,13 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
   };
   const voidInv = async (i: Inv) => { if (!confirm(`Void invoice ${i.number}?`)) return; try { await apiAdmin(`/admin/accounting/invoices/${i.id}/void`, { method: "POST" }); load(); } catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); } };
 
-  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   return (
     <div>
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         {[["", "All"], ["sent", "Sent"], ["partial", "Partial"], ["paid", "Paid"], ["overdue", "Overdue"], ["draft", "Draft"]].map(([v, l]) => (
-          <button key={v} onClick={() => setStatus(v)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={status === v ? { background: "#1E1E1E", color: "#fff" } : { background: "#fff", color: "#777", border: "1px solid rgba(0,0,0,0.06)" }}>{l}</button>
+          <button key={v} onClick={() => setStatus(v)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={status === v ? { background: "var(--o-inverse)", color: "#fff" } : { background: "var(--o-surface)", color: "var(--o-muted)", border: "1px solid rgba(0,0,0,0.06)" }}>{l}</button>
         ))}
         {/* Coffee and FET invoices use the Finance team's branded templates (full editor
             with live preview); "General" keeps the quick form for other business lines. */}
@@ -607,8 +621,8 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
             <input value={form.customer_email} onChange={(e) => setForm({ ...form, customer_email: e.target.value })} placeholder="Customer email" className={`${cls} sm:col-span-2`} style={st} />
             <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={cls} style={st}>{CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>
             <select value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} className={cls} style={st}><option value="">Sector…</option>{["FET", "SEAL", "COFFEE", "LOGISTICS", "GENERAL"].map((s) => <option key={s} value={s}>{s}</option>)}</select>
-            <label className="text-xs flex items-center gap-1" style={{ color: "#999" }}>Issue<input type="date" value={form.issue_date} onChange={(e) => setForm({ ...form, issue_date: e.target.value })} className="text-sm rounded-lg px-2 py-1.5 border ml-1 w-full" style={st} /></label>
-            <label className="text-xs flex items-center gap-1" style={{ color: "#999" }}>Due<input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} className="text-sm rounded-lg px-2 py-1.5 border ml-1 w-full" style={st} /></label>
+            <label className="text-xs flex items-center gap-1" style={{ color: "var(--o-faint)" }}>Issue<input type="date" value={form.issue_date} onChange={(e) => setForm({ ...form, issue_date: e.target.value })} className="text-sm rounded-lg px-2 py-1.5 border ml-1 w-full" style={st} /></label>
+            <label className="text-xs flex items-center gap-1" style={{ color: "var(--o-faint)" }}>Due<input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} className="text-sm rounded-lg px-2 py-1.5 border ml-1 w-full" style={st} /></label>
           </div>
           {/* Line items */}
           <div className="space-y-2 mb-3">
@@ -618,15 +632,15 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
                 <input type="number" min={1} value={l.quantity} onChange={(e) => setLine(i, { quantity: Number(e.target.value) })} className="text-sm rounded-xl px-2 py-2 border w-16" style={st} title="Qty" />
                 <input type="number" min={0} value={l.unit_price} onChange={(e) => setLine(i, { unit_price: Number(e.target.value) })} placeholder="Unit" className="text-sm rounded-xl px-2 py-2 border w-28" style={st} title="Unit price" />
                 <input type="number" min={0} max={100} value={l.vat_rate} onChange={(e) => setLine(i, { vat_rate: Number(e.target.value) })} className="text-sm rounded-xl px-2 py-2 border w-16" style={st} title="VAT %" />
-                {lines.length > 1 && <button onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))} className="p-2 rounded-lg shrink-0" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><X className="w-4 h-4" /></button>}
+                {lines.length > 1 && <button onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))} className="p-2 rounded-lg shrink-0" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><X className="w-4 h-4" /></button>}
               </div>
             ))}
-            <button onClick={() => setLines((ls) => [...ls, { description: "", quantity: 1, unit_price: 0, vat_rate: defaultVat }])} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Plus className="w-3.5 h-3.5" />Add line</button>
+            <button onClick={() => setLines((ls) => [...ls, { description: "", quantity: 1, unit_price: 0, vat_rate: defaultVat }])} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}><Plus className="w-3.5 h-3.5" />Add line</button>
           </div>
           <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Notes (optional)" className={cls} style={st} />
           <div className="flex items-center justify-between mt-3">
-            <span className="text-sm" style={{ color: "#777" }}>Subtotal {money(form.currency, sub)} · VAT {money(form.currency, vat)} · <strong style={{ color: "#1E1E1E" }}>Total {money(form.currency, sub + vat)}</strong></span>
-            <button onClick={create} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}><FileText className="w-4 h-4" />Create draft</button>
+            <span className="text-sm" style={{ color: "var(--o-muted)" }}>Subtotal {money(form.currency, sub)} · VAT {money(form.currency, vat)} · <strong style={{ color: "var(--o-text)" }}>Total {money(form.currency, sub + vat)}</strong></span>
+            <button onClick={create} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)" }}><FileText className="w-4 h-4" />Create draft</button>
           </div>
         </div>
       )}
@@ -652,19 +666,19 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     {i.business
-                      ? <Link href={`/admin/invoices/${i.id}`} className="text-sm font-semibold hover:underline" style={{ color: "#1E1E1E" }}>{i.number}</Link>
-                      : <span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{i.number}</span>}
+                      ? <Link href={`/admin/invoices/${i.id}`} className="text-sm font-semibold hover:underline" style={{ color: "var(--o-text)" }}>{i.number}</Link>
+                      : <span className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{i.number}</span>}
                     {i.business && <span className="text-[11px] text-ink-muted">{i.business === "coffee" ? "Coffee" : "FET"}{i.kind !== "standard" ? ` · ${i.kind}` : ""}</span>}
                     <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: sc.bg, color: sc.fg }}>{i.status}</span>
-                    {i.is_overdue && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(192,57,43,0.1)", color: "#C0392B" }}>overdue</span>}
+                    {i.is_overdue && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "rgba(192,57,43,0.1)", color: "var(--o-danger)" }}>overdue</span>}
                   </div>
-                  <p className="text-xs" style={{ color: "#999" }}>{i.customer_name} · {money(i.currency, i.total)}{i.balance > 0 && i.balance < i.total ? ` · ${money(i.currency, i.balance)} due` : ""}{i.due_date ? ` · due ${new Date(i.due_date).toLocaleDateString("en-GB")}` : ""}</p>
+                  <p className="text-xs" style={{ color: "var(--o-faint)" }}>{i.customer_name} · {money(i.currency, i.total)}{i.balance > 0 && i.balance < i.total ? ` · ${money(i.currency, i.balance)} due` : ""}{i.due_date ? ` · due ${new Date(i.due_date).toLocaleDateString("en-GB")}` : ""}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <button onClick={() => downloadFile(`/admin/accounting/invoices/${i.id}/pdf`, `${i.number}.pdf`)} className="p-1.5 rounded-lg" style={{ background: "#F2F2F2", color: "#555" }} title="PDF"><Download className="w-4 h-4" /></button>
-                  {i.status !== "void" && i.status !== "paid" && <button onClick={() => send(i)} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "rgba(59,130,246,0.12)", color: "#2563EB" }}><Send className="w-3.5 h-3.5" />Send…</button>}
-                  {(i.status === "sent" || i.status === "partial") && <button onClick={() => pay(i)} className="text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "#C5B27A", color: "#1E1E1E" }}>Record payment</button>}
-                  {canApprove && i.status !== "void" && i.status !== "paid" && <button onClick={() => voidInv(i)} className="text-[11px] font-semibold px-2 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>Void</button>}
+                  <button onClick={() => downloadFile(`/admin/accounting/invoices/${i.id}/pdf`, `${i.number}.pdf`)} className="p-1.5 rounded-lg" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }} title="PDF"><Download className="w-4 h-4" /></button>
+                  {i.status !== "void" && i.status !== "paid" && <button onClick={() => send(i)} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "rgba(59,130,246,0.12)", color: "var(--o-info)" }}><Send className="w-3.5 h-3.5" />Send…</button>}
+                  {(i.status === "sent" || i.status === "partial") && <button onClick={() => pay(i)} className="text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>Record payment</button>}
+                  {canApprove && i.status !== "void" && i.status !== "paid" && <button onClick={() => voidInv(i)} className="text-[11px] font-semibold px-2 py-1 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>Void</button>}
                 </div>
               </div>
             );
@@ -708,30 +722,30 @@ function Recurring({ canApprove }: { canApprove: boolean }) {
   const toggle = async (r: Rec) => { try { await apiAdmin(`/admin/accounting/recurring/${r.id}`, { method: "PATCH", body: JSON.stringify({ is_active: !r.is_active }) }); load(); } catch { /* */ } };
   const del = async (id: number) => { if (!confirm("Delete this recurring entry?")) return; try { await apiAdmin(`/admin/accounting/recurring/${id}`, { method: "DELETE" }); load(); } catch { /* */ } };
 
-  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   return (
     <div>
-      <p className="text-xs mb-4" style={{ color: "#999" }}>Recurring entries auto-create a draft transaction each month (on/after the chosen day) for a senior officer to approve — rent, salaries, subscriptions.</p>
+      <p className="text-xs mb-4" style={{ color: "var(--o-faint)" }}>Recurring entries auto-create a draft transaction each month (on/after the chosen day) for a senior officer to approve — rent, salaries, subscriptions.</p>
       <div className="space-y-2 mb-5">
         {list.length === 0 && <Empty label="No recurring entries yet." />}
         {list.map((r) => (
           <div key={r.id} className="bg-white rounded-[14px] border border-black/[0.05] p-4 flex items-center gap-3">
-            <Repeat className="w-4 h-4 shrink-0" style={{ color: "#C5B27A" }} />
+            <Repeat className="w-4 h-4 shrink-0" style={{ color: "var(--o-accent)" }} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{r.description || (r.category ?? r.type)}</p>
-              <p className="text-xs" style={{ color: "#999" }}>{r.type === "income" ? "In" : "Out"} · {r.account} · day {r.day_of_month} · {money(r.currency, r.amount)}{r.vat_rate ? ` · VAT ${r.vat_rate}%` : ""}</p>
+              <p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{r.description || (r.category ?? r.type)}</p>
+              <p className="text-xs" style={{ color: "var(--o-faint)" }}>{r.type === "income" ? "In" : "Out"} · {r.account} · day {r.day_of_month} · {money(r.currency, r.amount)}{r.vat_rate ? ` · VAT ${r.vat_rate}%` : ""}</p>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={r.is_active ? { background: "rgba(34,197,94,0.12)", color: "#16A34A" } : { background: "rgba(0,0,0,0.06)", color: "#999" }}>{r.is_active ? "active" : "paused"}</span>
-            {canApprove && <button onClick={() => toggle(r)} className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#F2F2F2", color: "#888" }}>{r.is_active ? "Pause" : "Resume"}</button>}
-            {canApprove && <button onClick={() => del(r.id)} className="p-1.5 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><Trash2 className="w-4 h-4" /></button>}
+            <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={r.is_active ? { background: "rgba(34,197,94,0.12)", color: "var(--o-success)" } : { background: "rgba(0,0,0,0.06)", color: "var(--o-faint)" }}>{r.is_active ? "active" : "paused"}</span>
+            {canApprove && <button onClick={() => toggle(r)} className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>{r.is_active ? "Pause" : "Resume"}</button>}
+            {canApprove && <button onClick={() => del(r.id)} className="p-1.5 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><Trash2 className="w-4 h-4" /></button>}
           </div>
         ))}
       </div>
 
       {canApprove ? (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-5">
-          <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "#1E1E1E" }}>Add recurring entry</p>
+          <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "var(--o-text)" }}>Add recurring entry</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className={cls} style={st}><option value="expense">Money out</option><option value="income">Money in</option></select>
             <select value={form.finance_account_id} onChange={(e) => setForm({ ...form, finance_account_id: e.target.value })} className={cls} style={st}><option value="">Account…</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>)}</select>
@@ -741,10 +755,10 @@ function Recurring({ canApprove }: { canApprove: boolean }) {
             <input type="number" min={1} max={28} value={form.day_of_month} onChange={(e) => setForm({ ...form, day_of_month: e.target.value })} placeholder="Day of month" className={cls} style={st} />
             <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description (e.g. Office rent)" className={`${cls} sm:col-span-2`} style={st} />
           </div>
-          {msg && <p className="text-sm mt-2" style={{ color: "#C0392B" }}>{msg}</p>}
-          <button onClick={add} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full mt-3" style={{ background: "#1E1E1E", color: "#fff" }}><Plus className="w-4 h-4" />Add recurring</button>
+          {msg && <p className="text-sm mt-2" style={{ color: "var(--o-danger)" }}>{msg}</p>}
+          <button onClick={add} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full mt-3" style={{ background: "var(--o-inverse)", color: "#fff" }}><Plus className="w-4 h-4" />Add recurring</button>
         </div>
-      ) : <p className="text-xs" style={{ color: "#bbb" }}>Only a senior finance officer can set up recurring entries.</p>}
+      ) : <p className="text-xs" style={{ color: "var(--o-faint)" }}>Only a senior finance officer can set up recurring entries.</p>}
     </div>
   );
 }

@@ -83,9 +83,9 @@ export function NotificationBell() {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label="Notifications"
-        className="relative flex items-center justify-center w-9 h-9 rounded-full transition-colors hover:bg-black/[0.04]"
+        className="c-icon-btn relative"
       >
-        <Bell className="w-[18px] h-[18px]" style={{ color: "#555" }} />
+        <Bell className="w-[18px] h-[18px]" />
         {unread > 0 && (
           <span
             className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold"
@@ -99,12 +99,12 @@ export function NotificationBell() {
       {open && (
         <div
           className="absolute right-0 top-full mt-2 z-30 rounded-2xl border shadow-xl overflow-hidden w-80"
-          style={{ background: "#fff", borderColor: "rgba(0,0,0,0.08)" }}
+          style={{ background: "var(--o-surface)", borderColor: "rgba(0,0,0,0.08)" }}
         >
           <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-            <span className="text-xs font-bold uppercase tracking-[0.08em]" style={{ color: "#999" }}>Notifications</span>
+            <span className="text-xs font-bold uppercase tracking-[0.08em]" style={{ color: "var(--o-faint)" }}>Notifications</span>
             {unread > 0 && (
-              <button onClick={markAllRead} className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#7A6020" }}>
+              <button onClick={markAllRead} className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "var(--o-accent-text)" }}>
                 <Check className="w-3 h-3" />Mark all read
               </button>
             )}
@@ -112,7 +112,7 @@ export function NotificationBell() {
 
           <div className="max-h-80 overflow-y-auto">
             {items.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm" style={{ color: "#999" }}>Nothing yet.</p>
+              <p className="px-4 py-8 text-center text-sm" style={{ color: "var(--o-faint)" }}>Nothing yet.</p>
             ) : (
               items.map((n) => (
                 <button
@@ -121,11 +121,11 @@ export function NotificationBell() {
                   className="w-full text-left px-4 py-3 border-b last:border-0 hover:bg-black/[0.02] transition-colors flex items-start gap-2.5"
                   style={{ borderColor: "rgba(0,0,0,0.05)" }}
                 >
-                  {!n.read_at && <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "#C5B27A" }} />}
+                  {!n.read_at && <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--o-accent)" }} />}
                   <div className={n.read_at ? "pl-4" : ""}>
-                    <p className="text-xs font-semibold" style={{ color: "#1E1E1E" }}>{n.data.title}</p>
-                    <p className="text-[11px] mt-0.5" style={{ color: "#777" }}>{n.data.body}</p>
-                    <p className="text-[10px] mt-1" style={{ color: "#bbb" }}>{timeAgo(n.created_at)}</p>
+                    <p className="text-xs font-semibold" style={{ color: "var(--o-text)" }}>{n.data.title}</p>
+                    <p className="text-[11px] mt-0.5" style={{ color: "var(--o-muted)" }}>{n.data.body}</p>
+                    <p className="text-[10px] mt-1" style={{ color: "var(--o-faint)" }}>{timeAgo(n.created_at)}</p>
                   </div>
                 </button>
               ))

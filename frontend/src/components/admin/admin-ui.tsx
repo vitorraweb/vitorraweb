@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ExternalLink, LogOut, ShieldCheck } from "lucide-react";
+import { ChevronDown, ExternalLink, LogOut, ShieldCheck, Sun, Moon, Monitor } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { appFor } from "@/lib/admin-apps";
+import { readConsoleTheme, writeConsoleTheme, type ConsoleTheme } from "@/lib/console-theme";
 import type { AdminUser } from "@/lib/auth";
 
 export type Paginated<T> = {
@@ -41,12 +44,27 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
   );
 }
 
-/** Console page title row. `actions` sits on the right (buttons, filters). */
+/**
+ * Odoo's control panel: a breadcrumb (App / Screen) with the screen's
+ * actions on the right. The app crumb links back to the app's first screen.
+ */
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
+  const pathname = usePathname();
+  const app = appFor(pathname ?? "");
+  const showApp = app && app.name !== title;
+
   return (
     <div className="c-page-head">
       <div className="min-w-0">
-        <h1 className="c-title">{title}</h1>
+        <h1 className="o-breadcrumb">
+          {showApp && (
+            <>
+              <Link href={app.items[0]?.href ?? "/admin"}>{app.name}</Link>
+              <span className="o-sep" aria-hidden="true">/</span>
+            </>
+          )}
+          <span className="c-title">{title}</span>
+        </h1>
         {subtitle && <p className="c-subtitle">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -110,10 +128,13 @@ export function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-/** Header profile chip — avatar, name/role, and a dropdown with site link + logout. */
+/** Header profile chip — avatar, name/role, and a dropdown with appearance, site link + logout. */
 export function UserMenu({ user, onLogout }: { user: AdminUser; onLogout: () => void }) {
   const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState<ConsoleTheme>("system");
   const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { if (open) setTheme(readConsoleTheme()); }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -131,72 +152,65 @@ export function UserMenu({ user, onLogout }: { user: AdminUser; onLogout: () => 
     };
   }, [open]);
 
+  const choose = (t: ConsoleTheme) => { setTheme(t); writeConsoleTheme(t); };
+  const item = "flex items-center gap-2.5 px-4 py-2.5 text-[14px] w-full text-left transition-colors hover:bg-paper-deep";
+
   return (
     <div className="relative" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex items-center gap-2.5 pl-1.5 pr-2.5 sm:pr-3 py-1.5 rounded-full transition-colors hover:bg-black/[0.04]"
+        className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-md transition-colors"
+        style={{ color: "var(--o-nav-text)" }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--o-nav-hover)")}
+        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
       >
         <span
-          className="flex items-center justify-center w-8 h-8 rounded-full text-[11px] font-bold shrink-0"
-          style={{ background: "#C5B27A", color: "#1E1E1E" }}
+          className="flex items-center justify-center w-8 h-8 rounded-full text-[12px] font-bold shrink-0"
+          style={{ background: "var(--o-accent)", color: "#1E1E1E" }}
         >
           {initials(user.name)}
         </span>
         <span className="hidden sm:flex flex-col items-start leading-tight">
-          <span className="text-[13px] font-semibold" style={{ color: "#1E1E1E" }}>{user.name}</span>
-          <span className="text-[11px] capitalize" style={{ color: "#999999" }}>{user.role}</span>
+          <span className="text-[13.5px] font-semibold">{user.name}</span>
+          <span className="text-[12px] capitalize" style={{ color: "var(--o-nav-muted)" }}>{user.role}</span>
         </span>
-        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} style={{ color: "#999999" }} />
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} style={{ color: "var(--o-nav-muted)" }} />
       </button>
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl border border-black/[0.06] py-1.5 z-50 animate-[vitorra-fade-in_0.15s_ease-out]"
-          style={{ boxShadow: "0 16px 48px rgba(0,0,0,0.14)" }}
+          className="absolute right-0 top-full mt-2 w-72 bg-paper border border-line rounded-md py-1.5 z-50 animate-[vitorra-fade-in_0.15s_ease-out]"
+          style={{ boxShadow: "var(--o-shadow-pop)" }}
           role="menu"
         >
-          <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-            <p className="text-sm font-semibold truncate" style={{ color: "#1E1E1E" }}>{user.name}</p>
-            <p className="text-xs truncate mt-0.5" style={{ color: "#999999" }}>{user.email}</p>
-            <span
-              className="inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-              style={{ background: "rgba(197,178,122,0.16)", color: "#7A6020" }}
-            >
-              {user.role}
-            </span>
+          <div className="px-4 py-3 border-b border-line">
+            <p className="text-[14px] font-semibold truncate text-ink">{user.name}</p>
+            <p className="text-[13px] truncate mt-0.5 text-ink-muted">{user.email}</p>
           </div>
+
+          <div className="px-4 py-3 border-b border-line">
+            <p className="text-[13px] text-ink-muted mb-2">Appearance</p>
+            <div className="o-seg w-full" role="group" aria-label="Appearance">
+              {([["light", "Light", Sun], ["dark", "Dark", Moon], ["system", "System", Monitor]] as const).map(([v, label, Icon]) => (
+                <button key={v} type="button" aria-pressed={theme === v} onClick={() => choose(v)} className="flex-1 justify-center">
+                  <Icon className="w-3.5 h-3.5" />{label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="py-1">
-            <Link
-              href="/admin/profile"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#F2F2F2]"
-              style={{ color: "#454545" }}
-              role="menuitem"
-            >
-              <ShieldCheck className="w-4 h-4" style={{ color: "#999999" }} />
+            <Link href="/admin/profile" onClick={() => setOpen(false)} className={`${item} text-ink-soft`} role="menuitem">
+              <ShieldCheck className="w-4 h-4 text-ink-muted" />
               Profile &amp; security
             </Link>
-            <Link
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#F2F2F2]"
-              style={{ color: "#454545" }}
-              role="menuitem"
-            >
-              <ExternalLink className="w-4 h-4" style={{ color: "#999999" }} />
+            <Link href="/" target="_blank" rel="noopener noreferrer" className={`${item} text-ink-soft`} role="menuitem">
+              <ExternalLink className="w-4 h-4 text-ink-muted" />
               View site
             </Link>
-            <button
-              type="button"
-              onClick={onLogout}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left transition-colors hover:bg-[#FBEAEA]"
-              style={{ color: "#C0392B" }}
-              role="menuitem"
-            >
+            <button type="button" onClick={onLogout} className={`${item} text-alert-ink`} role="menuitem">
               <LogOut className="w-4 h-4" />
               Log out
             </button>

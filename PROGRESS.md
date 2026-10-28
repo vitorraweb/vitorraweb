@@ -45,7 +45,7 @@
 | **Being told when the website breaks** — before a customer notices | ✅ **Built & tested on both environments** — a real alert was fired and the email confirmed arriving |
 | **Knowing what we spend, before the bill** | ✅ **Built** — warnings at 60/85/100% of budget, plus unusual-spending detection |
 | **Knowing which channel produced every enquiry** (Google Ads, Facebook, referral, direct) | ✅ **Live** — ad links still need campaign tags |
-| **Google Ads in the console** — spend, campaigns, search terms and cost per lead beside our enquiries; won deals reported back to Google; consent-aware tag with conversions on every lead form, call and WhatsApp tap | 🔨 **Built, not yet deployed** — needs the Google Cloud OAuth client, conversion labels from Marketing, then Connect in `/admin/google-ads` |
+| **Google Ads in the console** — spend, campaigns, search terms and cost per lead beside our enquiries; won deals reported back to Google; consent-aware tag with conversions on every lead form, call and WhatsApp tap | ✅ **Live** (28 October) — spend numbers wait on the Google Cloud OAuth client, conversion labels from Marketing, then Connect in `/admin/google-ads` |
 | **Enquiries chased and escalated when nobody replies** | ✅ **Live** — set the escalation list (`ENQUIRY_SLA_ESCALATE_TO`) |
 | **Quotations + branded Coffee / FET invoices** (Finance's templates) | ✅ **Live** |
 | **Customer sign-in landing in a previous account** | ✅ **Fixed & live** — everyone signed in again once |
@@ -56,6 +56,8 @@
 | **Bold redesign** — statement homepage, Olivia's banners and photos, real SEAL cans, East Africa route map, Mount Elgon map, fuel bars, contact/blog/careers in the same style | ✅ **Live** (27 October) |
 | **Found by Google, Bing and AI assistants** (structured data, short answers, `llms.txt`, Bing notified on publish) | ✅ **Live** — server update + Search Console / Bing Webmaster setup still to do |
 | **Blog drafts written with Claude, approved by Marketing by email** | ✅ **Live** — three drafts waiting for Send for review |
+| **Console redesigned like Odoo** — dark top bar, app tiles, breadcrumb control panels, list views, larger system fonts, light/dark mode, graph ⇄ pivot reporting on Overview, CEO report, Google Ads and Accounting | ✅ **Built** (28 October) |
+| **Staff test records removed from enquiries / orders / messages** (`leads:purge-test`) | ⏳ Run on the server: list first, then `--force` |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -1604,7 +1606,7 @@ on `redesign/bold`, previewed, then merged to `master`.
 
 ---
 
-## Found by Google, Bing and AI assistants (27 October 2026) — live, server step pending
+## Found by Google, Bing and AI assistants (27 October 2026) — live
 
 Goal: show up in Google and Bing results, and be the source AI assistants
 (ChatGPT, Copilot, Perplexity, Google AI Overviews) quote when someone asks
@@ -1633,9 +1635,7 @@ about fuel savings, wound spray, Ugandan coffee or East African freight.
   question headings, and end with a short Questions section.
 
 **⏳ To finish**
-1. **Server update** (blog → Bing notification, job posting dates):
-   `git fetch origin && git merge --ff-only origin/master`, then
-   `$PHP artisan config:cache`. No migration.
+1. ~~**Server update**~~ ✅ done 28 October with the Google Ads release.
 2. **Google Search Console:** add vitorra.org, verify (TXT record at GoDaddy, or
    set `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` on Vercel), submit the sitemap.
 3. **Bing Webmaster Tools:** import from Search Console (or set
@@ -1655,7 +1655,7 @@ about fuel savings, wound spray, Ugandan coffee or East African freight.
 
 ---
 
-## Google Ads in the console (28 October 2026) — built, not yet deployed
+## Google Ads in the console (28 October 2026) — live, Google connection pending
 
 Marketing now pays for Google Ads and Plausible is no longer running, so the
 question "what did the ad money produce?" needed Google's numbers beside ours.
@@ -1711,8 +1711,8 @@ admin-only, and both are written to the activity log.
      `https://vitorra.org/api/google-ads/oauth/callback`.
    - Put the client id and secret in `backend/.env` as `GOOGLE_ADS_CLIENT_ID` /
      `GOOGLE_ADS_CLIENT_SECRET`.
-2. **Server update:** pull, `migrate --force` (`2026_10_28_000001`),
-   `config:cache`, `route:cache`. Check with `php artisan google-ads:status`.
+2. ~~**Server update**~~ ✅ done 28 October (migration run; `google-ads:status`
+   lists what remains).
 3. **Connect:** an admin opens `/admin/google-ads`, presses **Connect Google Ads**,
    signs in with Marketing's Google Ads login, and picks the ad account.
 4. **Marketing, in Google Ads (Goals → Conversions):**
@@ -1740,6 +1740,70 @@ admin-only, and both are written to the activity log.
 > `components/GoogleTag.tsx`, `lib/cookies.ts` (`COOKIE_CONSENT_EVENT`), conversions
 > fired from `lib/api.ts`, page `app/admin/google-ads/page.tsx`. Tests: `GoogleAdsTest`
 > (15). **500 backend tests passing.**
+
+---
+
+## The console, redesigned like Odoo (28 October 2026)
+
+Asked for: the console to look and work like Odoo, easier to read, with
+plain professional fonts, real reporting screens, and dark mode.
+
+- **Top bar like Odoo's:** dark, with the app's name and its menu; the
+  current screen is highlighted. The apps button (top left) returns home.
+- **Home screen is Odoo's app grid:** a coloured tile per app with a red
+  badge for what is waiting, under the "Needs attention" list.
+- **Every screen opens with a control panel:** a breadcrumb ("Sales /
+  Enquiries") and its buttons on the right, on a white band.
+- **Readable:** the system font (San Francisco on Mac, Segoe UI on
+  Windows) replaces the serif titles; body text is 14px and every small
+  size stepped up one notch; faint grey text darkened to at least 4.5:1.
+- **List views:** bold column headers in sentence case, roomier rows,
+  status tags as coloured pills.
+- **Dark mode:** profile menu → Appearance → Light / Dark / System
+  (System follows the computer and switches with it). Remembered per browser.
+- **Reporting like Odoo's graph and pivot views** (Overview, CEO report,
+  Google Ads, Accounting → Overview): every chart has a measure picker,
+  Bar / Line / Pie, and a Graph ⇄ Pivot switch (the pivot is the table of
+  the same numbers, with totals). Hover shows the exact figures. Headline
+  tiles show the change against the previous period, green or red by
+  whether the change is good. Overview now covers the last 30 days.
+- The public cookie banner no longer shows inside the console or the staff
+  portal (no optional cookies are set there).
+
+> Technical detail (engineering): `--o-*` theme tokens in `globals.css`
+> (`.admin-console[data-theme="dark"]`, also defined at `:root` so console
+> components reused by the staff portal stay light); token utilities
+> (`text-ink`, `bg-paper`…) re-pointed inside the console; ~1,400 inline
+> hex colours across 41 console files converted to tokens. `lib/console-theme.ts`,
+> theme switch in `UserMenu`, breadcrumb `PageHeader`, `components/admin/reporting.tsx`
+> (`GraphView`, `KpiTile`; series colours are the validated dataviz order,
+> stepped for dark). `AdminController::stats` trends now 30 days.
+
+## Removing staff test records from the feeds (28 October 2026) — command ready
+
+Enquiries, orders and messages the team made while testing (John's Gmail
+addresses, @vitorra.org addresses, staff names) hid the real customers.
+`php artisan leads:purge-test` finds them and removes them.
+
+- Matches: the email of any staff login, any @vitorra.org address, any
+  address passed with `--email`, or a name containing a staff member's full
+  name. A record named with a staff **first name only** ("John") is listed
+  but kept unless `--include-first-names` — a customer can be called John.
+- Lists by default and deletes nothing. `--force` deletes what it listed,
+  after writing every row (with its items and documents) to
+  `storage/app/private/purge-backups/`. Logged in the activity log.
+- Also removes the generated PDFs, the staff replies logged against those
+  records, and the test addresses from the customer directory and pipeline
+  when nothing else uses them.
+
+**To run on the server:**
+```bash
+cd ~/vitorraweb && git pull origin master && cd backend
+/opt/alt/php83/usr/bin/php artisan leads:purge-test --email=leojohnseyi@gmail.com --email=johngraphics@gmail.com
+# read the list; if right:
+/opt/alt/php83/usr/bin/php artisan leads:purge-test --email=leojohnseyi@gmail.com --email=johngraphics@gmail.com --force
+```
+Tests: `PurgeTestLeadsTest` (3). **503 backend tests passing.**
 
 ---
 
@@ -1778,11 +1842,11 @@ F. **Write the incident runbook** — what to check, in what order, when the sit
    runbook would list none of those.
 
 **Google Ads (from 28 October)**
+- **Run `leads:purge-test` on the server** (list, check, then `--force`) so the feeds show only customers.
 - Google Cloud OAuth client + Explorer access, server update, then **Connect** in `/admin/google-ads` (see "Google Ads in the console").
 - Marketing: the five conversion labels for Vercel, enhanced conversions on, and optionally an Import → clicks action for won deals.
 
 **Website and search (from 27 October)**
-- **Server update** for the search work (see "Found by Google, Bing and AI assistants").
 - **Google Search Console, Bing Webmaster Tools, Google Business Profile, Bing Places** — need John's or Marketing's logins.
 - **Blog:** three drafts (diesel prices, coffee EUDR, FET fuel costs) waiting for Send for review; set the coffee export article's cover to `/banners/blog-coffee-export.jpg`.
 - **Testimonials:** two or three real client quotes, each with written consent.
