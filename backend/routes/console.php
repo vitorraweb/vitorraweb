@@ -80,3 +80,8 @@ Schedule::command('google-ads:sync --days=30')->dailyAt('03:40')->withoutOverlap
 // replies and pipeline changes, so Marketing's focus list stays current.
 Schedule::command('leads:score')->hourlyAt(35)->withoutOverlapping()
     ->onFailure(fn () => logger()->error('Scheduled leads:score failed'));
+
+// Finance receipt inbox: AI-read newly scanned receipts so the person
+// scanning never waits on it. A no-op when nothing is waiting or no key is set.
+Schedule::command('receipts:read')->everyMinute()->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Scheduled receipts:read failed'));

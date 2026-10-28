@@ -59,6 +59,7 @@
 | **Console redesigned like Odoo** — dark top bar, app tiles, breadcrumb control panels, list views, larger system fonts, light/dark mode, graph ⇄ pivot reporting on Overview, CEO report, Google Ads and Accounting | ✅ **Built** (28 October) |
 | **Staff test records removed from enquiries / orders / messages** (`leads:purge-test`) | ⏳ Run on the server: list first, then `--force` |
 | **Marketing app** — email template designer, markets, campaigns that must be tested to support before sending, open/click scorer, one-click unsubscribe, lead-priority decision engine; CEO report renamed Executive report | 🔨 **Built** (29 October) — server update needed |
+| **Everyone sorted into markets and ranked**; contacts from outside the website added by hand or imported; Sales screens tidied; **Finance receipt scanner** (phone QR, AI-read, kept encrypted) | 🔨 **Built** (30 October) — server update + `markets:build` |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -1741,6 +1742,74 @@ admin-only, and both are written to the activity log.
 > `components/GoogleTag.tsx`, `lib/cookies.ts` (`COOKIE_CONSENT_EVENT`), conversions
 > fired from `lib/api.ts`, page `app/admin/google-ads/page.tsx`. Tests: `GoogleAdsTest`
 > (15). **500 backend tests passing.**
+
+---
+
+## Markets filled, outside contacts in, Sales tidied, receipt scanner (30 October 2026)
+
+**Every contact sorted and ranked.** `markets:build` (also the **Build markets
+from your lists** button on Marketing → Markets):
+- Creates one market per product and industry, such as "Fuel Eco Tech · Cargo"
+  or "SEAL Wound Spray · Hospitals" (18 on the current lists).
+- Puts every contact who isn't already in a market into the right one.
+- Brings website enquirers (FET, SEAL, coffee; never staff or @vitorra.org)
+  into the CRM under a new **Website enquiries** industry. Converted
+  enquiries count as customers.
+- Ranks everyone with the decision engine.
+- Safe to re-run: it never moves a contact the team has already placed.
+
+**Contacts from outside the website** (Sales → Prospects):
+- **New contact** form for one person at a time: an event, a referral, a
+  call. It refuses duplicates by name, email or phone, and files the
+  contact into its industry's market (or one you choose).
+- **Import** upgraded:
+  - Reads an **Industry** column, so each row is filed under its own
+    industry; unknown values fall back to the industry chosen on screen.
+  - Can drop every row of the file into a chosen market.
+  - Offers a downloadable template spreadsheet.
+  - Re-uploading the same workbook still adds only new rows.
+
+**Sales screens tidied:**
+- **Pipeline:**
+  - Stage columns scroll on their own, like Odoo's kanban; "New lead" with
+    183 cards no longer runs for pages.
+  - The search box sits in the header band.
+  - The red "COLD" badge is now "Quiet 90+ days", so it doesn't clash with
+    the lead-priority Cold tier.
+  - Empty stages say so instead of showing a dash.
+- **Reply templates:**
+  - Renamed from "Templates", to tell them apart from Marketing's email
+    templates.
+  - Console buttons and filter switch in place of the old ones.
+- **Every older screen** with buttons beside its title (Tasks, Products,
+  Blog, FET, Staff, Trials, Media, Reply templates) now lines them up
+  inside the header band.
+- **Customers and Pipeline** no longer list the "Internal test" contacts.
+
+**Finance: receipts** (Accounting → Receipts):
+- **Scan with your phone** shows a QR code. The phone opens a simple page,
+  "Take a photo of a receipt": no sign-in, works for 30 minutes, and can
+  only add receipts.
+- Photos are shrunk on the phone (iPhone HEIC included) and uploaded.
+- Every receipt is **kept encrypted**, whether or not it is ever booked.
+- AI reads vendor, date, amount and VAT within a minute (needs
+  `ANTHROPIC_API_KEY`; without it, Finance types them in).
+- One click records a receipt as a **draft expense** with the receipt
+  attached; senior finance approves it as usual. Receipts can also be
+  uploaded from the computer, or archived without booking.
+
+**Server:** pull, `migrate --force` (`2026_10_30_000001`), `config:cache`,
+`route:cache`, then `markets:build` once. `receipts:read` runs every minute
+from the scheduler.
+
+> Technical detail (engineering): `App\Services\Marketing\MarketBuilder` (+ `markets:build`,
+> `POST /admin/marketing/markets/build`, `markets.auto_key`), `Prospect::CATEGORY_LABELS`/
+> `PRODUCT_LABELS`, `WEBSITE_LEAD`; `ProspectController@store`/`importTemplate`, import
+> `market_id` + industry column; `App\Services\ReceiptInbox` (+ `receipts:read`),
+> `FinanceReceiptController`, `ReceiptScanController` (public `/api/scan/{token}`, hash-only
+> tokens, 60 uploads per link), `ReceiptExtractionService::extractBytes`, tables
+> `finance_receipts`, `receipt_scan_links`; frontend `app/scan/[token]`, `lib/receipt-image.ts`,
+> `components/admin/ReceiptInbox.tsx`. Tests: `CrmOrganiseTest` (8). **527 backend tests passing.**
 
 ---
 

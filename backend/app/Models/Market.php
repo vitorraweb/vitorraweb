@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 /** A named audience Marketing sends campaigns to ("Kampala fleets", "Hospitals"). */
 class Market extends Model
 {
-    protected $fillable = ['name', 'description', 'product', 'color', 'created_by'];
+    protected $fillable = ['name', 'description', 'product', 'color', 'created_by', 'auto_key'];
 
     public function prospects(): BelongsToMany
     {

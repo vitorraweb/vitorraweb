@@ -53,21 +53,35 @@ class Prospect extends Model
     public const CATEGORIES_BY_PRODUCT = [
         'FET' => [
             'CARGO', 'DISTRIBUTOR', 'CONSTRUCTION', 'MANUFACTURING', 'PUBLIC_TRANSPORT',
-            'SCHOOL', 'FARMER', 'SPARE_PARTS', 'CAR_BOND', 'FUNERAL', 'INTERNAL_TEST',
+            'SCHOOL', 'FARMER', 'SPARE_PARTS', 'CAR_BOND', 'FUNERAL', 'WEBSITE_LEAD', 'INTERNAL_TEST',
         ],
         'SEAL' => [
             'HOSPITAL', 'PHARMACY', 'FIRST_RESPONDER', 'MANUFACTURING', 'MINING_QUARRY',
             'SPORTS_ASSOCIATION', 'BODA_BODA', 'BIKER_ASSOCIATION', 'TRAVEL_COMPANY',
-            'INTERNAL_TEST',
+            'WEBSITE_LEAD', 'INTERNAL_TEST',
         ],
         // Coffee buyers — retail/hospitality at home, wholesale and export abroad.
         // GO4WORLD: buyers who reached us through our go4WorldBusiness listing,
         // where most coffee buyers come from.
         'COFFEE' => [
             'GO4WORLD', 'CAFE_RESTAURANT', 'HOTEL', 'SUPERMARKET', 'CORPORATE_OFFICE', 'DISTRIBUTOR',
-            'EXPORT_BUYER', 'INDIVIDUAL', 'INTERNAL_TEST',
+            'EXPORT_BUYER', 'INDIVIDUAL', 'WEBSITE_LEAD', 'INTERNAL_TEST',
         ],
     ];
+
+    /** Human names for the industry codes (market names, imports, reports). */
+    public const CATEGORY_LABELS = [
+        'CARGO' => 'Cargo', 'DISTRIBUTOR' => 'Distributors', 'CONSTRUCTION' => 'Construction', 'MANUFACTURING' => 'Manufacturing',
+        'PUBLIC_TRANSPORT' => 'Public transport', 'SCHOOL' => 'Schools', 'FARMER' => 'Farmers', 'SPARE_PARTS' => 'Spare parts & garages',
+        'CAR_BOND' => 'Car bonds', 'FUNERAL' => 'Funeral services', 'HOSPITAL' => 'Hospitals', 'PHARMACY' => 'Pharmacies',
+        'FIRST_RESPONDER' => 'First responders', 'MINING_QUARRY' => 'Mines & quarries', 'SPORTS_ASSOCIATION' => 'Sports associations',
+        'BODA_BODA' => 'Boda bodas', 'BIKER_ASSOCIATION' => 'Biker associations', 'TRAVEL_COMPANY' => 'Travel companies',
+        'GO4WORLD' => 'go4WorldBusiness buyers', 'CAFE_RESTAURANT' => 'Cafés & restaurants', 'HOTEL' => 'Hotels',
+        'SUPERMARKET' => 'Supermarkets & shops', 'CORPORATE_OFFICE' => 'Offices & corporates', 'EXPORT_BUYER' => 'Export buyers',
+        'INDIVIDUAL' => 'Individual customers', 'WEBSITE_LEAD' => 'Website enquiries', 'INTERNAL_TEST' => 'Internal test',
+    ];
+
+    public const PRODUCT_LABELS = ['FET' => 'Fuel Eco Tech', 'SEAL' => 'SEAL Wound Spray', 'COFFEE' => 'Coffee'];
 
     /** Product lines with a prospect list. */
     public const PRODUCTS = ['FET', 'SEAL', 'COFFEE'];
@@ -79,6 +93,8 @@ class Prospect extends Model
         'HOSPITAL', 'PHARMACY', 'FIRST_RESPONDER', 'MINING_QUARRY',
         'SPORTS_ASSOCIATION', 'BODA_BODA', 'BIKER_ASSOCIATION', 'TRAVEL_COMPANY',
         'GO4WORLD', 'CAFE_RESTAURANT', 'HOTEL', 'SUPERMARKET', 'CORPORATE_OFFICE', 'EXPORT_BUYER', 'INDIVIDUAL',
+        // People who enquired through the website, brought into the CRM.
+        'WEBSITE_LEAD',
         // Our own addresses, for previewing a campaign before it goes to real
         // prospects. Kept out of the real verticals so test rows never inflate
         // an industry's count or get swept into a live send.

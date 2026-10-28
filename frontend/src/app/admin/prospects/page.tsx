@@ -4,7 +4,7 @@ import { Fragment, useEffect, useState, useCallback, useRef } from "react";
 import {
   Loader2, ChevronDown, Mail, Phone, MapPin, AlertTriangle, Upload,
   ChevronLeft, ChevronRight, Download, Send, X, ArrowRightCircle,
-  Paperclip, Save, CheckCircle2, FileText, CalendarClock, Eye, FlaskConical,
+  Paperclip, Save, CheckCircle2, FileText, CalendarClock, Eye, FlaskConical, Plus,
 } from "lucide-react";
 import Link from "next/link";
 import { apiAdmin, uploadAdmin, downloadCsv, auth, canAccess } from "@/lib/auth";
@@ -36,20 +36,20 @@ const CATEGORIES_BY_PRODUCT: Record<string, [string, string][]> = {
     ["CARGO", "Cargo"], ["DISTRIBUTOR", "Distributors"], ["CONSTRUCTION", "Construction"],
     ["MANUFACTURING", "Manufacturing"], ["PUBLIC_TRANSPORT", "Public transport"], ["SCHOOL", "Schools"],
     ["FARMER", "Farmers"], ["SPARE_PARTS", "Spare parts & garages"], ["CAR_BOND", "Car bonds"],
-    ["FUNERAL", "Funeral services"], ["INTERNAL_TEST", "Internal test"],
+    ["FUNERAL", "Funeral services"], ["WEBSITE_LEAD", "Website enquiries"], ["INTERNAL_TEST", "Internal test"],
   ],
   SEAL: [
     ["HOSPITAL", "Hospitals"], ["PHARMACY", "Pharmacies"], ["FIRST_RESPONDER", "First responders"],
     ["MANUFACTURING", "Manufacturing"], ["MINING_QUARRY", "Mines & quarries"],
     ["SPORTS_ASSOCIATION", "Sports associations"], ["BODA_BODA", "Boda bodas"],
     ["BIKER_ASSOCIATION", "Biker associations"], ["TRAVEL_COMPANY", "Travel companies"],
-    ["INTERNAL_TEST", "Internal test"],
+    ["WEBSITE_LEAD", "Website enquiries"], ["INTERNAL_TEST", "Internal test"],
   ],
   COFFEE: [
     ["GO4WORLD", "go4WorldBusiness buyers"], ["CAFE_RESTAURANT", "Cafés & restaurants"], ["HOTEL", "Hotels"], ["SUPERMARKET", "Supermarkets & shops"],
     ["CORPORATE_OFFICE", "Offices & corporates"], ["DISTRIBUTOR", "Distributors"],
     ["EXPORT_BUYER", "Export buyers"], ["INDIVIDUAL", "Individual customers"],
-    ["INTERNAL_TEST", "Internal test"],
+    ["WEBSITE_LEAD", "Website enquiries"], ["INTERNAL_TEST", "Internal test"],
   ],
 };
 
@@ -158,6 +158,8 @@ export default function ProspectsPage() {
   const [importMsg, setImportMsg]         = useState("");
   const [importCustomers, setImportCustomers] = useState(false);
   const [importReview, setImportReview] = useState<{ row: string; existing: string; by: string }[]>([]);
+  const [importMarket, setImportMarket] = useState("");
+  const [adding, setAdding] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const categories = product ? CATEGORIES_BY_PRODUCT[product] : ALL_CATEGORIES;
@@ -472,6 +474,7 @@ export default function ProspectsPage() {
       form.append("product", importProduct);
       form.append("category", importCat);
       if (importCustomers) form.append("existing_customers", "1");
+      if (importMarket) form.append("market_id", importMarket);
       const res = await uploadAdmin<{ message: string; matched_differently?: { row: string; existing: string; by: string }[] }>("/admin/prospects/import", form);
       setImportMsg(res.message);
       setImportReview(res.matched_differently ?? []);
@@ -494,8 +497,11 @@ export default function ProspectsPage() {
           <button onClick={handleExport} disabled={exporting} className="c-btn">
             {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}Export
           </button>
-          <button onClick={() => setImportOpen((o) => !o)} className="c-btn c-btn-primary">
+          <button onClick={() => setImportOpen((o) => !o)} className="c-btn" data-active={importOpen}>
             <Upload className="w-4 h-4" />Import list
+          </button>
+          <button onClick={() => setAdding(true)} className="c-btn c-btn-primary">
+            <Plus className="w-4 h-4" />New contact
           </button>
         </>}
       />
@@ -503,13 +509,17 @@ export default function ProspectsPage() {
       {/* Import panel */}
       {importOpen && (
         <div className="c-panel p-4 mb-3">
-          <p className="text-[13px] font-medium text-ink mb-1">Import a prospect or customer list (Excel or CSV)</p>
-          <p className="text-[12px] text-ink-muted mb-3">
-            Pick the product this list belongs to, then its industry. Upload the Excel file as it is (.xlsx) or a CSV.
-            Columns matched by header: name, location, phone, email (status and feedback optional).
-            <strong> Re-upload the same workbook whenever it grows:</strong> only new rows are added. A row is already on
-            the list if its name, email or phone matches, even retyped or under another industry. Existing rows are never
-            changed, only blank contact details filled in. The industry you pick applies to the new rows.
+          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
+            <p className="text-[14px] font-semibold text-ink">Import contacts from a spreadsheet (Excel or CSV)</p>
+            <button type="button" onClick={() => downloadCsv("/admin/prospects/import-template", "vitorra-contacts-template.csv")} className="text-[13px] text-gold-ink hover:underline inline-flex items-center gap-1">
+              <Download className="w-3.5 h-3.5" />Download a template
+            </button>
+          </div>
+          <p className="text-[13px] text-ink-muted mb-3">
+            For contacts gathered outside the website: events, referrals, calls, directories. Columns are matched by header:
+            name, email, phone, location, and optionally <strong>industry</strong> (each row filed under its own industry),
+            status and notes. <strong>Re-upload the same workbook whenever it grows:</strong> only new rows are added, matched by
+            name, email or phone, and existing rows are never changed, only blank details filled in.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <select value={importProduct} onChange={(e) => selImportProduct(e.target.value)} className="c-select">
@@ -517,6 +527,10 @@ export default function ProspectsPage() {
             </select>
             <select value={importCat} onChange={(e) => setImportCat(e.target.value)} className="c-select">
               {importCategories.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+            <select value={importMarket} onChange={(e) => setImportMarket(e.target.value)} className="c-select" aria-label="Also add to market">
+              <option value="">Market: its industry&apos;s market</option>
+              {markets.map((m) => <option key={m.id} value={m.id}>Market: {m.name}</option>)}
             </select>
             <input ref={fileRef} type="file" accept=".csv,text/csv,.xlsx,.xls" className="text-[13px]" />
             <label className="flex items-center gap-1.5 text-[13px] text-ink">
@@ -725,6 +739,15 @@ export default function ProspectsPage() {
             )}
           </div>
         </>
+      )}
+
+      {adding && (
+        <NewContactDialog
+          defaultProduct={product || "FET"}
+          markets={markets}
+          onClose={() => setAdding(false)}
+          onSaved={(msg) => { setAdding(false); setBulkNote(""); setImportMsg(msg); setImportOpen(false); setLoading(true); load(); }}
+        />
       )}
 
       {/* Sticky bulk action bar */}
@@ -1033,6 +1056,56 @@ function Labelled({ label, children }: { label: string; children: React.ReactNod
     <div>
       <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] mb-1 text-ink-muted">{label}</p>
       {children}
+    </div>
+  );
+}
+
+/** Add one contact by hand: someone met at an event, a referral, a call. */
+function NewContactDialog({ defaultProduct, markets, onClose, onSaved }: {
+  defaultProduct: string; markets: { id: number; name: string }[]; onClose: () => void; onSaved: (msg: string) => void;
+}) {
+  const [f, setF] = useState({
+    name: "", product: defaultProduct, category: (CATEGORIES_BY_PRODUCT[defaultProduct] ?? ALL_CATEGORIES)[0][0],
+    email: "", phone: "", location: "", outreach_status: "not_contacted", assigned_to: "", feedback: "", market_id: "",
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const set = (p: Partial<typeof f>) => setF((x) => ({ ...x, ...p }));
+  const save = async () => {
+    setBusy(true); setErr("");
+    try {
+      const r = await apiAdmin<{ message: string }>("/admin/prospects", { method: "POST", body: JSON.stringify({
+        ...f, email: f.email || null, phone: f.phone || null, location: f.location || null, assigned_to: f.assigned_to || null,
+        feedback: f.feedback || null, market_id: f.market_id ? Number(f.market_id) : null,
+      }) });
+      onSaved(r.message);
+    } catch (e) { setErr(e instanceof Error ? e.message : "Could not save"); setBusy(false); }
+  };
+  const field = (label: string, el: React.ReactNode) => <label className="block"><span className="block text-[13px] text-ink-muted mb-1">{label}</span>{el}</label>;
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }} onClick={onClose}>
+      <div className="bg-paper rounded-md w-full max-w-[600px] max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="c-panel-head"><span className="c-panel-title">New contact</span><button className="c-btn c-btn-ghost" onClick={onClose} aria-label="Close"><X className="w-4 h-4" /></button></div>
+        <div className="p-4 space-y-3">
+          {field("Company or person", <input className="c-input w-full" autoFocus value={f.name} onChange={(e) => set({ name: e.target.value })} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {field("Product", <select className="c-select w-full" value={f.product} onChange={(e) => set({ product: e.target.value, category: (CATEGORIES_BY_PRODUCT[e.target.value] ?? ALL_CATEGORIES)[0][0] })}>{PRODUCTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>)}
+            {field("Industry", <select className="c-select w-full" value={f.category} onChange={(e) => set({ category: e.target.value })}>{(CATEGORIES_BY_PRODUCT[f.product] ?? ALL_CATEGORIES).filter(([v]) => v !== "INTERNAL_TEST").map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>)}
+            {field("Email", <input type="email" className="c-input w-full" value={f.email} onChange={(e) => set({ email: e.target.value })} />)}
+            {field("Phone", <input className="c-input w-full" value={f.phone} placeholder="+256…" onChange={(e) => set({ phone: e.target.value })} />)}
+            {field("Location", <input className="c-input w-full" value={f.location} onChange={(e) => set({ location: e.target.value })} />)}
+            {field("Stage", <select className="c-select w-full" value={f.outreach_status} onChange={(e) => set({ outreach_status: e.target.value })}>{STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>)}
+            {field("Owner", <select className="c-select w-full" value={f.assigned_to} onChange={(e) => set({ assigned_to: e.target.value })}><option value="">Unassigned</option>{ASSIGNEES.map((a) => <option key={a}>{a}</option>)}</select>)}
+            {field("Market", <select className="c-select w-full" value={f.market_id} onChange={(e) => set({ market_id: e.target.value })}><option value="">Its industry&apos;s market</option>{markets.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>)}
+          </div>
+          {field("Notes (how you met, what they need)", <textarea className="c-input w-full h-20 py-2" value={f.feedback} onChange={(e) => set({ feedback: e.target.value })} />)}
+          {err && <p className="text-[13px] text-alert-ink">{err}</p>}
+          <div className="flex justify-end gap-2">
+            <button className="c-btn" onClick={onClose}>Cancel</button>
+            <button className="c-btn c-btn-primary" onClick={save} disabled={busy || !f.name.trim() || (!f.email.trim() && !f.phone.trim())}>{busy && <Loader2 className="w-4 h-4 animate-spin" />}Add contact</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

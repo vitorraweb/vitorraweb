@@ -91,7 +91,7 @@ A multi-currency cash-ledger bookkeeping tool with **maker–checker** approvals
 - All amounts per currency (never summed across currencies). Tables: `finance_accounts`, `finance_categories`, `finance_transactions` (+`vat_rate`/`vat_amount`), `supplier_bills`, `finance_budgets`, `invoices`, `invoice_items`, `recurring_entries`. Default categories via `FinanceCategoriesSeeder`.
 
 ### Scheduled commands (ride the existing cPanel `schedule:run` cron)
-`holidays:notify`, `digest:send`, `executive:report` (monthly+weekly), `applications:purge` (6-month), `invoices:remind`, `finance:recurring`, **`campaigns:send`** (every minute — drains prospect outreach campaigns; no-op when idle), **`google-ads:sync`** (hourly 3 days + nightly 30; no-op until connected), **`leads:score`** (hourly decision engine), plus the spatie backups.
+`holidays:notify`, `digest:send`, `executive:report` (monthly+weekly), `applications:purge` (6-month), `invoices:remind`, `finance:recurring`, **`campaigns:send`** (every minute — drains prospect outreach campaigns; no-op when idle), **`google-ads:sync`** (hourly 3 days + nightly 30; no-op until connected), **`leads:score`** (hourly decision engine), **`receipts:read`** (every minute; AI-reads scanned receipts), plus the spatie backups.
 
 ### Pending (operations setup, not code)
 - Set executive-report recipients in `/admin/settings`; grant new modules to existing ops accounts (incl. **"Accounting — approve"** for the Senior Finance Officer); optionally link **Careers** + **Suppliers** in the public footer; set `ANTHROPIC_API_KEY` on prod to enable CV/receipt auto-read (both work manually without it).

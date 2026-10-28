@@ -85,22 +85,17 @@ export default function TemplatesPage() {
   return (
     <div>
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <PageHeader title="Reply Templates" subtitle="Pre-saved email responses. Pick one when replying to a customer — it fills the subject and body instantly." />
-        <button onClick={openNew} className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full shrink-0"
-          style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>
+        <PageHeader title="Reply templates" subtitle="Saved replies for answering customers. Pick one in a conversation and it fills the subject and message." />
+        <button onClick={openNew} className="c-btn c-btn-primary shrink-0">
           <Plus className="w-4 h-4" />New template
         </button>
       </div>
 
       {/* Category filter */}
-      <div className="flex flex-wrap gap-2 mb-5">
-        <button onClick={() => setFilterCat("")} className="text-xs font-semibold px-3 py-1 rounded-full"
-          style={!filterCat ? { background: "var(--o-inverse)", color: "#fff" } : { background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>All</button>
+      <div className="o-seg mb-4" role="group" aria-label="Filter by product">
+        <button type="button" aria-pressed={!filterCat} onClick={() => setFilterCat("")}>All</button>
         {CATEGORIES.map((c) => (
-          <button key={c} onClick={() => setFilterCat(filterCat === c ? "" : c)} className="text-xs font-semibold px-3 py-1 rounded-full transition-colors"
-            style={filterCat === c ? { background: "var(--o-inverse)", color: "#fff" } : { background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
-            {c}
-          </button>
+          <button key={c} type="button" aria-pressed={filterCat === c} onClick={() => setFilterCat(filterCat === c ? "" : c)}>{c}</button>
         ))}
       </div>
 
@@ -138,12 +133,11 @@ export default function TemplatesPage() {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={save} disabled={saving || !form.name.trim() || !form.subject.trim() || !form.body.trim()}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50"
-              style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>
+              className="c-btn c-btn-primary">
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               {saving ? "Saving…" : "Save template"}
             </button>
-            <button onClick={cancel} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full"
+            <button onClick={cancel} className="c-btn"
               style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>
               <X className="w-3.5 h-3.5" />Cancel
             </button>

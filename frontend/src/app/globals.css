@@ -1384,7 +1384,14 @@
 .admin-console :is(.uppercase)[class*="tracking-"] { letter-spacing: .04em; }
 
 /* The control panel sits flush under the top bar. */
-.admin-console main:has(> .c-page-head:first-child, > div:first-child > .c-page-head:first-child) { padding-top: 0; }
+.admin-console main:has(> .c-page-head:first-child, > div:first-child > .c-page-head:first-child, > div:first-child > div:first-child > .c-page-head:first-child) { padding-top: 0; }
+/* Older screens put buttons beside the header in a wrapper: the wrapper
+   becomes the band, so the buttons sit inside it, aligned with the title. */
+.admin-console main div:has(> .c-page-head ~ *) {
+  align-items: center; margin-bottom: 1.25rem; padding: .85rem 0;
+  border-image: linear-gradient(to top, var(--o-line) 1px, var(--o-surface) 1px) fill 0 // 0 100vmax;
+}
+.admin-console main div:has(> .c-page-head ~ *) > .c-page-head { border-image: none; padding: 0; margin: 0; flex: 1 1 auto; }
 
 /* ── Token utilities, re-pointed at the theme ─────────────────────────────── */
 .admin-console :is(.bg-white, .bg-paper)        { background-color: var(--o-surface); }

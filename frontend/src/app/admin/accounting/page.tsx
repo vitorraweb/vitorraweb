@@ -8,19 +8,20 @@ import { PageHeader, Empty } from "@/components/admin/admin-ui";
 import { GraphView, KpiTile } from "@/components/admin/reporting";
 import { Stock } from "@/components/admin/FetStock";
 import { SendDocumentDialog } from "@/components/admin/SendDocument";
+import { ReceiptInbox } from "@/components/admin/ReceiptInbox";
 
 const CURRENCIES = ["UGX", "USD", "EUR"];
 const money = (c: string, a: number) => (c === "UGX" ? `UGX ${a.toLocaleString()}` : `${c === "USD" ? "$" : "€"}${(a / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
 const cls = "w-full text-sm rounded-xl px-3 py-2 border outline-none focus:border-[var(--o-accent)]";
 const st = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
-type Tab = "overview" | "invoices" | "transactions" | "accounts" | "bills" | "budgets" | "recurring" | "stock";
+type Tab = "overview" | "receipts" | "invoices" | "transactions" | "accounts" | "bills" | "budgets" | "recurring" | "stock";
 
 export default function AccountingPage() {
   // ?tab= deep-links straight to a section (command palette, emails).
   const [tab, setTabState] = useState<Tab>(() => {
     const t = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null;
-    return (t && ["overview", "invoices", "transactions", "accounts", "bills", "budgets", "recurring", "stock"].includes(t) ? t : "overview") as Tab;
+    return (t && ["overview", "receipts", "invoices", "transactions", "accounts", "bills", "budgets", "recurring", "stock"].includes(t) ? t : "overview") as Tab;
   });
   const setTab = (t: Tab) => {
     setTabState(t);
@@ -28,7 +29,7 @@ export default function AccountingPage() {
   };
   const canApprove = canAccess(auth.getUser(), { module: "accounting_approve" });
 
-  const tabs: [Tab, string][] = [["overview", "Overview"], ["invoices", "Invoices"], ["transactions", "Transactions"], ["accounts", "Accounts"], ["bills", "Bills"], ["budgets", "Budgets"], ["recurring", "Recurring"], ["stock", "Stock"]];
+  const tabs: [Tab, string][] = [["overview", "Overview"], ["receipts", "Receipts"], ["invoices", "Invoices"], ["transactions", "Transactions"], ["accounts", "Accounts"], ["bills", "Bills"], ["budgets", "Budgets"], ["recurring", "Recurring"], ["stock", "Stock"]];
 
   return (
     <div className="pb-12">
@@ -39,6 +40,7 @@ export default function AccountingPage() {
         ))}
       </div>
       {tab === "overview" && <Overview />}
+      {tab === "receipts" && <ReceiptInbox />}
       {tab === "invoices" && <Invoices canApprove={canApprove} />}
       {tab === "transactions" && <Transactions canApprove={canApprove} />}
       {tab === "accounts" && <Accounts canApprove={canApprove} />}

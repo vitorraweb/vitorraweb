@@ -23,6 +23,8 @@ use App\Http\Controllers\Api\FetTrialImportController;
 use App\Http\Controllers\Api\FetTrialShareController;
 use App\Http\Controllers\Api\GoogleAdsController;
 use App\Http\Controllers\Api\CampaignTrackController;
+use App\Http\Controllers\Api\FinanceReceiptController;
+use App\Http\Controllers\Api\ReceiptScanController;
 use App\Http\Controllers\Api\EmailDesignController;
 use App\Http\Controllers\Api\LeadPriorityController;
 use App\Http\Controllers\Api\MarketController;
@@ -146,6 +148,12 @@ Route::middleware('throttle:240,1')->prefix('t')->group(function () {
     Route::get('/c/{token}', [CampaignTrackController::class, 'click'])->where('token', '[A-Za-z0-9]{32}');
     Route::get('/u/{token}', [CampaignTrackController::class, 'unsubscribePage'])->where('token', '[A-Za-z0-9]{32}');
     Route::post('/u/{token}', [CampaignTrackController::class, 'unsubscribe'])->where('token', '[A-Za-z0-9]{32}');
+});
+
+// Receipt scanning from a phone: the 30-minute link in the QR code is the key.
+Route::middleware('throttle:90,1')->group(function () {
+    Route::get('/scan/{token}', [ReceiptScanController::class, 'show'])->where('token', '[A-Za-z0-9]{40}');
+    Route::post('/scan/{token}', [ReceiptScanController::class, 'upload'])->where('token', '[A-Za-z0-9]{40}');
 });
 
 // Google's browser redirect after an admin presses "Connect Google Ads".
@@ -345,6 +353,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/prospects', [ProspectController::class, 'index']);
             Route::get('/prospects/export', [ProspectController::class, 'export']);
             Route::post('/prospects/import', [ProspectController::class, 'import']);
+            Route::get('/prospects/import-template', [ProspectController::class, 'importTemplate']);
+            Route::post('/prospects', [ProspectController::class, 'store']);
             Route::post('/prospects/{prospect}/convert', [ProspectController::class, 'convert']);
             Route::patch('/prospects/bulk', [ProspectController::class, 'bulk']);
             Route::patch('/prospects/{prospect}', [ProspectController::class, 'update']);
@@ -364,6 +374,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::prefix('marketing')->group(function () {
                 Route::get('/markets', [MarketController::class, 'index']);
                 Route::post('/markets', [MarketController::class, 'store']);
+                Route::post('/markets/build', [MarketController::class, 'build'])->middleware('throttle:6,1');
                 Route::patch('/markets/{market}', [MarketController::class, 'update']);
                 Route::delete('/markets/{market}', [MarketController::class, 'destroy']);
                 Route::get('/markets/{market}/members', [MarketController::class, 'members']);
@@ -499,6 +510,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/vat-report', [AccountingController::class, 'vatReport']);
             Route::get('/transactions/export', [AccountingController::class, 'exportTransactions']);
             Route::post('/extract-receipt', [AccountingController::class, 'extractReceipt']);
+            // Receipt inbox: phone scans and uploads, kept encrypted until booked.
+            Route::get('/receipts', [FinanceReceiptController::class, 'index']);
+            Route::post('/receipts', [FinanceReceiptController::class, 'upload']);
+            Route::post('/receipts/scan-link', [FinanceReceiptController::class, 'scanLink'])->middleware('throttle:20,1');
+            Route::get('/receipts/{receipt}/file', [FinanceReceiptController::class, 'file']);
+            Route::patch('/receipts/{receipt}', [FinanceReceiptController::class, 'update']);
+            Route::post('/receipts/{receipt}/read', [FinanceReceiptController::class, 'read'])->middleware('throttle:20,1');
+            Route::post('/receipts/{receipt}/record', [FinanceReceiptController::class, 'record']);
             Route::get('/recurring', [AccountingController::class, 'recurring']);
             // Invoices (accounts receivable).
             Route::get('/invoices', [InvoiceController::class, 'index']);

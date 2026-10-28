@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Enquiry;
+use App\Models\Market;
 use App\Models\Prospect;
+use App\Services\Marketing\MarketBuilder;
 use App\Support\ProspectMatchIndex;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -73,6 +75,54 @@ class ProspectController extends Controller
         $updated = $query->update($changes + ['updated_at' => now()]);
 
         return response()->json(['updated' => $updated, 'message' => "Updated {$updated}."]);
+    }
+
+    /** Add one contact by hand — someone met at an event, a referral, a call. */
+    public function store(Request $request): JsonResponse
+    {
+        $product = strtoupper((string) $request->input('product', 'FET'));
+        $data = $request->validate([
+            'name'            => ['required', 'string', 'max:255'],
+            'product'         => ['required', Rule::in(Prospect::PRODUCTS)],
+            'category'        => ['required', Rule::in(Prospect::categoriesFor($product))],
+            'email'           => ['nullable', 'email', 'max:255', 'required_without:phone'],
+            'phone'           => ['nullable', 'string', 'max:60'],
+            'location'        => ['nullable', 'string', 'max:255'],
+            'outreach_status' => ['nullable', Rule::in(Prospect::STATUSES)],
+            'feedback'        => ['nullable', 'string', 'max:2000'],
+            'assigned_to'     => ['nullable', 'string', 'max:120'],
+            'market_id'       => ['nullable', 'integer', 'exists:markets,id'],
+        ]);
+
+        $index = new ProspectMatchIndex(Prospect::where('product', $data['product'])->get());
+        [$existing] = $index->find($data['name'], $data['email'] ?? null, $data['phone'] ?? null);
+        if ($existing) {
+            return response()->json(['message' => "Already on the {$data['product']} list as \"{$existing->name}\".", 'data' => $existing], 409);
+        }
+
+        $prospect = Prospect::create([
+            ...collect($data)->except('market_id')->all(),
+            'email'           => isset($data['email']) ? mb_strtolower($data['email']) : null,
+            'phone'           => isset($data['phone']) ? (\App\Support\Phone::e164($data['phone']) ?? $data['phone']) : null,
+            'outreach_status' => $data['outreach_status'] ?? 'not_contacted',
+            'source'          => 'added by '.$request->user()->name,
+        ]);
+        $market = isset($data['market_id']) ? Market::find($data['market_id']) : MarketBuilder::autoMarketFor($prospect->product, $prospect->category);
+        $market?->prospects()->syncWithoutDetaching([$prospect->id => ['added_by' => $request->user()->id]]);
+        \App\Services\Marketing\LeadScorer::forAll()->scoreAndStore(collect([$prospect]));
+
+        return response()->json(['data' => $prospect->fresh(), 'message' => "{$prospect->name} added".($market ? " to {$market->name}" : '').'.'], 201);
+    }
+
+    /** A blank spreadsheet with the columns the importer understands. */
+    public function importTemplate(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        return response()->streamDownload(function () {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Name', 'Email', 'Phone', 'Location', 'Industry', 'Status', 'Notes']);
+            fputcsv($out, ['Kampala Haulage Ltd', 'ops@kampalahaulage.ug', '+256700000000', 'Nakawa, Kampala', 'Cargo', 'Not contacted', 'Met at the trade fair']);
+            fclose($out);
+        }, 'vitorra-contacts-template.csv', ['Content-Type' => 'text/csv']);
     }
 
     /**
@@ -157,6 +207,8 @@ class ProspectController extends Controller
             'product'            => ['required', Rule::in(Prospect::PRODUCTS)],
             'category'           => ['required', Rule::in(Prospect::CATEGORIES)],
             'existing_customers' => ['nullable', 'boolean'],
+            // File the rows (new and already-known) into this market too.
+            'market_id'          => ['nullable', 'integer', 'exists:markets,id'],
         ]);
 
         $product   = $request->input('product');
@@ -215,7 +267,7 @@ class ProspectController extends Controller
         // phone or status column ("customer email" must not become the name).
         $iName = null;
         foreach ($header as $i => $h) {
-            if (preg_match('/e-?mail|phone|tel|mobile|status|location|address/', $h)) {
+            if (preg_match('/e-?mail|phone|tel|mobile|status|location|address|industry|sector|category|type/', $h)) {
                 continue;
             }
             if (preg_match('/name|company|organi[sz]ation|customer|business|client/', $h)) {
@@ -224,6 +276,26 @@ class ProspectController extends Controller
             }
         }
         $iFb   = $colByName(['feedback', 'notes']);
+        // An optional industry column ("Industry", "Sector", "Category", "Type")
+        // files each row under its own industry; unrecognised values fall
+        // back to the industry chosen on screen.
+        $iInd  = $colByName(['industry', 'sector', 'category', 'type of business', 'business type']);
+        $industryFor = function (?string $v) use ($product, $category): string {
+            $v = strtolower(trim((string) $v));
+            if ($v === '') {
+                return $category;
+            }
+            foreach (Prospect::categoriesFor($product) as $code) {
+                $label = strtolower(Prospect::CATEGORY_LABELS[$code] ?? $code);
+                if ($v === strtolower($code) || $v === $label || str_replace(' ', '_', $v) === strtolower($code)
+                    || rtrim($label, 's') === rtrim($v, 's')) {
+                    return $code;
+                }
+            }
+
+            return $category;
+        };
+        $touched = []; // every prospect id this file names, new or existing (for the market)
 
         // A cell is "phone-like" if it has 7+ digits and no @ (handles 256.../0...
         // formats and multiple numbers). Locations like "Plot 535" (<7 digits) won't match.
@@ -244,6 +316,10 @@ class ProspectController extends Controller
         foreach ($dataRows as $r) {
             // Scan only the "contact block" (columns before any status column) so
             // status/feedback text can't be mistaken for a location.
+            $rowIndustry = $iInd !== null ? (string) ($r[$iInd] ?? '') : '';
+            if ($iInd !== null) {
+                $r[$iInd] = ''; // never mistake the industry for a location
+            }
             $contactPart = $iStat !== null ? array_slice($r, 0, $iStat) : $r;
             $cells = array_values(array_filter(
                 array_map(fn ($c) => trim((string) $c), $contactPart),
@@ -302,6 +378,7 @@ class ProspectController extends Controller
             [$existing, $how] = $index->find($name, $email, $phone);
 
             if ($existing) {
+                $touched[] = $existing->id;
                 $skipped++;
                 // Never overwrite what the team has edited — only fill blanks.
                 $fill = array_filter([
@@ -326,7 +403,7 @@ class ProspectController extends Controller
 
             $prospect = Prospect::create([
                 'name'            => $name,
-                'category'        => $category,
+                'category'        => $industryFor($rowIndustry),
                 'product'         => $product,
                 'location'        => $location,
                 'phone'           => $phone,
@@ -337,12 +414,26 @@ class ProspectController extends Controller
                 'source'          => $customers ? 'customer list upload' : 'admin upload',
             ]);
             $index->add($prospect); // a row repeated within the same file is caught too
+            $touched[] = $prospect->id;
             $imported++;
+
+            // Straight into its product × industry market when one exists.
+            if (! $request->filled('market_id') && ($auto = MarketBuilder::autoMarketFor($product, $prospect->category))) {
+                $auto->prospects()->syncWithoutDetaching([$prospect->id => ['added_by' => $request->user()?->id]]);
+            }
+        }
+
+        if ($request->filled('market_id') && $touched) {
+            $market = Market::find($request->integer('market_id'));
+            $market->prospects()->syncWithoutDetaching(collect($touched)->unique()->mapWithKeys(fn ($id) => [$id => ['added_by' => $request->user()?->id]])->all());
         }
 
         $noun = $customers ? 'customers' : 'prospects';
         $message = "Added {$imported} new {$noun}. {$skipped} already on the list were left as they are";
         $message .= $filled ? " ({$filled} had missing contact details filled in)." : '.';
+        if (isset($market)) {
+            $message .= ' All '.count(array_unique($touched))." rows are in the market \"{$market->name}\".";
+        }
 
         return response()->json([
             'imported'            => $imported,

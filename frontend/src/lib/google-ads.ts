@@ -32,7 +32,7 @@ const LABELS: Record<ConversionKind, string | undefined> = {
 };
 
 /** Routes that are staff tools or unattended screens, never ad landing pages. */
-const PRIVATE_PREFIXES = ["/admin", "/staff", "/display"];
+const PRIVATE_PREFIXES = ["/admin", "/staff", "/display", "/scan"];
 
 export function isTrackedPath(pathname: string | null | undefined): boolean {
   if (!pathname) return false;

@@ -39,6 +39,16 @@ class MarketController extends Controller
         ])]);
     }
 
+    /** Build product × industry markets and bring website enquirers in, then rank everyone. */
+    public function build(Request $request, \App\Services\Marketing\MarketBuilder $builder): JsonResponse
+    {
+        $r = $builder->build($request->user()->id);
+        \App\Services\Marketing\LeadScorer::forAll()->scoreAndStore();
+        Audit::log('markets.built', "Markets built: {$r['markets_created']} new, {$r['contacts_placed']} contacts placed, {$r['website_added']} website enquirers added", null, $r);
+
+        return response()->json(['data' => $r, 'message' => "{$r['markets_created']} markets created, {$r['contacts_placed']} contacts placed, {$r['website_added']} website enquirers brought in. Everyone has been ranked."]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $market = Market::create($this->validated($request) + ['created_by' => $request->user()->id]);

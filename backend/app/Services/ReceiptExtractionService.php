@@ -49,8 +49,23 @@ class ReceiptExtractionService
             return null;
         }
 
+        return $this->extractBytes((string) file_get_contents($file->getRealPath()), $mime);
+    }
+
+    /**
+     * Read a receipt already in memory (e.g. decrypted from the receipt inbox).
+     *
+     * @return array<string,mixed>|null
+     */
+    public function extractBytes(string $bytes, string $mime): ?array
+    {
+        $key = config('services.anthropic.key');
+        if (! $key || ! in_array($mime, ['application/pdf', 'image/png', 'image/jpeg'], true)) {
+            return null;
+        }
+
         try {
-            $b64 = base64_encode(file_get_contents($file->getRealPath()));
+            $b64 = base64_encode($bytes);
             $doc = $mime === 'application/pdf'
                 ? ['type' => 'document', 'source' => ['type' => 'base64', 'media_type' => $mime, 'data' => $b64]]
                 : ['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => $mime, 'data' => $b64]];

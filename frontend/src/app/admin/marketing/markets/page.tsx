@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Plus, Search, UserPlus, ArrowRightLeft, Trash2, X, Pencil } from "lucide-react";
+import { Loader2, Plus, Search, UserPlus, ArrowRightLeft, Trash2, X, Pencil, Wand2 } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { PageHeader, Empty } from "@/components/admin/admin-ui";
 import { PRODUCTS, TIERS, pretty, tierOf, type Market } from "@/components/admin/marketing/shared";
@@ -19,9 +19,9 @@ type Page<T> = { data: T[]; total: number; current_page: number; last_page: numb
 const COLORS = ["#1F64A8", "#17785C", "#B4531F", "#5B44A6", "#A8406E", "#7A6020", "#0E7272", "#4D545E"];
 
 const CATEGORIES: Record<string, string[]> = {
-  FET: ["CARGO", "DISTRIBUTOR", "CONSTRUCTION", "MANUFACTURING", "PUBLIC_TRANSPORT", "SCHOOL", "FARMER", "SPARE_PARTS", "CAR_BOND", "FUNERAL"],
-  SEAL: ["HOSPITAL", "PHARMACY", "FIRST_RESPONDER", "MANUFACTURING", "MINING_QUARRY", "SPORTS_ASSOCIATION", "BODA_BODA", "BIKER_ASSOCIATION", "TRAVEL_COMPANY"],
-  COFFEE: ["GO4WORLD", "CAFE_RESTAURANT", "HOTEL", "SUPERMARKET", "CORPORATE_OFFICE", "DISTRIBUTOR", "EXPORT_BUYER", "INDIVIDUAL"],
+  FET: ["CARGO", "DISTRIBUTOR", "CONSTRUCTION", "MANUFACTURING", "PUBLIC_TRANSPORT", "SCHOOL", "FARMER", "SPARE_PARTS", "CAR_BOND", "FUNERAL", "WEBSITE_LEAD"],
+  SEAL: ["HOSPITAL", "PHARMACY", "FIRST_RESPONDER", "MANUFACTURING", "MINING_QUARRY", "SPORTS_ASSOCIATION", "BODA_BODA", "BIKER_ASSOCIATION", "TRAVEL_COMPANY", "WEBSITE_LEAD"],
+  COFFEE: ["GO4WORLD", "CAFE_RESTAURANT", "HOTEL", "SUPERMARKET", "CORPORATE_OFFICE", "DISTRIBUTOR", "EXPORT_BUYER", "INDIVIDUAL", "WEBSITE_LEAD"],
 };
 
 export default function MarketsPage() {
@@ -37,19 +37,35 @@ export default function MarketsPage() {
   useEffect(() => { load().catch(() => setMarkets([])); }, [load]);
 
   const current = markets?.find((m) => m.id === active) ?? null;
+  const [building, setBuilding] = useState(false);
+  const [buildMsg, setBuildMsg] = useState("");
+  /* Sort every prospect into a product × industry market and bring website
+     enquirers in. Never moves anyone the team has already placed. */
+  const build = async () => {
+    setBuilding(true); setBuildMsg("");
+    try { setBuildMsg((await apiAdmin<{ message: string }>("/admin/marketing/markets/build", { method: "POST" })).message); await load(); }
+    catch (e) { setBuildMsg(e instanceof Error ? e.message : "Could not build markets"); }
+    finally { setBuilding(false); }
+  };
+  const buildButton = (primary = false) => (
+    <button className={`c-btn${primary ? " c-btn-primary" : ""}`} onClick={build} disabled={building}>
+      {building ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}Build markets from your lists
+    </button>
+  );
 
   return (
     <div className="pb-12">
       <PageHeader title="Markets" subtitle="The audiences you send campaigns to. Add contacts, move them between markets, or create new ones."
-        actions={<button className="c-btn c-btn-primary" onClick={() => setEditing("new")}><Plus className="w-4 h-4" />New market</button>} />
+        actions={<>{buildButton()}<button className="c-btn c-btn-primary" onClick={() => setEditing("new")}><Plus className="w-4 h-4" />New market</button></>} />
+      {buildMsg && <p className="text-[14px] text-ok-ink mb-3">{buildMsg}</p>}
 
       {markets === null ? (
         <p className="flex items-center gap-2 text-[14px] text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</p>
       ) : markets.length === 0 ? (
         <div className="c-panel px-4 py-10 text-center">
           <p className="text-[15px] text-ink">No markets yet.</p>
-          <p className="text-[14px] text-ink-muted mt-1">For example “Kampala fleet operators”, “Hospitals” or “Coffee export buyers”.</p>
-          <button className="c-btn c-btn-primary mt-3" onClick={() => setEditing("new")}><Plus className="w-4 h-4" />Create a market</button>
+          <p className="text-[14px] text-ink-muted mt-1">Build them from your prospect lists in one step (one market per product and industry, plus website enquirers), or create your own, such as “Kampala fleet operators”.</p>
+          <div className="flex justify-center gap-2 mt-3">{buildButton(true)}<button className="c-btn" onClick={() => setEditing("new")}><Plus className="w-4 h-4" />Create a market</button></div>
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-[20rem_minmax(0,1fr)] gap-4 items-start">

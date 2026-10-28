@@ -113,16 +113,11 @@ export default function PipelinePage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <PageHeader title="Pipeline" subtitle="Every contact's stage and owner, in one view — from first contact to fulfilment." />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search name, email, company…"
-          className="text-sm rounded-full px-4 py-2 border w-64 max-w-full outline-none"
-          style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }}
-        />
-      </div>
+      <PageHeader
+        title="Pipeline"
+        subtitle="Every contact's stage and owner, in one view, from first contact to fulfilment."
+        actions={<input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, company…" className="c-input w-64 max-w-full" aria-label="Search the pipeline" />}
+      />
 
       {loading ? (
         <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
@@ -134,12 +129,14 @@ export default function PipelinePage() {
             {activeStages.map((stage) => {
               const items = filtered.filter((c) => c.stage === stage);
               return (
-                <div key={stage} className="shrink-0 w-72 rounded-[18px] p-3" style={{ background: "var(--o-surface-2)" }}>
-                  <div className="flex items-center justify-between px-1 mb-2">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: "var(--o-faint)" }}>{stageLabels[stage] ?? stage}</p>
-                    <span className="text-[11px] font-semibold rounded-full px-2 py-0.5" style={{ background: "var(--o-surface)", color: "var(--o-muted)" }}>{items.length}</span>
+                <div key={stage} className="shrink-0 w-72 rounded-md p-2.5 flex flex-col" style={{ background: "var(--o-surface-2)", maxHeight: "calc(100vh - 190px)" }}>
+                  <div className="flex items-center justify-between px-1 pb-2 mb-1 border-b border-line">
+                    <p className="text-[14px] font-semibold text-ink">{stageLabels[stage] ?? stage}</p>
+                    <span className="c-chip" data-plain>{items.length}</span>
                   </div>
-                  <div className="space-y-2.5">
+                  {/* Columns scroll on their own, like Odoo's kanban, so a long
+                      "New lead" column never pushes the board off the screen. */}
+                  <div className="space-y-2 overflow-y-auto pr-0.5 -mr-0.5 pt-1">
                     {items.map((c) => (
                       <ContactCard
                         key={c.email}
@@ -166,7 +163,7 @@ export default function PipelinePage() {
                         )}
                       </ContactCard>
                     ))}
-                    {items.length === 0 && <p className="text-xs text-center py-4" style={{ color: "var(--o-faint)" }}>—</p>}
+                    {items.length === 0 && <p className="text-[13px] text-center py-6 text-ink-muted">No contacts at this stage</p>}
                   </div>
                 </div>
               );
@@ -174,11 +171,7 @@ export default function PipelinePage() {
           </div>
 
           <div className="mt-2">
-            <button
-              onClick={() => setShowLost((v) => !v)}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full"
-              style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}
-            >
+            <button onClick={() => setShowLost((v) => !v)} className="c-btn">
               {showLost ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               Lost ({lostContacts.length})
             </button>
@@ -213,7 +206,7 @@ export default function PipelinePage() {
                         )}
                       </ContactCard>
                     ))}
-                    {lostContacts.length === 0 && <p className="text-xs text-center py-4" style={{ color: "var(--o-faint)" }}>—</p>}
+                    {lostContacts.length === 0 && <p className="text-[13px] text-center py-6 text-ink-muted">No lost contacts</p>}
                   </div>
                 </div>
               </div>
@@ -233,7 +226,7 @@ function ContactCard({
   now: number | null; children?: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-black/[0.05] overflow-hidden">
+    <div className="bg-white rounded-md border border-line overflow-hidden shadow-sm">
       <button onClick={onToggle} className="w-full text-left p-3">
         <div className="flex items-center gap-2 mb-1">
           <span
@@ -258,8 +251,9 @@ function ContactCard({
         </div>
         <div className="flex items-center gap-1.5">
           <p className="text-[10px]" style={{ color: "var(--o-faint)" }}>{now ? `Active ${formatRelativeTime(contact.last_activity, now)}` : ""}</p>
+          {/* "Quiet", not "cold": Cold is the decision engine's tier in Marketing. */}
           {contact.stale && (
-            <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "var(--o-danger)" }}>● Cold</span>
+            <span className="c-chip" data-tone="gold" title="No activity for 90 days or more">Quiet 90+ days</span>
           )}
         </div>
       </button>

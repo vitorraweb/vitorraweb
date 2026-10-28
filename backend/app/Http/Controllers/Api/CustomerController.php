@@ -377,7 +377,8 @@ class CustomerController extends Controller
             $records[] = ['email' => $m->email, 'name' => $m->name, 'company' => null,
                 'phone' => null, 'country' => null, 'ts' => (string) $m->created_at, 'src' => 'messages', 'status' => null];
         }
-        foreach (Prospect::get(['email', 'name', 'phone', 'outreach_status', 'created_at']) as $p) {
+        // Our own test addresses (the "Internal test" list) are not customers.
+        foreach (Prospect::where('category', '!=', 'INTERNAL_TEST')->get(['email', 'name', 'phone', 'outreach_status', 'created_at']) as $p) {
             $records[] = ['email' => $p->email, 'name' => $p->name, 'company' => null,
                 'phone' => $p->phone, 'country' => null, 'ts' => (string) $p->created_at, 'src' => 'prospects', 'status' => $p->outreach_status];
         }

@@ -51,7 +51,7 @@ export const ADMIN_APPS: AdminApp[] = [
       { label: "Customers", href: "/admin/customers", icon: Contact,       module: "customers", keywords: "contacts clients crm" },
       { label: "Prospects", href: "/admin/prospects", icon: Target,        module: "prospects", keywords: "outreach campaign leads list" },
       { label: "Quotations", href: "/admin/quotations", icon: FileSignature, module: "quotations", keywords: "quote proforma coffee fet export offer" },
-      { label: "Templates", href: "/admin/templates", icon: LayoutTemplate, module: "customers", keywords: "email replies" },
+      { label: "Reply templates", href: "/admin/templates", icon: LayoutTemplate, module: "customers", keywords: "email replies saved answers" },
       { label: "Contracts", href: "/admin/contracts", icon: FileCheck, module: ["prospects", "quotations", "accounting"], keywords: "contract agreement sign signature fet" },
       { label: "Documents", href: "/admin/sales-documents", icon: FolderLock, module: ["prospects", "quotations", "accounting"], keywords: "contract agreement fet sales terms" },
     ],
@@ -82,7 +82,7 @@ export const ADMIN_APPS: AdminApp[] = [
   {
     id: "accounting", name: "Accounting", blurb: "Books, invoices, bills, VAT and budgets", icon: Wallet, area: "Money",
     items: [
-      { label: "Books", href: "/admin/accounting", icon: Wallet, module: "accounting", keywords: "invoices bills vat transactions ledger stock inventory" },
+      { label: "Books", href: "/admin/accounting", icon: Wallet, module: "accounting", keywords: "invoices bills vat transactions ledger stock inventory receipts scan phone" },
     ],
   },
   {
