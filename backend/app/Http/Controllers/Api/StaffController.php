@@ -36,6 +36,12 @@ class StaffController extends Controller
             'start_date'             => optional($user->start_date)->toDateString(),
             'staff_status'           => $user->staff_status,
             'leave_entitlement_days' => $user->leave_entitlement_days,
+            'employment_type'        => $user->employment_type,
+            'contract_end_date'      => optional($user->contract_end_date)->toDateString(),
+            'date_of_birth'          => optional($user->date_of_birth)->toDateString(),
+            'emergency_contact_name'     => $user->emergency_contact_name,
+            'emergency_contact_phone'    => $user->emergency_contact_phone,
+            'emergency_contact_relation' => $user->emergency_contact_relation,
             'supervisor'             => $user->supervisor ? [
                 'id'        => $user->supervisor->id,
                 'name'      => $user->supervisor->name,
@@ -46,6 +52,23 @@ class StaffController extends Controller
             'teams_email'            => $user->teamsEmail(),
             'is_supervisor'          => $user->reports()->exists(),
         ]]);
+    }
+
+    /**
+     * The details staff keep up to date themselves: their phone and emergency
+     * contact. Everything else on the record is HR's (People → Employees).
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'phone'                      => ['nullable', 'string', 'max:40'],
+            'emergency_contact_name'     => ['nullable', 'string', 'max:120'],
+            'emergency_contact_phone'    => ['nullable', 'string', 'max:40'],
+            'emergency_contact_relation' => ['nullable', 'string', 'max:60'],
+        ]);
+        $request->user()->update($data);
+
+        return $this->me($request);
     }
 
     /** Direct reports of the signed-in staff member (for supervisors). */

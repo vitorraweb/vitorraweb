@@ -7,6 +7,7 @@ import type { StaffUser } from "@/lib/staff-auth";
 import { TwoFactorPanel } from "@/components/TwoFactorPanel";
 import { SessionsPanel } from "@/components/SessionsPanel";
 import { EmailSignaturePanel } from "@/components/EmailSignaturePanel";
+import { ContactDetailsPanel } from "@/components/people/ContactDetailsPanel";
 
 export default function StaffProfilePage() {
   const [user, setUser]     = useState<StaffUser | null>(null);
@@ -51,33 +52,33 @@ export default function StaffProfilePage() {
 
   return (
     <div className="max-w-2xl pb-16">
-      <h2 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "24px", fontWeight: 700, color: "#1E1E1E" }}>Profile & security</h2>
-      <p className="text-sm mb-6" style={{ color: "#999" }}>Your account and password.</p>
+      <h2 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "24px", fontWeight: 700, color: "var(--o-text)" }}>Profile & security</h2>
+      <p className="text-sm mb-6" style={{ color: "var(--o-faint)" }}>Your account, contact details and password.</p>
 
       {user && (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-6 mb-5">
           <div className="flex items-center gap-4">
-            <span className="flex items-center justify-center w-12 h-12 rounded-full text-sm font-bold shrink-0" style={{ background: "#C5B27A", color: "#1E1E1E" }}>
+            <span className="flex items-center justify-center w-12 h-12 rounded-full text-sm font-bold shrink-0" style={{ background: "#C5B27A", color: "var(--o-text)" }}>
               {user.name.split(" ").map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()}
             </span>
             <div className="min-w-0">
-              <p className="font-semibold text-base truncate" style={{ color: "#1E1E1E" }}>{user.name}</p>
-              <p className="text-sm truncate" style={{ color: "#999" }}>{user.email}</p>
+              <p className="font-semibold text-base truncate" style={{ color: "var(--o-text)" }}>{user.name}</p>
+              <p className="text-sm truncate" style={{ color: "var(--o-faint)" }}>{user.email}</p>
             </div>
-            <span className="ml-auto px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 capitalize" style={{ background: "rgba(197,178,122,0.16)", color: "#7A6020" }}>
+            <span className="ml-auto px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 capitalize" style={{ background: "rgba(197,178,122,0.16)", color: "var(--o-accent-text)" }}>
               {user.role}
             </span>
           </div>
-          <p className="text-xs mt-4" style={{ color: "#aaa" }}>To change your name, role, or department, contact HR.</p>
+          <p className="text-xs mt-4" style={{ color: "var(--o-faint)" }}>To change your name, role, or department, contact HR.</p>
         </div>
       )}
 
       {expiryLabel && (
-        <div className="flex items-start gap-3 rounded-[20px] border border-black/[0.06] p-5 mb-5" style={{ background: "#FAFAF8" }}>
+        <div className="flex items-start gap-3 rounded-[20px] border border-black/[0.06] p-5 mb-5" style={{ background: "var(--o-surface-2)" }}>
           <Clock className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#C5B27A" }} />
           <div>
-            <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>This session signs out automatically</p>
-            <p className="text-xs mt-0.5" style={{ color: "#999" }}>For security, you&apos;ll be asked to sign in again on <strong style={{ color: "#7A6020" }}>{expiryLabel}</strong>.</p>
+            <p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>This session signs out automatically</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--o-faint)" }}>For security, you&apos;ll be asked to sign in again on <strong style={{ color: "var(--o-accent-text)" }}>{expiryLabel}</strong>.</p>
           </div>
         </div>
       )}
@@ -85,30 +86,32 @@ export default function StaffProfilePage() {
       <form onSubmit={submit} className="bg-white rounded-[20px] border border-black/[0.06] p-6">
         <div className="flex items-center gap-2 mb-5">
           <ShieldCheck className="w-4 h-4" style={{ color: "#C5B27A" }} />
-          <h3 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "#1E1E1E" }}>Change password</h3>
+          <h3 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "var(--o-text)" }}>Change password</h3>
         </div>
         <div className="space-y-4">
           <Field label="Current password"><PwInput value={current} onChange={setCurrent} show={show} autoComplete="current-password" /></Field>
           <Field label="New password" hint="At least 8 characters."><PwInput value={next} onChange={setNext} show={show} autoComplete="new-password" /></Field>
           <Field label="Confirm new password"><PwInput value={confirm} onChange={setConfirm} show={show} autoComplete="new-password" /></Field>
 
-          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#777" }}>
+          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "var(--o-muted)" }}>
             <input type="checkbox" checked={show} onChange={() => setShow((s) => !s)} className="w-3.5 h-3.5 rounded accent-[#C5B27A]" />
             Show passwords
           </label>
-          <p className="text-xs" style={{ color: "#aaa" }}>Changing your password signs you out of any other devices.</p>
+          <p className="text-xs" style={{ color: "var(--o-faint)" }}>Changing your password signs you out of any other devices.</p>
 
-          {error && <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>}
+          {error && <p className="text-sm" style={{ color: "var(--o-danger)" }}>{error}</p>}
           <div className="flex items-center gap-3 pt-1">
             <button type="submit" disabled={saving || !current || !next || !confirm}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold disabled:opacity-50"
-              style={{ background: "#1E1E1E", color: "#fff" }}>
+              style={{ background: "var(--o-brand)", color: "var(--o-on-brand)" }}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}Update password
             </button>
-            {saved && <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "#16A34A" }}><Check className="w-4 h-4" />Password updated</span>}
+            {saved && <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--o-success)" }}><Check className="w-4 h-4" />Password updated</span>}
           </div>
         </div>
       </form>
+
+      <ContactDetailsPanel />
 
       {/* Email signature */}
       <EmailSignaturePanel api={apiStaff} />
@@ -128,8 +131,8 @@ function PwInput({ value, onChange, show, autoComplete }: { value: string; onCha
     <div className="relative">
       <input type={show || reveal ? "text" : "password"} value={value} onChange={(e) => onChange(e.target.value)} autoComplete={autoComplete}
         className="w-full text-sm rounded-xl px-3.5 py-2.5 pr-10 border outline-none focus:border-[#C5B27A]"
-        style={{ borderColor: "rgba(0,0,0,0.12)", background: "#fff" }} />
-      <button type="button" onClick={() => setReveal((r) => !r)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "#bbb" }} tabIndex={-1}>
+        style={{ borderColor: "var(--o-line-strong)", background: "var(--o-surface)" }} />
+      <button type="button" onClick={() => setReveal((r) => !r)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--o-faint)" }} tabIndex={-1}>
         {show || reveal ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
       </button>
     </div>
@@ -139,9 +142,9 @@ function PwInput({ value, onChange, show, autoComplete }: { value: string; onCha
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-[11px] font-bold uppercase tracking-[0.1em] block mb-1.5" style={{ color: "#999" }}>{label}</label>
+      <label className="text-[11px] font-bold uppercase tracking-[0.1em] block mb-1.5" style={{ color: "var(--o-faint)" }}>{label}</label>
       {children}
-      {hint && <p className="mt-1.5 text-xs" style={{ color: "#aaa" }}>{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs" style={{ color: "var(--o-faint)" }}>{hint}</p>}
     </div>
   );
 }

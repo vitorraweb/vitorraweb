@@ -1974,6 +1974,19 @@ Tests: `PurgeTestLeadsTest` (3). **503 backend tests passing.**
 
 ---
 
+## Staff management, round two (29 October 2026)
+
+- **My work** in the console: Leadership, Operations and Finance apply for leave, sign requests waiting on them, submit monthly reports, open their documents and see the team calendar, all without the separate staff sign-in. The console's first page reminds them about leave waiting for their signature and a missing monthly report.
+- **People** app for HR:
+  - **Overview**: who is away now and soon, leave awaiting signatures, missing monthly reports, probation and contract ends, birthdays and work anniversaries.
+  - **Employees**: full HR record per person, plus leave taken this year.
+  - **Leave calendar**: everyone's leave by day, with type.
+  - **Announcements**: notices on every staff member's home page.
+- **Employees (staff portal)**: announcements on their home, a **Team calendar** (their department's approved leave, with no leave type shown), and their own phone and emergency contact under Profile.
+- Server: `migrate --force` (new user HR fields + `announcements`), `route:cache`.
+
+---
+
 ## Website visitors with PostHog (29 October 2026)
 
 The console now shows who is on vitorra.org **right now** (on the Overview and under Insights → Website). It also shows visitors, visits and pages read per period against the period before, how people found us, where they are, phone vs. computer, and leads from the website. Session replays and heatmaps open in PostHog through **Watch visits**. Only visitors who accept cookies are recorded, and form fields are hidden. Staff screens and private client links are never tracked. The cookie policy was updated in English and Swahili.

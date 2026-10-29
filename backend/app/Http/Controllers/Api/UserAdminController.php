@@ -21,6 +21,8 @@ class UserAdminController extends Controller
         'department', 'supervisor_id', 'job_title', 'job_description',
         'start_date', 'staff_status', 'leave_entitlement_days',
         'permissions', 'documents', 'notes', 'created_at', 'microsoft_email',
+        'employment_type', 'contract_end_date', 'date_of_birth',
+        'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
     ];
 
     /** Staff directory (admin + ops + employees). Customers are managed elsewhere. */

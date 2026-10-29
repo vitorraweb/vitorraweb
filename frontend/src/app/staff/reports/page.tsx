@@ -12,9 +12,9 @@ type Report = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
-  draft:     { bg: "rgba(0,0,0,0.06)", fg: "#777" },
-  submitted: { bg: "rgba(197,178,122,0.16)", fg: "#7A6020" },
-  reviewed:  { bg: "rgba(34,197,94,0.12)", fg: "#16A34A" },
+  draft:     { bg: "var(--o-hover)", fg: "var(--o-muted)" },
+  submitted: { bg: "rgba(197,178,122,0.16)", fg: "var(--o-accent-text)" },
+  reviewed:  { bg: "rgba(34,197,94,0.12)", fg: "var(--o-success)" },
 };
 
 /** Last 6 month-period options (YYYY-MM), newest first. */
@@ -81,21 +81,21 @@ export default function StaffReportsPage() {
     finally { setSaving(false); }
   };
 
-  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   const canReview = role === "admin" || role === "ops" || team.length > 0;
 
   return (
     <div className="max-w-3xl pb-16">
-      <h2 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "24px", fontWeight: 700, color: "#1E1E1E" }}>My reports</h2>
-      <p className="text-sm mb-6" style={{ color: "#999" }}>Record what you did each month so your supervisor stays in the loop.</p>
+      <h2 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "24px", fontWeight: 700, color: "var(--o-text)" }}>My reports</h2>
+      <p className="text-sm mb-6" style={{ color: "var(--o-faint)" }}>Record what you did each month so your supervisor stays in the loop.</p>
 
       {/* Editor */}
       <div className="bg-white rounded-[20px] border border-black/[0.06] p-6 mb-6">
         <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
           <div className="flex items-center gap-2">
             <ClipboardCheck className="w-4 h-4" style={{ color: "#C5B27A" }} />
-            <h3 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "#1E1E1E" }}>Monthly report</h3>
+            <h3 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "var(--o-text)" }}>Monthly report</h3>
           </div>
           <select value={period} onChange={(e) => setPeriod(e.target.value)} className="text-sm rounded-xl px-3 py-1.5 border" style={inputStyle}>
             {recentPeriods().map((p) => <option key={p} value={p}>{periodLabel(p)}</option>)}
@@ -107,37 +107,37 @@ export default function StaffReportsPage() {
         ); })()}
 
         {locked && current ? (
-          <div className="rounded-xl p-4" style={{ background: "#FAFAF8" }}>
-            <p className="text-sm font-semibold mb-2" style={{ color: "#1E1E1E" }}>This report has been reviewed.</p>
+          <div className="rounded-xl p-4" style={{ background: "var(--o-surface-2)" }}>
+            <p className="text-sm font-semibold mb-2" style={{ color: "var(--o-text)" }}>This report has been reviewed.</p>
             {current.rating != null && <Stars rating={current.rating} />}
-            {current.supervisor_comment && <p className="text-sm mt-2" style={{ color: "#454545" }}>{current.supervisor_comment}</p>}
+            {current.supervisor_comment && <p className="text-sm mt-2" style={{ color: "var(--o-text-2)" }}>{current.supervisor_comment}</p>}
           </div>
         ) : (
           <>
-            <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#999" }}>What you worked on</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "var(--o-faint)" }}>What you worked on</p>
             <div className="space-y-2 mb-3">
               {items.map((it, i) => (
-                <div key={i} className="flex items-start gap-2 rounded-xl p-2" style={{ background: "#F7F7F5" }}>
-                  <button onClick={() => setItem(i, { done: !it.done })} className="mt-1.5 shrink-0 w-5 h-5 rounded-md flex items-center justify-center" style={{ background: it.done ? "#16A34A" : "#fff", border: "1px solid rgba(0,0,0,0.15)" }}>
+                <div key={i} className="flex items-start gap-2 rounded-xl p-2" style={{ background: "var(--o-surface-2)" }}>
+                  <button onClick={() => setItem(i, { done: !it.done })} className="mt-1.5 shrink-0 w-5 h-5 rounded-md flex items-center justify-center" style={{ background: it.done ? "var(--o-success)" : "#fff", border: "1px solid rgba(0,0,0,0.15)" }}>
                     {it.done && <Check className="w-3.5 h-3.5 text-white" />}
                   </button>
                   <div className="flex-1 min-w-0 space-y-1">
                     <input value={it.label} onChange={(e) => setItem(i, { label: e.target.value })} placeholder="Task or deliverable…" className="w-full text-sm rounded-lg px-2.5 py-1.5 border" style={inputStyle} />
                     <input value={it.note} onChange={(e) => setItem(i, { note: e.target.value })} placeholder="Note (optional)" className="w-full text-xs rounded-lg px-2.5 py-1.5 border" style={inputStyle} />
                   </div>
-                  <button onClick={() => removeItem(i)} className="mt-1 shrink-0 p-1.5 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><X className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => removeItem(i)} className="mt-1 shrink-0 p-1.5 rounded-lg" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><X className="w-3.5 h-3.5" /></button>
                 </div>
               ))}
-              <button onClick={addItem} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "#F2F2F2", color: "#555" }}><Plus className="w-3.5 h-3.5" />Add item</button>
+              <button onClick={addItem} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}><Plus className="w-3.5 h-3.5" />Add item</button>
             </div>
 
-            <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "#999" }}>Summary</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "var(--o-faint)" }}>Summary</p>
             <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} placeholder="Overall progress, blockers, plans for next month…" className="w-full text-sm rounded-xl px-3 py-2 border outline-none focus:border-[#C5B27A]" style={inputStyle} />
 
-            {msg && <p className="text-sm mt-3" style={{ color: /fail|lock/i.test(msg) ? "#C0392B" : "#16A34A" }}>{msg}</p>}
+            {msg && <p className="text-sm mt-3" style={{ color: /fail|lock/i.test(msg) ? "var(--o-danger)" : "var(--o-success)" }}>{msg}</p>}
             <div className="flex items-center gap-2 mt-4">
-              <button onClick={() => save("draft")} disabled={saving} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50" style={{ background: "#F2F2F2", color: "#555" }}><Save className="w-4 h-4" />Save draft</button>
-              <button onClick={() => save("submitted")} disabled={saving} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50" style={{ background: "#1E1E1E", color: "#fff" }}><Send className="w-4 h-4" />Submit</button>
+              <button onClick={() => save("draft")} disabled={saving} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}><Save className="w-4 h-4" />Save draft</button>
+              <button onClick={() => save("submitted")} disabled={saving} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50" style={{ background: "var(--o-brand)", color: "var(--o-on-brand)" }}><Send className="w-4 h-4" />Submit</button>
             </div>
           </>
         )}
@@ -153,9 +153,9 @@ function TeamReview({ reports, onReviewed }: { reports: Report[]; onReviewed: ()
   const submitted = reports.filter((r) => r.status === "submitted");
   return (
     <div>
-      <h3 className="text-sm font-bold uppercase tracking-[0.08em] mb-3" style={{ color: "#1E1E1E" }}>Team reports to review</h3>
+      <h3 className="text-sm font-bold uppercase tracking-[0.08em] mb-3" style={{ color: "var(--o-text)" }}>Team reports to review</h3>
       {submitted.length === 0 ? (
-        <p className="text-sm" style={{ color: "#999" }}>Nothing awaiting your review.</p>
+        <p className="text-sm" style={{ color: "var(--o-faint)" }}>Nothing awaiting your review.</p>
       ) : (
         <div className="space-y-2.5">
           {submitted.map((r) => <ReviewCard key={r.id} report={r} onReviewed={onReviewed} />)}
@@ -183,28 +183,28 @@ function ReviewCard({ report, onReviewed }: { report: Report; onReviewed: () => 
   return (
     <div className="bg-white rounded-[16px] border border-black/[0.06] p-4">
       <button onClick={() => setOpen((o) => !o)} className="w-full text-left">
-        <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{report.user?.name ?? "Staff"} · {periodLabel(report.period)}</p>
-        <p className="text-xs mt-0.5" style={{ color: "#999" }}>{(report.items ?? []).length} item{(report.items ?? []).length === 1 ? "" : "s"} · tap to {open ? "hide" : "review"}</p>
+        <p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{report.user?.name ?? "Staff"} · {periodLabel(report.period)}</p>
+        <p className="text-xs mt-0.5" style={{ color: "var(--o-faint)" }}>{(report.items ?? []).length} item{(report.items ?? []).length === 1 ? "" : "s"} · tap to {open ? "hide" : "review"}</p>
       </button>
       {open && (
-        <div className="mt-3 pt-3 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+        <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--o-line)" }}>
           <ul className="space-y-1.5 mb-3">
             {(report.items ?? []).map((it, i) => (
-              <li key={i} className="text-sm flex items-start gap-2" style={{ color: "#454545" }}>
+              <li key={i} className="text-sm flex items-start gap-2" style={{ color: "var(--o-text-2)" }}>
                 <span className="mt-0.5">{it.done ? "✅" : "⬜"}</span>
                 <span><strong>{it.label}</strong>{it.note ? ` — ${it.note}` : ""}</span>
               </li>
             ))}
           </ul>
-          {report.summary && <p className="text-sm mb-3" style={{ color: "#555" }}>{report.summary}</p>}
+          {report.summary && <p className="text-sm mb-3" style={{ color: "var(--o-text-2)" }}>{report.summary}</p>}
 
           <div className="flex items-center gap-1 mb-2">
             {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} onClick={() => setRating(n)}><Star className="w-5 h-5" style={{ color: n <= rating ? "#C5B27A" : "#ddd", fill: n <= rating ? "#C5B27A" : "none" }} /></button>
+              <button key={n} onClick={() => setRating(n)}><Star className="w-5 h-5" style={{ color: n <= rating ? "#C5B27A" : "var(--o-line-strong)", fill: n <= rating ? "#C5B27A" : "none" }} /></button>
             ))}
           </div>
           <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={2} placeholder="Feedback for the team member…" className="w-full text-sm rounded-xl px-3 py-2 border outline-none focus:border-[#C5B27A] mb-2" style={inputStyle} />
-          <button onClick={submit} disabled={saving} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50" style={{ background: "#1E1E1E", color: "#fff" }}>
+          <button onClick={submit} disabled={saving} className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50" style={{ background: "var(--o-brand)", color: "var(--o-on-brand)" }}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}Mark reviewed
           </button>
         </div>
@@ -216,9 +216,9 @@ function ReviewCard({ report, onReviewed }: { report: Report; onReviewed: () => 
 function Stars({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((n) => <Star key={n} className="w-4 h-4" style={{ color: n <= rating ? "#C5B27A" : "#ddd", fill: n <= rating ? "#C5B27A" : "none" }} />)}
+      {[1, 2, 3, 4, 5].map((n) => <Star key={n} className="w-4 h-4" style={{ color: n <= rating ? "#C5B27A" : "var(--o-line-strong)", fill: n <= rating ? "#C5B27A" : "none" }} />)}
     </div>
   );
 }
 
-const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const inputStyle = { borderColor: "var(--o-line-strong)", background: "var(--o-surface)", color: "var(--o-text)" } as const;

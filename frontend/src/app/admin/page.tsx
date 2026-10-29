@@ -10,7 +10,7 @@ import { APP_AREAS, visibleApps } from "@/lib/admin-apps";
    on each clear 4.5:1. */
 const APP_TINT: Record<string, string> = {
   sales: "#1F64A8", marketing: "#B03A5B", orders: "#B4531F", fet: "#17785C", accounting: "#5B44A6", insights: "#0E7272",
-  operations: "#7A6020", people: "#A8406E", website: "#2E6E31", settings: "#4D545E",
+  operations: "#7A6020", people: "#A8406E", me: "#3B6E8F", website: "#2E6E31", settings: "#4D545E",
 };
 
 /* ─── Console home: the app launcher ──────────────────────────────────────────
@@ -68,13 +68,18 @@ export default function ConsoleHome() {
     if (!user) return;
     const can = (module?: string) => canAccess(user, { module });
     (async () => {
-      const [stats, alerts, leave, suppliers, drafts] = await Promise.all([
+      const lastMonth = (() => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; })();
+      const [stats, alerts, leave, suppliers, drafts, toSign, myReports] = await Promise.all([
         apiAdmin<{ data: Stats }>("/admin/stats").then((r) => r.data).catch(() => ({} as Stats)),
         apiAdmin<{ data: Alerts }>("/admin/alerts").then((r) => r.data).catch(() => ({} as Alerts)),
         can("people") ? list(apiAdmin("/admin/leave?status=pending")) : Promise.resolve(0),
         can("suppliers") ? list(apiAdmin("/admin/suppliers?status=pending")) : Promise.resolve(0),
         can("accounting") ? list(apiAdmin("/admin/accounting/transactions?status=draft")) : Promise.resolve(0),
+        // My work: leave waiting for this person's signature, and their own monthly report.
+        apiAdmin<{ data: { can_decide: boolean }[] }>("/staff/leave/pending").then((r) => r.data.filter((l) => l.can_decide).length).catch(() => 0),
+        apiAdmin<{ data: { period: string; status: string }[] }>("/staff/reports").then((r) => r.data).catch(() => null),
       ]);
+      const reportDue = user.role !== "admin" && myReports !== null && !myReports.some((r) => r.period === lastMonth && r.status !== "draft") ? 1 : 0;
       const all: (Attention & { module?: string })[] = [
         { key: "enq", app: "sales", module: "enquiries", count: stats.enquiries?.by_status?.new ?? 0, label: "new enquiries waiting for a first reply", href: "/admin/enquiries" },
         { key: "quiet", app: "sales", module: "customers", count: alerts.stale_contacts?.count ?? 0, label: "customers with no contact in two weeks or more", href: "/admin/pipeline" },
@@ -85,6 +90,8 @@ export default function ConsoleHome() {
         { key: "tasks", app: "operations", module: "tasks", count: alerts.overdue_tasks?.count ?? 0, label: "tasks past their due date", href: "/admin/tasks" },
         { key: "suppliers", app: "operations", module: "suppliers", count: suppliers, label: "supplier applications to review", href: "/admin/suppliers" },
         { key: "leave", app: "people", module: "people", count: leave, label: "leave requests waiting for a signature", href: "/admin/leave" },
+        { key: "sign", app: "me", count: toSign, label: "leave requests waiting for your signature", href: "/admin/me/leave" },
+        { key: "report", app: "me", count: reportDue, label: `your ${new Date(`${lastMonth}-01T00:00:00`).toLocaleDateString("en-GB", { month: "long" })} monthly report is not submitted yet`, href: "/admin/me/reports" },
         { key: "msgs", app: "website", module: "messages", count: stats.messages_unread ?? 0, label: "unread website messages", href: "/admin/messages" },
       ];
       setItems(all.filter((a) => a.count > 0 && can(a.module)));

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, Users, ShieldCheck, CalendarDays, ClipboardCheck, Menu, X, LogOut, ExternalLink } from "lucide-react";
+import { LayoutDashboard, FileText, Users, ShieldCheck, CalendarDays, ClipboardCheck, Menu, X, LogOut, ExternalLink, CalendarRange } from "lucide-react";
 import { staffAuth, apiStaff, STAFF_ROLES } from "@/lib/staff-auth";
 import type { StaffUser } from "@/lib/staff-auth";
 
@@ -16,6 +16,7 @@ const PUBLIC_PATHS = ["/staff/login", "/staff/forgot-password", "/staff/reset-pa
 const nav: NavItem[] = [
   { label: "Dashboard",          href: "/staff",           icon: LayoutDashboard },
   { label: "Leave",              href: "/staff/leave",     icon: CalendarDays },
+  { label: "Team calendar",      href: "/staff/calendar",  icon: CalendarRange },
   { label: "My reports",         href: "/staff/reports",   icon: ClipboardCheck },
   { label: "My documents",       href: "/staff/documents", icon: FileText },
   { label: "My team",            href: "/staff/team",      icon: Users, supervisorOnly: true },

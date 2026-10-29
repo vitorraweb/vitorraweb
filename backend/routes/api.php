@@ -63,6 +63,7 @@ use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\ContractSigningController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TwoFactorController;
+use App\Http\Controllers\Api\PeopleController;
 use App\Http\Controllers\Api\UserAdminController;
 use Illuminate\Support\Facades\Route;
 
@@ -248,6 +249,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [StaffController::class, 'me']);
         Route::get('/team', [StaffController::class, 'team']);
         Route::get('/directory', [StaffController::class, 'directory']);
+        Route::put('/profile', [StaffController::class, 'updateProfile']);
+        Route::get('/calendar', [PeopleController::class, 'staffCalendar']);
+        Route::get('/announcements', [PeopleController::class, 'staffAnnouncements']);
         // Teams meetings visible to this person (company-wide + their department).
         Route::get('/meetings', [MeetingController::class, 'index']);
         Route::get('/documents', [StaffController::class, 'documents']);
@@ -471,6 +475,14 @@ Route::middleware('auth:sanctum')->group(function () {
         });
         // People / HR — leave overview & review, public holidays, company events.
         Route::middleware('perm:people')->group(function () {
+            Route::get('/people/overview', [PeopleController::class, 'overview']);
+            Route::get('/people/employees', [PeopleController::class, 'employees']);
+            Route::patch('/people/employees/{user}', [PeopleController::class, 'updateEmployee']);
+            Route::get('/people/calendar', [PeopleController::class, 'calendar']);
+            Route::get('/announcements', [PeopleController::class, 'announcements']);
+            Route::post('/announcements', [PeopleController::class, 'storeAnnouncement']);
+            Route::patch('/announcements/{announcement}', [PeopleController::class, 'updateAnnouncement']);
+            Route::delete('/announcements/{announcement}', [PeopleController::class, 'destroyAnnouncement']);
             Route::get('/leave', [LeaveController::class, 'all']);
             Route::post('/leave/{leave}/decision', [LeaveController::class, 'decision']);
             Route::get('/leave/{leave}/note', [LeaveController::class, 'downloadNote']);

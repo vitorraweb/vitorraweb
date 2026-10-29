@@ -108,7 +108,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (PUBLIC_PATHS.includes(pathname)) return <>{children}</>;
   if (!user) return null;
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  // The most specific menu item wins, so /admin/people/calendar lights up
+  // "Leave calendar" and not also "Overview" (/admin/people).
+  const matches = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) =>
+    matches(href) && !(appFor(pathname)?.items ?? []).some((i) => i.href.length > href.length && i.href.startsWith(href) && matches(i.href));
 
   return (
     <div className="admin-console min-h-screen" data-theme={theme}>

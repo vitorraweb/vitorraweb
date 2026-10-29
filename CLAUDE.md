@@ -96,6 +96,9 @@ A multi-currency cash-ledger bookkeeping tool with **maker–checker** approvals
 ### Pending (operations setup, not code)
 - Set executive-report recipients in `/admin/settings`; grant new modules to existing ops accounts (incl. **"Accounting — approve"** for the Senior Finance Officer); optionally link **Careers** + **Suppliers** in the public footer; set `ANTHROPIC_API_KEY` on prod to enable CV/receipt auto-read (both work manually without it).
 
+### Staff management, round two (October 2026)
+Console **My work** app (`/admin/me/*`) = the staff portal's self-service on the console session (console tokens carry `staff`; `lib/staff-auth.ts` switches token/links when under `/admin`) — Leadership/Ops/Finance never sign in twice; employees keep `/staff`. **People** app adds Overview (`/admin/people`: away, pending signatures, missing reports, probation/contract ends, birthdays/anniversaries), Employees (HR record incl. employment type, contract end, DOB, emergency contact, leave taken — `PeopleController`, `people` module; role/access stay admin-only in Settings → Staff), Leave calendar (types; staff see own department, approved only, no type) and Announcements (shown on staff homes). Staff edit own phone + emergency contact (`PUT /staff/profile`).
+
 ### PostHog web analytics (October 2026) — `docs/posthog.md`
 Public pages only (`lib/posthog.ts` private list), proxied via `/ingest`; cookieless until consent, cookie + session replay after. Console **Insights → Website** (`/admin/website`, module `google_ads`) + Overview live strip read PostHog server-side (`POSTHOG_PERSONAL_API_KEY`, query:read). Frontend env: `NEXT_PUBLIC_POSTHOG_KEY/HOST/UI_HOST`.
 

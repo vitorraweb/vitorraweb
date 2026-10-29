@@ -5,6 +5,27 @@
 
 import { authFetch } from "./http";
 import { API_BASE_URL } from "./constants";
+import { auth } from "./auth";
+
+/* The same self-service screens also live inside the console (My work,
+   /admin/me/*) for Leadership, Operations and Finance. There they use the
+   console session — whose token already carries the `staff` ability — so
+   nobody has to sign in twice. */
+export const inConsole = (): boolean => typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
+
+/** A staff-portal link, pointed at the console's copy when shown inside the console. */
+export function staffPath(path: string): string {
+  if (!inConsole()) return path;
+  if (path === "/staff/profile") return "/admin/profile";
+  return path.replace(/^\/staff/, "/admin/me");
+}
+
+const sessionToken = (): string | null => (inConsole() ? auth.getToken() : staffAuth.getToken());
+
+function signedOut(): void {
+  if (inConsole()) { auth.clear(); window.location.href = "/admin/login?expired=1"; return; }
+  staffAuth.clear(); window.location.href = "/staff/login?expired=1";
+}
 
 const TOKEN_KEY  = "vitorra_staff_token";
 const USER_KEY   = "vitorra_staff_user";
@@ -27,6 +48,7 @@ export const staffAuth = {
     try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
   },
   getUser: (): StaffUser | null => {
+    if (inConsole()) return auth.getUser() as StaffUser | null;
     try { const r = localStorage.getItem(USER_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
   },
   save: (token: string | null, user: StaffUser, expiresAt?: string | null): void => {
@@ -57,8 +79,8 @@ export const staffAuth = {
 
 /** Authenticated JSON fetch for the staff portal. */
 export async function apiStaff<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await authFetch(base(), path, staffAuth.getToken(), options ?? {});
-  if (res.status === 401) { staffAuth.clear(); window.location.href = "/staff/login?expired=1"; }
+  const res = await authFetch(base(), path, sessionToken(), options ?? {});
+  if (res.status === 401) signedOut();
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Request failed" }));
     throw new Error(err.message ?? "Request failed");
@@ -68,8 +90,8 @@ export async function apiStaff<T>(path: string, options?: RequestInit): Promise<
 
 /** Multipart upload for the staff portal (browser sets the boundary). */
 export async function uploadStaff<T>(path: string, form: FormData): Promise<T> {
-  const res = await authFetch(base(), path, staffAuth.getToken(), { method: "POST", body: form }, false);
-  if (res.status === 401) { staffAuth.clear(); window.location.href = "/staff/login?expired=1"; }
+  const res = await authFetch(base(), path, sessionToken(), { method: "POST", body: form }, false);
+  if (res.status === 401) signedOut();
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Upload failed" }));
     throw new Error(err.message ?? "Upload failed");
@@ -91,7 +113,7 @@ function filenameFromResponse(res: Response, fallback: string): string {
 
 /** Download a private file from an authorized endpoint as a browser download. */
 export async function downloadStaffFile(path: string, filename: string): Promise<void> {
-  const res = await authFetch(base(), path, staffAuth.getToken(), {}, false);
+  const res = await authFetch(base(), path, sessionToken(), {}, false);
   if (!res.ok) throw new Error("Download failed");
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);

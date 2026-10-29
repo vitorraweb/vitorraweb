@@ -22,10 +22,10 @@ const TYPE_LABEL: Record<string, string> = {
   compassionate: "Compassionate", maternity: "Maternity",
 };
 const STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
-  pending:   { bg: "rgba(197,178,122,0.16)", fg: "#7A6020" },
-  approved:  { bg: "rgba(34,197,94,0.12)", fg: "#16A34A" },
-  declined:  { bg: "rgba(192,57,43,0.1)", fg: "#C0392B" },
-  cancelled: { bg: "rgba(0,0,0,0.06)", fg: "#777" },
+  pending:   { bg: "rgba(197,178,122,0.16)", fg: "var(--o-accent-text)" },
+  approved:  { bg: "rgba(34,197,94,0.12)", fg: "var(--o-success)" },
+  declined:  { bg: "rgba(192,57,43,0.1)", fg: "var(--o-danger)" },
+  cancelled: { bg: "var(--o-hover)", fg: "var(--o-muted)" },
 };
 
 export default function StaffLeavePage() {
@@ -101,14 +101,14 @@ export default function StaffLeavePage() {
     try { await apiStaff(`/staff/leave/${id}/decision`, { method: "POST", body: JSON.stringify({ status, comment }) }); load(); } catch { /* */ }
   };
 
-  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "#777" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
+  if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   const canReview = role === "admin" || role === "ops" || pending.length > 0;
 
   return (
     <div className="max-w-3xl pb-16">
-      <h2 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "24px", fontWeight: 700, color: "#1E1E1E" }}>Leave</h2>
-      <p className="text-sm mb-6" style={{ color: "#999" }}>Apply for time off and track your requests.</p>
+      <h2 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "24px", fontWeight: 700, color: "var(--o-text)" }}>Leave</h2>
+      <p className="text-sm mb-6" style={{ color: "var(--o-faint)" }}>Apply for time off and track your requests.</p>
 
       {/* Balance */}
       {balance && (
@@ -123,7 +123,7 @@ export default function StaffLeavePage() {
       <form onSubmit={submit} className="bg-white rounded-[20px] border border-black/[0.06] p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Plus className="w-4 h-4" style={{ color: "#C5B27A" }} />
-          <h3 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "#1E1E1E" }}>Apply for leave</h3>
+          <h3 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "var(--o-text)" }}>Apply for leave</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Type">
@@ -132,7 +132,7 @@ export default function StaffLeavePage() {
             </select>
           </Field>
           <Field label="Working days">
-            <div className="h-[42px] flex items-center px-3.5 rounded-xl border text-sm" style={{ ...inputStyle, color: preview ? "#1E1E1E" : "#bbb" }}>
+            <div className="h-[42px] flex items-center px-3.5 rounded-xl border text-sm" style={{ ...inputStyle, color: preview ? "var(--o-text)" : "var(--o-faint)" }}>
               {preview ? `${preview.working_days} day${preview.working_days === 1 ? "" : "s"}` : "—"}
             </div>
           </Field>
@@ -153,13 +153,13 @@ export default function StaffLeavePage() {
         {preview && preview.warnings.length > 0 && (
           <div className="mt-4 rounded-xl px-4 py-3 space-y-1" style={{ background: "rgba(192,57,43,0.07)" }}>
             {preview.warnings.map((w, i) => (
-              <p key={i} className="text-xs flex items-start gap-1.5" style={{ color: "#C0392B" }}><AlertTriangle className="w-3.5 h-3.5 mt-px shrink-0" />{w}</p>
+              <p key={i} className="text-xs flex items-start gap-1.5" style={{ color: "var(--o-danger)" }}><AlertTriangle className="w-3.5 h-3.5 mt-px shrink-0" />{w}</p>
             ))}
           </div>
         )}
-        {formMsg && <p className="text-sm mt-3" style={{ color: "#C0392B" }}>{formMsg}</p>}
+        {formMsg && <p className="text-sm mt-3" style={{ color: "var(--o-danger)" }}>{formMsg}</p>}
 
-        <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-full text-sm font-semibold disabled:opacity-50" style={{ background: "#1E1E1E", color: "#fff" }}>
+        <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-full text-sm font-semibold disabled:opacity-50" style={{ background: "var(--o-brand)", color: "var(--o-on-brand)" }}>
           {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}Submit request
         </button>
       </form>
@@ -167,27 +167,27 @@ export default function StaffLeavePage() {
       {/* Approvals (supervisors / HR) */}
       {canReview && (
         <div className="mb-6">
-          <h3 className="text-sm font-bold uppercase tracking-[0.08em] mb-3" style={{ color: "#1E1E1E" }}>Pending approvals</h3>
+          <h3 className="text-sm font-bold uppercase tracking-[0.08em] mb-3" style={{ color: "var(--o-text)" }}>Pending approvals</h3>
           {pending.length === 0 ? (
-            <p className="text-sm" style={{ color: "#999" }}>Nothing awaiting your review.</p>
+            <p className="text-sm" style={{ color: "var(--o-faint)" }}>Nothing awaiting your review.</p>
           ) : (
             <div className="space-y-2.5">
               {pending.map((l) => (
                 <div key={l.id} className="bg-white rounded-[16px] border border-black/[0.06] p-4">
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div>
-                      <p className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{l.user?.name ?? "Staff"} · {TYPE_LABEL[l.type] ?? l.type}</p>
-                      <p className="text-xs" style={{ color: "#999" }}>{fmt(l.start_date)} → {fmt(l.end_date)} · {l.working_days} day{l.working_days === 1 ? "" : "s"}</p>
-                      {l.reason && <p className="text-xs mt-1" style={{ color: "#777" }}>{l.reason}</p>}
+                      <p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{l.user?.name ?? "Staff"} · {TYPE_LABEL[l.type] ?? l.type}</p>
+                      <p className="text-xs" style={{ color: "var(--o-faint)" }}>{fmt(l.start_date)} → {fmt(l.end_date)} · {l.working_days} day{l.working_days === 1 ? "" : "s"}</p>
+                      {l.reason && <p className="text-xs mt-1" style={{ color: "var(--o-muted)" }}>{l.reason}</p>}
                       {l.approvals?.length > 0 && (
-                        <p className="text-xs mt-1" style={{ color: "#777" }}>
+                        <p className="text-xs mt-1" style={{ color: "var(--o-muted)" }}>
                           {l.approvals.map((a) => `${a.label} ${a.decision}${a.by ? ` — ${a.by}` : ""}`).join(" · ")}
                         </p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => decide(l.id, "approved")} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}><Check className="w-3.5 h-3.5" />Approve</button>
-                      <button onClick={() => decide(l.id, "declined")} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "#C0392B" }}><X className="w-3.5 h-3.5" />Decline</button>
+                      <button onClick={() => decide(l.id, "approved")} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "var(--o-success)" }}><Check className="w-3.5 h-3.5" />Approve</button>
+                      <button onClick={() => decide(l.id, "declined")} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-full" style={{ background: "rgba(192,57,43,0.08)", color: "var(--o-danger)" }}><X className="w-3.5 h-3.5" />Decline</button>
                     </div>
                   </div>
                 </div>
@@ -198,11 +198,11 @@ export default function StaffLeavePage() {
       )}
 
       {/* My history */}
-      <h3 className="text-sm font-bold uppercase tracking-[0.08em] mb-3" style={{ color: "#1E1E1E" }}>My requests</h3>
+      <h3 className="text-sm font-bold uppercase tracking-[0.08em] mb-3" style={{ color: "var(--o-text)" }}>My requests</h3>
       {mine.length === 0 ? (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-8 text-center">
-          <CalendarDays className="w-8 h-8 mx-auto mb-2" style={{ color: "#ddd" }} />
-          <p className="text-sm" style={{ color: "#999" }}>No leave requests yet.</p>
+          <CalendarDays className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--o-line-strong)" }} />
+          <p className="text-sm" style={{ color: "var(--o-faint)" }}>No leave requests yet.</p>
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -212,13 +212,13 @@ export default function StaffLeavePage() {
               <div key={l.id} className="bg-white rounded-[16px] border border-black/[0.06] p-4 flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold" style={{ color: "#1E1E1E" }}>{TYPE_LABEL[l.type] ?? l.type}</span>
+                    <span className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{TYPE_LABEL[l.type] ?? l.type}</span>
                     <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: sc.bg, color: sc.fg }}>{l.status}</span>
                   </div>
-                  <p className="text-xs mt-0.5" style={{ color: "#999" }}>{fmt(l.start_date)} → {fmt(l.end_date)} · {l.working_days} day{l.working_days === 1 ? "" : "s"}</p>
-                  {l.review_comment && <p className="text-xs mt-1" style={{ color: "#777" }}>Note: {l.review_comment}</p>}
+                  <p className="text-xs mt-0.5" style={{ color: "var(--o-faint)" }}>{fmt(l.start_date)} → {fmt(l.end_date)} · {l.working_days} day{l.working_days === 1 ? "" : "s"}</p>
+                  {l.review_comment && <p className="text-xs mt-1" style={{ color: "var(--o-muted)" }}>Note: {l.review_comment}</p>}
                   {l.status === "pending" && (l.approvals?.length > 0 || l.awaiting?.length > 0) && (
-                    <p className="text-xs mt-1" style={{ color: "#777" }}>
+                    <p className="text-xs mt-1" style={{ color: "var(--o-muted)" }}>
                       {[
                         ...(l.approvals ?? []).map((a) => `${a.label} ${a.decision}`),
                         ...((l.awaiting ?? []).length ? [`awaiting ${l.awaiting.join(" + ")}`] : []),
@@ -227,7 +227,7 @@ export default function StaffLeavePage() {
                   )}
                 </div>
                 {(l.status === "pending" || l.status === "approved") && (
-                  <button onClick={() => cancel(l.id)} className="text-xs font-semibold px-3 py-1.5 rounded-full shrink-0" style={{ background: "#F2F2F2", color: "#777" }}>Cancel</button>
+                  <button onClick={() => cancel(l.id)} className="text-xs font-semibold px-3 py-1.5 rounded-full shrink-0" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>Cancel</button>
                 )}
               </div>
             );
@@ -239,13 +239,13 @@ export default function StaffLeavePage() {
 }
 
 const inputCls = "w-full text-sm rounded-xl px-3.5 py-2.5 border outline-none focus:border-[#C5B27A]";
-const inputStyle = { borderColor: "rgba(0,0,0,0.12)", background: "#fff", color: "#1E1E1E" } as const;
+const inputStyle = { borderColor: "var(--o-line-strong)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
 function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="bg-white rounded-[18px] border p-4" style={{ borderColor: highlight ? "#C5B27A" : "rgba(0,0,0,0.06)" }}>
-      <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: "#bbb" }}>{label}</p>
-      <p className="text-base font-semibold" style={{ color: highlight ? "#7A6020" : "#1E1E1E" }}>{value}</p>
+      <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: "var(--o-faint)" }}>{label}</p>
+      <p className="text-base font-semibold" style={{ color: highlight ? "var(--o-accent-text)" : "var(--o-text)" }}>{value}</p>
     </div>
   );
 }
@@ -253,7 +253,7 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-[11px] font-bold uppercase tracking-[0.1em] block mb-1.5" style={{ color: "#999" }}>{label}</label>
+      <label className="text-[11px] font-bold uppercase tracking-[0.1em] block mb-1.5" style={{ color: "var(--o-faint)" }}>{label}</label>
       {children}
     </div>
   );

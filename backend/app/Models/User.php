@@ -37,6 +37,12 @@ class User extends Authenticatable
         'notes',
         'email_signature',
         'microsoft_email',
+        'employment_type',
+        'contract_end_date',
+        'date_of_birth',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'emergency_contact_relation',
     ];
 
     protected $hidden = [
@@ -52,6 +58,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
             'start_date'             => 'date:Y-m-d',
+            'contract_end_date'      => 'date:Y-m-d',
+            'date_of_birth'          => 'date:Y-m-d',
             'permissions'            => 'array',
             'documents'              => 'array',
             'leave_entitlement_days' => 'integer',

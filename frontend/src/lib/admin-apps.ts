@@ -2,7 +2,7 @@ import {
   Handshake, ShoppingCart, Gauge, Wallet, LineChart, Users, ListChecks, Globe, Settings,
   MessageSquare, Workflow, Contact, Target, LayoutTemplate, CreditCard, FlaskConical,
   TrendingUp, LayoutDashboard, CalendarCheck, Hourglass, Briefcase, CalendarDays,
-  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame, Video,
+  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame, Video, UserCircle, ClipboardCheck, CalendarRange,
 } from "lucide-react";
 import { canAccess, type AdminUser } from "@/lib/auth";
 
@@ -103,9 +103,23 @@ export const ADMIN_APPS: AdminApp[] = [
     ],
   },
   {
-    id: "people", name: "People", blurb: "Leave, probation, hiring and holidays", icon: Users, area: "Run the company",
+    id: "me", name: "My work", blurb: "Your leave, monthly reports, documents and team", icon: UserCircle, area: "Run the company",
     items: [
+      { label: "Home",          href: "/admin/me",           icon: LayoutDashboard, keywords: "my portal staff self service supervisor" },
+      { label: "My leave",      href: "/admin/me/leave",     icon: CalendarCheck,   keywords: "apply leave time off holiday request balance" },
+      { label: "My reports",    href: "/admin/me/reports",   icon: ClipboardCheck,  keywords: "monthly report checklist" },
+      { label: "Team calendar", href: "/admin/me/calendar",  icon: CalendarRange,   keywords: "who is away absence" },
+      { label: "My documents",  href: "/admin/me/documents", icon: FolderLock,      keywords: "contract hr files" },
+    ],
+  },
+  {
+    id: "people", name: "People", blurb: "Employees, leave, announcements, probation and hiring", icon: Users, area: "Run the company",
+    items: [
+      { label: "Overview",  href: "/admin/people",    icon: LayoutDashboard, module: "people", keywords: "hr dashboard headcount birthdays contracts" },
+      { label: "Employees", href: "/admin/people/employees", icon: Contact, module: "people", keywords: "staff records hr emergency contact contract" },
       { label: "Leave",     href: "/admin/leave",     icon: CalendarCheck, module: "people", keywords: "time off absence" },
+      { label: "Leave calendar", href: "/admin/people/calendar", icon: CalendarRange, module: "people", keywords: "who is away absence schedule" },
+      { label: "Announcements",  href: "/admin/people/announcements", icon: Megaphone, module: "people", keywords: "notices news staff" },
       { label: "Probation", href: "/admin/probation", icon: Hourglass,     module: "people", keywords: "new staff reports" },
       { label: "Careers",   href: "/admin/careers",   icon: Briefcase,     module: "people", keywords: "jobs hiring recruitment cv applicants" },
       { label: "Holidays",  href: "/admin/holidays",  icon: CalendarDays,  module: "people", keywords: "public holidays events" },
@@ -136,6 +150,7 @@ const EXTRA_ROUTES: { href: string; app: string; label: string; module?: string;
   { href: "/admin/users",   app: "settings", label: "Users", adminOnly: true },
   { href: "/admin/invoices", app: "accounting", label: "Invoice", module: "accounting" },
   { href: "/admin/profile", app: "",         label: "Profile & security" },
+  { href: "/admin/me/team", app: "me",       label: "My team" },
 ];
 
 /** Flat list, longest href first, for active-route detection and guards. */
