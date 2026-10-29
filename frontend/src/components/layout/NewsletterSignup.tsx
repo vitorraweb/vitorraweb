@@ -46,9 +46,12 @@ export default function NewsletterSignup({ onInk = false }: { onInk?: boolean })
   }
 
   return (
-    <form onSubmit={onSubmit} className="w-full lg:w-[420px]">
-      <div className="flex items-end gap-3">
-        <label className="flex-1">
+    <form onSubmit={onSubmit} className="@container w-full max-w-[420px]">
+      {/* Side by side when there is room; stacked (full-width button) in a
+          narrow column, so a longer translation of the placeholder or the
+          button ("Jiandikishe") is never cut off. */}
+      <div className="flex flex-col gap-3 @[26rem]:flex-row @[26rem]:items-end">
+        <label className="flex-1 min-w-0">
           <span className="sr-only">{t("placeholder")}</span>
           <input
             type="email"
@@ -63,7 +66,7 @@ export default function NewsletterSignup({ onInk = false }: { onInk?: boolean })
         <button
           type="submit"
           disabled={state === "loading"}
-          className={`q-btn disabled:opacity-60 ${onInk ? "bg-ink-fg text-ink hover:bg-white" : "bg-ink text-paper hover:bg-black"}`}
+          className={`q-btn shrink-0 justify-center disabled:opacity-60 ${onInk ? "bg-ink-fg text-ink hover:bg-white" : "bg-ink text-paper hover:bg-black"}`}
         >
           {state === "loading" ? (
             <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />

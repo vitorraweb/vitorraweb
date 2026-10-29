@@ -59,19 +59,17 @@ export default function Footer() {
     <footer className="q-scope bg-ink text-ink-fg" data-tone="ink">
       {/* ── Let's talk + newsletter ───────────────────────────────────────── */}
       <div className="q-container grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 pt-14 sm:pt-20 pb-12 sm:pb-16 border-b border-ink-line">
-        <div className="lg:col-span-7">
+        {/* The size follows the column width and the length of the phrase, so
+            "Let's talk", "Tuzungumze" or a longer translation always fits on
+            one line in its column — never under the newsletter, never off the
+            screen. Rendered as one word (not letter by letter) so the letters
+            keep their natural spacing on every device. */}
+        <div className="lg:col-span-7 min-w-0 [container-type:inline-size]">
           <p className="t-label text-ink-fg-muted mb-6">{t("footer.letsTalkLead")}</p>
-          <Link href="/contact" className="group inline-block q-talk" aria-label={talk}>
-            {/* Letter-by-letter lift only where there is a real hover (mouse).
-                On phones a tap would leave the letters half-lifted and the
-                apostrophe crowding the "t", so touch screens get the word whole. */}
-            <span aria-hidden="true" className="q-talk-split font-display font-light text-[clamp(3.5rem,1.5rem+7vw,8.5rem)] leading-[0.9] tracking-[-0.03em] whitespace-nowrap">
-              {Array.from(talk).map((ch, i) => (
-                <span key={i} className="inline-block" style={{ "--i": i } as React.CSSProperties}>{ch === " " ? "\u00a0" : ch}</span>
-              ))}
-            </span>
-            <span aria-hidden="true" className="q-talk-plain font-display font-light text-[clamp(3.25rem,1.5rem+7vw,8.5rem)] leading-[0.95] tracking-[-0.015em] whitespace-nowrap">{talk}</span>
-            <span aria-hidden="true" className="ml-4 inline-block align-middle text-gold text-[clamp(2rem,1rem+3vw,4rem)] transition-transform duration-500 group-hover:translate-x-2 group-hover:-translate-y-2">↗</span>
+          <Link href="/contact" className="group inline-flex max-w-full items-center gap-[0.18em]" aria-label={talk}
+            style={{ fontSize: `clamp(2.25rem, calc(145cqi / ${Math.max(Array.from(talk).length, 7)}), 8.5rem)` }}>
+            <span aria-hidden="true" className="min-w-0 font-display font-light leading-[0.95] tracking-[-0.02em] [text-wrap:balance] [overflow-wrap:anywhere] transition-colors duration-500 group-hover:text-gold">{talk}</span>
+            <span aria-hidden="true" className="shrink-0 text-gold text-[0.45em] leading-none transition-transform duration-500 group-hover:translate-x-2 group-hover:-translate-y-2">↗</span>
           </Link>
         </div>
         <div className="lg:col-span-5 lg:pt-12">

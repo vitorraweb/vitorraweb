@@ -1248,16 +1248,6 @@
   .q-ring { animation: q-ring 2400ms var(--ease-cinematic) infinite; }
 }
 
-/* Footer "Let's talk": on hover each letter lifts and turns gold in turn —
-   mouse devices only; touch screens show the plain word. */
-.q-talk-split { display: none; }
-@media (hover: hover) and (pointer: fine) {
-  .q-talk-split { display: inline; }
-  .q-talk-plain { display: none; }
-}
-.q-talk span[style] { transition: translate 600ms var(--ease-cinematic), color 600ms var(--ease-cinematic); transition-delay: calc(var(--i) * 28ms); }
-.q-talk:hover span[style], .q-talk:focus-visible span[style] { translate: 0 -0.08em; color: var(--color-gold); }
-@media (prefers-reduced-motion: reduce) { .q-talk span[style] { transition: color 200ms; } .q-talk:hover span[style] { translate: none; } }
 
 /* Map routes draw themselves as the map scrolls into view (pathLength=1).
    Drawn in full wherever scroll-driven animation is unsupported or motion is
