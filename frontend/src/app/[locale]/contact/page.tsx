@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { getTranslations } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import Header from "@/components/layout/Header";
@@ -44,7 +45,7 @@ export default async function ContactPage() {
         </span>
       ),
     },
-    { k: t("whatsapp"), v: <a href={wa} target="_blank" rel="noopener noreferrer" className="q-link">{t("whatsappValue")}</a> },
+    { k: t("whatsapp"), v: <a href={wa} target="_blank" rel="noopener noreferrer" className="q-link inline-flex items-center gap-2"><WhatsAppIcon className="h-4 w-4" />{t("whatsappValue")}</a> },
     { k: t("visitLabel"), v: <span className="text-ink-soft">{CONTACT_ADDRESS.join(", ")}</span> },
     { k: t("hoursLabel"), v: <span className="flex flex-col gap-1 text-ink-soft"><span>{t("hoursWeekday")}</span><span>{t("hoursSaturday")}</span></span> },
   ];

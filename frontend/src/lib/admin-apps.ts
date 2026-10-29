@@ -2,7 +2,7 @@ import {
   Handshake, ShoppingCart, Gauge, Wallet, LineChart, Users, ListChecks, Globe, Settings,
   MessageSquare, Workflow, Contact, Target, LayoutTemplate, CreditCard, FlaskConical,
   TrendingUp, LayoutDashboard, CalendarCheck, Hourglass, Briefcase, CalendarDays,
-  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame, Video, UserCircle, ClipboardCheck, CalendarRange,
+  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame, Video, UserCircle, ClipboardCheck, CalendarRange, CalendarClock,
 } from "lucide-react";
 import { canAccess, type AdminUser } from "@/lib/auth";
 
@@ -46,12 +46,13 @@ export const ADMIN_APPS: AdminApp[] = [
   {
     id: "sales", name: "Sales", blurb: "Enquiries, pipeline, customers, prospecting and quotations", icon: Handshake, area: "Sell",
     items: [
+      { label: "Today",     href: "/admin/sales/today", icon: CalendarClock, module: ["customers", "prospects"], keywords: "follow ups calls my day to do hot leads" },
       { label: "Enquiries", href: "/admin/enquiries", icon: MessageSquare, module: "enquiries", keywords: "leads quote requests inbox" },
       { label: "Pipeline",  href: "/admin/pipeline",  icon: Workflow,      module: "customers", keywords: "deals stages board kanban" },
       { label: "Customers", href: "/admin/customers", icon: Contact,       module: "customers", keywords: "contacts clients crm" },
       { label: "Prospects", href: "/admin/prospects", icon: Target,        module: "prospects", keywords: "outreach campaign leads list" },
       { label: "Quotations", href: "/admin/quotations", icon: FileSignature, module: "quotations", keywords: "quote proforma coffee fet export offer" },
-      { label: "Reply templates", href: "/admin/templates", icon: LayoutTemplate, module: "customers", keywords: "email replies saved answers" },
+      { label: "Replies", href: "/admin/templates", icon: LayoutTemplate, module: "customers", keywords: "reply templates email replies saved answers" },
       { label: "Contracts", href: "/admin/contracts", icon: FileCheck, module: ["prospects", "quotations", "accounting"], keywords: "contract agreement sign signature fet" },
       { label: "Documents", href: "/admin/sales-documents", icon: FolderLock, module: ["prospects", "quotations", "accounting"], keywords: "contract agreement fet sales terms" },
     ],

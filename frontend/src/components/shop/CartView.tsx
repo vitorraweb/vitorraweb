@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Minus, Plus, Trash2, ShoppingBag, MessageCircle, Mail, ArrowRight } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, Mail, ArrowRight } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import CurrencyToggle from "./CurrencyToggle";
 import { useCart, lineKey } from "@/lib/cart";
 import { formatPrice } from "@/lib/coffee-catalog";
@@ -261,7 +262,7 @@ export default function CartView() {
           <p className="text-xs font-semibold mb-2.5" style={{ color: "#777777" }}>Prefer to order another way?</p>
           <div className="flex flex-col sm:flex-row gap-2">
             <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1.5 flex-1 rounded-full text-xs font-semibold py-2.5 transition-colors" style={{ border: "1px solid rgba(0,0,0,0.12)", color: "#1E1E1E" }}>
-              <MessageCircle className="w-3.5 h-3.5" />
+              <WhatsAppIcon className="w-4 h-4" />
               WhatsApp
             </a>
             <a href={mailtoHref} className="inline-flex items-center justify-center gap-1.5 flex-1 rounded-full text-xs font-semibold py-2.5 transition-colors" style={{ border: "1px solid rgba(0,0,0,0.12)", color: "#1E1E1E" }}>

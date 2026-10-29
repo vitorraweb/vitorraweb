@@ -1,4 +1,5 @@
 import { CircleLink } from "@/components/system/CircleLink";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { Section, Container, Label, Heading, Text, ButtonLink, TextLink } from "@/components/system";
 import { Reveal } from "@/components/ui/reveal";
 import { Magnetic } from "@/components/motion/Magnetic";
@@ -220,7 +221,7 @@ export function ContactBand({
           <Text size="lead" className="mt-6 max-w-[30rem]">{body}</Text>
           <div className="mt-10 flex flex-wrap items-center gap-8">
             <CircleLink href={briefHref} size="lg">{briefLabel}</CircleLink>
-            <Magnetic><ButtonLink href={wa} external variant="secondary" arrow={false}>{labels.whatsapp}</ButtonLink></Magnetic>
+            <Magnetic><ButtonLink href={wa} external variant="secondary" arrow={false}><WhatsAppIcon className="h-4 w-4" />{labels.whatsapp}</ButtonLink></Magnetic>
           </div>
         </div>
         <dl className="lg:col-span-5 border-t border-line-strong">

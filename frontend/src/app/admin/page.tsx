@@ -69,7 +69,7 @@ export default function ConsoleHome() {
     const can = (module?: string) => canAccess(user, { module });
     (async () => {
       const lastMonth = (() => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; })();
-      const [stats, alerts, leave, suppliers, drafts, toSign, myReports] = await Promise.all([
+      const [stats, alerts, leave, suppliers, drafts, toSign, myReports, overdue] = await Promise.all([
         apiAdmin<{ data: Stats }>("/admin/stats").then((r) => r.data).catch(() => ({} as Stats)),
         apiAdmin<{ data: Alerts }>("/admin/alerts").then((r) => r.data).catch(() => ({} as Alerts)),
         can("people") ? list(apiAdmin("/admin/leave?status=pending")) : Promise.resolve(0),
@@ -78,9 +78,11 @@ export default function ConsoleHome() {
         // My work: leave waiting for this person's signature, and their own monthly report.
         apiAdmin<{ data: { can_decide: boolean }[] }>("/staff/leave/pending").then((r) => r.data.filter((l) => l.can_decide).length).catch(() => 0),
         apiAdmin<{ data: { period: string; status: string }[] }>("/staff/reports").then((r) => r.data).catch(() => null),
+        can("customers") || can("prospects") ? apiAdmin<{ data: { overdue: number } }>("/admin/crm/today").then((r) => r.data.overdue).catch(() => 0) : Promise.resolve(0),
       ]);
       const reportDue = user.role !== "admin" && myReports !== null && !myReports.some((r) => r.period === lastMonth && r.status !== "draft") ? 1 : 0;
       const all: (Attention & { module?: string })[] = [
+        { key: "overdue", app: "sales", module: undefined, count: overdue, label: "of your customer follow-ups are overdue", href: "/admin/sales/today" },
         { key: "enq", app: "sales", module: "enquiries", count: stats.enquiries?.by_status?.new ?? 0, label: "new enquiries waiting for a first reply", href: "/admin/enquiries" },
         { key: "quiet", app: "sales", module: "customers", count: alerts.stale_contacts?.count ?? 0, label: "customers with no contact in two weeks or more", href: "/admin/pipeline" },
         { key: "followups", app: "sales", module: "prospects", count: stats.prospects?.follow_ups_due ?? 0, label: "customers and prospects due a follow-up", href: "/admin/prospects?due=1" },

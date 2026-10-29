@@ -9,14 +9,28 @@ class CustomerNote extends Model
 {
     protected $fillable = [
         'email', 'note', 'updated_by', 'owner_id', 'pipeline_stage',
+        'deal_value', 'deal_currency', 'deal_product', 'expected_close', 'lost_reason', 'next_action', 'next_action_on', 'stage_changed_at',
         'override_name', 'override_phone', 'override_company', 'override_country',
         'tags',
     ];
 
-    protected $casts = ['tags' => 'array'];
+    protected $casts = ['tags' => 'array', 'deal_value' => 'integer', 'expected_close' => 'date:Y-m-d', 'next_action_on' => 'date:Y-m-d', 'stage_changed_at' => 'datetime', 'owner_id' => 'integer'];
 
     /** Unified pipeline stages, in the order they're worked. */
     public const STAGES = ['lead', 'contacted', 'qualified', 'quoted', 'won', 'fulfilled', 'lost'];
+
+    /** Chance a deal at each stage closes — weights the forecast. */
+    public const STAGE_PROBABILITY = ['lead' => 10, 'contacted' => 20, 'qualified' => 40, 'quoted' => 60, 'won' => 100, 'fulfilled' => 100, 'lost' => 0];
+
+    public const LOST_REASONS = [
+        'price'       => 'Price too high',
+        'timing'      => 'Not the right time',
+        'competitor'  => 'Chose a competitor',
+        'no_response' => 'Stopped responding',
+        'no_budget'   => 'No budget',
+        'not_fit'     => 'Not a fit',
+        'other'       => 'Other',
+    ];
 
     public const STAGE_LABELS = [
         'lead'      => 'New Lead',

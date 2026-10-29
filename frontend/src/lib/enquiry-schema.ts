@@ -51,6 +51,19 @@ export function getEnquirySchemas(t: Translator, tt: Translator): Record<UiCateg
     { value: "exploring", label: t("tlExploring") },
   ];
 
+  /* How the customer wants to hear back — most Ugandan buyers prefer
+     WhatsApp, and the sales team's Today list puts a WhatsApp button on it. */
+  const CONTACT_PREF: FieldDef = {
+    id: "contact_pref",
+    label: t("contactPref"),
+    type: "single",
+    options: [
+      { value: "whatsapp", label: "WhatsApp" },
+      { value: "call", label: t("contactPrefCall") },
+      { value: "email", label: t("contactPrefEmail") },
+    ],
+  };
+
   return {
     /* Fuel Eco Tech — fleet fuel efficiency (B2B). Vehicle + fleet can arrive
        pre-filled from the savings calculator. */
@@ -96,6 +109,30 @@ export function getEnquirySchemas(t: Translator, tt: Translator): Record<UiCateg
           { value: "research", label: t("fetRoleResearch") },
         ],
       },
+      /* The sales motion is enquiry → free assessment → quote: let the
+         customer ask for the assessment, and say when and where, up front. */
+      {
+        id: "assessment",
+        label: t("fetAssessment"),
+        type: "single",
+        options: [
+          { value: "yes", label: t("fetAssessmentYes") },
+          { value: "no", label: t("fetAssessmentNo") },
+        ],
+      },
+      {
+        id: "assessment_when",
+        label: t("fetAssessmentWhen"),
+        type: "single",
+        showIf: (a) => a.assessment === "yes",
+        options: [
+          { value: "this_week", label: t("fetWhenThisWeek") },
+          { value: "next_week", label: t("fetWhenNextWeek") },
+          { value: "this_month", label: t("fetWhenThisMonth") },
+        ],
+      },
+      { id: "assessment_where", label: t("fetAssessmentWhere"), type: "text", placeholder: t("fetAssessmentWherePh"), showIf: (a) => a.assessment === "yes" },
+      CONTACT_PREF,
     ],
 
     /* SEAL — hemostatic wound spray (B2B medical). */
@@ -153,6 +190,7 @@ export function getEnquirySchemas(t: Translator, tt: Translator): Record<UiCateg
         ],
       },
       { id: "timeline", label: t("timeline"), type: "single", required: true, options: TIMELINE },
+      CONTACT_PREF,
     ],
 
     /* Coffee — wholesale & export (retail is self-serve, handled by the shop). */
@@ -286,6 +324,7 @@ export function getEnquirySchemas(t: Translator, tt: Translator): Record<UiCateg
           { value: "own", label: t("coffeeBrandOwn") },
         ],
       },
+      CONTACT_PREF,
     ],
 
     /* Logistics — freight & supply chain (B2B). The most data-rich quote. */
@@ -344,10 +383,11 @@ export function getEnquirySchemas(t: Translator, tt: Translator): Record<UiCateg
         ],
       },
       { id: "timeline", label: t("timeline"), type: "single", options: TIMELINE },
+      CONTACT_PREF,
     ],
 
     /* General enquiry — no structured fields; the free-text message carries it. */
-    GENERAL: [],
+    GENERAL: [CONTACT_PREF],
   };
 }
 

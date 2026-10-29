@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Loader2, Mail, StickyNote, MessageSquare, ShoppingCart, FileText, Users, Save, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Mail, StickyNote, MessageSquare, ShoppingCart, FileText, Users, ChevronDown, ChevronUp, CalendarClock } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
-import { PageHeader, Empty, formatDate, formatRelativeTime, initials } from "@/components/admin/admin-ui";
+import { PageHeader, Empty, formatRelativeTime, initials } from "@/components/admin/admin-ui";
+import { KpiTile } from "@/components/admin/reporting";
+import { CustomerDrawer } from "@/components/crm/CustomerDrawer";
+import { money, moneyShort, isoDay } from "@/components/crm/crm";
 
 type Person = { id: number; name: string; department?: string | null };
 type Contact = {
@@ -11,21 +14,12 @@ type Contact = {
   enquiries: number; orders: number; messages: number; prospects: number;
   first_seen: string; last_activity: string; has_note: boolean; stale: boolean;
   stage: string; pipeline_stage: string | null; owner: { id: number; name: string } | null;
+  deal_value: number | null; deal_currency: string; expected_close: string | null; next_action: string | null; next_action_on: string | null;
 };
-type Detail = {
-  email: string;
-  prospects: { id: number; name: string; category: string; outreach_status: string; assigned_to: string | null; created_at: string }[];
-  enquiries: { id: number; product_category: string | null; message: string; status: string; assigned_to: string | null; created_at: string }[];
-  orders: { id: number; reference: string; currency: string; total: number; status: string; payment_status: string; created_at: string }[];
-  messages: { id: number; subject: string | null; message: string; status: string; created_at: string }[];
-  note: string | null;
-  pipeline_stage: string | null;
-  owner: { id: number; name: string } | null;
+type Forecast = {
+  currencies: Record<string, { open: number; weighted: number; won_this_month: number; closing_this_month: number }>;
+  win_rate: number | null; decided_90d: number;
 };
-
-const money = (currency: string, total: number) =>
-  currency === "USD" ? `$${(total / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `UGX ${total.toLocaleString("en-US")}`;
-
 const selectCls = "text-[11px] font-semibold rounded-full px-2 py-1 border outline-none";
 const selectStyle = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text-2)" } as const;
 
@@ -37,10 +31,7 @@ export default function PipelinePage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
-  const [detail, setDetail] = useState<Detail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [note, setNote] = useState("");
-  const [savingNote, setSavingNote] = useState(false);
+  const [forecast, setForecast] = useState<Forecast | null>(null);
   const [showLost, setShowLost] = useState(false);
   const [now, setNow] = useState<number | null>(null);
 
@@ -62,6 +53,8 @@ export default function PipelinePage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  const loadForecast = useCallback(() => { apiAdmin<{ data: Forecast }>("/admin/crm/forecast").then((r) => setForecast(r.data)).catch(() => setForecast(null)); }, []);
+  useEffect(() => { loadForecast(); }, [loadForecast]);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -72,16 +65,8 @@ export default function PipelinePage() {
   const activeStages = stages.filter((s) => s !== "lost");
   const lostContacts = filtered.filter((c) => c.stage === "lost");
 
-  const expand = async (email: string) => {
-    if (open === email) { setOpen(null); return; }
-    setOpen(email); setDetail(null); setDetailLoading(true);
-    try {
-      const res = await apiAdmin<{ data: Detail }>(`/admin/customers/detail?email=${encodeURIComponent(email)}`);
-      setDetail(res.data);
-      setNote(res.data.note ?? "");
-    } catch { setDetail(null); }
-    finally { setDetailLoading(false); }
-  };
+  const expand = (email: string) => setOpen(open === email ? null : email);
+  const openContact = contacts.find((c) => c.email === open) ?? null;
 
   const changeStage = async (email: string, newStage: string) => {
     const prev = contacts;
@@ -102,14 +87,6 @@ export default function PipelinePage() {
     } catch { setContacts(prev); }
   };
 
-  const saveNote = async (email: string) => {
-    setSavingNote(true);
-    try {
-      await apiAdmin("/admin/customers/note", { method: "PUT", body: JSON.stringify({ email, note: note || null }) });
-      setContacts((cs) => cs.map((c) => (c.email.toLowerCase() === email.toLowerCase() ? { ...c, has_note: !!note.trim() } : c)));
-    } catch { /* ignore */ }
-    finally { setSavingNote(false); }
-  };
 
   return (
     <div>
@@ -125,14 +102,30 @@ export default function PipelinePage() {
         <Empty label="No contacts yet." />
       ) : (
         <>
+          {forecast && (() => {
+            const f = forecast.currencies.UGX ?? { open: 0, weighted: 0, won_this_month: 0, closing_this_month: 0 };
+            return (
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+                <KpiTile label="Open pipeline" value={moneyShort(f.open)} sub="Deals with a value, not yet won" />
+                <KpiTile label="Forecast" value={moneyShort(f.weighted)} sub="Weighted by how far each deal is" />
+                <KpiTile label="Closing this month" value={moneyShort(f.closing_this_month)} sub="By expected close date" />
+                <KpiTile label="Won this month" value={moneyShort(f.won_this_month)} />
+                <KpiTile label="Win rate" value={forecast.win_rate == null ? "—" : `${forecast.win_rate}%`} sub={`Of ${forecast.decided_90d} decided in 90 days`} />
+              </div>
+            );
+          })()}
           <div className="flex gap-4 overflow-x-auto pb-4 board-scroll-x">
             {activeStages.map((stage) => {
               const items = filtered.filter((c) => c.stage === stage);
+              const value = items.reduce((n, c) => n + (c.deal_currency === "UGX" ? c.deal_value ?? 0 : 0), 0);
               return (
                 <div key={stage} className="shrink-0 w-72 rounded-md p-2.5 flex flex-col" style={{ background: "var(--o-surface-2)", maxHeight: "calc(100vh - 190px)" }}>
                   <div className="flex items-center justify-between px-1 pb-2 mb-1 border-b border-line">
                     <p className="text-[14px] font-semibold text-ink">{stageLabels[stage] ?? stage}</p>
-                    <span className="c-chip" data-plain>{items.length}</span>
+                    <span className="flex items-center gap-1.5">
+                      {value > 0 && <span className="text-[12px] font-semibold text-ink-muted tabular-nums">{moneyShort(value)}</span>}
+                      <span className="c-chip" data-plain>{items.length}</span>
+                    </span>
                   </div>
                   {/* Columns scroll on their own, like Odoo's kanban, so a long
                       "New lead" column never pushes the board off the screen. */}
@@ -149,19 +142,7 @@ export default function PipelinePage() {
                         onStageChange={(s) => changeStage(c.email, s)}
                         onOwnerChange={(id) => changeOwner(c.email, id)}
                         now={now}
-                      >
-                        {open === c.email && (
-                          <DetailPanel
-                            loading={detailLoading}
-                            detail={detail}
-                            email={c.email}
-                            note={note}
-                            setNote={setNote}
-                            savingNote={savingNote}
-                            onSaveNote={() => saveNote(c.email)}
-                          />
-                        )}
-                      </ContactCard>
+                      />
                     ))}
                     {items.length === 0 && <p className="text-[13px] text-center py-6 text-ink-muted">No contacts at this stage</p>}
                   </div>
@@ -192,19 +173,7 @@ export default function PipelinePage() {
                         onStageChange={(s) => changeStage(c.email, s)}
                         onOwnerChange={(id) => changeOwner(c.email, id)}
                         now={now}
-                      >
-                        {open === c.email && (
-                          <DetailPanel
-                            loading={detailLoading}
-                            detail={detail}
-                            email={c.email}
-                            note={note}
-                            setNote={setNote}
-                            savingNote={savingNote}
-                            onSaveNote={() => saveNote(c.email)}
-                          />
-                        )}
-                      </ContactCard>
+                      />
                     ))}
                     {lostContacts.length === 0 && <p className="text-[13px] text-center py-6 text-ink-muted">No lost contacts</p>}
                   </div>
@@ -214,12 +183,19 @@ export default function PipelinePage() {
           </div>
         </>
       )}
+
+      {openContact && (
+        <CustomerDrawer
+          email={openContact.email} name={openContact.name || openContact.email} phone={openContact.phone} company={openContact.company}
+          onClose={() => setOpen(null)} onChanged={() => { load(); loadForecast(); }}
+        />
+      )}
     </div>
   );
 }
 
 function ContactCard({
-  contact, stages, stageLabels, assignees, open, onToggle, onStageChange, onOwnerChange, now, children,
+  contact, stages, stageLabels, assignees, onToggle, onStageChange, onOwnerChange, now, children,
 }: {
   contact: Contact; stages: string[]; stageLabels: Record<string, string>; assignees: Person[];
   open: boolean; onToggle: () => void; onStageChange: (s: string) => void; onOwnerChange: (id: number | null) => void;
@@ -249,6 +225,17 @@ function ContactCard({
           {contact.orders > 0 && <CountChip icon={ShoppingCart} n={contact.orders} />}
           {contact.messages > 0 && <CountChip icon={FileText} n={contact.messages} />}
         </div>
+        {(contact.deal_value || contact.next_action_on) && (
+          <div className="flex items-center gap-2 mb-1.5 text-[12px]">
+            {contact.deal_value ? <span className="font-semibold text-ink tabular-nums">{money(contact.deal_value, contact.deal_currency)}</span> : null}
+            {contact.next_action_on && (
+              <span className="inline-flex items-center gap-1 truncate" title={contact.next_action ?? undefined}
+                style={{ color: contact.next_action_on < isoDay() ? "var(--o-danger)" : contact.next_action_on === isoDay() ? "var(--o-warning)" : "var(--o-muted)" }}>
+                <CalendarClock className="w-3 h-3 shrink-0" />{contact.next_action ?? "Follow up"} · {new Date(`${contact.next_action_on}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+              </span>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-1.5">
           <p className="text-[10px]" style={{ color: "var(--o-faint)" }}>{now ? `Active ${formatRelativeTime(contact.last_activity, now)}` : ""}</p>
           {/* "Quiet", not "cold": Cold is the decision engine's tier in Marketing. */}
@@ -283,64 +270,6 @@ function ContactCard({
   );
 }
 
-function DetailPanel({
-  loading, detail, email, note, setNote, savingNote, onSaveNote,
-}: {
-  loading: boolean; detail: Detail | null; email: string;
-  note: string; setNote: (v: string) => void; savingNote: boolean; onSaveNote: () => void;
-}) {
-  if (loading) {
-    return <div className="flex items-center gap-2 text-sm px-3 pb-3" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading history…</div>;
-  }
-  if (!detail || detail.email.toLowerCase() !== email.toLowerCase()) return null;
-
-  return (
-    <div className="px-3 pb-3 pt-1 border-t" style={{ borderColor: "rgba(0,0,0,0.06)" }} onClick={(e) => e.stopPropagation()}>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 my-2 text-[11px]" style={{ color: "var(--o-text-2)" }}>
-        <a href={`mailto:${email}`} className="flex items-center gap-1 hover:underline"><Mail className="w-3 h-3" style={{ color: "var(--o-accent)" }} />{email}</a>
-      </div>
-
-      <div className="space-y-3">
-        {detail.prospects.length > 0 && (
-          <HistoryBlock title="Prospects">
-            {detail.prospects.map((p) => (
-              <Item key={`p${p.id}`} tag={p.category} status={p.outreach_status} date={p.created_at} text={p.assigned_to ? `Assigned: ${p.assigned_to}` : ""} />
-            ))}
-          </HistoryBlock>
-        )}
-        {detail.enquiries.length > 0 && (
-          <HistoryBlock title="Enquiries">
-            {detail.enquiries.map((e) => (
-              <Item key={`e${e.id}`} tag={e.product_category ?? "General"} status={e.status} date={e.created_at} text={e.message} />
-            ))}
-          </HistoryBlock>
-        )}
-        {detail.orders.length > 0 && (
-          <HistoryBlock title="Orders">
-            {detail.orders.map((o) => (
-              <Item key={`o${o.id}`} tag={o.reference} status={o.status} date={o.created_at} text={`${money(o.currency, o.total)} · ${o.payment_status}`} />
-            ))}
-          </HistoryBlock>
-        )}
-        {detail.messages.length > 0 && (
-          <HistoryBlock title="Messages">
-            {detail.messages.map((m) => (
-              <Item key={`m${m.id}`} tag={m.subject || "Message"} status={m.status} date={m.created_at} text={m.message} />
-            ))}
-          </HistoryBlock>
-        )}
-
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5" style={{ color: "var(--o-faint)" }}>Internal note</p>
-          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Private note about this contact…" className="w-full text-sm rounded-xl px-3 py-2 border min-h-16" style={{ borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)" }} />
-          <button onClick={onSaveNote} disabled={savingNote} className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold px-3.5 py-1.5 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)", opacity: savingNote ? 0.7 : 1 }}>
-            {savingNote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}Save note
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function CountChip({ icon: Icon, n }: { icon: typeof Mail; n: number }) {
   return (
@@ -350,23 +279,4 @@ function CountChip({ icon: Icon, n }: { icon: typeof Mail; n: number }) {
   );
 }
 
-function HistoryBlock({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <p className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "var(--o-faint)" }}>{title}</p>
-      <div className="space-y-1.5">{children}</div>
-    </div>
-  );
-}
 
-function Item({ tag, status, date, text }: { tag: string; status: string; date: string; text: string }) {
-  return (
-    <div className="rounded-xl px-3.5 py-2.5" style={{ background: "var(--o-surface-2)" }}>
-      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface)", color: "var(--o-muted)" }}>{tag}</span>
-        <span className="text-[11px]" style={{ color: "var(--o-faint)" }}>{status.replace(/_/g, " ")} · {formatDate(date)}</span>
-      </div>
-      {text && <p className="text-xs line-clamp-2" style={{ color: "var(--o-text-2)" }}>{text}</p>}
-    </div>
-  );
-}

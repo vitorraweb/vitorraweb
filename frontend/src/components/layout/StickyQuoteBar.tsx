@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { ArrowRight, Phone, MessageCircle } from "lucide-react";
+import { ArrowRight, Phone } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { CONTACT_PHONE } from "@/lib/constants";
 
 // Routes where a contact dock would be redundant or in the way.
@@ -53,7 +54,7 @@ export default function StickyQuoteBar() {
           <Phone aria-hidden="true" className="h-5 w-5" />
         </a>
         <a href={waHref} tabIndex={tab} target="_blank" rel="noopener noreferrer" aria-label={t("chatOnWhatsapp")} className="flex w-16 items-center justify-center text-ink">
-          <MessageCircle aria-hidden="true" className="h-5 w-5" />
+          <WhatsAppIcon className="h-6 w-6" />
         </a>
       </div>
     </div>

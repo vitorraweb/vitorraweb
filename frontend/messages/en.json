@@ -1045,7 +1045,19 @@
     "coffeeSample": "Would you like a sample first?",
     "coffeeSampleYes": "Yes, send a sample",
     "coffeeSampleNo": "No, quote only",
-    "coffeeSampleHelp": "Samples are available; the sample and its shipping are carried by the buyer."
+    "coffeeSampleHelp": "Samples are available; the sample and its shipping are carried by the buyer.",
+    "contactPref": "How should we get back to you?",
+    "contactPrefCall": "Phone call",
+    "contactPrefEmail": "Email",
+    "fetAssessment": "Would you like a free on-site fuel assessment?",
+    "fetAssessmentYes": "Yes, please visit us",
+    "fetAssessmentNo": "Not yet, just the quote",
+    "fetAssessmentWhen": "When suits you?",
+    "fetWhenThisWeek": "This week",
+    "fetWhenNextWeek": "Next week",
+    "fetWhenThisMonth": "Later this month",
+    "fetAssessmentWhere": "Where are the vehicles based?",
+    "fetAssessmentWherePh": "e.g. Namanve depot, Kampala"
   },
   "newsletter": {
     "title": "Stay in the loop",

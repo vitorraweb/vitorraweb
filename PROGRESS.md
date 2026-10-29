@@ -1974,6 +1974,29 @@ Tests: `PurgeTestLeadsTest` (3). **503 backend tests passing.**
 
 ---
 
+## Sales CRM, round two, and the real WhatsApp icon (29 October 2026)
+
+- **WhatsApp:** the real WhatsApp logo (in WhatsApp green) replaces the generic chat bubble on:
+  - the floating "Message us" button;
+  - the phone contact bar and the cart;
+  - the contact page and the "WhatsApp us" buttons.
+- **Sales → Today:** each salesperson's day in one place:
+  - follow-ups due (overdue first);
+  - new enquiries nobody has answered, flagging who asked for a free assessment and how they want to be contacted;
+  - the hottest prospects;
+  - deals expected to close this month.
+
+  Call and WhatsApp are one tap away on every row.
+- **Customer panel** (from Today and the Pipeline):
+  - log a call, WhatsApp chat, site visit or meeting, with the outcome and the next step. The deal moves forward by itself and the next step lands in Today;
+  - set the deal's value, product and expected close date, and record why a deal was lost;
+  - see the customer's whole history in one place: enquiries, orders, emails, campaign opens and clicks, and the team's notes.
+- **Pipeline forecast:** shows open pipeline, a weighted forecast, deals closing this month, won this month and the win rate. Cards show each deal's value and next step (red when overdue).
+- **Enquiry form:** asks how the customer wants to be contacted (WhatsApp, call or email). For FET, it asks whether they want a free on-site assessment, and when and where.
+- Server: `migrate --force` (deal fields + `sales_activities`), `route:cache`.
+
+---
+
 ## Staff management, round two (29 October 2026)
 
 - **My work** in the console: Leadership, Operations and Finance apply for leave, sign requests waiting on them, submit monthly reports, open their documents and see the team calendar, all without the separate staff sign-in. The console's first page reminds them about leave waiting for their signature and a missing monthly report.

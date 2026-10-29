@@ -63,6 +63,7 @@ use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\ContractSigningController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TwoFactorController;
+use App\Http\Controllers\Api\CrmController;
 use App\Http\Controllers\Api\PeopleController;
 use App\Http\Controllers\Api\UserAdminController;
 use Illuminate\Support\Facades\Route;
@@ -432,6 +433,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::match(['put', 'patch'], '/products/{product}', [ProductAdminController::class, 'update']);
             Route::delete('/products/{product}', [ProductAdminController::class, 'destroy']);
         });
+        // CRM activity log, customer timeline and the salesperson's "Today" —
+        // for Sales (customers) and Marketing (prospects) alike.
+        Route::middleware('perm:customers,prospects')->prefix('crm')->group(function () {
+            Route::get('/today', [CrmController::class, 'today']);
+            Route::get('/timeline', [CrmController::class, 'timeline']);
+            Route::post('/activities', [CrmController::class, 'storeActivity'])->middleware('throttle:120,1');
+            Route::delete('/activities/{activity}', [CrmController::class, 'destroyActivity']);
+        });
         Route::middleware('perm:customers')->group(function () {
             Route::get('/customers', [CustomerController::class, 'index']);
             Route::get('/customers/export', [CustomerController::class, 'export']);
@@ -440,6 +449,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/customers/info', [CustomerController::class, 'updateInfo']);
             Route::put('/customers/tags', [CustomerController::class, 'updateTags']);
             Route::put('/customers/pipeline', [CustomerController::class, 'updatePipeline']);
+            Route::put('/customers/deal', [CrmController::class, 'updateDeal']);
+            Route::get('/crm/forecast', [CrmController::class, 'forecast']);
             Route::post('/communications', [CustomerController::class, 'sendReply']);
             Route::get('/communications/{communication}/attachments/{index}', [CustomerController::class, 'downloadCommunicationAttachment']);
             // Reply templates

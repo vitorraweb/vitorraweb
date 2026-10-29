@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { MessageCircle } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { CONTACT_PHONE } from "@/lib/constants";
 
 const NUMBER = CONTACT_PHONE.replace(/[^0-9]/g, "");
@@ -9,9 +9,9 @@ const OPENER = "Hi Vitorra Holdings, I'd like to know more about your products."
 const HREF = `https://wa.me/${NUMBER}?text=${encodeURIComponent(OPENER)}`;
 
 /* Persistent, site-wide entry point to a real person — the digital extension
-   of how Marketing already sells door-to-door. Kept in Vitorra's own charcoal
-   + gold rather than WhatsApp's brand green, so it reads as part of the same
-   premium system as everything else, not a third-party widget bolted on.
+   of how Marketing already sells door-to-door. The button stays in Vitorra's
+   paper + ink; only the WhatsApp glyph carries WhatsApp green, so visitors
+   recognise the channel instantly without a bolted-on green widget.
    Positioned above StickyQuoteBar's mobile strip so the two never collide.
    whatsapp-launcher (globals.css) keeps it periodically popping + rippling
    so it stays noticeable without a continuous, cheap-looking bounce. */
@@ -29,7 +29,7 @@ export default function WhatsAppButton() {
       rel="noopener noreferrer"
       className="q-scope hidden lg:inline-flex fixed z-40 right-6 bottom-6 items-center gap-2 rounded-edge border border-line-strong bg-paper px-4 min-h-11 t-small font-medium text-ink shadow-[0_8px_24px_rgba(30,30,30,0.08)] transition-colors hover:border-ink"
     >
-      <MessageCircle aria-hidden="true" className="h-4 w-4 text-gold-ink" />
+      <WhatsAppIcon className="h-5 w-5" />
       {t("messageUs")}
       <span className="sr-only">, {t("chatOnWhatsapp")}</span>
     </a>

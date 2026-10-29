@@ -287,7 +287,9 @@ class CustomerController extends Controller
         ]);
 
         $email = mb_strtolower(trim($data['email']));
-        $previousOwnerId = CustomerNote::where('email', $email)->value('owner_id');
+        $existing = CustomerNote::where('email', $email)->first();
+        $previousOwnerId = $existing?->owner_id;
+        $stageChanged = ($existing?->pipeline_stage) !== ($data['pipeline_stage'] ?? null);
 
         CustomerNote::updateOrCreate(
             ['email' => $email],
@@ -295,7 +297,7 @@ class CustomerController extends Controller
                 'owner_id'       => $data['owner_id'] ?? null,
                 'pipeline_stage' => $data['pipeline_stage'] ?? null,
                 'updated_by'     => $request->user()->name ?? null,
-            ]
+            ] + ($stageChanged ? ['stage_changed_at' => now()] : [])
         );
 
         // Notify only on an actual new assignment to someone — not a no-op
@@ -442,6 +444,11 @@ class CustomerController extends Controller
             $contact['pipeline_stage'] = $note?->pipeline_stage;
             $contact['stage'] = $note?->pipeline_stage ?? $derived;
             $contact['owner'] = $note?->owner ? ['id' => $note->owner->id, 'name' => $note->owner->name] : null;
+            $contact['deal_value']     = $note?->deal_value;
+            $contact['deal_currency']  = $note?->deal_currency ?? 'UGX';
+            $contact['expected_close'] = $note?->expected_close?->toDateString();
+            $contact['next_action']    = $note?->next_action;
+            $contact['next_action_on'] = $note?->next_action_on?->toDateString();
 
             $staleThresholds = config('pipeline.stale_days', []);
             $contact['stale'] = isset($staleThresholds[$contact['stage']])

@@ -1045,7 +1045,19 @@
     "coffeeSample": "Je, ungependa sampuli kwanza?",
     "coffeeSampleYes": "Ndiyo, tuma sampuli",
     "coffeeSampleNo": "Hapana, bei tu",
-    "coffeeSampleHelp": "Sampuli zinapatikana; gharama ya sampuli na usafirishaji wake hubebwa na mnunuzi."
+    "coffeeSampleHelp": "Sampuli zinapatikana; gharama ya sampuli na usafirishaji wake hubebwa na mnunuzi.",
+    "contactPref": "Tukujibu vipi?",
+    "contactPrefCall": "Simu",
+    "contactPrefEmail": "Barua pepe",
+    "fetAssessment": "Ungependa tathmini ya bure ya mafuta kwenye eneo lako?",
+    "fetAssessmentYes": "Ndiyo, karibuni mtutembelee",
+    "fetAssessmentNo": "Bado, nukuu tu",
+    "fetAssessmentWhen": "Ni lini panakufaa?",
+    "fetWhenThisWeek": "Wiki hii",
+    "fetWhenNextWeek": "Wiki ijayo",
+    "fetWhenThisMonth": "Baadaye mwezi huu",
+    "fetAssessmentWhere": "Magari yako yako wapi?",
+    "fetAssessmentWherePh": "mf. depo ya Namanve, Kampala"
   },
   "newsletter": {
     "title": "Pata habari zetu",
