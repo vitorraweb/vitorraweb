@@ -64,6 +64,7 @@ use App\Http\Controllers\Api\ContractSigningController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\CrmController;
+use App\Http\Controllers\Api\DisplayController;
 use App\Http\Controllers\Api\PeopleController;
 use App\Http\Controllers\Api\UserAdminController;
 use Illuminate\Support\Facades\Route;
@@ -168,6 +169,8 @@ Route::get('/google-ads/oauth/callback', [GoogleAdsController::class, 'callback'
 
 // Live exchange rate (cached 1 hr; falls back to config if API key not set)
 Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);
+// Reception / street screen: what to show beyond its built-in story (the welcome).
+Route::get('/display', [DisplayController::class, 'show'])->middleware('throttle:60,1');
 
 /*
 |--------------------------------------------------------------------------
@@ -288,6 +291,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Teams meetings (join links from Teams/Outlook). Admin + ops add them;
         // the creator or an admin edits (checked in the controller).
         Route::get('/meetings', [MeetingController::class, 'index']);
+        Route::get('/display', [DisplayController::class, 'show']);
+        Route::put('/display/welcome', [DisplayController::class, 'updateWelcome'])->middleware('throttle:30,1');
         Route::post('/meetings', [MeetingController::class, 'store']);
         Route::patch('/meetings/{meeting}', [MeetingController::class, 'update']);
         Route::delete('/meetings/{meeting}', [MeetingController::class, 'destroy']);

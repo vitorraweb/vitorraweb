@@ -1974,6 +1974,19 @@ Tests: `PurgeTestLeadsTest` (3). **503 backend tests passing.**
 
 ---
 
+## The reception and street screen, redesigned (29 October 2026)
+
+The screen is now a loop of about 90 seconds, built like a premium shop window:
+- the Vitorra ident;
+- a personal welcome for a visiting client, set by reception in Operations → Reception screen; it switches itself off;
+- each business's film, with one large proof number (13.9%, 36 months, 1 tonne, 1 named contact) and a QR code to book or enquire;
+- the independent credentials;
+- "Visit us", with a WhatsApp QR code.
+
+`/display?mode=street`, for the screen facing the road, uses bigger type and fewer words, has no clock, and never shows a visitor's name. It works on 1080p, 4K and portrait screens. QR codes carry `utm_source=display`, so visits from the screen show in analytics. Server: `route:cache`.
+
+---
+
 ## Sales CRM, round two, and the real WhatsApp icon (29 October 2026)
 
 - **WhatsApp:** the real WhatsApp logo (in WhatsApp green) replaces the generic chat bubble on:

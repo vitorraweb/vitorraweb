@@ -1,49 +1,29 @@
 "use client";
 
-import { KioskTopBar } from "@/components/display/KioskTopBar";
-import { KioskSpotlight, KioskHeadline, KioskStageProvider } from "@/components/display/KioskSpotlight";
-import { KioskSideRail } from "@/components/display/KioskSideRail";
-import { KioskTicker } from "@/components/display/KioskTicker";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Stage } from "@/components/display/Stage";
 
-/* ─── /display — reception lobby screen ───────────────────────────────────────
-   An unattended, always-on screen for the front desk.
+/* ─── /display — the reception TV and the street-facing screen ────────────────
+   /display                → reception: clock, Kampala weather, and a personal
+                              welcome for the visiting client when reception sets
+                              one (Operations → Reception screen).
+   /display?mode=street    → the screen facing the road: bigger type, fewer
+                              words, no clock and never a visitor's name.
+   /display?scene=fet      → hold one scene (for checking a screen's set-up).
 
-   It is built as a stage, not a dashboard: the brand film of whichever
-   business line is up runs full-bleed behind everything, and the header,
-   headline, rail and ticker float over it. The earlier layout boxed the film
-   into one card among several, which gave a visitor no idea where to look —
-   weather carried the same visual weight as an independently verified result.
-
-   Design notes:
-   - Full-bleed, fixed viewport — this is a TV screen, not a scrollable page.
-   - Type is sized to be read from across a lobby, not from a desk.
-   - No header/footer/cookie banner (see CookieBanner + robots.ts + middleware
-     for the "/display" exclusions) — nobody is here to dismiss a banner.
-   - English-only by design (excluded from the i18n middleware, same as /admin).
+   Full-screen and fixed — a TV, not a page. No header, footer or cookie banner
+   (excluded in CookieBanner, robots.ts and the i18n middleware). English only.
    ─────────────────────────────────────────────────────────────────────────── */
+function Screen() {
+  const q = useSearchParams();
+  return <Stage mode={q.get("mode") === "street" ? "street" : "reception"} pin={q.get("scene")} />;
+}
+
 export default function DisplayPage() {
   return (
-    <KioskStageProvider>
-      <div className="fixed inset-0 overflow-hidden select-none" style={{ backgroundColor: "#0A0A0A" }}>
-        {/* Full-bleed media bed + scrims */}
-        <KioskSpotlight />
-
-        {/* Everything else floats over it */}
-        <div className="relative z-10 flex flex-col h-full">
-          <KioskTopBar />
-
-          <main className="flex-1 min-h-0 px-10 lg:px-14 pb-8 flex items-stretch gap-10">
-            {/* Headline column — anchored to the lower third, where the scrim
-                is heaviest and the eye lands after the brand lockup. */}
-            <div className="flex-1 min-w-0 flex flex-col justify-end pb-2">
-              <KioskHeadline />
-            </div>
-            <KioskSideRail />
-          </main>
-
-          <KioskTicker />
-        </div>
-      </div>
-    </KioskStageProvider>
+    <Suspense fallback={<div className="fixed inset-0" style={{ background: "#09090A" }} />}>
+      <Screen />
+    </Suspense>
   );
 }

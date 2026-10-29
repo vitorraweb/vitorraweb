@@ -38,6 +38,12 @@ class Setting extends Model
         // read the shared support inbox, so that is the default and the fallback.
         'blog_review_to' => 'support@vitorra.org',
 
+        // Reception / street screen (/display): a personal welcome for a visiting
+        // client, shown until the given time. Set from Operations → Reception screen.
+        'display_welcome_name'  => '',
+        'display_welcome_line'  => '',
+        'display_welcome_until' => '',
+
         // Printed on the branded quotations / invoices (BrandedDocument).
         'company_tin'       => '1055502376',
         // From Finance's "VHL BANK INFOR" letter (Stanbic, Forest Mall branch).

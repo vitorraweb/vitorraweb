@@ -1575,3 +1575,22 @@
 .c-tab { flex-shrink: 0; padding: .6rem .9rem; font-size: 14px; color: var(--o-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; }
 .c-tab:hover { color: var(--o-text); }
 .c-tab[aria-selected="true"] { color: var(--o-text); font-weight: 600; border-bottom-color: var(--o-accent); }
+
+/* ── Reception / street screen (/display) ────────────────────────────────────
+   Always animated: a TV in a lobby has no reduced-motion preference to honour,
+   and the motion is what makes a window display read from across the street. */
+.vx .vx-rise { opacity: 0; animation: vx-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) forwards; }
+@keyframes vx-rise { from { opacity: 0; transform: translateY(0.5em); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+.vx .vx-draw { transform: scaleX(0); transform-origin: left; animation: vx-draw 1200ms cubic-bezier(0.65, 0, 0.35, 1) var(--d, 0s) forwards; }
+@keyframes vx-draw { to { transform: scaleX(1); } }
+.vx .vx-kenburns { animation: vx-kenburns var(--dur, 12s) linear both; }
+@keyframes vx-kenburns { from { transform: scale(1.02); } to { transform: scale(1.09); } }
+.vx .vx-progress { transform: scaleX(0); animation: vx-draw var(--dur, 10s) linear forwards; }
+.vx .vx-aurora {
+  background:
+    radial-gradient(40% 50% at 70% 35%, rgba(197,178,122,0.36), transparent 70%),
+    radial-gradient(35% 45% at 25% 75%, rgba(122,96,32,0.38), transparent 70%),
+    radial-gradient(30% 35% at 85% 85%, rgba(197,178,122,0.14), transparent 70%);
+  animation: vx-aurora 28s ease-in-out infinite alternate;
+}
+@keyframes vx-aurora { from { transform: translate3d(-3%, -2%, 0) rotate(0deg); } to { transform: translate3d(3%, 3%, 0) rotate(6deg); } }
