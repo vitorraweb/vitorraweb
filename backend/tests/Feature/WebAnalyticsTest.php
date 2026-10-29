@@ -118,4 +118,44 @@ class WebAnalyticsTest extends TestCase
         Http::fake();
         $this->withHeaders($this->headers())->getJson('/api/admin/web-analytics/summary?period=1y')->assertStatus(422);
     }
+
+    public function test_insights_turn_the_numbers_into_ranked_sentences(): void
+    {
+        $this->configure();
+        \App\Models\Enquiry::create(['name' => 'Buyer', 'email' => 'buyer@example.com', 'product_category' => 'SEAL', 'message' => 'Price?']);
+        Http::fake(['eu.posthog.com/*' => function (Request $r) {
+            $q = $r['query']['query'];
+            $rows = match (true) {
+                str_contains($q, 'CASE WHEN')                        => [['/products/fuel-eco-tech', 120], ['/products/seal-wound-spray', 40], ['', 300]],
+                str_contains($q, '$entry_pathname')                  => [['/', 200, 0.4], ['/products/coffee', 60, 0.82]],
+                str_contains($q, 'FROM sessions') && str_contains($q, 'avg(') => [[80, 0.5]],
+                str_contains($q, '$channel_type')                    => [['Organic Search', 120], ['Paid Search', 60]],
+                str_contains($q, 'toDate(timestamp)')                => [],
+                str_contains($q, 'properties.$pathname AS p')       => [],
+                str_contains($q, '$geoip_country_name')              => [['Uganda', 150], ['Kenya', 20], ['Germany', 6]],
+                str_contains($q, 'properties.$device_type')          => [['Mobile', 160], ['Desktop', 40]],
+                str_contains($q, 'properties.$browser')              => [],
+                str_contains($q, 'INTERVAL 14 DAY')                  => [[100, 120, 400, 2]],
+                default                                              => [[200, 260, 900, 3]],
+            };
+
+            return Http::response(['results' => $rows]);
+        }]);
+
+        $items = $this->withHeaders($this->headers())->getJson('/api/admin/web-analytics/insights')->assertOk()->json('data.items');
+        $heads = array_column($items, 'headline');
+
+        $this->assertLessThanOrEqual(6, count($items));
+        $this->assertStringContainsString('Fuel Eco Tech: 120 people read the page, no enquiries', $heads[0]);
+        $this->assertContains('82% of people who arrive on /products/coffee leave without reading on', $heads);
+        $this->assertContains('200 visitors this week, up 100% on last week', $heads);
+        $this->assertNotContains('SEAL Wound Spray: 40 people read the page, no enquiries', $heads);
+        $this->assertSame('warn', $items[0]['tone']);
+    }
+
+    public function test_insights_are_quiet_when_not_configured(): void
+    {
+        config(['services.posthog.project_id' => null]);
+        $this->withHeaders($this->headers())->getJson('/api/admin/web-analytics/insights')->assertOk()->assertJsonPath('data.configured', false);
+    }
 }

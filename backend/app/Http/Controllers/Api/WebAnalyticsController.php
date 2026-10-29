@@ -27,6 +27,19 @@ class WebAnalyticsController extends Controller
         }
     }
 
+    public function insights(\App\Services\Analytics\WebInsights $insights): JsonResponse
+    {
+        if (! PostHogWebStats::configured()) {
+            return response()->json(['data' => ['configured' => false]]);
+        }
+
+        try {
+            return response()->json(['data' => ['configured' => true, 'items' => $insights->build()]]);
+        } catch (RuntimeException $e) {
+            return response()->json(['data' => ['configured' => true, 'items' => [], 'error' => $e->getMessage()]]);
+        }
+    }
+
     public function live(PostHogWebStats $stats): JsonResponse
     {
         if (! PostHogWebStats::configured()) {

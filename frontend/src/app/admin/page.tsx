@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Loader2, TrendingUp, TrendingDown, AlertTriangle, Lightbulb } from "lucide-react";
 import { apiAdmin, auth, canAccess, type AdminUser } from "@/lib/auth";
 import { APP_AREAS, visibleApps } from "@/lib/admin-apps";
 
@@ -14,10 +14,20 @@ const APP_TINT: Record<string, string> = {
 };
 
 /* ─── Console home: the app launcher ──────────────────────────────────────────
-   Two things, in order: what needs someone today (counts pulled from the
-   existing endpoints, each shown only to people who can act on it), then
+   Two things, in order: the week's website insights for people who can see
+   the analytics (everyone else gets the "needs attention" to-do list; its
+   counts still show as red badges on the app tiles for all), then
    every app the user may open, grouped by what it is for. The old KPI
    dashboard lives on as Insights → Overview.                               */
+
+type Insight = { tone: "up" | "down" | "warn" | "info"; headline: string; detail: string; href: string };
+
+const TONE = {
+  warn: { Icon: AlertTriangle, color: "var(--o-danger)" },
+  down: { Icon: TrendingDown, color: "var(--o-danger)" },
+  up:   { Icon: TrendingUp, color: "var(--o-success)" },
+  info: { Icon: Lightbulb, color: "var(--o-info)" },
+} as const;
 
 type Attention = { key: string; app: string; count: number; label: string; href: string };
 
@@ -40,6 +50,16 @@ export default function ConsoleHome() {
   const [user] = useState<AdminUser | null>(() => auth.getUser());
   const [items, setItems] = useState<Attention[] | null>(null);
   const [now] = useState(() => new Date());
+  // Website insights (PostHog) take this panel for people who can see them;
+  // null = not available to this person (or not connected) → the to-do list shows.
+  const [insights, setInsights] = useState<Insight[] | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (!user || !canAccess(user, { module: "google_ads" })) { setInsights(null); return; }
+    apiAdmin<{ data: { configured: boolean; items?: Insight[] } }>("/admin/web-analytics/insights")
+      .then((r) => setInsights(r.data.configured && r.data.items?.length ? r.data.items : null))
+      .catch(() => setInsights(null));
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -88,7 +108,36 @@ export default function ConsoleHome() {
         </p>
       </div>
 
-      {/* ══ Needs attention ═════════════════════════════════════════════════ */}
+      {/* ══ Website insights (or, without them, Needs attention) ═════════════ */}
+      {insights === undefined ? (
+        <section className="c-panel mb-8">
+          <div className="flex items-center gap-2 px-4 py-5 text-[13px] text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Reading the website numbers…</div>
+        </section>
+      ) : insights ? (
+        <section aria-labelledby="insights" className="c-panel mb-8">
+          <div className="c-panel-head">
+            <h2 id="insights" className="c-panel-title">Website insights · last 7 days</h2>
+            <Link href="/admin/website" className="text-[13px] font-medium text-gold-ink hover:underline">Full report</Link>
+          </div>
+          <ul className="divide-y divide-line">
+            {insights.map((i) => {
+              const { Icon, color } = TONE[i.tone] ?? TONE.info;
+              return (
+                <li key={i.headline}>
+                  <Link href={i.href} className="group flex items-start gap-3 px-4 py-3 hover:bg-paper-deep transition-colors">
+                    <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color }} aria-hidden="true" />
+                    <span className="min-w-0">
+                      <span className="block text-[14px] font-semibold text-ink">{i.headline}</span>
+                      <span className="block text-[13px] text-ink-muted">{i.detail}</span>
+                    </span>
+                    <ArrowRight className="w-4 h-4 ml-auto mt-0.5 shrink-0 text-ink-muted group-hover:text-ink transition-colors" aria-hidden="true" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : (
       <section aria-labelledby="attention" className="c-panel mb-8">
         <div className="c-panel-head">
           <h2 id="attention" className="c-panel-title">Needs attention</h2>
@@ -113,6 +162,7 @@ export default function ConsoleHome() {
           </ul>
         )}
       </section>
+      )}
 
       {/* ══ Apps (Odoo's home menu) ═══════════════════════════════════════ */}
       <section aria-label="Apps">

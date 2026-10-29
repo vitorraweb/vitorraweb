@@ -121,6 +121,33 @@ class PostHogWebStats
         });
     }
 
+    /** People who viewed each product page in the last 7 days (any language prefix). */
+    public function productPageViews(array $paths): array
+    {
+        return Cache::remember('posthog:product-views', 900, function () use ($paths) {
+            $cases = collect($paths)->map(fn ($p) => "WHEN properties.\$pathname LIKE '%".addslashes($p)."%' THEN '".addslashes($p)."'")->join(' ');
+            $rows = $this->query("
+                SELECT CASE {$cases} ELSE '' END AS page, uniq(person_id)
+                FROM events WHERE event = '\$pageview' AND timestamp >= now() - INTERVAL 7 DAY
+                GROUP BY page");
+
+            return collect($rows)->filter(fn ($r) => $r[0] !== '')->mapWithKeys(fn ($r) => [$r[0] => (int) $r[1]])->all();
+        });
+    }
+
+    /** First pages of visits in the last 7 days, with how many left from there. */
+    public function landingPages(): array
+    {
+        return Cache::remember('posthog:landing', 900, function () {
+            $rows = $this->query("
+                SELECT \$entry_pathname AS p, count() AS n, if(count() = 0, 0, countIf(\$is_bounce) / count()) AS b
+                FROM sessions WHERE \$start_timestamp >= now() - INTERVAL 7 DAY
+                GROUP BY p ORDER BY n DESC LIMIT 10");
+
+            return array_map(fn ($r) => ['path' => (string) ($r[0] ?? '/'), 'sessions' => (int) $r[1], 'bounce' => (float) $r[2] * 100], $rows);
+        });
+    }
+
     /** @return array<int, array<int, mixed>> rows */
     private function query(string $hogql): array
     {

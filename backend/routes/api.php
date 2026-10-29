@@ -497,6 +497,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('perm:google_ads')->prefix('web-analytics')->group(function () {
             Route::get('/summary', [WebAnalyticsController::class, 'summary'])->middleware('throttle:60,1');
             Route::get('/live', [WebAnalyticsController::class, 'live'])->middleware('throttle:120,1');
+            Route::get('/insights', [WebAnalyticsController::class, 'insights'])->middleware('throttle:60,1');
         });
         // Google Ads reporting — spend, campaigns, search terms, Ads leads.
         Route::middleware('perm:google_ads')->prefix('google-ads')->group(function () {
