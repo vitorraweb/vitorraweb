@@ -20,7 +20,10 @@ const APP_TINT: Record<string, string> = {
    every app the user may open, grouped by what it is for. The old KPI
    dashboard lives on as Insights → Overview.                               */
 
-type Insight = { tone: "up" | "down" | "warn" | "info"; headline: string; detail: string; href: string };
+type Insight = { tone: "up" | "down" | "warn" | "info"; kind: string; headline: string; short: string; detail: string; href: string };
+
+/** The three most important insights, no two of the same kind (one warning, the trend, the contact rate…). */
+const pickThree = (all: Insight[]) => all.filter((i, n) => all.findIndex((j) => j.kind === i.kind) === n).slice(0, 3);
 
 const TONE = {
   warn: { Icon: AlertTriangle, color: "var(--o-danger)" },
@@ -114,28 +117,22 @@ export default function ConsoleHome() {
           <div className="flex items-center gap-2 px-4 py-5 text-[13px] text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Reading the website numbers…</div>
         </section>
       ) : insights ? (
-        <section aria-labelledby="insights" className="c-panel mb-8">
-          <div className="c-panel-head">
-            <h2 id="insights" className="c-panel-title">Website insights · last 7 days</h2>
-            <Link href="/admin/website" className="text-[13px] font-medium text-gold-ink hover:underline">Full report</Link>
-          </div>
-          <ul className="divide-y divide-line">
-            {insights.map((i) => {
+        <section aria-label="Website insights, last 7 days" className="c-panel mb-6 flex items-center gap-2 px-3 py-2">
+          <span className="shrink-0 text-[12.5px] font-semibold text-ink-muted pr-1 hidden md:inline">This week</span>
+          <ul className="flex-1 min-w-0 flex gap-2 overflow-x-auto">
+            {pickThree(insights).map((i) => {
               const { Icon, color } = TONE[i.tone] ?? TONE.info;
               return (
-                <li key={i.headline}>
-                  <Link href={i.href} className="group flex items-start gap-3 px-4 py-3 hover:bg-paper-deep transition-colors">
-                    <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color }} aria-hidden="true" />
-                    <span className="min-w-0">
-                      <span className="block text-[14px] font-semibold text-ink">{i.headline}</span>
-                      <span className="block text-[13px] text-ink-muted">{i.detail}</span>
-                    </span>
-                    <ArrowRight className="w-4 h-4 ml-auto mt-0.5 shrink-0 text-ink-muted group-hover:text-ink transition-colors" aria-hidden="true" />
+                <li key={i.headline} className="min-w-[13rem] flex-1 basis-0">
+                  <Link href={i.href} title={`${i.headline}. ${i.detail}`} className="flex items-center gap-2 h-9 px-2.5 rounded-md border border-line hover:bg-paper-deep transition-colors">
+                    <Icon className="w-4 h-4 shrink-0" style={{ color }} aria-hidden="true" />
+                    <span className="truncate text-[13px] text-ink">{i.short}</span>
                   </Link>
                 </li>
               );
             })}
           </ul>
+          <Link href="/admin/website" className="shrink-0 inline-flex items-center gap-1 text-[13px] font-medium text-gold-ink hover:underline pl-1">All<ArrowRight className="w-3.5 h-3.5" /></Link>
         </section>
       ) : (
       <section aria-labelledby="attention" className="c-panel mb-8">
