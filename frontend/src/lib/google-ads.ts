@@ -1,3 +1,4 @@
+import { capture } from "@/lib/posthog";
 /* ─── Google Ads tag ──────────────────────────────────────────────────────────
    Marketing pays for Google Ads, and Google can only optimise (and report) on
    what the site tells it: which visits became an enquiry, a call, a
@@ -22,6 +23,12 @@ export const GOOGLE_ADS_ID =
   process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? (process.env.NODE_ENV === "production" ? "AW-18227983736" : "");
 
 export type ConversionKind = "enquiry" | "contact" | "reserve" | "newsletter" | "call";
+
+/** The same moments as PostHog events — the console's "Leads from the website" counts the first three. */
+const POSTHOG_EVENTS: Record<ConversionKind, string> = {
+  enquiry: "enquiry_submitted", contact: "contact_submitted", reserve: "reservation_submitted",
+  newsletter: "newsletter_subscribed", call: "call_clicked",
+};
 
 const LABELS: Record<ConversionKind, string | undefined> = {
   enquiry: process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_ENQUIRY,
@@ -77,6 +84,8 @@ export interface ConversionDetails {
  * and never delays the form: a blocked tag or a missing label is a no-op.
  */
 export function trackConversion(kind: ConversionKind, details: ConversionDetails = {}): void {
+  // Product analytics (PostHog) gets the same moment, without any personal data.
+  capture(POSTHOG_EVENTS[kind], details.value != null ? { value: details.value, currency: details.currency ?? "UGX" } : {});
   try {
     const label = LABELS[kind];
     const g = gtag();

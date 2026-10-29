@@ -1974,6 +1974,14 @@ Tests: `PurgeTestLeadsTest` (3). **503 backend tests passing.**
 
 ---
 
+## Website visitors with PostHog (29 October 2026)
+
+The console now shows who is on vitorra.org **right now** (on the Overview and under Insights → Website). It also shows visitors, visits and pages read per period against the period before, how people found us, where they are, phone vs. computer, and leads from the website. Session replays and heatmaps open in PostHog through **Watch visits**. Only visitors who accept cookies are recorded, and form fields are hidden. Staff screens and private client links are never tracked. The cookie policy was updated in English and Swahili.
+
+Switching on (`docs/posthog.md`): Vercel `NEXT_PUBLIC_POSTHOG_KEY` + `NEXT_PUBLIC_POSTHOG_HOST` + `NEXT_PUBLIC_POSTHOG_UI_HOST` → redeploy; turn on Session replay in PostHog; API server `POSTHOG_PROJECT_ID` + `POSTHOG_PERSONAL_API_KEY` (Query: Read) → `config:cache`.
+
+---
+
 ## Microsoft Teams integration (28 October 2026)
 
 What the team gets:

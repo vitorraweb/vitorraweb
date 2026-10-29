@@ -8,6 +8,7 @@ import { CartProvider } from "@/lib/cart";
 import { Toaster } from "@/components/ui/sonner";
 import { AttributionCapture } from "@/components/AttributionCapture";
 import { GoogleTag } from "@/components/GoogleTag";
+import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 
 /* ── Type pairing — Quiet Authority (October 2026) ─────────────────────────────
    Display: Fraunces — a variable serif with an optical-size axis, the closest
@@ -115,6 +116,7 @@ export default async function RootLayout({
             {children}
             <AttributionCapture />
             <GoogleTag />
+            <PostHogAnalytics />
             <CookieBanner />
             <Toaster position="bottom-right" />
           </CartProvider>

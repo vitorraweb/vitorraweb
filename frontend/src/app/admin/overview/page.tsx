@@ -85,6 +85,7 @@ export default function AdminOverview() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [alerts, setAlerts] = useState<Alerts | null>(null);
   const [ads, setAds] = useState<AdsGlance | null>(null);
+  const [onSite, setOnSite] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [now, setNow] = useState<number | null>(null);
@@ -106,6 +107,14 @@ export default function AdminOverview() {
   }, []);
 
   useEffect(() => { load(); const id = setInterval(load, POLL_MS); return () => clearInterval(id); }, [load]);
+  // People on vitorra.org right now (PostHog). Hidden when not connected or no access.
+  const loadLive = useCallback(async () => {
+    try {
+      const r = (await apiAdmin<{ data: { configured: boolean; now?: number } }>("/admin/web-analytics/live")).data;
+      setOnSite(r.configured && r.now != null ? r.now : null);
+    } catch { setOnSite(null); }
+  }, []);
+  useEffect(() => { loadLive(); const id = setInterval(loadLive, 30_000); return () => clearInterval(id); }, [loadLive]);
   useEffect(() => { loadAds(); const id = setInterval(loadAds, ADS_POLL_MS); return () => clearInterval(id); }, [loadAds]);
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
 
@@ -132,6 +141,13 @@ export default function AdminOverview() {
 
       {stats && (
         <div className="space-y-4">
+          {onSite != null && (
+            <Link href="/admin/website" className="c-panel px-4 py-3 flex items-center gap-3 text-[14px] hover:bg-[var(--o-hover)]">
+              <LiveDot />
+              <span className="text-ink"><strong className="tabular-nums">{onSite}</strong> {onSite === 1 ? "person is" : "people are"} on vitorra.org right now</span>
+              <span className="ml-auto inline-flex items-center gap-1 text-[13px] font-medium text-gold-ink">Website visitors<ArrowRight className="w-3.5 h-3.5" /></span>
+            </Link>
+          )}
           {/* ── Headline numbers ─────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
             <KpiTile label="Enquiries this month" value={num(stats.enquiries.this_month)} now={stats.enquiries.this_month} before={stats.enquiries.last_month} href="/admin/enquiries" />

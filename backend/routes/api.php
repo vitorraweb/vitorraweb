@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\FetTrialController;
 use App\Http\Controllers\Api\FetTrialImportController;
 use App\Http\Controllers\Api\FetTrialShareController;
 use App\Http\Controllers\Api\GoogleAdsController;
+use App\Http\Controllers\Api\WebAnalyticsController;
 use App\Http\Controllers\Api\CampaignTrackController;
 use App\Http\Controllers\Api\FinanceReceiptController;
 use App\Http\Controllers\Api\MeetingController;
@@ -492,6 +493,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/applications/{application}/cv', [JobAdminController::class, 'downloadCv']);
         });
         // Executive report — CEO business summary (leadership/finance/admin).
+        // Website visitors (PostHog) — same audience as the Ads report.
+        Route::middleware('perm:google_ads')->prefix('web-analytics')->group(function () {
+            Route::get('/summary', [WebAnalyticsController::class, 'summary'])->middleware('throttle:60,1');
+            Route::get('/live', [WebAnalyticsController::class, 'live'])->middleware('throttle:120,1');
+        });
         // Google Ads reporting — spend, campaigns, search terms, Ads leads.
         Route::middleware('perm:google_ads')->prefix('google-ads')->group(function () {
             Route::get('/status', [GoogleAdsController::class, 'status']);

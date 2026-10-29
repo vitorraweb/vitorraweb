@@ -680,7 +680,9 @@
       "analytics": "<b>Vidakuzi vya uchambuzi</b>, vinatusaidia kuelewa jinsi wageni wanavyotumia tovuti ili tuiboreshe. Hivi vinawekwa tu kwa idhini yako.",
       "analyticsList": [
         "Kuangaliwa kwa kurasa na njia za urambazaji (zilizojumlishwa, zisizo na utambulisho)",
-        "Aina ya kifaa na kivinjari (kuboresha uzoefu wa simu)"
+        "Aina ya kifaa na kivinjari (kuboresha uzoefu wa simu)",
+        "Tunatumia PostHog kwa hili. Bila idhini yako, ziara bado inahesabiwa, lakini hakuna kidakuzi kinachowekwa na hutatambuliwa utakaporudi",
+        "Kwa idhini yako, PostHog pia hurekodi jinsi kurasa zinavyotumika (kubofya, kusogeza) ili turekebishe kinachochanganya. Chochote kinachoandikwa kwenye fomu hufichwa katika rekodi hizi"
       ],
       "advertising": "<b>Vidakuzi vya matangazo (Google Ads)</b>: vinatuonyesha ni tangazo lipi letu la Google lililoleta ombi, simu au uhifadhi, ili tutumie fedha kwenye matangazo yanayofanya kazi. Hivi vinawekwa tu kwa idhini yako.",
       "advertisingList": [

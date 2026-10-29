@@ -63,6 +63,15 @@ return [
      * — access comes from the Cloud project's API access level (Explorer is
      * enough: 2,880 production operations a day; an hourly sync uses ~250).
      */
+    // PostHog web analytics — read side for the console's Website screen.
+    // personal_api_key is a secret (scope: query:read) and never leaves the
+    // server; the public project key lives in the frontend's NEXT_PUBLIC_POSTHOG_KEY.
+    'posthog' => [
+        'host'             => rtrim((string) env('POSTHOG_HOST', 'https://eu.posthog.com'), '/'),
+        'project_id'       => env('POSTHOG_PROJECT_ID'),
+        'personal_api_key' => env('POSTHOG_PERSONAL_API_KEY'),
+    ],
+
     'google_ads' => [
         'client_id'     => env('GOOGLE_ADS_CLIENT_ID'),
         'client_secret' => env('GOOGLE_ADS_CLIENT_SECRET'),

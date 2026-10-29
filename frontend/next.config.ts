@@ -13,7 +13,18 @@ const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api
    /sanctum/csrf-cookie when cookie auth mode is switched on. */
 const API_HOST = API_ORIGIN.replace(/\/api\/?$/, "");
 
+/* PostHog ingestion host for the project's region (eu or us), e.g.
+   https://eu.i.posthog.com. Its static assets live on the matching -assets host. */
+const POSTHOG_INGEST = (process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com").replace(/\/$/, "");
+const POSTHOG_ASSETS = POSTHOG_INGEST.replace(/^https:\/\/(eu|us)\.i\./, "https://$1-assets.i.");
+
 const nextConfig: NextConfig = {
+  // PostHog's API paths end in a slash (/ingest/e/), so Next's automatic
+  // trailing-slash redirect is off; redirects() below restores it for pages.
+  skipTrailingSlashRedirect: true,
+  async redirects() {
+    return [{ source: "/:path((?!ingest/|api/).+)/", destination: "/:path", permanent: true }];
+  },
   // Emits .next/standalone — a self-contained Node server bundled with only the
   // node_modules actually reached at runtime. Required for the Docker image we
   // deploy to ECS Fargate (planning/12-aws-migration-plan.md); it takes the
@@ -70,6 +81,11 @@ const nextConfig: NextConfig = {
       // (app/api/contracts/sign) to pass the client's IP to the API. Rewrites
       // run before dynamic routes, so the handler must be excluded here.
       { source: "/api/:path((?!contracts/sign/).*)", destination: `${API_ORIGIN}/:path` },
+      // PostHog analytics through our own domain (lib/posthog.ts), so ad
+      // blockers that drop third-party trackers still count visits.
+      { source: "/ingest/static/:path*", destination: `${POSTHOG_ASSETS}/static/:path*` },
+      { source: "/ingest/array/:path*", destination: `${POSTHOG_ASSETS}/array/:path*` },
+      { source: "/ingest/:path*", destination: `${POSTHOG_INGEST}/:path*` },
       // Only used when NEXT_PUBLIC_AUTH_MODE=cookie (Sanctum SPA mode).
       { source: "/sanctum/:path*", destination: `${API_HOST}/sanctum/:path*` },
     ];

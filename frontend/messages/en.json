@@ -680,7 +680,9 @@
       "analytics": "<b>Analytics cookies</b>: help us understand how visitors use the site so we can improve it. These are only set with your consent.",
       "analyticsList": [
         "Page views and navigation paths (aggregated, anonymised)",
-        "Device type and browser (to improve mobile experience)"
+        "Device type and browser (to improve mobile experience)",
+        "We use PostHog for this. Without your consent a visit is still counted, but no cookie is set and you are not recognised on your next visit",
+        "With your consent, PostHog also records how pages are used (clicks, scrolling) so we can fix what is confusing. Anything typed into a form is hidden from these recordings"
       ],
       "advertising": "<b>Advertising cookies (Google Ads)</b>: tell us which of our Google adverts led to an enquiry, a call or a reservation, so we spend on adverts that work. These are only set with your consent.",
       "advertisingList": [

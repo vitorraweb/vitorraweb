@@ -86,10 +86,11 @@ export const ADMIN_APPS: AdminApp[] = [
     ],
   },
   {
-    id: "insights", name: "Insights", blurb: "Company overview, the Executive report and Google Ads", icon: LineChart, area: "Money",
+    id: "insights", name: "Insights", blurb: "Company overview, website visitors, the Executive report and Google Ads", icon: LineChart, area: "Money",
     items: [
       { label: "Overview",  href: "/admin/overview",  icon: LayoutDashboard, keywords: "dashboard stats" },
       { label: "Executive report", href: "/admin/executive", icon: TrendingUp, module: "executive", keywords: "executive ceo revenue report" },
+      { label: "Website",   href: "/admin/website",   icon: Globe, module: "google_ads", keywords: "visitors traffic analytics posthog live sessions replays pages" },
       { label: "Google Ads", href: "/admin/google-ads", icon: Megaphone, module: "google_ads", keywords: "adwords ads advertising spend campaigns cpc clicks search terms marketing" },
     ],
   },
