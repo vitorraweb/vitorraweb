@@ -77,7 +77,7 @@ export default async function EnquirePage({
         </Section>
 
         <Section tone="deep" className="!pt-12 lg:!pt-16" aria-label={t(`${key}Title`)}>
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-start">
             <div className="lg:col-span-7 lg:order-2">
               <EnquiryForm initialSector={sector} initialMessage={initialMessage} initialAnswers={initialAnswers} />
             </div>

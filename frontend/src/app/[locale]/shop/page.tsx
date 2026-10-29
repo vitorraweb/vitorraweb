@@ -68,7 +68,7 @@ export default async function ShopPage() {
           <div aria-hidden="true" className="hero-aurora-right" />
           <div aria-hidden="true" className="hero-grain" />
 
-          <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 mt-auto pb-16 md:pb-20 pt-32">
+          <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 md:px-12 lg:px-20 mt-auto pb-12 sm:pb-16 md:pb-20 pt-24 sm:pt-32">
             <Reveal>
               <span className="eyebrow-light mb-5 inline-flex">Vitorra Coffee · Shop</span>
               <h1

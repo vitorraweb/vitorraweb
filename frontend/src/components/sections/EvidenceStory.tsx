@@ -66,7 +66,7 @@ export function EvidenceStory(p: Props) {
             <div className="col-span-6 col-start-7 relative min-h-[26rem]">
               <p className="t-label text-ink-fg-muted mb-10">{p.label}</p>
               {/* Progress rail */}
-              <div className="flex gap-2 mb-12" aria-hidden="true">
+              <div className="flex gap-2 mb-10 sm:mb-12" aria-hidden="true">
                 {steps.map((_, i) => (
                   <span key={i} className="h-px flex-1 bg-ink-line overflow-hidden">
                     <motion.span className="block h-full bg-gold origin-left" animate={{ scaleX: step >= i ? 1 : 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} />

@@ -91,7 +91,7 @@ export default async function LogisticsPage() {
         {/* ══ Services ══════════════════════════════════════════════════════ */}
         <Section tone="paper" rule aria-labelledby="logistics-services">
           <Container>
-            <SectionHead id="logistics-services" label={t("servicesLabel")} title={t("servicesTitle")} className="mb-14" />
+            <SectionHead id="logistics-services" label={t("servicesLabel")} title={t("servicesTitle")} className="mb-10 sm:mb-14" />
             <ServiceChain
               items={[
                 { title: old("cap1Title"), body: t("cap1Body") },
@@ -115,7 +115,7 @@ export default async function LogisticsPage() {
 
         {/* ══ Routes — the two port corridors, on a real map ═══════════════ */}
         <Section tone="paper" aria-labelledby="logistics-routes">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-center">
             <div className="lg:col-span-4">
               <SectionHead id="logistics-routes" label={vt("routesLabel")} title={vt("routesTitle")} body={vt("routesBody")} />
             </div>
@@ -136,7 +136,7 @@ export default async function LogisticsPage() {
 
         {/* ══ What we need to quote ═════════════════════════════════════════ */}
         <Section tone="deep" id="logistics-need" aria-labelledby="logistics-need-heading">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <div className="lg:col-span-5">
               <SectionHead id="logistics-need-heading" label={t("needLabel")} title={t("needTitle")} body={t("needBody")} />
               <div className="mt-10">
@@ -157,7 +157,7 @@ export default async function LogisticsPage() {
 
         {/* ══ What you can expect ═══════════════════════════════════════════ */}
         <Section tone="ink" aria-labelledby="logistics-expect">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <SectionHead id="logistics-expect" onInk label={t("expectLabel")} title={t("expectTitle")} className="lg:col-span-4" />
             <div className="lg:col-span-8">
               <Steps
@@ -170,7 +170,7 @@ export default async function LogisticsPage() {
 
         {/* ══ Questions ═════════════════════════════════════════════════════ */}
         <Section tone="paper" aria-labelledby="logistics-faq">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <SectionHead id="logistics-faq" label={shared("faqLabel")} title={t("faqTitle")} className="lg:col-span-4" />
             <div className="lg:col-span-8">
               <Faq items={faqs} />

@@ -272,7 +272,7 @@ export function FetCalculatorCard() {
                       <span className="block text-sm font-semibold text-ink">
                         {tt(`${t.id}.label`)}
                       </span>
-                      <span className="block text-[11px] mt-0.5 text-ink-muted">
+                      <span className="block text-[12px] mt-0.5 text-ink-muted">
                         {t.model} · {tt(`${t.id}.segment`).split("·").pop()?.trim()}
                       </span>
                     </button>
@@ -307,6 +307,7 @@ export function FetCalculatorCard() {
                   </Field>
                   <Field
                     label={tc("consumption")}
+                    wideOnPhone
                     hint={touched.consumption ? undefined : tc("assumedTag")}
                     aside={
                       <Segmented
@@ -401,8 +402,8 @@ export function FetCalculatorCard() {
               </div>
 
               <div className="flex justify-between mt-1">
-                <span className="text-[11px] text-ink-muted">{tc("noSaving")}</span>
-                <span className="text-[11px] text-ink-muted">{tc("optimistic", { pct: SAVINGS.max })}</span>
+                <span className="text-[12px] text-ink-muted">{tc("noSaving")}</span>
+                <span className="text-[12px] text-ink-muted">{tc("optimistic", { pct: SAVINGS.max })}</span>
               </div>
 
               {/* Scenarios — including the one where it doesn't pay. */}
@@ -450,7 +451,7 @@ export function FetCalculatorCard() {
             {/* The working, in full. */}
             {spendReady && (
               <div className="mt-5 rounded-frame p-5 bg-paper-deep border border-line">
-                <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] mb-2 text-gold-ink">
+                <p className="text-[11.5px] font-bold uppercase tracking-[0.1em] mb-2 text-gold-ink">
                   {tc("workingTitle")}
                 </p>
                 <p className="text-[12.5px] leading-relaxed text-ink-soft">
@@ -484,7 +485,7 @@ export function FetCalculatorCard() {
 
                 {assumptions.length > 0 && (
                   <>
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] mt-3.5 mb-1.5 text-gold-ink">
+                    <p className="text-[11.5px] font-bold uppercase tracking-[0.1em] mt-3.5 mb-1.5 text-gold-ink">
                       {tc("assumptionsTitle")}
                     </p>
                     <ul className="space-y-1">
@@ -525,7 +526,7 @@ export function FetCalculatorCard() {
               />
             )}
 
-            <p className="mt-3 text-center text-[11px] leading-relaxed text-ink-muted">
+            <p className="mt-3 text-center text-[12px] leading-relaxed text-ink-muted">
               {tc("disclaimer")}
             </p>
       </div>
@@ -539,7 +540,7 @@ export default function FetCalculator() {
 
   return (
     <section id="fet-calculator" aria-labelledby="fet-calculator-heading" className="q-scope q-section bg-paper scroll-mt-24">
-      <div className="q-container grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+      <div className="q-container grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-start">
         <div className="lg:col-span-4 lg:sticky lg:top-28">
           <p className="t-label text-ink-muted mb-6">{tc("eyebrow")}</p>
           <h2 id="fet-calculator-heading" className="t-h2 text-ink">{tc("title")}</h2>
@@ -561,16 +562,18 @@ export default function FetCalculator() {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block t-label text-[0.6875rem] text-ink-muted">
+    <span className="block t-label text-[0.75rem] text-ink-muted">
       {children}
     </span>
   );
 }
 
 function Field({
-  label, hint, aside, wide, children,
+  label, hint, aside, wide, wideOnPhone, children,
 }: {
   label: string;
+  /** Full width on phones only — for a field whose header also carries a toggle. */
+  wideOnPhone?: boolean;
   /** Small tag beside the label — used to mark an input still on a default. */
   hint?: string;
   aside?: React.ReactNode;
@@ -578,13 +581,13 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className={wide ? "col-span-2" : undefined}>
-      <div className="mb-2 flex items-center justify-between gap-2 min-h-[18px]">
-        <span className="flex items-center gap-1.5">
+    <div className={wide ? "col-span-2" : wideOnPhone ? "col-span-2 sm:col-span-1" : undefined}>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 min-h-[18px]">
+        <span className="flex flex-wrap items-center gap-1.5">
           <Label>{label}</Label>
           {hint && (
             <span
-              className="t-label text-[0.625rem] tracking-[0.1em] px-1.5 py-0.5 rounded-edge text-gold-ink border border-line-strong"
+              className="t-label text-[0.6875rem] tracking-[0.08em] px-1.5 py-0.5 rounded-edge text-gold-ink border border-line-strong"
               
             >
               {hint}
@@ -623,7 +626,7 @@ function Segmented({
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.value)}
-            className={`${full ? "flex-1" : ""} rounded-[1px] font-medium transition-colors ${small ? "text-[10px] px-2 py-1" : "text-[12px] px-3 py-2"} ${on ? "bg-ink text-paper" : "text-ink-muted hover:text-ink"}`}
+            className={`${full ? "flex-1" : ""} rounded-[1px] font-medium transition-colors ${small ? "text-[12px] px-2.5 py-1.5" : "text-[13px] px-3 py-2"} ${on ? "bg-ink text-paper" : "text-ink-muted hover:text-ink"}`}
           >
             {o.label}
           </button>

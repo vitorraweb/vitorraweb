@@ -1028,9 +1028,13 @@
 }
 @utility q-section {
   padding-block: clamp(4.5rem, 2.8rem + 7vw, 9rem);
+  /* Phones: most visitors. A tighter rhythm keeps each section to about a
+     screen, so the page reads as a story rather than a long scroll. */
+  @media (width < 640px) { padding-block: 3.5rem; }
 }
 @utility q-section-tight {
   padding-block: clamp(3rem, 2rem + 4vw, 5.5rem);
+  @media (width < 640px) { padding-block: 2.5rem; }
 }
 
 /* ── Controls ──────────────────────────────────────────────────────────── */
@@ -1068,8 +1072,11 @@
   background-position: 0 100%;
   background-repeat: no-repeat;
   padding-bottom: 3px;
+  position: relative;
   transition: background-size 300ms var(--ease-quiet), color 200ms var(--ease-quiet);
   &:hover { background-size: 0% 1px; background-position: 100% 100%; }
+  /* A finger-sized hit area (about 44px tall) without changing the layout. */
+  &::after { content: ""; position: absolute; inset: -10px -6px; }
 }
 
 /* ── Reveal — visible by default, animated only where the browser can do it
@@ -1241,7 +1248,13 @@
   .q-ring { animation: q-ring 2400ms var(--ease-cinematic) infinite; }
 }
 
-/* Footer "Let's talk": on hover each letter lifts and turns gold in turn. */
+/* Footer "Let's talk": on hover each letter lifts and turns gold in turn —
+   mouse devices only; touch screens show the plain word. */
+.q-talk-split { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .q-talk-split { display: inline; }
+  .q-talk-plain { display: none; }
+}
 .q-talk span[style] { transition: translate 600ms var(--ease-cinematic), color 600ms var(--ease-cinematic); transition-delay: calc(var(--i) * 28ms); }
 .q-talk:hover span[style], .q-talk:focus-visible span[style] { translate: 0 -0.08em; color: var(--color-gold); }
 @media (prefers-reduced-motion: reduce) { .q-talk span[style] { transition: color 200ms; } .q-talk:hover span[style] { translate: none; } }

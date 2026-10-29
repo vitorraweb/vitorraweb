@@ -19,7 +19,7 @@ export default function CheckoutPage() {
     <>
       <Header />
       <main className="flex-1" style={{ backgroundColor: "#F2F2F2" }}>
-        <section className="pt-28 md:pt-32 pb-16 md:pb-24 px-6 md:px-12 lg:px-20">
+        <section className="pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-24 px-6 md:px-12 lg:px-20">
           <div className="container-max mb-10">
             <Reveal>
               <span className="eyebrow block mb-3">Vitorra Coffee</span>

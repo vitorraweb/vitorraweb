@@ -27,7 +27,7 @@ export default function FetPricing() {
   return (
     <Section tone="deep" id="fet-pricing" aria-labelledby="fet-pricing-heading">
       <Container>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-end mb-14">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-end mb-10 sm:mb-14">
           <SectionHead
             id="fet-pricing-heading"
             className="lg:col-span-7"
@@ -75,7 +75,7 @@ export default function FetPricing() {
           ))}
         </ol>
 
-        <div className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="mt-10 sm:mt-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-6">
             <div className="flex flex-col items-start gap-4">
               {[

@@ -39,7 +39,7 @@ export function StatementHero({
 
   return (
     <section aria-labelledby="hero-title" className="q-scope relative isolate overflow-hidden bg-paper text-ink">
-      <Container className="relative z-10 pt-32 lg:pt-40">
+      <Container className="relative z-10 pt-24 sm:pt-32 lg:pt-40">
         <div className="flex items-center justify-between gap-6 q-rise" style={d(80)}>
           <div className="flex items-center gap-5">
             <Label>{label}</Label>

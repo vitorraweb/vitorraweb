@@ -67,7 +67,7 @@ export default async function AboutPage() {
 
         {/* ══ Who we are ════════════════════════════════════════════════════ */}
         <Section tone="deep" aria-labelledby="about-who">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-center">
             <div className="lg:col-span-5">
               <SectionHead id="about-who" label={t("whoLabel")} title={t("whoTitle")} body={t("whoBody")} />
               <dl className="mt-10 grid grid-cols-2 gap-px bg-line border-y border-line">
@@ -93,7 +93,7 @@ export default async function AboutPage() {
         {/* ══ How we work ═══════════════════════════════════════════════════ */}
         <Section tone="paper" aria-labelledby="about-values">
           <Container>
-            <SectionHead id="about-values" label={t("valuesLabel")} title={t("valuesTitle")} className="mb-14" />
+            <SectionHead id="about-values" label={t("valuesLabel")} title={t("valuesTitle")} className="mb-10 sm:mb-14" />
             <FactGrid
               columns={3}
               items={[1, 2, 3].map((n) => ({ title: t(`value${n}Title`), body: t(`value${n}Body`) }))}
@@ -104,14 +104,14 @@ export default async function AboutPage() {
         {/* ══ The four businesses ═══════════════════════════════════════════ */}
         <Section tone="paper" rule id="about-businesses" aria-labelledby="about-businesses-heading">
           <Container>
-            <SectionHead id="about-businesses-heading" label={t("portfolioLabel")} title={t("portfolioTitle")} className="mb-14" />
+            <SectionHead id="about-businesses-heading" label={t("portfolioLabel")} title={t("portfolioTitle")} className="mb-10 sm:mb-14" />
             <BusinessDoors />
           </Container>
         </Section>
 
         {/* ══ What stands behind it ═════════════════════════════════════════ */}
         <Section tone="paper" aria-labelledby="about-cred">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <div className="lg:col-span-4">
               <SectionHead id="about-cred" label={home("credLabel")} title={home("credTitle")} body={home("credBody")} />
               <div className="mt-8"><TextLink href="/trust/certifications">{home("credCta")}</TextLink></div>

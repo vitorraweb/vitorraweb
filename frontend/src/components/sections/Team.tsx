@@ -48,7 +48,7 @@ function Portrait({ m, role, large = false }: { m: Member; role: string; large?:
 export default async function Team({ labels }: { labels: { leadership: string; officers: string } }) {
   const t = await getTranslations("team");
   return (
-    <div className="space-y-20">
+    <div className="space-y-12 sm:space-y-20">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-end">
         <div className="lg:col-span-5">
           <Portrait m={ceo} role={t(`roles.${ceo.roleKey}`)} large />

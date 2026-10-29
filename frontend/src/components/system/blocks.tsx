@@ -36,7 +36,7 @@ export function ProductIntro({
 }) {
   return (
     <Section tone="paper" className="!pt-12 lg:!pt-20" aria-labelledby="product-title">
-      <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+      <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-start">
         <div className="lg:col-span-6 lg:pt-6">
           <Label index={index} className="mb-8">{name}</Label>
           <Heading as="h1" size="h1" id="product-title" className="text-ink">{title}</Heading>
@@ -46,7 +46,7 @@ export function ProductIntro({
             {secondary && <TextLink href={secondary.href}>{secondary.label}</TextLink>}
           </div>
           {facts && facts.length > 0 && (
-            <dl className="mt-12 grid grid-cols-2 gap-px bg-line border-y border-line">
+            <dl className="mt-10 sm:mt-12 grid grid-cols-2 gap-px bg-line border-y border-line">
               {facts.map((f) => (
                 <div key={f.k} className="bg-paper py-4 pr-4">
                   <dt className="t-label text-ink-muted">{f.k}</dt>
@@ -175,7 +175,7 @@ export function CredentialGroups({
   groups: { title: string; items: { name: string; what: string }[] }[];
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-10">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 md:gap-10">
       {groups.map((g) => (
         <Reveal key={g.title}>
           <h3 className="t-label text-ink-muted pb-4 border-b border-line-strong">{g.title}</h3>
@@ -215,7 +215,7 @@ export function ContactBand({
      (the footer no longer repeats them). */
   return (
     <Section tone="sage" aria-labelledby="contact-band-heading">
-      <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-center">
         <div className="lg:col-span-7">
           <Heading id="contact-band-heading" size="h1" className="text-ink">{title}</Heading>
           <Text size="lead" className="mt-6 max-w-[30rem]">{body}</Text>

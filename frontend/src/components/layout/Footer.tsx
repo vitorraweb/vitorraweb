@@ -58,15 +58,19 @@ export default function Footer() {
   return (
     <footer className="q-scope bg-ink text-ink-fg" data-tone="ink">
       {/* ── Let's talk + newsletter ───────────────────────────────────────── */}
-      <div className="q-container grid grid-cols-1 lg:grid-cols-12 gap-12 pt-20 pb-16 border-b border-ink-line">
+      <div className="q-container grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 pt-14 sm:pt-20 pb-12 sm:pb-16 border-b border-ink-line">
         <div className="lg:col-span-7">
           <p className="t-label text-ink-fg-muted mb-6">{t("footer.letsTalkLead")}</p>
           <Link href="/contact" className="group inline-block q-talk" aria-label={talk}>
-            <span aria-hidden="true" className="font-display font-light text-[clamp(3.5rem,1.5rem+7vw,8.5rem)] leading-[0.9] tracking-[-0.035em] whitespace-nowrap">
+            {/* Letter-by-letter lift only where there is a real hover (mouse).
+                On phones a tap would leave the letters half-lifted and the
+                apostrophe crowding the "t", so touch screens get the word whole. */}
+            <span aria-hidden="true" className="q-talk-split font-display font-light text-[clamp(3.5rem,1.5rem+7vw,8.5rem)] leading-[0.9] tracking-[-0.03em] whitespace-nowrap">
               {Array.from(talk).map((ch, i) => (
                 <span key={i} className="inline-block" style={{ "--i": i } as React.CSSProperties}>{ch === " " ? "\u00a0" : ch}</span>
               ))}
             </span>
+            <span aria-hidden="true" className="q-talk-plain font-display font-light text-[clamp(3.25rem,1.5rem+7vw,8.5rem)] leading-[0.95] tracking-[-0.015em] whitespace-nowrap">{talk}</span>
             <span aria-hidden="true" className="ml-4 inline-block align-middle text-gold text-[clamp(2rem,1rem+3vw,4rem)] transition-transform duration-500 group-hover:translate-x-2 group-hover:-translate-y-2">↗</span>
           </Link>
         </div>
@@ -78,7 +82,7 @@ export default function Footer() {
       </div>
 
       {/* ── Logo · link columns ───────────────────────────────────────────── */}
-      <div className="q-container grid grid-cols-2 lg:grid-cols-12 gap-x-8 gap-y-12 py-14">
+      <div className="q-container grid grid-cols-2 lg:grid-cols-12 gap-x-8 gap-y-8 sm:gap-y-12 py-10 sm:py-14">
         <div className="col-span-2 lg:col-span-4">
           <Link href="/" aria-label="Vitorra Holdings Limited, home" className="inline-flex items-center gap-4">
             <Image src="/logo.png" alt="" width={48} height={48} className="h-12 w-auto" />
@@ -93,10 +97,10 @@ export default function Footer() {
         {cols.map((col, i) => (
           <div key={col.heading} className={i === 0 ? "lg:col-span-2 lg:col-start-6" : "lg:col-span-2"}>
             <h3 className="t-label text-ink-fg-muted mb-5">{col.heading}</h3>
-            <ul className="space-y-3 t-small">
+            <ul className="space-y-1 sm:space-y-3 t-small">
               {col.links.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-ink-fg/85 hover:text-ink-fg hover:underline underline-offset-4 decoration-gold transition-colors">
+                  <Link href={link.href} className="inline-block py-1.5 sm:py-0 text-ink-fg/85 hover:text-ink-fg hover:underline underline-offset-4 decoration-gold transition-colors">
                     {link.label}
                   </Link>
                 </li>

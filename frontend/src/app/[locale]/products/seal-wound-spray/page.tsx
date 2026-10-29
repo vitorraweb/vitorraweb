@@ -111,7 +111,7 @@ export default async function SealPage() {
         {/* ══ The range ═════════════════════════════════════════════════════ */}
         <Section tone="deep" id="seal-range" aria-labelledby="seal-range-heading">
           <Container>
-            <SectionHead id="seal-range-heading" label={t("rangeLabel")} title={old("rangeTitle")} body={old("rangeBody")} className="mb-14" />
+            <SectionHead id="seal-range-heading" label={t("rangeLabel")} title={old("rangeTitle")} body={old("rangeBody")} className="mb-10 sm:mb-14" />
             <ul className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {variants.map((v) => (
                 <li key={v.name}>
@@ -146,12 +146,12 @@ export default async function SealPage() {
         {/* ══ What stands behind it + regulatory status ═════════════════════ */}
         <Section tone="paper" aria-labelledby="seal-trust">
           <Container>
-            <SectionHead id="seal-trust" label={t("trustLabel")} title={<>{old("trustTitleLead")} {old("trustTitleAccent")}</>} body={old("trustBody")} className="mb-14" />
+            <SectionHead id="seal-trust" label={t("trustLabel")} title={<>{old("trustTitleLead")} {old("trustTitleAccent")}</>} body={old("trustBody")} className="mb-10 sm:mb-14" />
             <FactGrid
               columns={3}
               items={[1, 2, 3, 4, 5, 6].map((n) => ({ title: old(`trust${n}Label`), body: old(`trust${n}Body`) }))}
             />
-            <Reveal className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-6 border-l-2 border-gold pl-6">
+            <Reveal className="mt-10 sm:mt-12 grid grid-cols-1 lg:grid-cols-12 gap-6 border-l-2 border-gold pl-6">
               <h3 className="lg:col-span-3 t-h3 text-ink">{t("regTitle")}</h3>
               <Text className="lg:col-span-8">{t("regBody")}</Text>
             </Reveal>
@@ -162,7 +162,7 @@ export default async function SealPage() {
 
         {/* ══ Specifications and safety ═════════════════════════════════════ */}
         <Section tone="deep" aria-labelledby="seal-specs">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <div className="lg:col-span-6">
               <SectionHead id="seal-specs" label={t("specsLabel")} title={old("specsTitle")} className="mb-10" />
               <SpecTable rows={[1, 2, 3, 4, 5, 6].map((n) => [old(`spec${n}Key`), old(`spec${n}Value`)] as [string, string])} />
@@ -180,10 +180,10 @@ export default async function SealPage() {
 
         {/* ══ For procurement teams ═════════════════════════════════════════ */}
         <Section tone="ink" aria-labelledby="seal-proc">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <div className="lg:col-span-5">
               <SectionHead id="seal-proc" onInk label={t("procLabel")} title={t("procTitle")} body={t("procBody")} />
-              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-seal.webp" alt={bn("keySealAlt")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 30vw, 100vw" />
+              <Picture className="mt-10 sm:mt-12 max-w-[22rem]" src="/banners/keyvisual-seal.webp" alt={bn("keySealAlt")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 30vw, 100vw" />
             </div>
             <ol className="lg:col-span-6 lg:col-start-7 border-t border-ink-line">
               {[t("proc1"), t("proc2"), t("proc3"), t("proc4")].map((p, i) => (
@@ -198,7 +198,7 @@ export default async function SealPage() {
 
         {/* ══ Questions ═════════════════════════════════════════════════════ */}
         <Section tone="paper" aria-labelledby="seal-faq">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <SectionHead id="seal-faq" label={shared("faqLabel")} title={t("faqTitle")} className="lg:col-span-4" />
             <div className="lg:col-span-8">
               <Faq items={faqs} />

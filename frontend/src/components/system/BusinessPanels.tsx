@@ -99,7 +99,7 @@ export function BusinessPanels({ doors, viewLabel }: { doors: Door[]; viewLabel:
       </ol>
 
       {/* Phones and tablets */}
-      <ol className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-14">
+      <ol className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-10 sm:gap-y-14">
         {doors.map((d, i) => (
           <li key={d.key}>
             <Link href={d.href} className="group block relative overflow-hidden rounded-frame bg-paper-deep q-unveil" style={{ aspectRatio: "4/5" }} aria-label={d.name}>

@@ -19,9 +19,12 @@ export function ProofCarousel({
   label,
   title,
   slides,
+  swipeHint,
 }: {
   label: string;
   title: string;
+  /** "Swipe for more →" under the phone carousel. */
+  swipeHint?: string;
   slides: ProofSlide[];
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -70,7 +73,7 @@ export function ProofCarousel({
               <div key={s.href} className="shrink-0 w-[min(42rem,46vw,calc((100svh-14rem)*1.333))]">{slide(s, i, "46vw")}</div>
             ))}
           </motion.div>
-          <div className="q-container w-full mt-12">
+          <div className="q-container w-full mt-10 sm:mt-12">
             <div className="h-px w-full bg-ink-line">
               <motion.div className="h-px bg-gold origin-left" style={{ scaleX: bar }} />
             </div>
@@ -78,16 +81,20 @@ export function ProofCarousel({
         </div>
       </div>
 
-      {/* Phones, tablets and reduced motion: the slides in a column */}
+      {/* Phones and tablets: a swipeable row (the next card peeks in, so it
+          reads as "there's more"), instead of four tall cards in a column.
+          Reduced motion on desktop keeps the plain grid. */}
       <div className="lg:hidden motion-reduce:!block q-section">
-        <div className="q-container">
-          {Head}
-          <ul className="mt-10 space-y-10">
-            {slides.map((s, i) => (
-              <li key={s.href}>{slide(s, i, "100vw")}</li>
-            ))}
-          </ul>
-        </div>
+        <div className="q-container">{Head}</div>
+        <ul
+          className="mt-8 flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar px-[clamp(1.25rem,0.6rem+2.8vw,3rem)] scroll-px-[clamp(1.25rem,0.6rem+2.8vw,3rem)] lg:grid lg:grid-cols-2 lg:gap-10 lg:overflow-visible lg:q-container"
+          aria-label={label}
+        >
+          {slides.map((s, i) => (
+            <li key={s.href} className="shrink-0 w-[84%] sm:w-[60%] snap-start lg:w-auto">{slide(s, i, "(min-width: 640px) 60vw, 84vw")}</li>
+          ))}
+        </ul>
+        {swipeHint && <p className="q-container t-small text-ink-fg-muted mt-5 lg:hidden" aria-hidden="true">{swipeHint}</p>}
       </div>
     </section>
   );

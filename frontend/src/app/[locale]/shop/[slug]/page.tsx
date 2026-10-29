@@ -58,7 +58,7 @@ export default async function ProductDetailPage({ params }: Props) {
       <main className="flex-1" style={{ backgroundColor: "#F2F2F2" }}>
 
         {/* ══ PRODUCT ═════════════════════════════════════════════════════════ */}
-        <section className="pt-28 md:pt-32 pb-16 md:pb-24 px-6 md:px-12 lg:px-20" style={{ backgroundColor: "#FFFFFF" }}>
+        <section className="pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-24 px-6 md:px-12 lg:px-20" style={{ backgroundColor: "#FFFFFF" }}>
           <div className="container-max">
             {/* Breadcrumb */}
             <Link

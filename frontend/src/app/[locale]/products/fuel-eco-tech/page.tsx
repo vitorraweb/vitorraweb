@@ -112,7 +112,7 @@ export default async function FuelEcoTechPage() {
 
         {/* ══ Evidence ══════════════════════════════════════════════════════ */}
         <Section tone="ink" aria-labelledby="fet-evidence">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <Reveal className="lg:col-span-6">
               <Label onInk className="mb-10">{home("evidenceLabel")}</Label>
               <p id="fet-evidence" className="t-figure text-ink-fg">
@@ -120,7 +120,7 @@ export default async function FuelEcoTechPage() {
               </p>
               <Text size="lead" onInk className="mt-6 max-w-[30rem]">{home("evidenceFigureCaption")}</Text>
 
-              <p className="t-label text-ink-fg-muted mt-12 mb-4">{t("observedLabel")}</p>
+              <p className="t-label text-ink-fg-muted mt-10 sm:mt-12 mb-4">{t("observedLabel")}</p>
               <ul className="space-y-3">
                 {[old("finding1"), old("finding2"), old("finding3")].map((f) => (
                   <li key={f} className="flex items-baseline gap-3 t-small text-ink-fg">
@@ -179,7 +179,7 @@ export default async function FuelEcoTechPage() {
         {/* ══ What it doesn't touch — with Vitorra's own fitting photographs ═ */}
         <Section tone="deep" aria-labelledby="fet-notouch">
           <Container>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-end mb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-end mb-16">
               <SectionHead id="fet-notouch" label={t("noTouchLabel")} title={t("noTouchTitle")} className="lg:col-span-5" />
               <div className="lg:col-span-6 lg:col-start-7">
                 <Mosaic
@@ -204,7 +204,7 @@ export default async function FuelEcoTechPage() {
         {/* ══ Which device fits — straight from the manufacturer's tables ══ */}
         <Section tone="paper" aria-labelledby="fet-fit">
           <Container>
-            <SectionHead id="fet-fit" label={t("fitLabel")} title={t("fitTitle")} body={t("fitBody")} className="mb-14" />
+            <SectionHead id="fet-fit" label={t("fitLabel")} title={t("fitTitle")} body={t("fitBody")} className="mb-10 sm:mb-14" />
             {/* Summary first — one row per device — with the manufacturer's
                 full 26-row table one click away. Native <details>, no JS. */}
             <ul className="border-t border-line-strong">
@@ -272,10 +272,10 @@ export default async function FuelEcoTechPage() {
 
         {/* ══ How we sell ═══════════════════════════════════════════════════ */}
         <Section tone="ink" aria-labelledby="fet-sell">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <div className="lg:col-span-4">
               <SectionHead id="fet-sell" onInk label={t("sellLabel")} title={t("sellTitle")} />
-              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-fet.webp" alt={bn("keyFetAlt")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
+              <Picture className="mt-10 sm:mt-12 max-w-[22rem]" src="/banners/keyvisual-fet.webp" alt={bn("keyFetAlt")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
             </div>
             <div className="lg:col-span-8">
               <Steps
@@ -292,7 +292,7 @@ export default async function FuelEcoTechPage() {
 
         {/* ══ Credentials, separated by what they cover ═════════════════════ */}
         <Section tone="paper" aria-labelledby="fet-cred">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <div className="lg:col-span-4">
               <SectionHead id="fet-cred" label={home("credLabel")} title={home("credTitle")} body={home("credBody")} />
               <div className="mt-8">
@@ -328,7 +328,7 @@ export default async function FuelEcoTechPage() {
 
         {/* ══ Questions ═════════════════════════════════════════════════════ */}
         <Section tone="paper" rule aria-labelledby="fet-faq">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <SectionHead id="fet-faq" label={t("faqLabel")} title={t("faqTitle")} className="lg:col-span-4" />
             <div className="lg:col-span-8">
               <Faq items={faqs} />

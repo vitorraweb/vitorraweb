@@ -155,7 +155,7 @@ export default async function HomePage() {
 
         {/* ══ 4 · Credentials, separated ════════════════════════════════════ */}
         <Section tone="cream" aria-labelledby="cred-heading">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <div className="lg:col-span-4">
               <Label className="mb-6">{t("credLabel")}</Label>
               <Heading id="cred-heading" size="h2" className="text-ink">{t("credTitle")}</Heading>
@@ -164,7 +164,7 @@ export default async function HomePage() {
                 <TextLink href="/trust/certifications">{t("credCta")}</TextLink>
               </div>
             </div>
-            <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-10 lg:border-l lg:border-line-strong lg:pl-16">
+            <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 md:gap-10 lg:border-l lg:border-line-strong lg:pl-16">
               <div className="md:col-span-2">
                 <CredentialGroups groups={credentials.map((g) => ({ title: g.group, items: g.items }))} />
               </div>
@@ -177,6 +177,7 @@ export default async function HomePage() {
         <ProofCarousel
           label={bn("proofLabel")}
           title={bn("proofTitle")}
+          swipeHint={bn("swipeMore")}
           slides={[
             { src: "/banners/proof-fet.webp", alt: bn("proofFetAlt"), href: "/products/fuel-eco-tech", name: tp("fet.name") },
             { src: "/banners/proof-seal.webp", alt: bn("proofSealAlt"), href: "/products/seal-wound-spray", name: tp("seal.name") },
@@ -187,7 +188,7 @@ export default async function HomePage() {
 
         {/* ══ 5 · The company ═══════════════════════════════════════════════ */}
         <Section tone="sage" aria-labelledby="company-heading">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-center">
             <div className="lg:col-span-6 lg:order-2">
               <Picture src="/photos/company-B-reception.jpg" alt={alt("reception")} ratio="4/3" grade={false} sizes="(min-width: 1024px) 45vw, 100vw" />
             </div>
@@ -205,7 +206,7 @@ export default async function HomePage() {
         {/* ══ 6 · News ══════════════════════════════════════════════════════ */}
         <Section tone="paper" aria-labelledby="news-heading">
           <Container>
-            <div className="flex flex-wrap items-end justify-between gap-6 mb-12">
+            <div className="flex flex-wrap items-end justify-between gap-6 mb-10 sm:mb-12">
               <div>
                 <Label className="mb-6">{t("newsLabel")}</Label>
                 <Heading id="news-heading" size="h2" className="text-ink">{t("newsTitle")}</Heading>

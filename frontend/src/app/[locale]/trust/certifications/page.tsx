@@ -87,7 +87,7 @@ export default async function CertificationsPage() {
             <Text size="lead" className="mt-8 max-w-[40rem] q-rise">{t("lead")}</Text>
 
             {/* Jump links — one per group */}
-            <nav aria-label={t("label")} className="mt-12 flex flex-wrap gap-x-8 gap-y-3">
+            <nav aria-label={t("label")} className="mt-10 sm:mt-12 flex flex-wrap gap-x-8 gap-y-3">
               {EVIDENCE_GROUPS.map((g, i) => (
                 <a key={g} href={`#evidence-${g}`} className="q-link t-small text-ink">
                   <span className="font-numeric text-gold-ink">{String(i + 1).padStart(2, "0")}</span>

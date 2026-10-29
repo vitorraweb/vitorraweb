@@ -42,10 +42,10 @@ export default function CoffeeExportSpec() {
           label={t("eyebrow")}
           title={<>{t("titleLead")} {t("titleAccent")}</>}
           body={t("body")}
-          className="mb-14"
+          className="mb-10 sm:mb-14"
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
           {/* ── Price, with its caveat beside it ─────────────────────────── */}
           <div className="lg:col-span-5">
             <p className="t-label text-ink-muted">{t("priceEyebrow")}</p>
@@ -69,7 +69,7 @@ export default function CoffeeExportSpec() {
         </div>
 
         {/* ── Grades ─────────────────────────────────────────────────────── */}
-        <div className="mt-20">
+        <div className="mt-10 sm:mt-12 sm:mt-20">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
             <h3 className="t-h3 text-ink">{t("gradesTitle")}</h3>
             <p className="t-small text-ink-muted max-w-[34rem]">{t("gradesBody")}</p>
@@ -88,7 +88,7 @@ export default function CoffeeExportSpec() {
         </div>
 
         {/* ── Documentation ──────────────────────────────────────────────── */}
-        <div className="mt-20 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="mt-10 sm:mt-12 sm:mt-20 grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-5">
             <h3 className="t-h3 text-ink">{t("docsTitle")}</h3>
             <Text size="small" className="mt-3">{t("docsBody")}</Text>

@@ -51,7 +51,8 @@ export default function LanguageSwitcher({ dark = false }: { dark?: boolean }) {
               aria-pressed={isActive}
               lang={opt}
               className={cn(
-                "py-1 border-b transition-colors",
+                // py-2.5/px-1.5 give a thumb-sized target; the -my keeps the bar height.
+                "py-2.5 -my-1.5 px-1.5 -mx-1.5 border-b transition-colors",
                 isActive
                   ? cn("border-gold", dark ? "text-ink-fg" : "text-ink")
                   : cn("border-transparent", dark ? "text-ink-fg-muted hover:text-ink-fg" : "text-ink-muted hover:text-ink"),

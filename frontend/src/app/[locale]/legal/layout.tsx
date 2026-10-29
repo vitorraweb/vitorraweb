@@ -17,7 +17,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
     <>
       <Header />
       <main id="main" className="q-scope flex-1 bg-paper pt-16 lg:pt-[6.25rem]">
-        <div className="q-container q-section !pt-14 lg:!pt-20 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+        <div className="q-container q-section !pt-14 lg:!pt-20 grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-start">
           <div className="lg:col-span-3">
             <LegalNav heading={t("colLegal")} links={links} />
           </div>

@@ -118,7 +118,7 @@ export default async function CoffeePage() {
 
         {/* ══ Origin — where it grows, on a real map ═══════════════════════ */}
         <Section tone="paper" aria-labelledby="coffee-origin-map">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-center">
             <div className="lg:col-span-5">
               <SectionHead id="coffee-origin-map" label={vt("originLabel")} title={vt("originTitle")} body={vt("originBody")} />
             </div>
@@ -129,11 +129,11 @@ export default async function CoffeePage() {
         <DesignedBanner src="/banners/wide-coffee.webp" alt={bn("wideCoffeeAlt")} width={2880} height={1234} />
 
         <Section tone="paper" aria-labelledby="coffee-blend">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <div className="lg:col-span-5">
               <h2 id="coffee-blend" className="t-h2 text-ink">{old("blendTitle")}</h2>
               <p className="t-body text-ink-soft mt-6">{old("blendBody")}</p>
-              <Picture className="mt-12 max-w-[22rem]" src="/banners/keyvisual-coffee.webp" alt={bn("keyCoffeeAlt")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
+              <Picture className="mt-10 sm:mt-12 max-w-[22rem]" src="/banners/keyvisual-coffee.webp" alt={bn("keyCoffeeAlt")} ratio="4/5" grade={false} sizes="(min-width: 1024px) 25vw, 90vw" />
             </div>
             <div className="lg:col-span-7">
               <SpecTable rows={[1, 2, 3, 4, 5].map((n) => [old(`spec${n}Key`), old(`spec${n}Value`)] as [string, string])} />
@@ -147,7 +147,7 @@ export default async function CoffeePage() {
         {/* ══ Ways to buy ═══════════════════════════════════════════════════ */}
         <Section tone="paper" aria-labelledby="coffee-ways">
           <Container>
-            <SectionHead id="coffee-ways" label={t("waysLabel")} title={t("waysTitle")} className="mb-14" />
+            <SectionHead id="coffee-ways" label={t("waysLabel")} title={t("waysTitle")} className="mb-10 sm:mb-14" />
             <ol className="grid grid-cols-1 md:grid-cols-3 gap-px bg-line border-y border-line">
               {ways.map((w, i) => (
                 <li key={w.title} className="flex flex-col bg-paper py-10 md:px-8 md:first:pl-0">
@@ -165,7 +165,7 @@ export default async function CoffeePage() {
 
         {/* ══ Questions ═════════════════════════════════════════════════════ */}
         <Section tone="paper" rule aria-labelledby="coffee-faq">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
             <SectionHead id="coffee-faq" label={shared("faqLabel")} title={t("faqTitle")} className="lg:col-span-4" />
             <div className="lg:col-span-8">
               <Faq items={faqs} />

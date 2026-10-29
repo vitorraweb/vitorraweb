@@ -64,7 +64,7 @@ export default async function ContactPage() {
 
         {/* Every way to reach a person, and the short form, on cream. */}
         <Section tone="cream" aria-labelledby="contact-direct">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-start">
             <div className="lg:col-span-5">
               <Label className="mb-6">{t("eyebrow")}</Label>
               <Heading id="contact-direct" size="h2" className="text-ink mb-10">{t("directTitle")}</Heading>
@@ -76,7 +76,7 @@ export default async function ContactPage() {
                   </div>
                 ))}
               </dl>
-              <div className="mt-12 border-l-2 border-gold pl-6">
+              <div className="mt-10 sm:mt-12 border-l-2 border-gold pl-6">
                 <p className="font-display text-[1.375rem] text-ink">{t("quoteTitle")}</p>
                 <p className="t-small text-ink-muted mt-2 mb-5">{t("quoteBody")}</p>
                 <TextLink href="/enquire">{t("quoteCta")}</TextLink>
@@ -90,7 +90,7 @@ export default async function ContactPage() {
 
         {/* Where we are: the real building beside the map, on sage. */}
         <Section tone="sage" aria-labelledby="contact-visit">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-stretch">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-stretch">
             <div className="lg:col-span-5">
               <Label className="mb-6">{t("visitLabel")}</Label>
               <h2 id="contact-visit" className="sr-only">{t("visitLabel")}</h2>

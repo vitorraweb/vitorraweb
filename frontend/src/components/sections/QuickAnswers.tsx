@@ -21,7 +21,7 @@ export async function QuickAnswers({ page, tone = "paper" }: { page: AnswersPage
   const items = await quickAnswers(page);
   return (
     <Section tone={tone} rule={tone === "paper"} aria-labelledby={`answers-${page}`}>
-      <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+      <Container className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
         <div className="lg:col-span-4">
           <Label className="mb-6">{t("label")}</Label>
           <Heading id={`answers-${page}`} size="h2" className="text-ink">{t("title")}</Heading>

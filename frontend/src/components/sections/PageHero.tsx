@@ -26,7 +26,7 @@ export function PageHero({
 
   return (
     <section aria-labelledby={id} className="q-scope relative bg-paper text-ink">
-      <Container className="pt-32 lg:pt-44 pb-16 lg:pb-24">
+      <Container className="pt-24 sm:pt-32 lg:pt-44 pb-12 sm:pb-16 lg:pb-24">
         <div className="flex items-center justify-between gap-6 q-rise" style={d(80)}>
           <div className="flex items-center gap-5">
             <Label>{label}</Label>

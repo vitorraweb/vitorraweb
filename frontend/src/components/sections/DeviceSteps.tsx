@@ -35,12 +35,12 @@ export function DeviceSteps({
     <section aria-labelledby="fet-how" className="q-scope bg-paper text-ink">
       <div ref={ref} className="hidden lg:block relative" style={{ height: `${steps.length * 90 + 60}vh` }}>
         <div className="sticky top-0 h-svh overflow-hidden">
-          <div className="q-container h-full grid grid-cols-12 gap-12 items-center">
+          <div className="q-container h-full grid grid-cols-12 gap-8 sm:gap-12 items-center">
             <div className="col-span-5">
               <p className="t-label text-ink-muted mb-6">{label}</p>
               <h2 id="fet-how" className="t-h2 text-ink">{title}</h2>
               <p className="t-body text-ink-soft mt-6 max-w-[28rem]">{body}</p>
-              <ol className="mt-12 border-t border-line">
+              <ol className="mt-10 sm:mt-12 border-t border-line">
                 {steps.map((s, i) => (
                   <li key={s.title} className="border-b border-line py-5">
                     <div className="flex gap-5">

@@ -95,7 +95,7 @@ export default async function BlogPostPage({ params }: Props) {
               <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
               {t("backToBlog")}
             </Link>
-            <header className="mt-12 max-w-[52rem]">
+            <header className="mt-10 sm:mt-12 max-w-[52rem]">
               <p className="t-label text-ink-muted flex flex-wrap gap-x-3 q-rise">
                 {post.published_at && <time dateTime={post.published_at} className="font-numeric">{fmt.format(new Date(post.published_at))}</time>}
                 {post.author && <span>· {post.author}</span>}
