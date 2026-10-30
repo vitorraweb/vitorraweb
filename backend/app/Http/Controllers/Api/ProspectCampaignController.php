@@ -12,6 +12,7 @@ use App\Support\Audit;
 use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
@@ -75,6 +76,12 @@ class ProspectCampaignController extends Controller
                 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,png,jpg,jpeg,csv,txt',
             ],
         ]);
+
+        // Customers only receive an email the team has already seen as a test:
+        // this exact subject and body, tested by this person in the last 24 hours.
+        if (config('campaigns.require_test', true) && ! Cache::has($this->testedKey($request->user()->id, $data['subject'], $data['body']))) {
+            return response()->json(['message' => 'Send a test of this exact email to the team first, then send it to customers.'], 422);
+        }
 
         $prospects = $request->boolean('all_matching')
             ? Prospect::query()->filtered(ProspectController::filtersFrom($request))->get()
@@ -297,6 +304,7 @@ class ProspectCampaignController extends Controller
         foreach ($recipients as $to) {
             Mail::to($to)->send($this->composed($data, $files, isTest: true, signature: $request->user()->email_signature));
         }
+        Cache::put($this->testedKey($request->user()->id, $data['subject'], $data['body']), true, now()->addDay());
 
         return response()->json([
             'sent_to' => $recipients->values()->all(),
@@ -318,5 +326,11 @@ class ProspectCampaignController extends Controller
             $isTest,
             $signature,
         );
+    }
+
+    /** Marks "this person tested this exact subject and body" (whitespace-trimmed). */
+    private function testedKey(int $userId, string $subject, string $body): string
+    {
+        return 'campaign-tested:'.$userId.':'.sha1(trim($subject)."\n".trim($body));
     }
 }

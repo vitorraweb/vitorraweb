@@ -442,9 +442,9 @@ export default function ProspectsPage() {
     } finally { setTesting(false); }
   };
 
-  /** Full send — a version nobody has tested needs a second, deliberate click. */
+  /** Full send — only once this exact version has been sent as a test to the team. */
   const releaseCampaign = () => {
-    if (!tested && !confirmUntested) { setConfirmUntested(true); return; }
+    if (!tested) { setConfirmUntested(true); return; }
     startCampaign();
   };
 
@@ -964,12 +964,13 @@ export default function ProspectsPage() {
                 {campaign ? "Close" : "Cancel"}
               </button>
               {!campaign && (
-                <button onClick={releaseCampaign} disabled={sending || !subject.trim() || !body.trim() || (!allMatching && selectedWithEmail === 0)}
+                <button onClick={releaseCampaign} disabled={sending || !tested || !subject.trim() || !body.trim() || (!allMatching && selectedWithEmail === 0)}
+                  title={tested ? undefined : "Send a test of this exact email first"}
                   className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full disabled:opacity-50"
                   style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>
                   {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                  {confirmUntested && !tested
-                    ? "Not tested yet. Send anyway?"
+                  {!tested
+                    ? "Send a test first"
                     : allMatching ? `Send to all ${meta.total}` : `Send to ${selectedWithEmail}`}
                 </button>
               )}

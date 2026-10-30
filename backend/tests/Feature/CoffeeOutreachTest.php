@@ -22,6 +22,13 @@ class CoffeeOutreachTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // These tests are about sending; the test-first rule has its own test.
+        config(['campaigns.require_test' => false]);
+    }
+
     private function admin(): self
     {
         $user = User::create([

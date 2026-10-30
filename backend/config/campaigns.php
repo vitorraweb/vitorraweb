@@ -28,4 +28,8 @@ return [
         (string) env('CAMPAIGN_TEST_RECIPIENTS', 'thurayya@vitorra.org,sarah@vitorra.org')
     )))),
 
+
+    // Customers only receive an email the sender has first test-sent to the
+    // team (same subject and body, within 24 hours). Leave on.
+    'require_test' => env('CAMPAIGN_REQUIRE_TEST', true),
 ];

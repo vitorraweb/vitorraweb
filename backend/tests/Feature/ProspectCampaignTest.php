@@ -23,6 +23,8 @@ class ProspectCampaignTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // These tests are about sending; the test-first rule has its own test.
+        config(['campaigns.require_test' => false]);
         config(['campaigns.throttle_ms' => 0, 'mail.campaign_from' => 'support@vitorra.org']);
     }
 
@@ -47,6 +49,31 @@ class ProspectCampaignTest extends TestCase
             'product'  => 'SEAL',
             'email'    => 'p-'.uniqid().'@example.org',
         ], $extra));
+    }
+
+    public function test_customers_only_get_an_email_the_sender_has_tested(): void
+    {
+        config(['campaigns.require_test' => true]);
+        Mail::fake();
+        $staff = $this->admin();
+        $prospect = $this->prospect();
+        $email = ['subject' => 'Free fuel assessment', 'body' => 'Dear {name}, a short note.'];
+
+        // Not tested: refused, and nothing reaches the customer.
+        $this->actingApi($staff)->postJson('/api/admin/prospect-campaigns', ['ids' => [$prospect->id]] + $email)
+            ->assertUnprocessable()->assertJsonPath('message', 'Send a test of this exact email to the team first, then send it to customers.');
+        Mail::assertNothingSent();
+
+        // Tested to the sender themself, then the same email goes out.
+        $this->app['auth']->forgetGuards();
+        $this->actingApi($staff)->postJson('/api/admin/prospect-campaigns/test', $email + ['recipients' => [$staff->email]])->assertOk();
+        $this->app['auth']->forgetGuards();
+
+        // Changing the wording after the test needs a new test.
+        $this->actingApi($staff)->postJson('/api/admin/prospect-campaigns', ['ids' => [$prospect->id], 'subject' => 'Free fuel assessment!', 'body' => $email['body']])
+            ->assertUnprocessable();
+        $this->app['auth']->forgetGuards();
+        $this->actingApi($staff)->postJson('/api/admin/prospect-campaigns', ['ids' => [$prospect->id]] + $email)->assertCreated();
     }
 
     public function test_campaign_sends_from_the_support_address_not_the_staff_member(): void

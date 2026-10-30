@@ -20,6 +20,8 @@ class CampaignEmailTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // These tests are about sending; the test-first rule has its own test.
+        config(['campaigns.require_test' => false]);
         config([
             'campaigns.throttle_ms'      => 0,
             'mail.campaign_from'         => 'support@vitorra.org',
