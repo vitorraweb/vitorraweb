@@ -38,7 +38,7 @@ export default function ReceptionScreenPage() {
     finally { setBusy(false); }
   };
 
-  const src = mode === "street" ? "/display?mode=street" : "/display";
+  const src = mode === "street" ? "/display/street" : "/display";
 
   return (
     <div className="pb-12">
@@ -47,7 +47,7 @@ export default function ReceptionScreenPage() {
         subtitle="Welcome a visiting client by name on the reception TV, and preview the reception and street screens."
         actions={<>
           <a className="c-btn" href="/display" target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4" />Open reception screen</a>
-          <a className="c-btn" href="/display?mode=street" target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4" />Open street screen</a>
+          <a className="c-btn" href="/display/street" target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4" />Open street screen</a>
         </>}
       />
 
@@ -87,7 +87,12 @@ export default function ReceptionScreenPage() {
           <div className="relative w-full overflow-hidden rounded-md" style={{ aspectRatio: "16 / 9", background: "#09090A" }}>
             <iframe key={src} src={src} title="Screen preview" className="absolute inset-0 w-full h-full border-0" />
           </div>
-          <p className="text-[12.5px] text-ink-muted">Set the screen&apos;s browser to open {typeof window !== "undefined" ? window.location.origin : "https://vitorra.org"}{src} in full-screen (kiosk) mode.</p>
+          <div className="text-[13px] text-ink-soft space-y-1.5">
+            <p className="font-semibold text-ink">Full screen, without browser tabs</p>
+            <p><strong>Best:</strong> on the screen&apos;s computer, open <span className="font-mono">vitorra.org{src}</span> in Chrome or Edge, then choose <em>Install</em> (the icon at the right of the address bar, or ⋮ → Cast, save and share → Install page as app). It opens full screen with no tabs. Set it to open at start-up.</p>
+            <p><strong>Quick:</strong> open the page and click once anywhere (or press F). It goes full screen and stays awake.</p>
+            <p><strong>Media players / dedicated PCs:</strong> start Chrome with <span className="font-mono">--kiosk https://vitorra.org{src}</span>.</p>
+          </div>
         </section>
       </div>
     </div>

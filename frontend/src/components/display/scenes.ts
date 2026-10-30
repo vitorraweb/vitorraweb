@@ -16,8 +16,10 @@ export type SectorScene = {
   tag: string;
   film: string;
   poster: string;
-  /** CSS filter to bring a film into the same dark world as the others. */
+  /** CSS filter to bring a film into the same dark world as the others (reception). */
   grade?: string;
+  /** The same for the street screen, where everything is brighter for daylight. */
+  streetGrade?: string;
   line1: string;
   line2: string;
   stat: { value: number; decimals?: number; prefix?: string; unit: string; caption: string };
@@ -64,6 +66,7 @@ export const SECTORS: SectorScene[] = [
     film: "/videos/coffee-hero.mp4",
     poster: "/videos/coffee-hero-poster.jpg",
     grade: "brightness(0.42) contrast(1.18) saturate(1.25) sepia(0.22)",
+    streetGrade: "brightness(0.78) contrast(1.12) saturate(1.2) sepia(0.12)",
     line1: "Ugandan Arabica,",
     line2: "graded and exported at origin.",
     stat: { value: 1, unit: "tonne", caption: "minimum export order · samples on request" },

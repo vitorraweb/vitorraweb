@@ -8,8 +8,9 @@ import { Stage } from "@/components/display/Stage";
    /display                → reception: clock, Kampala weather, and a personal
                               welcome for the visiting client when reception sets
                               one (Operations → Reception screen).
-   /display?mode=street    → the screen facing the road: bigger type, fewer
-                              words, no clock and never a visitor's name.
+   /display/street         → the screen facing the road (also ?mode=street):
+                              bigger, brighter for daylight, fewer words, no
+                              clock and never a visitor's name.
    /display?scene=fet      → hold one scene (for checking a screen's set-up).
 
    Full-screen and fixed — a TV, not a page. No header, footer or cookie banner
