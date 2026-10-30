@@ -1437,6 +1437,34 @@
 .admin-console :is(input, select, textarea):not([type="checkbox"], [type="radio"], [type="range"]) {
   background-color: var(--o-surface); color: var(--o-text); border-color: var(--o-line-strong);
 }
+/* Website colours used inside the console (inline styles, colour mixes) follow
+   the console theme, so nothing light-on-light appears in dark mode. */
+.admin-console {
+  --color-paper: var(--o-surface);
+  --color-paper-deep: var(--o-surface-2);
+  --color-ink: var(--o-text);
+  --color-ink-soft: var(--o-text-2);
+  --color-ink-muted: var(--o-muted);
+  --color-line: var(--o-line);
+  --color-line-strong: var(--o-line-strong);
+  --color-gold: var(--o-accent);
+  --color-gold-ink: var(--o-accent-text);
+  --color-alert-ink: var(--o-danger);
+  --color-ok-ink: var(--o-success);
+}
+/* Dropdown lists take the field's colours rather than the system's white. */
+.admin-console :is(select option, select optgroup) { background-color: var(--o-surface); color: var(--o-text); }
+/* Browser autofill paints filled fields its own light colour; keep the
+   console's field colour and readable text instead. */
+.admin-console :is(input, textarea, select):-webkit-autofill,
+.admin-console :is(input, textarea, select):-webkit-autofill:hover,
+.admin-console :is(input, textarea, select):-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--o-text);
+  caret-color: var(--o-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--o-surface) inset;
+  box-shadow: 0 0 0 1000px var(--o-surface) inset;
+  transition: background-color 600000s 0s;
+}
 .admin-console :is(input, select, textarea):focus { border-color: var(--o-accent) !important; outline: none; box-shadow: 0 0 0 3px color-mix(in oklab, var(--o-accent) 22%, transparent); }
 .admin-console :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--o-brand); }
 

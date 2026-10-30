@@ -177,7 +177,7 @@ export default function TemplatesPage() {
                   <button onClick={() => openEdit(t)} className="p-1.5 rounded-lg hover:bg-black/5 transition-colors">
                     <Pencil className="w-3.5 h-3.5" style={{ color: "var(--o-muted)" }} />
                   </button>
-                  <button onClick={() => destroy(t.id)} disabled={deleting === t.id} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                  <button onClick={() => destroy(t.id)} disabled={deleting === t.id} className="p-1.5 rounded-lg hover:bg-[var(--o-danger-bg)] transition-colors">
                     {deleting === t.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: "var(--o-danger)" }} /> : <Trash2 className="w-3.5 h-3.5" style={{ color: "var(--o-danger)" }} />}
                   </button>
                 </div>

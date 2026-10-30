@@ -134,13 +134,13 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
       {/* On hand now, per model */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
         {models.map((m) => (
-          <button key={m.code} onClick={() => setFocus(focus === m.code ? "" : m.code)} className="c-panel p-4 text-left transition-colors" style={focus === m.code ? { borderColor: "var(--color-gold)" } : undefined}>
+          <button key={m.code} onClick={() => setFocus(focus === m.code ? "" : m.code)} className="c-panel p-4 text-left transition-colors" style={focus === m.code ? { borderColor: "var(--o-accent)" } : undefined}>
             <p className="c-panel-title mb-2">{m.label}</p>
-            <p className="text-2xl tabular-nums text-ink" style={{ color: m.on_hand < 0 ? "var(--color-alert-ink)" : undefined }}>{m.on_hand}<span className="text-xs text-ink-muted ml-1">in stock</span></p>
+            <p className="text-2xl tabular-nums text-ink" style={{ color: m.on_hand < 0 ? "var(--o-danger)" : undefined }}>{m.on_hand}<span className="text-xs text-ink-muted ml-1">in stock</span></p>
             {m.value_ugx !== null && <p className="text-xs text-ink-muted mt-1 tabular-nums">{ugx(m.value_ugx)} at catalogue price</p>}
           </button>
         ))}
-        <div className="c-panel p-4 sm:col-span-1" style={{ background: "var(--color-paper-deep)" }}>
+        <div className="c-panel p-4 sm:col-span-1" style={{ background: "var(--o-surface-2)" }}>
           <p className="c-panel-title mb-2">All FET</p>
           <p className="text-2xl tabular-nums text-ink">{totalUnits}<span className="text-xs text-ink-muted ml-1">devices</span></p>
           <p className="text-xs text-ink-muted mt-1 tabular-nums">{ugx(totalValue)} at catalogue price</p>
@@ -161,7 +161,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
                 </td>
                 {models.map((m) => {
                   const n = h.models[m.code] ?? 0;
-                  return <td key={m.code} className="text-right tabular-nums" style={n < 0 ? { color: "var(--color-alert-ink)" } : undefined}>{n || "–"}</td>;
+                  return <td key={m.code} className="text-right tabular-nums" style={n < 0 ? { color: "var(--o-danger)" } : undefined}>{n || "–"}</td>;
                 })}
                 <td className="text-right tabular-nums font-semibold text-ink">{h.total}</td>
                 <td className="whitespace-nowrap">{h.last_moved_on ? new Date(`${h.last_moved_on}T00:00:00`).toLocaleDateString("en-GB") : "–"}</td>
@@ -171,7 +171,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
         </table>
         <p className="text-xs text-ink-muted px-4 py-2">
           Devices stay with the <b>{mainHolder}</b> unless an entry says otherwise. A delivery goes to whoever is entered as <b>Received by</b>; use <b>Handed over</b> when devices move from one person or office to another.
-          {holders.some((h) => Object.values(h.models).some((n) => n < 0)) && <span style={{ color: "var(--color-alert-ink)" }}> A figure in red is below zero: devices were recorded leaving that holder before reaching them. Correct the entry below.</span>}
+          {holders.some((h) => Object.values(h.models).some((n) => n < 0)) && <span style={{ color: "var(--o-danger)" }}> A figure in red is below zero: devices were recorded leaving that holder before reaching them. Correct the entry below.</span>}
         </p>
       </div>
 
@@ -226,11 +226,11 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
             {editing && <button onClick={closeForm} className="c-btn c-btn-ghost">Cancel</button>}
             <p className="text-xs text-ink-muted">{isAdjust ? "Use after a physical count: + if more devices were found than the book says, − if fewer." : form.type === "transfer" ? "Devices stay in company stock; only who holds them changes." : "Leave the holder blank for the main store. Sold also covers devices fitted to a customer's vehicle."}</p>
           </div>
-          {msg && <p className="text-sm mt-2" style={{ color: msg === "Recorded." || msg === "Corrected." ? "var(--color-ok-ink)" : "var(--color-alert-ink)" }}>{msg}</p>}
+          {msg && <p className="text-sm mt-2" style={{ color: msg === "Recorded." || msg === "Corrected." ? "var(--o-success)" : "var(--o-danger)" }}>{msg}</p>}
         </div>
       )}
 
-      {!adding && msg === "Corrected." && <p className="text-sm mb-3" style={{ color: "var(--color-ok-ink)" }}>Corrected.</p>}
+      {!adding && msg === "Corrected." && <p className="text-sm mb-3" style={{ color: "var(--o-success)" }}>Corrected.</p>}
 
       {/* Week by week */}
       <div className="c-panel mb-5 overflow-x-auto">
