@@ -146,6 +146,10 @@
     "careers": {
       "title": "Careers | Vitorra Holdings Limited",
       "description": "Join Vitorra Holdings: careers across fuel technology, healthcare, premium coffee, and logistics in Kampala, Uganda. Send a general application or ask about open roles."
+    },
+    "fetCatalogue": {
+      "title": "Fuel Eco Tech Catalogue | Four Devices, Prices & Stock",
+      "description": "The full Fuel Eco Tech range: four devices covering every engine from 1.0 to 16 litres, with prices in UGX including installation and live stock in Kampala."
     }
   },
   "finalCta": {
@@ -276,7 +280,8 @@
     "reservePayOffline": "Prefer to pay offline? Reserve and we'll contact you",
     "reservePayFailed": "We couldn't start the payment just now. Your reservation is saved, and our team will contact you to complete it.",
     "reserveCopyLink": "Copy reservation link",
-    "reserveLinkCopied": "Link copied!"
+    "reserveLinkCopied": "Link copied!",
+    "openCatalogue": "Open the full catalogue"
   },
   "fetCalculator": {
     "eyebrow": "Savings calculator",
@@ -1790,5 +1795,41 @@
     "logistics3A": "It depends on the authorities at each border, so Vitorra gives an estimate for your route rather than a guarantee.",
     "logistics4Q": "What do I need for a freight quote?",
     "logistics4A": "Origin and destination, what the cargo is with its weight and volume, any special handling, and when it must move. A quote follows within 24 hours of a complete brief."
+  },
+  "fetCatalogue": {
+    "crumb": "Catalogue",
+    "eyebrow": "The Fuel Eco Tech catalogue · Kampala",
+    "titleLead": "Four devices.",
+    "titleAccent": "Every engine from 1.0 to 16 litres.",
+    "lead": "One design, sized for your vehicle: from a compact car to a 40-tonne truck. Every price is in Uganda shillings and includes professional installation.",
+    "heroStock": "{count, plural, =0 {All models available to order} other {# of {total} models in stock in Kampala today}}",
+    "ctaFind": "Find your device",
+    "ctaAssess": "Book a free fuel assessment",
+    "proofK": "Measured result",
+    "proofV": "less fuel on a VW T5, CTI GmbH field test, Germany 2025",
+    "finderLabel": "Which one fits",
+    "finderTitle": "Choose your vehicle.",
+    "stockIn": "In stock in Kampala, ready to fit",
+    "stockLow": "{count, plural, one {Only # left in stock} other {Only # left in stock}}",
+    "stockOrder": "Available to order",
+    "specEngine": "Engine size",
+    "specExamples": "Typical vehicles",
+    "specInstall": "Installation",
+    "specInstallV": "Included, by our technicians",
+    "appsLabel": "Manufacturer applications",
+    "priceLabel": "Price, installed",
+    "compareLabel": "Compare",
+    "compareTitle": "The range, side by side.",
+    "rowFor": "Built for",
+    "rowPrice": "Price (UGX)",
+    "rowStock": "Stock today",
+    "rowOpen": "View device",
+    "includedLabel": "With every device",
+    "includedTitle": "Fitted, measured and backed.",
+    "includedBody": "We assess your vehicles first, fit the device ourselves and stay with you while the savings are measured.",
+    "backToFet": "How Fuel Eco Tech works and the full test result",
+    "stockNote": "Stock is taken from our Kampala store records and refreshed every few minutes.",
+    "contactTitle": "Not sure which device your fleet needs?",
+    "contactBody": "Tell us about your vehicles. We will recommend the right device for each one and estimate what you could save, free of charge."
   }
 }

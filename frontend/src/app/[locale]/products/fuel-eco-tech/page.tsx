@@ -19,6 +19,7 @@ import { CinematicHero, DesignedBanner, FactStrip, Mosaic, Picture } from "@/com
 import { CountUp } from "@/components/system/CountUp";
 import APPLICATIONS from "@/data/fet-applications.json";
 import { engineSpanLabel } from "@/lib/fet-pricing";
+import { getFetAvailability } from "@/lib/fet-availability";
 
 /* ─── Fuel Eco Tech — Quiet Authority ─────────────────────────────────────────
    Rebuilt October 2026 around the FET buying journey, in the order a fleet
@@ -56,6 +57,7 @@ export default async function FuelEcoTechPage() {
   const alt = await getTranslations("imageAlt");
   const bn = await getTranslations("banners");
   const vt = await getTranslations("visuals");
+  const stock = await getFetAvailability();
 
   const evidenceRows: [string, string][] = [
     [home("evidenceRowBefore"), `11.52 ${home("evidenceUnit")}`],
@@ -267,7 +269,7 @@ export default async function FuelEcoTechPage() {
         </Section>
 
         {/* ══ Price, then the customer's own estimate ═══════════════════════ */}
-        <FetPricing />
+        <FetPricing stock={stock} />
         <FetCalculator />
 
         {/* ══ How we sell ═══════════════════════════════════════════════════ */}

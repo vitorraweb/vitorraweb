@@ -169,6 +169,8 @@ Route::get('/google-ads/oauth/callback', [GoogleAdsController::class, 'callback'
 
 // Live exchange rate (cached 1 hr; falls back to config if API key not set)
 Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);
+// Public FET stock status for the website catalogue (in stock / low / to order, never full counts).
+Route::get('/fet/availability', [FetStockController::class, 'availability'])->middleware('throttle:120,1');
 // Reception / street screen: what to show beyond its built-in story (the welcome).
 Route::get('/display', [DisplayController::class, 'show'])->middleware('throttle:60,1');
 

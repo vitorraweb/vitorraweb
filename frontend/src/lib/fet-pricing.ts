@@ -294,3 +294,8 @@ export function computeSavings(input: {
     deviceCostFleet: deviceCostEur * vehicles,
   };
 }
+
+/** Catalogue tier → the device code used by the stock book and application table. */
+export const TIER_CODE: Record<FetTier["id"], "FI" | "FII" | "FIII" | "FIV"> = {
+  car: "FI", suv: "FII", lighttruck: "FIII", heavytruck: "FIV",
+};

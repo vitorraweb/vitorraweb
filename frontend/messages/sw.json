@@ -146,6 +146,10 @@
     "careers": {
       "title": "Kazi | Vitorra Holdings Limited",
       "description": "Jiunge na Vitorra Holdings: kazi katika teknolojia ya mafuta, afya, kahawa bora, na usafirishaji mjini Kampala, Uganda. Tuma ombi la jumla au uliza kuhusu nafasi zilizopo."
+    },
+    "fetCatalogue": {
+      "title": "Katalogi ya Fuel Eco Tech | Vifaa Vinne, Bei na Stoo",
+      "description": "Aina zote za Fuel Eco Tech: vifaa vinne kwa kila injini kuanzia lita 1.0 hadi 16, bei kwa UGX pamoja na ufungaji, na stoo iliyopo Kampala."
     }
   },
   "finalCta": {
@@ -276,7 +280,8 @@
     "reservePayOffline": "Unapendelea kulipa nje ya mtandao? Hifadhi nasi tutawasiliana nawe",
     "reservePayFailed": "Hatukuweza kuanzisha malipo kwa sasa. Hifadhi yako imehifadhiwa. Timu yetu itawasiliana nawe ili kukamilisha.",
     "reserveCopyLink": "Nakili kiungo cha hifadhi",
-    "reserveLinkCopied": "Kiungo kimenakiliwa!"
+    "reserveLinkCopied": "Kiungo kimenakiliwa!",
+    "openCatalogue": "Fungua katalogi kamili"
   },
   "fetCalculator": {
     "eyebrow": "Kikokotoo cha uokoaji",
@@ -1790,5 +1795,41 @@
     "logistics3A": "Inategemea mamlaka katika kila mpaka, hivyo Vitorra hutoa makadirio kwa njia yako badala ya ahadi.",
     "logistics4Q": "Nahitaji nini kupata bei ya usafirishaji?",
     "logistics4A": "Mahali pa kuanzia na kufika, aina ya mzigo pamoja na uzito na ujazo, mahitaji maalum, na lini unapaswa kusafirishwa. Bei hutolewa ndani ya saa 24 baada ya maelezo kamili."
+  },
+  "fetCatalogue": {
+    "crumb": "Katalogi",
+    "eyebrow": "Katalogi ya Fuel Eco Tech · Kampala",
+    "titleLead": "Vifaa vinne.",
+    "titleAccent": "Kila injini kuanzia lita 1.0 hadi 16.",
+    "lead": "Muundo mmoja, uliopimwa kulingana na gari lako: kuanzia gari dogo hadi lori la tani 40. Kila bei iko kwa shilingi za Uganda na inajumuisha ufungaji wa kitaalamu.",
+    "heroStock": "{count, plural, =0 {Aina zote zinapatikana kwa kuagiza} other {Aina # kati ya {total} zipo stoo Kampala leo}}",
+    "ctaFind": "Tafuta kifaa chako",
+    "ctaAssess": "Omba tathmini ya mafuta bila malipo",
+    "proofK": "Matokeo yaliyopimwa",
+    "proofV": "mafuta kidogo kwenye VW T5, jaribio la CTI GmbH, Ujerumani 2025",
+    "finderLabel": "Kipi kinafaa",
+    "finderTitle": "Chagua gari lako.",
+    "stockIn": "Kipo stoo Kampala, tayari kufungwa",
+    "stockLow": "{count, plural, one {Kimebaki # tu stoo} other {Vimebaki # tu stoo}}",
+    "stockOrder": "Kinapatikana kwa kuagiza",
+    "specEngine": "Ukubwa wa injini",
+    "specExamples": "Magari ya kawaida",
+    "specInstall": "Ufungaji",
+    "specInstallV": "Umejumuishwa, na mafundi wetu",
+    "appsLabel": "Matumizi kulingana na mtengenezaji",
+    "priceLabel": "Bei, pamoja na ufungaji",
+    "compareLabel": "Linganisha",
+    "compareTitle": "Aina zote, kando kwa kando.",
+    "rowFor": "Kimetengenezwa kwa",
+    "rowPrice": "Bei (UGX)",
+    "rowStock": "Stoo leo",
+    "rowOpen": "Angalia kifaa",
+    "includedLabel": "Pamoja na kila kifaa",
+    "includedTitle": "Kinafungwa, kinapimwa na kina dhamana.",
+    "includedBody": "Tunatathmini magari yako kwanza, tunafunga kifaa wenyewe na tunabaki nawe wakati akiba inapimwa.",
+    "backToFet": "Jinsi Fuel Eco Tech inavyofanya kazi na matokeo kamili ya jaribio",
+    "stockNote": "Taarifa za stoo zinatoka kwenye kumbukumbu za stoo yetu ya Kampala na husasishwa kila baada ya dakika chache.",
+    "contactTitle": "Huna uhakika kifaa kipi kinafaa magari yako?",
+    "contactBody": "Tueleze kuhusu magari yako. Tutapendekeza kifaa sahihi kwa kila gari na kukadiria unachoweza kuokoa, bila malipo."
   }
 }

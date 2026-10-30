@@ -6,7 +6,9 @@ import ReserveButton from "@/components/sections/ReserveButton";
 import { Section, Container, TextLink, Text } from "@/components/system";
 import { VehicleIcon } from "@/components/ui/VehicleIcon";
 import { SectionHead } from "@/components/system/blocks";
-import { FET_TIERS, formatUgx, engineSpanLabel } from "@/lib/fet-pricing";
+import { FET_TIERS, TIER_CODE, formatUgx, engineSpanLabel } from "@/lib/fet-pricing";
+import { FetStockBadge } from "@/components/sections/FetStockBadge";
+import type { FetAvailability } from "@/lib/fet-availability";
 
 /* ─── FET Full Line Pricing — Quiet Authority ─────────────────────────────────
    Public pricing guide, one column per device tier — a line drawing of the vehicle class, then its exact selling
@@ -16,9 +18,7 @@ import { FET_TIERS, formatUgx, engineSpanLabel } from "@/lib/fet-pricing";
    engineSpanLabel(), so this block can never disagree with "Which device fits".
    The model codes on the left are the manufacturer's (FET-PRO-FI…FIV).       */
 
-const MODEL_CODE: Record<string, string> = { car: "FI", suv: "FII", lighttruck: "FIII", heavytruck: "FIV" };
-
-export default function FetPricing() {
+export default function FetPricing({ stock }: { stock?: FetAvailability | null }) {
   const tr = useTranslations("fetPricing");
   const tt = useTranslations("fetTiers");
 
@@ -55,8 +55,9 @@ export default function FetPricing() {
               <p className="t-label text-gold-ink mt-6">{t.model}</p>
               <h3 className="t-h3 text-ink mt-3">{tt(`${t.id}.label`)}</h3>
               <p className="t-small text-ink-soft mt-2">{tt(`${t.id}.fits`)}</p>
-              <p className="t-small text-ink-muted mt-1 font-numeric">{engineSpanLabel(MODEL_CODE[t.id])}</p>
+              <p className="t-small text-ink-muted mt-1 font-numeric">{engineSpanLabel(TIER_CODE[t.id])}</p>
               <p className="t-small text-ink-muted mt-1">{tr("egPrefix", { examples: tt(`${t.id}.examples`) })}</p>
+              <FetStockBadge stock={stock?.models[TIER_CODE[t.id]]} className="mt-4" />
 
               <div className="mt-auto pt-8">
                 <p className="t-label text-ink-muted">{tr("from")}</p>
@@ -78,6 +79,7 @@ export default function FetPricing() {
         <div className="mt-10 sm:mt-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-6">
             <div className="flex flex-col items-start gap-4">
+              <TextLink href="/products/fuel-eco-tech/catalogue">{tr("openCatalogue")}</TextLink>
               {[
                 { href: "/downloads/vitorra-fet-application-guide.pdf", label: tr("downloadGuide") },
                 { href: "/downloads/vitorra-fet-datasheet.pdf", label: tr("downloadDatasheet") },

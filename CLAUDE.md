@@ -198,6 +198,7 @@ Dark → Gold strip → White → Dark → White → Ivory → Dark → Ivory �
 | SEAL Wound Spray | `/products/seal-wound-spray` | ✅ Complete | **Rebuilt from product deck** — chitosan/FDA story, 3 variants, how-it-works, specs, trust signals, safety |
 | Vitorra Coffee | `/products/coffee` | ✅ Complete | Aligned with design system |
 | Logistics | `/products/logistics` | ✅ Complete | Aligned with design system |
+| FET Catalogue | `/products/fuel-eco-tech/catalogue` | ✅ Complete | Premium range page: chooser, one spread per device (applications, price installed, Reserve/Quote), comparison, live stock badges from the stock book (`GET /fet/availability`: in stock / only N left (≤3) / to order, never full counts, 5-min refresh). Same badges on the FET page pricing |
 | Enquiry / Quote | `/enquire` | ✅ Complete | Dark hero, sector-adaptive, 3-step form |
 | Blog (list) | `/blog` | ✅ Complete | ISR, placeholder state when backend offline |
 | Blog (post) | `/blog/[slug]` | ✅ Complete | Dynamic, fetches from API |

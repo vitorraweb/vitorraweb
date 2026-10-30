@@ -11,6 +11,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -62,6 +63,38 @@ class FetStockController extends Controller
                 ->map(fn (FetStockMovement $m) => $this->present($m)),
             'types'     => FetStockMovement::TYPES,
         ]);
+    }
+
+    /** Below this many devices in stock, the public catalogue says "only N left". */
+    public const LOW_STOCK = 3;
+
+    private const AVAILABILITY_CACHE = 'fet.availability';
+
+    /**
+     * Public: whether each catalogue model can be fitted from stock, for the
+     * website. Deliberately coarse, so competitors can't read our inventory:
+     * in stock, low (with the exact number only when it is 1–3), or available
+     * to order. Samples are never offered for sale, so they are left out.
+     */
+    public function availability(): JsonResponse
+    {
+        $data = Cache::remember(self::AVAILABILITY_CACHE, 300, function () {
+            $onHand = FetStockMovement::selectRaw('model, SUM(quantity) q')->groupBy('model')->pluck('q', 'model');
+            $models = [];
+            foreach (FetStockMovement::MODELS as $code => $m) {
+                if ($m['slug'] === null) {
+                    continue;
+                }
+                $n = max(0, (int) ($onHand[$code] ?? 0));
+                $models[$code] = $n === 0
+                    ? ['status' => 'order']
+                    : ($n <= self::LOW_STOCK ? ['status' => 'low', 'left' => $n] : ['status' => 'in_stock']);
+            }
+
+            return ['models' => $models, 'checked_at' => now()->toIso8601String()];
+        });
+
+        return response()->json($data)->header('Cache-Control', 'public, max-age=300');
     }
 
     public function store(Request $request): JsonResponse
@@ -363,6 +396,8 @@ class FetStockController extends Controller
         foreach ($checks as $key => $c) {
             $before[$key] = $this->lowest($c['model'], $c['holder'], $c['from']);
         }
+
+        Cache::forget(self::AVAILABILITY_CACHE);
 
         return DB::transaction(function () use ($write, $checks, $before) {
             $result = $write();

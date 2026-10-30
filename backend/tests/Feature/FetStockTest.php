@@ -88,6 +88,21 @@ class FetStockTest extends TestCase
         $this->record($u, ['model' => 'FI', 'type' => 'adjustment', 'quantity' => 2, 'note' => 'Stock count'])->assertCreated();
     }
 
+    public function test_public_availability_hides_full_counts(): void
+    {
+        $u = $this->admin();
+        $this->record($u, ['model' => 'FI', 'type' => 'received', 'quantity' => 12])->assertCreated();
+        $this->record($u, ['model' => 'FII', 'type' => 'received', 'quantity' => 2])->assertCreated();
+        $this->record($u, ['model' => 'SAMPLE', 'type' => 'received', 'quantity' => 5])->assertCreated();
+        $this->app['auth']->forgetGuards();
+
+        $res = $this->withHeaders(['Authorization' => ''])->getJson('/api/fet/availability')->assertOk();
+        $this->assertSame(['status' => 'in_stock'], $res->json('models.FI'));
+        $this->assertSame(['status' => 'low', 'left' => 2], $res->json('models.FII'));
+        $this->assertSame(['status' => 'order'], $res->json('models.FIV'));
+        $this->assertNull($res->json('models.SAMPLE'));
+    }
+
     public function test_samples_are_tracked_without_a_price(): void
     {
         $u = $this->juniorFinance();
