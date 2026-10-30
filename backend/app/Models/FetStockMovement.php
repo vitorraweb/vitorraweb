@@ -19,15 +19,39 @@ class FetStockMovement extends Model
         'FIV'  => ['label' => 'FET-PRO-FIV',  'slug' => 'fet-heavytruck'],
     ];
 
-    /** received/returned add stock, sold removes it, an adjustment can go either way. */
-    public const TYPES = ['received', 'sold', 'returned', 'adjustment'];
+    /**
+     * received/returned add stock, sold removes it, an adjustment can go either
+     * way, and a transfer hands devices from one holder to another (two linked
+     * rows, − at the giver and + at the receiver, so company stock is unchanged).
+     */
+    public const TYPES = ['received', 'sold', 'returned', 'adjustment', 'transfer'];
 
-    protected $fillable = ['model', 'type', 'quantity', 'moved_on', 'reference', 'picked_by', 'note', 'created_by'];
+    /** The main store: Operations keeps the devices unless an entry says otherwise. */
+    public const MAIN_HOLDER = 'Operations office (Victor Lojum)';
+
+    /** Ways people have written the main store, folded into one holder. */
+    private const MAIN_ALIASES = ['operations', 'operations office', 'ops', 'ops office', 'victor', 'victor lojum', "victor's office", 'victor lojum office', 'head of operations', 'main store', 'store'];
+
+    protected $fillable = ['model', 'type', 'quantity', 'moved_on', 'reference', 'picked_by', 'holder', 'transfer_id', 'note', 'created_by'];
 
     protected $casts = [
         'moved_on' => 'date:Y-m-d',
         'quantity' => 'integer',
     ];
+
+    /**
+     * One spelling per holder: blank or any name for the main store becomes the
+     * main store, and a name already on the book keeps its first spelling.
+     */
+    public static function normaliseHolder(?string $name): string
+    {
+        $name = trim(preg_replace('/\s+/', ' ', (string) $name));
+        if ($name === '' || in_array(mb_strtolower(rtrim($name, '.')), self::MAIN_ALIASES, true) || mb_strtolower($name) === mb_strtolower(self::MAIN_HOLDER)) {
+            return self::MAIN_HOLDER;
+        }
+
+        return static::query()->whereRaw('LOWER(holder) = ?', [mb_strtolower($name)])->value('holder') ?? $name;
+    }
 
     public function creator(): BelongsTo
     {

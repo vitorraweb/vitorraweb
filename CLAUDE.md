@@ -88,6 +88,7 @@ A multi-currency cash-ledger bookkeeping tool with **maker–checker** approvals
 - **AI receipt capture:** `ReceiptExtractionService` (Claude) reads an uploaded receipt → auto-fills the transaction (vendor/date/amount/VAT). Reuses `ANTHROPIC_API_KEY`; graceful without it.
 - **VAT:** per-line output VAT on invoices + input VAT on expenses → VAT report (payable/reclaim per currency).
 - **Recurring:** monthly rent/salary/subscription templates → `finance:recurring` cron generates drafts. **Accountant CSV export** of all transactions.
+- **FET stock** (Accounting → Stock, `FetStockController`): movements per model rolled up weekly, plus **custody** — every entry names a holder (`holder`; "Received by" for a delivery, "Taken from" otherwise; blank / "Victor" / "Operations" = main store `FetStockMovement::MAIN_HOLDER`, the Operations office). **Handed over** = two linked rows (`transfer_id`). "Where the devices are kept" summary + signable PDF (`/stock/holders-pdf`). Finance (`accounting`) corrects entries (`PATCH /stock/{id}`, audited before/after); removal stays senior-finance only. No change may leave the company or any holder below zero.
 - All amounts per currency (never summed across currencies). Tables: `finance_accounts`, `finance_categories`, `finance_transactions` (+`vat_rate`/`vat_amount`), `supplier_bills`, `finance_budgets`, `invoices`, `invoice_items`, `recurring_entries`. Default categories via `FinanceCategoriesSeeder`.
 
 ### Scheduled commands (ride the existing cPanel `schedule:run` cron)

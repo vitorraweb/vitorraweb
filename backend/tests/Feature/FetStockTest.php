@@ -164,4 +164,111 @@ class FetStockTest extends TestCase
         $res = $this->withHeaders($this->h($u))->get('/api/admin/accounting/stock/export')->assertOk();
         $this->assertStringContainsString('FET-PRO-FI', $res->streamedContent());
     }
+
+    private function holders(User $u): array
+    {
+        $this->app['auth']->forgetGuards();
+
+        return collect($this->withHeaders($this->h($u))->getJson('/api/admin/accounting/stock')->assertOk()->json('holders'))
+            ->mapWithKeys(fn ($h) => [$h['holder'] => $h])->all();
+    }
+
+    public function test_received_by_is_where_the_devices_are_kept(): void
+    {
+        $u = $this->juniorFinance();
+        $this->record($u, ['model' => 'FI', 'type' => 'received', 'quantity' => 10])->assertCreated()
+            ->assertJsonPath('data.holder', FetStockMovement::MAIN_HOLDER);
+        $this->record($u, ['model' => 'FI', 'type' => 'received', 'quantity' => 3, 'holder' => 'Mbarara branch'])->assertCreated();
+        // "Victor" is the main store, not a separate holder.
+        $this->record($u, ['model' => 'FII', 'type' => 'received', 'quantity' => 2, 'holder' => 'victor lojum'])->assertCreated();
+
+        $h = $this->holders($u);
+        $this->assertSame(array_keys($h)[0], FetStockMovement::MAIN_HOLDER); // main store first
+        $this->assertSame(['FI' => 10, 'FII' => 2, 'FIII' => 0, 'FIV' => 0], $h[FetStockMovement::MAIN_HOLDER]['models']);
+        $this->assertSame(3, $h['Mbarara branch']['total']);
+    }
+
+    public function test_hand_over_moves_devices_between_holders_not_out_of_stock(): void
+    {
+        $u = $this->juniorFinance();
+        $this->record($u, ['model' => 'FIII', 'type' => 'received', 'quantity' => 5])->assertCreated();
+        $this->record($u, ['model' => 'FIII', 'type' => 'transfer', 'quantity' => 2, 'to_holder' => 'Sarah Nuwamanya'])->assertCreated()
+            ->assertJsonPath('data.quantity', 2)->assertJsonPath('data.to_holder', 'Sarah Nuwamanya');
+
+        $h = $this->holders($u);
+        $this->assertSame(3, $h[FetStockMovement::MAIN_HOLDER]['models']['FIII']);
+        $this->assertSame(2, $h['Sarah Nuwamanya']['models']['FIII']);
+        $this->app['auth']->forgetGuards();
+        $res = $this->withHeaders($this->h($u))->getJson('/api/admin/accounting/stock')->json();
+        $this->assertSame(5, collect($res['models'])->firstWhere('code', 'FIII')['on_hand']);
+        $this->assertCount(2, $res['movements']); // the hand-over is listed once
+
+        // Sarah can't hand over or sell more than she holds.
+        $this->app['auth']->forgetGuards();
+        $this->record($u, ['model' => 'FIII', 'type' => 'sold', 'quantity' => 3, 'holder' => 'Sarah Nuwamanya', 'picked_by' => 'Client'])
+            ->assertUnprocessable()->assertJsonValidationErrors('holder');
+        $this->record($u, ['model' => 'FIII', 'type' => 'sold', 'quantity' => 2, 'holder' => 'sarah nuwamanya', 'picked_by' => 'Client'])->assertCreated();
+        $this->assertArrayNotHasKey('Sarah Nuwamanya', $this->holders($u));
+    }
+
+    public function test_finance_can_correct_an_entry_and_it_is_logged(): void
+    {
+        $u = $this->juniorFinance();
+        $this->record($u, ['model' => 'FI', 'type' => 'received', 'quantity' => 4, 'reference' => 'DN-1'])->assertCreated();
+        $m = FetStockMovement::first();
+
+        $this->withHeaders($this->h($u))->patchJson("/api/admin/accounting/stock/{$m->id}", [
+            'model' => 'FII', 'type' => 'received', 'quantity' => 6, 'moved_on' => now()->toDateString(),
+            'reference' => 'DN-1A', 'holder' => 'Kampala warehouse',
+        ])->assertOk()->assertJsonPath('data.quantity', 6)->assertJsonPath('data.holder', 'Kampala warehouse');
+
+        $this->assertSame(['FII', 6, 'DN-1A'], [$m->fresh()->model, $m->fresh()->quantity, $m->fresh()->reference]);
+        $this->assertTrue(ActivityLog::where('action', 'fet_stock.update')->exists());
+        $this->assertSame(6, $this->holders($u)['Kampala warehouse']['total']);
+    }
+
+    public function test_a_correction_cannot_break_later_sales(): void
+    {
+        $u = $this->admin();
+        $this->record($u, ['model' => 'FI', 'type' => 'received', 'quantity' => 4])->assertCreated();
+        $this->record($u, ['model' => 'FI', 'type' => 'sold', 'quantity' => 3, 'picked_by' => 'Musa'])->assertCreated();
+        $delivery = FetStockMovement::where('type', 'received')->first();
+
+        $this->withHeaders($this->h($u))->patchJson("/api/admin/accounting/stock/{$delivery->id}", [
+            'model' => 'FI', 'type' => 'received', 'quantity' => 2, 'moved_on' => now()->toDateString(),
+        ])->assertUnprocessable();
+        $this->assertSame(4, $delivery->fresh()->quantity);
+    }
+
+    public function test_editing_a_hand_over_changes_both_sides(): void
+    {
+        $u = $this->juniorFinance();
+        $this->record($u, ['model' => 'FII', 'type' => 'received', 'quantity' => 6])->assertCreated();
+        $id = $this->record($u, ['model' => 'FII', 'type' => 'transfer', 'quantity' => 2, 'to_holder' => 'Field team'])->json('data.id');
+
+        $this->app['auth']->forgetGuards();
+        $this->withHeaders($this->h($u))->patchJson("/api/admin/accounting/stock/{$id}", [
+            'model' => 'FII', 'type' => 'transfer', 'quantity' => 4, 'moved_on' => now()->toDateString(), 'to_holder' => 'Jinja office',
+        ])->assertOk();
+
+        $h = $this->holders($u);
+        $this->assertSame(2, $h[FetStockMovement::MAIN_HOLDER]['total']);
+        $this->assertSame(4, $h['Jinja office']['total']);
+        $this->assertArrayNotHasKey('Field team', $h);
+        $this->assertDatabaseCount('fet_stock_movements', 3);
+    }
+
+    public function test_where_kept_pdf(): void
+    {
+        $u = $this->admin();
+        $this->record($u, ['model' => 'FI', 'type' => 'received', 'quantity' => 2, 'holder' => 'Gulu depot'])->assertCreated();
+        $res = $this->withHeaders($this->h($u))->get('/api/admin/accounting/stock/holders-pdf')->assertOk();
+        $this->assertStringStartsWith('%PDF', $res->getContent());
+
+        $html = view('documents.fet-stock-holders', [
+            'holders' => [['holder' => 'Gulu depot', 'main' => false, 'models' => ['FI' => 2, 'FII' => 0, 'FIII' => 0, 'FIV' => 0], 'total' => 2, 'last_moved_on' => now()->toDateString()]],
+            'models' => FetStockMovement::MODELS, 'asAt' => CarbonImmutable::now(), 'printedBy' => 'A',
+        ])->render();
+        $this->assertStringContainsString('Gulu depot', $html);
+    }
 }

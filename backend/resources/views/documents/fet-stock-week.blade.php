@@ -19,6 +19,7 @@
                 <th style="width: 70px;">Date</th>
                 <th>Model</th>
                 <th class="amount" style="width: 40px;">Qty</th>
+                <th>Taken from</th>
                 <th>Picked up by</th>
                 <th>Reference</th>
                 <th>Note</th>
@@ -30,12 +31,13 @@
                     <td>{{ $m->moved_on->format('D j M') }}</td>
                     <td>{{ $models[$m->model]['label'] ?? $m->model }}@if ($m->type === 'adjustment')<br><span style="font-size: 9px; color: #999;">Stock-count correction</span>@endif</td>
                     <td class="amount"><strong>{{ -$m->quantity }}</strong></td>
+                    <td>{{ $m->holder ?: '—' }}</td>
                     <td>{{ $m->picked_by ?: '—' }}</td>
                     <td>{{ $m->reference ?: '—' }}</td>
                     <td style="font-size: 10px; color: #454545;">{{ $m->note ?: '' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="6" style="color: #999; padding: 16px 10px;">No devices went out of stock this week.</td></tr>
+                <tr><td colspan="7" style="color: #999; padding: 16px 10px;">No devices went out of stock this week.</td></tr>
             @endforelse
         </tbody>
     </table>

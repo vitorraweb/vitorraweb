@@ -581,7 +581,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/stock', [FetStockController::class, 'index']);
             Route::get('/stock/export', [FetStockController::class, 'export']);
             Route::get('/stock/week-pdf', [FetStockController::class, 'weekPdf']);
+            Route::get('/stock/holders-pdf', [FetStockController::class, 'holdersPdf']);
             Route::post('/stock', [FetStockController::class, 'store']);
+            Route::patch('/stock/{movement}', [FetStockController::class, 'update']);
         });
         // Internal sales documents (contract templates) — the sales and marketing
         // team, quotation holders and Finance. Never served publicly.
