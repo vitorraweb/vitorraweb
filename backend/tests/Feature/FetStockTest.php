@@ -56,12 +56,16 @@ class FetStockTest extends TestCase
 
         $weeks = $this->withHeaders($this->h($u))->getJson('/api/admin/accounting/stock?weeks=3')->assertOk()->json('weeks');
 
-        // Newest first: 26 Oct, 19 Oct, 12 Oct.
-        $this->assertSame(['2026-10-26', '2026-10-19', '2026-10-12'], array_column($weeks, 'start'));
-        $this->assertSame(['opening' => 0, 'received' => 20, 'sold' => 0, 'returned' => 0, 'adjusted' => 0, 'closing' => 20], $weeks[2]['models']['FI']);
+        // In date order, the current week last: 12 Oct, 19 Oct, 26 Oct.
+        $this->assertSame(['2026-10-12', '2026-10-19', '2026-10-26'], array_column($weeks, 'start'));
+        $this->assertSame(['opening' => 0, 'received' => 20, 'sold' => 0, 'returned' => 0, 'adjusted' => 0, 'closing' => 20], $weeks[0]['models']['FI']);
         $this->assertSame(['opening' => 20, 'received' => 0, 'sold' => 5, 'returned' => 0, 'adjusted' => 0, 'closing' => 15], $weeks[1]['models']['FI']);
-        $this->assertSame(14, $weeks[0]['models']['FI']['closing']);
-        $this->assertSame(0, $weeks[0]['models']['FIV']['closing']);
+        $this->assertSame(14, $weeks[2]['models']['FI']['closing']);
+        $this->assertSame(0, $weeks[2]['models']['FIV']['closing']);
+
+        // Asking for more weeks doesn't add empty weeks from before stock was first recorded.
+        $this->app['auth']->forgetGuards();
+        $this->assertCount(3, $this->withHeaders($this->h($u))->getJson('/api/admin/accounting/stock?weeks=8')->json('weeks'));
     }
 
     public function test_cannot_sell_more_than_in_stock(): void
@@ -140,7 +144,7 @@ class FetStockTest extends TestCase
 
         $res = $this->withHeaders($this->h($u))->get('/api/admin/accounting/stock/week-pdf?week=2026-10-29')->assertOk();
         $this->assertStringStartsWith('%PDF', $res->getContent());
-        $this->assertStringContainsString('vitorra-fet-devices-out-2026-10-26.pdf', $res->headers->get('content-disposition'));
+        $this->assertStringContainsString('vitorra-fet-status-2026-10-26.pdf', $res->headers->get('content-disposition'));
 
         // The sheet itself names who picked the devices up.
         $html = view('documents.fet-stock-week', [

@@ -1,6 +1,6 @@
-@extends('documents._layout', ['docTitle' => 'FET devices out'])
+@extends('documents._layout', ['docTitle' => 'FET Status'])
 
-{{-- Weekly stock-out sheet for Finance: what left stock, who picked it up,
+{{-- Weekly FET status sheet for Finance: what left stock, who picked it up,
      and where each model stands at the end of the week. Printed and signed. --}}
 @section('content')
     <table class="meta">

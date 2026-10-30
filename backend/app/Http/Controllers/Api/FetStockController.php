@@ -176,7 +176,7 @@ class FetStockController extends Controller
     }
 
     /**
-     * One week's devices out, as a printable PDF: every device that left stock
+     * One week's FET status, as a printable PDF: every device that left stock
      * (date, model, quantity, who picked it up, reference), then the week's
      * opening and closing stock per model, with lines to sign.
      */
@@ -219,17 +219,25 @@ class FetStockController extends Controller
             'printedBy' => $request->user()?->name,
         ])->setPaper('a4');
 
-        return $pdf->download('vitorra-fet-devices-out-'.$start->toDateString().'.pdf');
+        return $pdf->download('vitorra-fet-status-'.$start->toDateString().'.pdf');
     }
 
     /**
-     * Opening, movements and closing per model for the last $weeks weeks,
-     * newest first. Weeks run Monday to Sunday.
+     * Opening, movements and closing per model, week by week in date order
+     * (oldest first, the current week last). The list starts at the first week
+     * anything was recorded, so a new row appears only when a new week begins;
+     * at most the last $weeks weeks. Weeks run Monday to Sunday.
      */
     private function weekly(int $weeks): array
     {
         $thisWeek = CarbonImmutable::today()->startOfWeek(CarbonImmutable::MONDAY);
         $first    = $thisWeek->subWeeks($weeks - 1);
+        $started  = FetStockMovement::min('moved_on');
+        if ($started !== null) {
+            $first = max($first, CarbonImmutable::parse($started)->startOfWeek(CarbonImmutable::MONDAY));
+        } else {
+            $first = $thisWeek;
+        }
 
         // Stock carried into the first week shown.
         $opening = FetStockMovement::where('moved_on', '<', $first->toDateString())
@@ -266,7 +274,7 @@ class FetStockController extends Controller
             $rows[] = ['start' => $start->toDateString(), 'end' => $end->toDateString(), 'models' => $models];
         }
 
-        return array_reverse($rows);
+        return $rows;
     }
 
     /** The request, checked. Shared by recording and correcting an entry. */

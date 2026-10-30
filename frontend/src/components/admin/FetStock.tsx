@@ -31,17 +31,17 @@ const day = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString("en-GB",
 const ugx = (n: number) => `UGX ${n.toLocaleString()}`;
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`);
 
-/** That week's devices-out sheet, ready to print and sign. */
+/** That week's FET status sheet, ready to print and sign. */
 function WeekPdf({ start }: { start: string }) {
   const [busy, setBusy] = useState(false);
   const get = async () => {
     setBusy(true);
-    try { await downloadFile(`/admin/accounting/stock/week-pdf?week=${start}`, `vitorra-fet-devices-out-${start}.pdf`); }
+    try { await downloadFile(`/admin/accounting/stock/week-pdf?week=${start}`, `vitorra-fet-status-${start}.pdf`); }
     catch (e) { alert(e instanceof Error ? e.message : "Could not create the PDF."); }
     finally { setBusy(false); }
   };
   return (
-    <button onClick={get} disabled={busy} className="c-btn c-btn-ghost !h-7 !px-2" title="Devices out this week, printable PDF">
+    <button onClick={get} disabled={busy} className="c-btn c-btn-ghost !h-7 !px-2" title="FET status for this week, printable PDF">
       {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}PDF
     </button>
   );
@@ -281,7 +281,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
             </tbody>
           </table>
         )}
-        <p className="text-xs text-ink-muted px-4 py-2">Figures are closing stock at the end of each week. <b>PDF</b> prints that week&apos;s devices out, with who picked them up, ready to sign. {focus ? "" : "Underneath: devices in (+) and out (−) that week. Pick a model for the full breakdown."}</p>
+        <p className="text-xs text-ink-muted px-4 py-2">Figures are closing stock at the end of each week. The current week is at the bottom; a new row starts each Monday. <b>PDF</b> prints that week&apos;s FET status (devices out, who picked them up, stock per model), ready to sign. {focus ? "" : "Underneath: devices in (+) and out (−) that week. Pick a model for the full breakdown."}</p>
       </div>
 
       {/* The entries behind it */}
