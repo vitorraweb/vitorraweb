@@ -7,7 +7,10 @@
    testing and clearance say. Numbers are the ones published on vitorra.org.
    ─────────────────────────────────────────────────────────────────────────── */
 
-export type Mode = "reception" | "street";
+/** reception: a TV in the lobby · street: the screen facing the road (daylight)
+ *  · projector: the reception story projected onto a wall (projectors cannot show
+ *  black, so it is bright, heavy and high-contrast). */
+export type Mode = "reception" | "street" | "projector";
 
 export type SectorScene = {
   kind: "sector";
@@ -107,11 +110,11 @@ export function durationOf(scene: Scene, mode: Mode): number {
   }
 }
 
-/** The loop for a mode. The welcome is reception-only: a visitor's name never goes on the street. */
+/** The loop for a mode. The welcome is indoor-only: a visitor's name never goes on the street. */
 export function storyFor(mode: Mode, hasWelcome: boolean): Scene[] {
   return [
     { kind: "ident", id: "ident" },
-    ...(mode === "reception" && hasWelcome ? [{ kind: "welcome", id: "welcome" } as const] : []),
+    ...(mode !== "street" && hasWelcome ? [{ kind: "welcome", id: "welcome" } as const] : []),
     ...SECTORS,
     { kind: "proof", id: "proof" },
     { kind: "visit", id: "visit" },

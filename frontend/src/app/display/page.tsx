@@ -11,6 +11,8 @@ import { Stage } from "@/components/display/Stage";
    /display/street         → the screen facing the road (also ?mode=street):
                               bigger, brighter for daylight, fewer words, no
                               clock and never a visitor's name.
+   /display/projector      → the reception story for a wall projector
+                              (also ?mode=projector).
    /display?scene=fet      → hold one scene (for checking a screen's set-up).
 
    Full-screen and fixed — a TV, not a page. No header, footer or cookie banner
@@ -18,7 +20,8 @@ import { Stage } from "@/components/display/Stage";
    ─────────────────────────────────────────────────────────────────────────── */
 function Screen() {
   const q = useSearchParams();
-  return <Stage mode={q.get("mode") === "street" ? "street" : "reception"} pin={q.get("scene")} />;
+  const m = q.get("mode");
+  return <Stage mode={m === "street" || m === "projector" ? m : "reception"} pin={q.get("scene")} />;
 }
 
 export default function DisplayPage() {

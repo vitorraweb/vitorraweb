@@ -27,10 +27,16 @@ const DRIFT = [[0, 0], [3, -2], [-2, 3], [2, 2], [-3, -1]];
 const THEMES = {
   reception: { "--vx-bg": "#09090A", "--vx-fg": "#F4EFE6", "--vx-gold": "#C5B27A", "--vx-muted": "rgba(244,239,230,0.72)", "--vx-track": "rgba(244,239,230,0.16)", "--vx-line": "rgba(197,178,122,0.35)" },
   street:    { "--vx-bg": "#0E0E10", "--vx-fg": "#FFFFFF", "--vx-gold": "#EED596", "--vx-muted": "rgba(255,255,255,0.9)", "--vx-track": "rgba(255,255,255,0.3)", "--vx-line": "rgba(238,213,150,0.6)" },
+  projector: { "--vx-bg": "#000000", "--vx-fg": "#FFFFFF", "--vx-gold": "#F5D57C", "--vx-muted": "#FFFFFF", "--vx-track": "rgba(255,255,255,0.35)", "--vx-line": "rgba(245,213,124,0.7)" },
   daylight:  { "--vx-bg": "#F5F0E6", "--vx-fg": "#17140F", "--vx-gold": "#8A6A1F", "--vx-muted": "rgba(23,20,15,0.74)", "--vx-track": "rgba(23,20,15,0.15)", "--vx-line": "rgba(138,106,31,0.45)" },
 } as const;
 
 export function Stage({ mode, pin }: { mode: Mode; pin?: string | null }) {
+  if (pin === "check") return <ProjectorCheck />;
+  return <Loop mode={mode} pin={pin} />;
+}
+
+function Loop({ mode, pin }: { mode: Mode; pin?: string | null }) {
   const welcome = useWelcome(mode);
   const story = useMemo(() => storyFor(mode, !!welcome), [mode, welcome]);
   const [i, setI] = useState(0);
@@ -54,27 +60,32 @@ export function Stage({ mode, pin }: { mode: Mode; pin?: string | null }) {
   const [dx, dy] = DRIFT[drift];
 
   const street = mode === "street";
+  const projector = mode === "projector";
+  // Bright modes (street, projector) share the big type and brighter films.
+  const big = mode !== "reception";
   const activeSector = scene.kind === "sector" ? scene.id : null;
-  // Daylight: outdoors the brand scenes go ivory (a dark screen in sun reads as
-  // a black hole), and over film everything is brighter and heavier.
-  const light = street && (scene.kind === "ident" || scene.kind === "proof");
-  const theme = light ? THEMES.daylight : street ? THEMES.street : THEMES.reception;
+  // Daylight: the brand scenes go ivory where dark would read as a hole —
+  // outdoors in sun, and on a projector, which cannot show black at all.
+  const light = (street && (scene.kind === "ident" || scene.kind === "proof"))
+    || (projector && (scene.kind === "ident" || scene.kind === "proof" || scene.kind === "welcome"));
+  const theme = light ? THEMES.daylight : projector ? THEMES.projector : street ? THEMES.street : THEMES.reception;
 
   return (
     <div className="vx fixed inset-0 overflow-hidden select-none cursor-none" data-mode={mode}
       style={{ ...theme, background: "var(--vx-bg)", color: "var(--vx-fg)", transition: "background-color 1.2s ease, color 1.2s ease" } as React.CSSProperties}>
-      <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={street} light={light} />
-      <div className="hero-grain absolute inset-0 pointer-events-none" style={{ opacity: light ? 0 : street ? 0.025 : 0.035 }} />
+      <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} light={light} />
+      <div className="hero-grain absolute inset-0 pointer-events-none" style={{ opacity: light || projector ? 0 : street ? 0.025 : 0.035 }} />
       <ScreenCare />
 
-      <div className="relative z-10 h-full flex flex-col" style={{ padding: "4.2vmin 5vmin 3.4vmin", translate: `${dx}px ${dy}px`, transition: "translate 4s ease", textShadow: street && !light ? "0 0.25vmin 1.6vmin rgba(0,0,0,0.55)" : undefined }}>
+      {/* Projectors usually crop the edges (overscan), so their safe area is wider. */}
+      <div className="relative z-10 h-full flex flex-col" style={{ padding: projector ? "6.5vmin 7.5vmin 5vmin" : "4.2vmin 5vmin 3.4vmin", translate: `${dx}px ${dy}px`, transition: "translate 4s ease", textShadow: street && !light && !projector ? "0 0.25vmin 1.6vmin rgba(0,0,0,0.55)" : undefined }}>
         <TopBar mode={mode} hidden={scene.kind === "ident"} />
         <div key={`${scene.id}-${loop}`} className="flex-1 min-h-0 flex">
-          {scene.kind === "ident" && <Ident street={street} />}
+          {scene.kind === "ident" && <Ident street={big} />}
           {scene.kind === "welcome" && welcome && <WelcomeScene welcome={welcome} />}
-          {scene.kind === "sector" && <SectorView s={scene} street={street} seconds={seconds} />}
-          {scene.kind === "proof" && <Proof street={street} />}
-          {scene.kind === "visit" && <Visit street={street} />}
+          {scene.kind === "sector" && <SectorView s={scene} street={big} panel={projector} seconds={seconds} />}
+          {scene.kind === "proof" && <Proof street={big} />}
+          {scene.kind === "visit" && <Visit street={big} panel={projector} here={street} />}
         </div>
         <Progress story={story} index={index} seconds={seconds} loop={loop} />
       </div>
@@ -150,7 +161,7 @@ function TopBar({ mode, hidden }: { mode: Mode; hidden: boolean }) {
           <p className="uppercase" style={{ fontSize: "1.15vmin", letterSpacing: "0.32em", color: "var(--vx-gold)", marginTop: "0.7vmin" }}>Holdings Limited</p>
         </div>
       </div>
-      {mode === "reception" ? (
+      {mode !== "street" ? (
         <div className="text-right leading-none">
           <p className="font-display tabular-nums" style={{ fontSize: "5vmin", fontWeight: 300 }}>{time}</p>
           <p className="uppercase flex items-center justify-end" style={{ fontSize: "1.2vmin", letterSpacing: "0.24em", color: "var(--vx-muted)", marginTop: "1vmin", gap: "1vmin" }}>
@@ -212,13 +223,17 @@ function WelcomeScene({ welcome }: { welcome: NonNullable<Welcome> }) {
   );
 }
 
-function SectorView({ s, street, seconds }: { s: SectorScene; street: boolean; seconds: number }) {
+/* On a projector, the words sit on solid dark panels: a projected gradient
+   scrim goes grey and muddy, a panel stays crisp. */
+const PANEL: React.CSSProperties = { background: "rgba(8,8,10,0.82)", padding: "2.6vmin 3.2vmin", borderRadius: "1.2vmin" };
+
+function SectorView({ s, street, panel = false, seconds }: { s: SectorScene; street: boolean; panel?: boolean; seconds: number }) {
   const n = useCountUp(s.stat.value, s.stat.decimals ?? 0, 1800, 900);
   const qr = street ? "22vmin" : "16vmin";
   return (
     <div className="w-full grid portrait:grid-cols-1 landscape:grid-cols-[minmax(0,1fr)_auto] items-end" style={{ gap: "5vmin" }}>
       {/* Words */}
-      <div className="min-w-0 portrait:order-2" style={{ paddingBottom: "1vmin" }}>
+      <div className="min-w-0 portrait:order-2 justify-self-start" style={{ paddingBottom: "1vmin", ...(panel ? PANEL : {}) }}>
         <p className="vx-rise flex items-center uppercase" style={{ gap: "2vmin", fontSize: "1.6vmin", letterSpacing: "0.36em", ["--d" as string]: "0.15s" }}>
           <span style={{ color: "var(--vx-gold)" }}>{s.index} / 04</span>
           <span className="vx-draw" style={{ width: "7vmin", height: 1, background: "var(--vx-gold)", ["--d" as string]: "0.4s" }} />
@@ -232,8 +247,8 @@ function SectorView({ s, street, seconds }: { s: SectorScene; street: boolean; s
 
       {/* Number + QR */}
       <div className="flex flex-col items-end portrait:items-start portrait:order-1 portrait:mb-auto" style={{ gap: "4vmin" }}>
-        <div className="text-right portrait:text-left vx-rise" style={{ ["--d" as string]: "0.6s" }}>
-          <p className="font-display tabular-nums leading-none" style={{ fontWeight: street ? 300 : 200, fontSize: street ? "30vmin" : "24vmin", letterSpacing: "-0.05em" }}>
+        <div className="text-right portrait:text-left vx-rise" style={{ ["--d" as string]: "0.6s", ...(panel ? PANEL : {}) }}>
+          <p className="vx-stat font-display tabular-nums leading-none" style={{ fontWeight: street ? 300 : 200, fontSize: street ? "30vmin" : "24vmin", letterSpacing: "-0.05em" }}>
             {s.stat.prefix}{n}
             <span style={{ fontSize: "0.32em", color: "var(--vx-gold)", letterSpacing: "-0.01em", marginLeft: "0.08em" }}>{s.stat.unit}</span>
           </p>
@@ -264,11 +279,11 @@ function Proof({ street }: { street: boolean }) {
   );
 }
 
-function Visit({ street }: { street: boolean }) {
+function Visit({ street, panel = false, here = false }: { street: boolean; panel?: boolean; here?: boolean }) {
   return (
     <div className="w-full grid portrait:grid-cols-1 landscape:grid-cols-[minmax(0,1fr)_auto] items-end" style={{ gap: "5vmin" }}>
-      <div className="min-w-0">
-        <p className="vx-rise uppercase" style={{ fontSize: "1.6vmin", letterSpacing: "0.42em", color: "var(--vx-gold)", ["--d" as string]: "0.15s" }}>{street ? "You are here" : "Visit us"}</p>
+      <div className="min-w-0 justify-self-start" style={panel ? PANEL : undefined}>
+        <p className="vx-rise uppercase" style={{ fontSize: "1.6vmin", letterSpacing: "0.42em", color: "var(--vx-gold)", ["--d" as string]: "0.15s" }}>{here ? "You are here" : "Visit us"}</p>
         <h2 className="font-display" style={{ fontWeight: street ? 400 : 300, letterSpacing: "-0.028em", lineHeight: 1, marginTop: "2.6vmin", fontSize: street ? "9vmin" : "7.6vmin" }}>
           <span className="vx-rise block" style={{ ["--d" as string]: "0.4s" }}>Padre Pio House,</span>
           <span className="vx-rise block italic" style={{ color: "var(--vx-gold)", ["--d" as string]: "0.7s" }}>Lumumba Avenue, Kampala.</span>
@@ -331,11 +346,11 @@ function useCountUp(target: number, decimals: number, ms: number, delayMs: numbe
   return v.toFixed(decimals);
 }
 
-/** The welcome set by reception (Operations → Reception screen). Never fetched for the street screen. */
+/** The welcome set by reception (Operations → Reception screen). Indoors only — never fetched for the street screen. */
 function useWelcome(mode: Mode): Welcome {
   const [w, setW] = useState<Welcome>(null);
   useEffect(() => {
-    if (mode !== "reception") return;
+    if (mode === "street") return;
     let live = true;
     const load = () => fetch(`${API_BASE_URL}/display`, { headers: { Accept: "application/json" } })
       .then((r) => r.json()).then((j) => { if (live) setW(j?.data?.welcome ?? null); }).catch(() => {});
@@ -406,6 +421,36 @@ function ScreenCare() {
       <p className="rounded-full" style={{ fontSize: "1.5vmin", letterSpacing: "0.12em", padding: "1vmin 2.2vmin", background: "rgba(0,0,0,0.55)", color: "#fff", backdropFilter: "blur(6px)" }}>
         Click or tap anywhere for full screen · press F to toggle
       </p>
+    </div>
+  );
+}
+
+/* ── Projector check (/display?scene=check) ─────────────────────────────
+   For setting up a projector against the wall: the outer frame should sit
+   just inside the wall edge (adjust keystone/zoom), the fine lines in the
+   centre should be sharp (focus), all ten grey steps should be distinct
+   (brightness/contrast), and the smallest text line should be readable from
+   the back of reception. */
+function ProjectorCheck() {
+  const steps = Array.from({ length: 10 }, (_, n) => Math.round((n / 9) * 255));
+  return (
+    <div className="fixed inset-0 bg-black text-white select-none cursor-none" style={{ fontFamily: "system-ui, sans-serif" }}>
+      <div className="absolute border-[3px] border-white" style={{ inset: "2vmin" }} />
+      <div className="absolute border border-dashed" style={{ inset: "6.5vmin 7.5vmin 5vmin", borderColor: "#F5D57C" }} />
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center" style={{ gap: "3vmin" }}>
+        <div className="grid" style={{ gridTemplateColumns: "repeat(24, 1px)", gap: "3px", height: "12vmin" }}>
+          {Array.from({ length: 24 }, (_, n) => <span key={n} className="bg-white h-full" />)}
+        </div>
+        <div className="flex">
+          {steps.map((v) => <span key={v} style={{ width: "7vmin", height: "7vmin", background: `rgb(${v},${v},${v})` }} />)}
+        </div>
+        <div className="text-center space-y-1">
+          <p style={{ fontSize: "6vmin", fontWeight: 600 }}>Vitorra projector check</p>
+          <p style={{ fontSize: "2.6vmin" }}>The dashed gold frame is the safe area. Everything on the loop stays inside it.</p>
+          <p style={{ fontSize: "1.9vmin" }}>Smallest text on the loop: read this from the back of reception.</p>
+          <p style={{ fontSize: "1.9vmin", color: "#F5D57C" }}>Focus until the white lines above are sharp. All ten grey squares should look different.</p>
+        </div>
+      </div>
     </div>
   );
 }
