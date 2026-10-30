@@ -88,6 +88,17 @@ class FetStockTest extends TestCase
         $this->record($u, ['model' => 'FI', 'type' => 'adjustment', 'quantity' => 2, 'note' => 'Stock count'])->assertCreated();
     }
 
+    public function test_samples_are_tracked_without_a_price(): void
+    {
+        $u = $this->juniorFinance();
+        $this->record($u, ['model' => 'SAMPLE', 'type' => 'received', 'quantity' => 2])->assertCreated();
+        $this->record($u, ['model' => 'SAMPLE', 'type' => 'transfer', 'quantity' => 1, 'to_holder' => 'Marketing'])->assertCreated();
+
+        $sample = collect($this->withHeaders($this->h($u))->getJson('/api/admin/accounting/stock')->json('models'))->firstWhere('code', 'SAMPLE');
+        $this->assertSame(['FET sample', 2, null], [$sample['label'], $sample['on_hand'], $sample['value_ugx']]);
+        $this->assertSame(1, $this->holders($u)['Marketing']['models']['SAMPLE']);
+    }
+
     public function test_value_uses_catalogue_price(): void
     {
         Product::create(['slug' => 'fet-car', 'name' => 'FI', 'category' => 'FET', 'price_ugx' => 1_891_000, 'price_usd_cents' => 0, 'is_published' => true]);
@@ -188,7 +199,7 @@ class FetStockTest extends TestCase
 
         $h = $this->holders($u);
         $this->assertSame(array_keys($h)[0], FetStockMovement::MAIN_HOLDER); // main store first
-        $this->assertSame(['FI' => 10, 'FII' => 2, 'FIII' => 0, 'FIV' => 0], $h[FetStockMovement::MAIN_HOLDER]['models']);
+        $this->assertSame(['FI' => 10, 'FII' => 2, 'FIII' => 0, 'FIV' => 0, 'SAMPLE' => 0], $h[FetStockMovement::MAIN_HOLDER]['models']);
         $this->assertSame(3, $h['Mbarara branch']['total']);
     }
 
@@ -270,7 +281,7 @@ class FetStockTest extends TestCase
         $this->assertStringStartsWith('%PDF', $res->getContent());
 
         $html = view('documents.fet-stock-holders', [
-            'holders' => [['holder' => 'Gulu depot', 'main' => false, 'models' => ['FI' => 2, 'FII' => 0, 'FIII' => 0, 'FIV' => 0], 'total' => 2, 'last_moved_on' => now()->toDateString()]],
+            'holders' => [['holder' => 'Gulu depot', 'main' => false, 'models' => ['FI' => 2, 'FII' => 0, 'FIII' => 0, 'FIV' => 0, 'SAMPLE' => 0], 'total' => 2, 'last_moved_on' => now()->toDateString()]],
             'models' => FetStockMovement::MODELS, 'asAt' => CarbonImmutable::now(), 'printedBy' => 'A',
         ])->render();
         $this->assertStringContainsString('Gulu depot', $html);

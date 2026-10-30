@@ -132,7 +132,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
   return (
     <div>
       {/* On hand now, per model */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
         {models.map((m) => (
           <button key={m.code} onClick={() => setFocus(focus === m.code ? "" : m.code)} className="c-panel p-4 text-left transition-colors" style={focus === m.code ? { borderColor: "var(--color-gold)" } : undefined}>
             <p className="c-panel-title mb-2">{m.label}</p>
@@ -140,7 +140,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
             {m.value_ugx !== null && <p className="text-xs text-ink-muted mt-1 tabular-nums">{ugx(m.value_ugx)} at catalogue price</p>}
           </button>
         ))}
-        <div className="c-panel p-4 col-span-2 lg:col-span-1" style={{ background: "var(--color-paper-deep)" }}>
+        <div className="c-panel p-4 sm:col-span-1" style={{ background: "var(--color-paper-deep)" }}>
           <p className="c-panel-title mb-2">All FET</p>
           <p className="text-2xl tabular-nums text-ink">{totalUnits}<span className="text-xs text-ink-muted ml-1">devices</span></p>
           <p className="text-xs text-ink-muted mt-1 tabular-nums">{ugx(totalValue)} at catalogue price</p>

@@ -32,12 +32,12 @@ class FetStockController extends Controller
     {
         $weeks = (int) ($request->validate(['weeks' => ['sometimes', 'integer', 'min:1', 'max:52']])['weeks'] ?? 8);
 
-        $prices = Product::whereIn('slug', array_column(FetStockMovement::MODELS, 'slug'))->pluck('price_ugx', 'slug');
+        $prices = Product::whereIn('slug', array_filter(array_column(FetStockMovement::MODELS, 'slug')))->pluck('price_ugx', 'slug');
 
         $onHand = FetStockMovement::selectRaw('model, SUM(quantity) q')->groupBy('model')->pluck('q', 'model');
         $models = collect(FetStockMovement::MODELS)->map(function (array $m, string $code) use ($onHand, $prices) {
             $qty   = (int) ($onHand[$code] ?? 0);
-            $price = $prices[$m['slug']] ?? null;
+            $price = $m['slug'] ? ($prices[$m['slug']] ?? null) : null;
 
             return [
                 'code'      => $code,

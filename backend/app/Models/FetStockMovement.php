@@ -11,12 +11,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class FetStockMovement extends Model
 {
-    /** Catalogue models, in price order, with the product slug that carries each price. */
+    /**
+     * Catalogue models, in price order, with the product slug that carries each
+     * price, then sample units (demo / trial devices), which have no catalogue price.
+     */
     public const MODELS = [
         'FI'   => ['label' => 'FET-PRO-FI',   'slug' => 'fet-car'],
         'FII'  => ['label' => 'FET-PRO-FII',  'slug' => 'fet-suv'],
         'FIII' => ['label' => 'FET-PRO-FIII', 'slug' => 'fet-lighttruck'],
         'FIV'  => ['label' => 'FET-PRO-FIV',  'slug' => 'fet-heavytruck'],
+        'SAMPLE' => ['label' => 'FET sample', 'slug' => null],
     ];
 
     /**
