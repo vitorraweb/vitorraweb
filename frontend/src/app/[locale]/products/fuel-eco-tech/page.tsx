@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { QuickAnswers, quickAnswers } from "@/components/sections/QuickAnswers";
 import { localeAlternates, products, faqPage, breadcrumbs, ldJson } from "@/lib/seo";
 import Header from "@/components/layout/Header";
@@ -20,6 +20,9 @@ import { CountUp } from "@/components/system/CountUp";
 import APPLICATIONS from "@/data/fet-applications.json";
 import { engineSpanLabel } from "@/lib/fet-pricing";
 import { getFetAvailability } from "@/lib/fet-availability";
+import { getSpotlight } from "@/lib/api";
+import { SpotlightBar } from "@/components/sections/SpotlightBar";
+import { FetBuyersPack } from "@/components/sections/FetBuyersPack";
 
 /* ─── Fuel Eco Tech — Quiet Authority ─────────────────────────────────────────
    Rebuilt October 2026 around the FET buying journey, in the order a fleet
@@ -58,6 +61,7 @@ export default async function FuelEcoTechPage() {
   const bn = await getTranslations("banners");
   const vt = await getTranslations("visuals");
   const stock = await getFetAvailability();
+  const spotlight = await getSpotlight("fet", await getLocale());
 
   const evidenceRows: [string, string][] = [
     [home("evidenceRowBefore"), `11.52 ${home("evidenceUnit")}`],
@@ -102,6 +106,7 @@ export default async function FuelEcoTechPage() {
           primary={{ label: t("primary"), href: ENQUIRE }}
           secondary={{ label: t("secondary"), href: "#fet-calculator" }}
         />
+        <SpotlightBar spotlight={spotlight} />
         <FactStrip
           facts={[
             { k: t("factFitK"), v: t("factFitV") },
@@ -271,6 +276,7 @@ export default async function FuelEcoTechPage() {
         {/* ══ Price, then the customer's own estimate ═══════════════════════ */}
         <FetPricing stock={stock} />
         <FetCalculator />
+        <FetBuyersPack />
 
         {/* ══ How we sell ═══════════════════════════════════════════════════ */}
         <Section tone="ink" aria-labelledby="fet-sell">

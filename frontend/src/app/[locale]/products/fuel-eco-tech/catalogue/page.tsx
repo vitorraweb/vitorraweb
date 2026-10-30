@@ -9,6 +9,7 @@ import ApproxPrice from "@/components/ui/ApproxPrice";
 import { VehicleIcon } from "@/components/ui/VehicleIcon";
 import ReserveButton from "@/components/sections/ReserveButton";
 import { FetStockBadge } from "@/components/sections/FetStockBadge";
+import { FetBuyersPack } from "@/components/sections/FetBuyersPack";
 import { Section, Container, Label, Heading, Text, ButtonLink, TextLink } from "@/components/system";
 import { SectionHead, ContactBand } from "@/components/system/blocks";
 import { localeAlternates, breadcrumbs, ldJson } from "@/lib/seo";
@@ -281,6 +282,8 @@ export default async function FetCataloguePage() {
             </div>
           </Container>
         </Section>
+
+        <FetBuyersPack />
 
         {/* ══ What every device includes ════════════════════════════════════ */}
         <Section tone="ink" aria-labelledby="fet-included">

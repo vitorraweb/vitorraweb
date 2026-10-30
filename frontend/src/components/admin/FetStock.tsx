@@ -19,10 +19,11 @@ type Week = { start: string; end: string; models: Record<string, WeekModel> };
 type Movement = { id: number; model: string; type: string; quantity: number; moved_on: string; reference: string | null; picked_by: string | null; holder: string; to_holder: string | null; note: string | null; created_by: string | null };
 type Holder = { holder: string; main: boolean; models: Record<string, number>; total: number; last_moved_on: string | null };
 
-const TYPE_LABEL: Record<string, string> = { received: "Received", sold: "Sold / installed", returned: "Returned", transfer: "Handed over", adjustment: "Stock-count correction" };
-const TYPE_TONE: Record<string, string> = { received: "ok", sold: "blue", returned: "violet", transfer: "muted", adjustment: "gold" };
+const TYPE_LABEL: Record<string, string> = { received: "Received", sold: "Sold / installed", trial: "Under trial", returned: "Returned", transfer: "Handed over", adjustment: "Stock-count correction" };
+const TYPE_TONE: Record<string, string> = { received: "ok", sold: "blue", trial: "violet", returned: "violet", transfer: "muted", adjustment: "gold" };
+const HANDOVER = (t: string) => t === "transfer" || t === "trial";
 /** What the "who has them" field means for each kind of entry. */
-const HOLDER_LABEL: Record<string, string> = { received: "Received by — where they are kept", returned: "Returned to — where they are kept", sold: "Taken from", adjustment: "Counted at", transfer: "Handed over by" };
+const HOLDER_LABEL: Record<string, string> = { received: "Received by — where they are kept", returned: "Returned to — where they are kept", sold: "Taken from", adjustment: "Counted at", transfer: "Handed over by", trial: "Taken from" };
 
 const blankForm = () => ({ model: "FI", type: "received", quantity: "", moved_on: today(), reference: "", picked_by: "", holder: "", to_holder: "", note: "" });
 
@@ -94,9 +95,10 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
     if (!form.quantity || Number(form.quantity) === 0) { setMsg("Enter how many devices."); return; }
     if (form.type === "sold" && !form.picked_by.trim()) { setMsg("Enter the name of the person who picked up the devices."); return; }
     if (form.type === "transfer" && !form.to_holder.trim()) { setMsg("Enter the person or office the devices were handed to."); return; }
+    if (form.type === "trial" && !form.to_holder.trim()) { setMsg("Enter the client trying the devices."); return; }
     setSaving(true);
     try {
-      const body = JSON.stringify({ ...form, quantity: Number(form.quantity), picked_by: form.type === "sold" ? form.picked_by : null, to_holder: form.type === "transfer" ? form.to_holder : null });
+      const body = JSON.stringify({ ...form, quantity: Number(form.quantity), picked_by: form.type === "sold" ? form.picked_by : null, to_holder: HANDOVER(form.type) ? form.to_holder : null });
       if (editing) await apiAdmin(`/admin/accounting/stock/${editing}`, { method: "PATCH", body });
       else await apiAdmin("/admin/accounting/stock", { method: "POST", body });
       setForm(editing ? blankForm() : { ...form, quantity: "", reference: "", picked_by: "", to_holder: "", note: "" });
@@ -207,10 +209,10 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
               <span className="block text-[11px] text-ink-muted mb-1">{HOLDER_LABEL[form.type]}</span>
               <input list="fet-holders" value={form.holder} onChange={(e) => setForm({ ...form, holder: e.target.value })} placeholder={mainHolder} className="c-input w-full" />
             </label>
-            {form.type === "transfer" && (
+            {HANDOVER(form.type) && (
               <label className="sm:col-span-2 block">
-                <span className="block text-[11px] text-ink-muted mb-1">Handed to — where they are kept now</span>
-                <input list="fet-holders" value={form.to_holder} onChange={(e) => setForm({ ...form, to_holder: e.target.value })} placeholder="Person or office (required)" className="c-input w-full" />
+                <span className="block text-[11px] text-ink-muted mb-1">{form.type === "trial" ? "Client trying the devices" : "Handed to — where they are kept now"}</span>
+                <input list="fet-holders" value={form.to_holder} onChange={(e) => setForm({ ...form, to_holder: e.target.value })} placeholder={form.type === "trial" ? "Client or company (required)" : "Person or office (required)"} className="c-input w-full" />
               </label>
             )}
             {form.type === "sold" && (
@@ -224,7 +226,7 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
           <div className="flex items-center gap-3 mt-3">
             <button onClick={save} disabled={saving} className="c-btn c-btn-primary">{saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}{editing ? "Save correction" : "Save"}</button>
             {editing && <button onClick={closeForm} className="c-btn c-btn-ghost">Cancel</button>}
-            <p className="text-xs text-ink-muted">{isAdjust ? "Use after a physical count: + if more devices were found than the book says, − if fewer." : form.type === "transfer" ? "Devices stay in company stock; only who holds them changes." : "Leave the holder blank for the main store. Sold also covers devices fitted to a customer's vehicle."}</p>
+            <p className="text-xs text-ink-muted">{isAdjust ? "Use after a physical count: + if more devices were found than the book says, − if fewer." : form.type === "transfer" ? "Devices stay in company stock; only who holds them changes." : form.type === "trial" ? "Still company stock, held as \u201cOn trial: client\u201d. If they buy, record Sold taken from that holder; if not, hand them back." : "Leave the holder blank for the main store. Sold also covers devices fitted to a customer's vehicle."}</p>
           </div>
           {msg && <p className="text-sm mt-2" style={{ color: msg === "Recorded." || msg === "Corrected." ? "var(--o-success)" : "var(--o-danger)" }}>{msg}</p>}
         </div>
@@ -296,8 +298,8 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
                   <td className="whitespace-nowrap">{new Date(`${m.moved_on}T00:00:00`).toLocaleDateString("en-GB")}</td>
                   <td className="whitespace-nowrap">{label(m.model)}</td>
                   <td><span className="c-chip" data-tone={TYPE_TONE[m.type]}>{TYPE_LABEL[m.type] ?? m.type}</span></td>
-                  <td className="text-right tabular-nums font-semibold text-ink">{m.type === "transfer" ? m.quantity : signed(m.quantity)}</td>
-                  <td className="whitespace-nowrap">{m.type === "transfer" ? <>{m.holder} → <b>{m.to_holder ?? "?"}</b></> : m.holder}</td>
+                  <td className="text-right tabular-nums font-semibold text-ink">{HANDOVER(m.type) ? m.quantity : signed(m.quantity)}</td>
+                  <td className="whitespace-nowrap">{HANDOVER(m.type) ? <>{m.holder} → <b>{m.to_holder ?? "?"}</b></> : m.holder}</td>
                   <td className="whitespace-nowrap">{m.picked_by ?? "–"}</td>
                   <td>{m.reference ?? "–"}</td>
                   <td className="max-w-[240px] truncate" title={m.note ?? undefined}>{m.note ?? "–"}</td>

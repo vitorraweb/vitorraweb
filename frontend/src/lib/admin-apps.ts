@@ -2,7 +2,7 @@ import {
   Handshake, ShoppingCart, Gauge, Wallet, LineChart, Users, ListChecks, Globe, Settings,
   MessageSquare, Workflow, Contact, Target, LayoutTemplate, CreditCard, FlaskConical,
   TrendingUp, LayoutDashboard, CalendarCheck, Hourglass, Briefcase, CalendarDays,
-  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame, Video, UserCircle, ClipboardCheck, CalendarRange, CalendarClock, MonitorPlay,
+  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame, Sparkles, Video, UserCircle, ClipboardCheck, CalendarRange, CalendarClock, MonitorPlay,
 } from "lucide-react";
 import { canAccess, type AdminUser } from "@/lib/auth";
 
@@ -58,12 +58,13 @@ export const ADMIN_APPS: AdminApp[] = [
     ],
   },
   {
-    id: "marketing", name: "Marketing", blurb: "Email campaigns, markets, templates and lead priorities", icon: Mails, area: "Sell",
+    id: "marketing", name: "Marketing", blurb: "Email campaigns, markets, templates, lead priorities and the website spotlight", icon: Mails, area: "Sell",
     items: [
       { label: "Campaigns", href: "/admin/marketing/campaigns", icon: Mails, module: "prospects", keywords: "email campaign newsletter send blast" },
       { label: "Markets", href: "/admin/marketing/markets", icon: Layers, module: "prospects", keywords: "audience segment list contacts" },
       { label: "Templates", href: "/admin/marketing/templates", icon: Palette, module: "prospects", keywords: "email design builder template" },
       { label: "Lead priorities", href: "/admin/marketing/priorities", icon: Flame, module: "prospects", keywords: "decision engine score hot leads focus" },
+      { label: "Spotlight", href: "/admin/marketing/spotlight", icon: Sparkles, module: "blog", keywords: "spotlight banner announcement homepage hero news this month seasonal" },
     ],
   },
   {

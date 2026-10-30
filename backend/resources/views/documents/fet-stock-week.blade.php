@@ -38,7 +38,7 @@
                 <th>Model</th>
                 <th class="num" style="width: 34px;">Qty</th>
                 <th>Taken from</th>
-                <th>Picked up by</th>
+                <th>Picked up by / client</th>
                 <th>Reference</th>
                 <th>Note</th>
             </tr>
@@ -47,10 +47,10 @@
             @forelse ($out as $i => $m)
                 <tr class="{{ $i % 2 ? 'alt' : '' }}">
                     <td>{{ $m->moved_on->format('D j M') }}</td>
-                    <td>{{ $models[$m->model]['label'] ?? $m->model }}@if ($m->type === 'adjustment')<br><span class="tag grey">Count correction</span>@endif</td>
+                    <td>{{ $models[$m->model]['label'] ?? $m->model }}@if ($m->type === 'adjustment')<br><span class="tag grey">Count correction</span>@elseif ($m->type === 'trial')<br><span class="tag gold">Out on trial</span>@endif</td>
                     <td class="num"><strong>{{ -$m->quantity }}</strong></td>
                     <td>{{ $m->holder ?: '—' }}</td>
-                    <td>{{ $m->picked_by ?: '—' }}</td>
+                    <td>{{ $m->type === 'trial' ? (\App\Models\FetStockMovement::where('transfer_id', $m->transfer_id)->where('quantity', '>', 0)->value('holder') ?: '—') : ($m->picked_by ?: '—') }}</td>
                     <td class="nw">{{ $m->reference ?: '—' }}</td>
                     <td class="dim">{{ $m->note ?: '' }}</td>
                 </tr>

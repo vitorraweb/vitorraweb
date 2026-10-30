@@ -58,7 +58,7 @@ class FetStockController extends Controller
             'main_holder' => FetStockMovement::MAIN_HOLDER,
             // A hand-over is two rows; the list shows it once, from the giver's side.
             'movements' => $this->withPartners(FetStockMovement::with('creator:id,name')
-                ->where(fn ($q) => $q->where('type', '!=', 'transfer')->orWhere('quantity', '<', 0))
+                ->where(fn ($q) => $q->whereNotIn('type', FetStockMovement::HANDOVERS)->orWhere('quantity', '<', 0))
                 ->orderByDesc('moved_on')->orderByDesc('id')->limit(100)->get())
                 ->map(fn (FetStockMovement $m) => $this->present($m)),
             'types'     => FetStockMovement::TYPES,
@@ -241,6 +241,7 @@ class FetStockController extends Controller
         }
 
         // A hand-over between holders moves devices but none leave the company.
+        // Devices sent out on trial are listed too (tagged), since they left the store.
         $out = $inWeek->filter(fn (FetStockMovement $m) => $m->quantity < 0 && $m->type !== 'transfer')->values();
 
         $pdf = Pdf::loadView('documents.fet-stock-week', [
@@ -324,11 +325,13 @@ class FetStockController extends Controller
             'picked_by' => ['nullable', 'required_if:type,sold', 'string', 'max:255'],
             // Who keeps them: "received by" for a delivery, "taken from" otherwise. Blank = the main store.
             'holder'    => ['nullable', 'string', 'max:255'],
-            'to_holder' => ['nullable', 'required_if:type,transfer', 'string', 'max:255'],
+            'to_holder' => ['nullable', 'required_if:type,transfer,trial', 'string', 'max:255'],
             'note'      => ['nullable', 'string', 'max:2000'],
         ], [
             'picked_by.required_if' => 'Enter the name of the person who picked up the devices.',
-            'to_holder.required_if' => 'Enter the person or office the devices were handed to.',
+            'to_holder.required_if' => $request->input('type') === 'trial'
+                ? 'Enter the client trying the devices.'
+                : 'Enter the person or office the devices were handed to.',
         ]);
 
         $data['moved_on'] = CarbonImmutable::parse($data['moved_on'])->toDateString();
@@ -353,11 +356,16 @@ class FetStockController extends Controller
             'picked_by' => $data['picked_by'] ?? null, 'holder' => $holder,
         ];
 
-        if ($data['type'] !== 'transfer') {
+        if (! in_array($data['type'], FetStockMovement::HANDOVERS, true)) {
             return [[...$base, 'quantity' => $data['type'] === 'sold' ? -$qty : $qty, 'transfer_id' => null]];
         }
 
-        $to = FetStockMovement::normaliseHolder($data['to_holder']);
+        // A trial client is held as "On trial: <client>", so the custody summary says so.
+        $toName = $data['to_holder'];
+        if ($data['type'] === 'trial' && ! str_starts_with(mb_strtolower(trim($toName)), mb_strtolower(FetStockMovement::TRIAL_PREFIX))) {
+            $toName = FetStockMovement::TRIAL_PREFIX.trim($toName);
+        }
+        $to = FetStockMovement::normaliseHolder($toName);
         if (mb_strtolower($to) === mb_strtolower($holder)) {
             throw ValidationException::withMessages(['to_holder' => 'The devices are already with '.$holder.'. Pick who they were handed to.']);
         }
@@ -485,7 +493,7 @@ class FetStockController extends Controller
             'model'      => $m->model,
             'type'       => $m->type,
             // A hand-over reads as the number of devices handed over.
-            'quantity'   => $m->type === 'transfer' ? abs($m->quantity) : $m->quantity,
+            'quantity'   => in_array($m->type, FetStockMovement::HANDOVERS, true) ? abs($m->quantity) : $m->quantity,
             'moved_on'   => $m->moved_on->toDateString(),
             'reference'  => $m->reference,
             'picked_by'  => $m->picked_by,

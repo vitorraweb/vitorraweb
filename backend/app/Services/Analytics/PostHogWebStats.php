@@ -70,7 +70,7 @@ class PostHogWebStats
 
             $totals = fn (string $where) => $this->query("
                 SELECT uniq(person_id), uniq(properties.\$session_id), countIf(event = '\$pageview'),
-                       countIf(event IN ('enquiry_submitted', 'contact_submitted', 'reservation_submitted'))
+                       countIf(event IN ('enquiry_submitted', 'contact_submitted', 'reservation_submitted', 'buyers_pack_requested'))
                 FROM events WHERE {$where}")[0] ?? [0, 0, 0, 0];
 
             $now  = $totals("timestamp >= {$from}");

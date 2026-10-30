@@ -171,6 +171,10 @@ Route::get('/google-ads/oauth/callback', [GoogleAdsController::class, 'callback'
 Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);
 // Public FET stock status for the website catalogue (in stock / low / to order, never full counts).
 Route::get('/fet/availability', [FetStockController::class, 'availability'])->middleware('throttle:120,1');
+// The light lead step on the FET pages: email the Buyer's Pack, log an FET lead.
+Route::post('/fet/buyers-pack', [\App\Http\Controllers\Api\FetBuyersPackController::class, 'store'])->middleware(['turnstile', 'throttle:6,1']);
+// The current spotlight message for the homepage / FET page.
+Route::get('/spotlight', [\App\Http\Controllers\Api\SpotlightController::class, 'current'])->middleware('throttle:120,1');
 // Reception / street screen: what to show beyond its built-in story (the welcome).
 Route::get('/display', [DisplayController::class, 'show'])->middleware('throttle:60,1');
 
@@ -484,6 +488,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
         });
         Route::middleware('perm:blog')->group(function () {
+            // Spotlights — the dated "what's new" message on the homepage and FET page.
+            Route::get('/spotlights', [\App\Http\Controllers\Api\SpotlightController::class, 'index']);
+            Route::post('/spotlights', [\App\Http\Controllers\Api\SpotlightController::class, 'store']);
+            Route::patch('/spotlights/{spotlight}', [\App\Http\Controllers\Api\SpotlightController::class, 'update']);
+            Route::delete('/spotlights/{spotlight}', [\App\Http\Controllers\Api\SpotlightController::class, 'destroy']);
             Route::get('/blog/posts', [BlogAdminController::class, 'index']);
             Route::post('/blog/posts', [BlogAdminController::class, 'store']);
             Route::get('/blog/posts/{post}', [BlogAdminController::class, 'show']);

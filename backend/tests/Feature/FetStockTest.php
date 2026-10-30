@@ -103,6 +103,27 @@ class FetStockTest extends TestCase
         $this->assertNull($res->json('models.SAMPLE'));
     }
 
+    public function test_under_trial_moves_devices_to_the_client_and_stays_in_stock(): void
+    {
+        $u = $this->juniorFinance();
+        $this->record($u, ['model' => 'FII', 'type' => 'received', 'quantity' => 5])->assertCreated();
+        $this->record($u, ['model' => 'FII', 'type' => 'trial', 'quantity' => 2])->assertJsonValidationErrors('to_holder');
+        $this->record($u, ['model' => 'FII', 'type' => 'trial', 'quantity' => 2, 'to_holder' => 'Kampala Coaches Ltd'])->assertCreated()
+            ->assertJsonPath('data.type', 'trial')->assertJsonPath('data.quantity', 2)->assertJsonPath('data.to_holder', 'On trial: Kampala Coaches Ltd');
+
+        $h = $this->holders($u);
+        $this->assertSame(3, $h[FetStockMovement::MAIN_HOLDER]['models']['FII']);
+        $this->assertSame(2, $h['On trial: Kampala Coaches Ltd']['models']['FII']);
+        $this->app['auth']->forgetGuards();
+        $fii = collect($this->withHeaders($this->h($u))->getJson('/api/admin/accounting/stock')->json('models'))->firstWhere('code', 'FII');
+        $this->assertSame(5, $fii['on_hand']); // still company stock
+
+        // The client buys one: sold from the trial holder.
+        $this->app['auth']->forgetGuards();
+        $this->record($u, ['model' => 'FII', 'type' => 'sold', 'quantity' => 1, 'holder' => 'On trial: Kampala Coaches Ltd', 'picked_by' => 'Client'])->assertCreated();
+        $this->assertSame(1, $this->holders($u)['On trial: Kampala Coaches Ltd']['total']);
+    }
+
     public function test_samples_are_tracked_without_a_price(): void
     {
         $u = $this->juniorFinance();

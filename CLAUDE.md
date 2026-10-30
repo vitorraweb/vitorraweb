@@ -109,6 +109,12 @@ Console **My work** app (`/admin/me/*`) = the staff portal's self-service on the
 ### PostHog web analytics (October 2026) — `docs/posthog.md`
 Public pages only (`lib/posthog.ts` private list), proxied via `/ingest`; cookieless until consent, cookie + session replay after. Console **Insights → Website** (`/admin/website`, module `google_ads`) + Overview live strip read PostHog server-side (`POSTHOG_PERSONAL_API_KEY`, query:read). Frontend env: `NEXT_PUBLIC_POSTHOG_KEY/HOST/UI_HOST`.
 
+### Growth: lead capture and fresh content (October 2026)
+- **FET Buyer's Pack** (`components/sections/FetBuyersPack`, on the FET page after the calculator and on the catalogue): name, email, fleet size → emails the published price list (read from the product records), device guide, datasheet and catalogue link, and logs an FET lead in Enquiries (`POST /fet/buyers-pack`, turnstile, `FetBuyersPackController`). PostHog `buyers_pack_requested` counts as a website lead; Ads uses `NEXT_PUBLIC_GOOGLE_ADS_LABEL_PACK` or the enquiry label.
+- **Spotlight** (Marketing → Spotlight, `blog` module): dated message under the homepage and FET heroes, EN/SW, priority; public `GET /spotlight?page=home|fet&locale=` (5-min cache, cleared on save). Nothing shows when none is live.
+- **Stock "Under trial"**: a hand-over (type `trial`) to a holder named `On trial: <client>`; still company stock; sell from or hand back from that holder.
+- **Marketing drafts** live in `marketing/` (campaign drafts; daily briefings on the `marketing-briefings` branch).
+
 ### Microsoft Teams (October 2026) — `docs/microsoft-teams.md`
 Chat-in-Teams deep-link buttons (staff/team/colleagues; address = `microsoft_email` or a `MICROSOFT_365_DOMAINS` login), **Meetings** (Operations app; pasted Teams join links, host-allowlisted), channel alerts via a **Workflows webhook** (`TEAMS_WORKFLOW_WEBHOOK_URL`, server-only; `teams_notifications` outbox, dedupe + bounded retries), and a **dashboard tab** (`/teams/dashboard`, only route frameable by M365 hosts) signed in with Entra SSO verified server-side (`POST /auth/teams`, single tenant, oid pinned, 2FA kept). Package: `scripts/build_teams_app.py` → `teams-app/dist/vitorra-teams.zip`. No Graph permissions.
 

@@ -18,7 +18,8 @@ import { ProofCarousel } from "@/components/sections/ProofCarousel";
 import { CredentialStrip } from "@/components/sections/CredentialStrip";
 import { EvidenceStory } from "@/components/sections/EvidenceStory";
 import { BusinessDoors } from "@/components/system/doors";
-import { getBlogPosts } from "@/lib/api";
+import { getBlogPosts, getSpotlight } from "@/lib/api";
+import { SpotlightBar } from "@/components/sections/SpotlightBar";
 import { COMPANY_REG_NO } from "@/lib/constants";
 import type { BlogPost } from "@/types";
 
@@ -56,6 +57,7 @@ export default async function HomePage() {
   const tp = await getTranslations("products");
   const vt = await getTranslations("visuals");
   const locale = await getLocale();
+  const spotlight = await getSpotlight("home", locale);
 
   let posts: BlogPost[] = [];
   try {
@@ -122,6 +124,7 @@ export default async function HomePage() {
           credit={t("heroCredit")}
           scrollCue={t("scrollCue")}
         />
+        <SpotlightBar spotlight={spotlight} />
         <CredentialStrip label={vt("stripLabel")} linkLabel={vt("stripLink")} />
 
         {/* ══ 2 · Four doors — each shows the photograph its page opens on ═ */}

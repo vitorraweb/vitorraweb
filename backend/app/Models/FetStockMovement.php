@@ -27,8 +27,15 @@ class FetStockMovement extends Model
      * received/returned add stock, sold removes it, an adjustment can go either
      * way, and a transfer hands devices from one holder to another (two linked
      * rows, − at the giver and + at the receiver, so company stock is unchanged).
+     * A trial is a hand-over to a client trying the device: still our stock,
+     * held by "On trial: <client>" until it is sold or handed back.
      */
-    public const TYPES = ['received', 'sold', 'returned', 'adjustment', 'transfer'];
+    public const TYPES = ['received', 'sold', 'returned', 'adjustment', 'transfer', 'trial'];
+
+    /** Hand-overs: two linked rows that move devices between holders. */
+    public const HANDOVERS = ['transfer', 'trial'];
+
+    public const TRIAL_PREFIX = 'On trial: ';
 
     /** The main store: Operations keeps the devices unless an entry says otherwise. */
     public const MAIN_HOLDER = 'Operations office (Victor Lojum)';

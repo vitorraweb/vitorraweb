@@ -1831,5 +1831,52 @@
     "stockNote": "Stock is taken from our Kampala store records and refreshed every few minutes.",
     "contactTitle": "Not sure which device your fleet needs?",
     "contactBody": "Tell us about your vehicles. We will recommend the right device for each one and estimate what you could save, free of charge."
+  },
+  "buyersPack": {
+    "eyebrow": "Not ready for a quote?",
+    "title": "Take the FET Buyer's Pack with you.",
+    "body": "Compare the devices in your own time. Tell us where to send it and we'll email the pack straight away. No call unless you ask for one.",
+    "inside1": "The full price list, installation included",
+    "inside2": "Which device fits each of your vehicles",
+    "inside3": "The product datasheet and certifications",
+    "inside4": "How the free fuel assessment works",
+    "fieldName": "Your name",
+    "fieldEmail": "Email",
+    "fieldPhone": "Phone or WhatsApp (optional)",
+    "fieldFleet": "Vehicles in your fleet",
+    "fieldVehicle": "Mostly",
+    "fieldCompany": "Company (optional)",
+    "choose": "Choose",
+    "optional": "Optional",
+    "fleet": {
+      "1": "Just one",
+      "2-5": "2 to 5",
+      "6-20": "6 to 20",
+      "21-50": "21 to 50",
+      "50+": "More than 50"
+    },
+    "vehicle": {
+      "car": "Cars / mini-buses",
+      "suv": "SUVs / vans",
+      "lighttruck": "Light & medium trucks",
+      "heavytruck": "Heavy trucks",
+      "mixed": "A mix"
+    },
+    "submit": "Email me the Buyer's Pack",
+    "sending": "Sending…",
+    "error": "We couldn't send it just now. Please try again, or WhatsApp us on +256 740 026 294.",
+    "privacy": "We use your details only to send the pack and follow up about Fuel Eco Tech.",
+    "errName": "Please enter your name.",
+    "errEmail": "Please enter a valid email.",
+    "errPhone": "Please enter a valid phone number.",
+    "errFleet": "Please choose how many vehicles.",
+    "doneLabel": "On its way",
+    "doneTitle": "Thank you, {name}. Check your inbox.",
+    "doneBody": "The pack is in your email. You can also open everything now:",
+    "dlGuide": "Which device fits (PDF)",
+    "dlDatasheet": "Product datasheet (PDF)",
+    "dlCatalogue": "The FET catalogue with today's stock",
+    "nextStep": "When you're ready, the free fuel assessment is the next step. It costs nothing and commits you to nothing.",
+    "nextCta": "Book a free fuel assessment"
   }
 }

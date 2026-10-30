@@ -327,3 +327,33 @@ export async function getMyEnquiries(token: string): Promise<Enquiry[]> {
   });
   return res.data;
 }
+
+/* ─── FET Buyer's Pack (the light lead step) ──────────────────────────── */
+
+export async function requestBuyersPack(
+  data: { name: string; email: string; phone?: string; company?: string; fleet_size: string; vehicle?: string },
+  turnstileToken?: string,
+): Promise<void> {
+  await request("/fet/buyers-pack", {
+    method: "POST",
+    body: JSON.stringify({ ...data, turnstile_token: turnstileToken, attribution: getAttribution() }),
+  });
+  trackConversion("pack", { transactionId: `pack-${Date.now()}`, email: data.email, phone: data.phone });
+}
+
+/* ─── Spotlight (the current "what's new" line under a hero) ───────────── */
+
+export type Spotlight = { eyebrow: string | null; title: string; body: string | null; cta_label: string | null; cta_url: string | null };
+
+export async function getSpotlight(page: "home" | "fet", locale: string): Promise<Spotlight | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/spotlight?page=${page}&locale=${locale === "sw" ? "sw" : "en"}`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return null;
+    return ((await res.json()) as { data: Spotlight | null }).data;
+  } catch {
+    return null;
+  }
+}

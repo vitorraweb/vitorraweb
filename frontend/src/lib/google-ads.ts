@@ -22,12 +22,12 @@ import { capture } from "@/lib/posthog";
 export const GOOGLE_ADS_ID =
   process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? (process.env.NODE_ENV === "production" ? "AW-18227983736" : "");
 
-export type ConversionKind = "enquiry" | "contact" | "reserve" | "newsletter" | "call";
+export type ConversionKind = "enquiry" | "contact" | "reserve" | "newsletter" | "call" | "pack";
 
 /** The same moments as PostHog events — the console's "Leads from the website" counts the first three. */
 const POSTHOG_EVENTS: Record<ConversionKind, string> = {
   enquiry: "enquiry_submitted", contact: "contact_submitted", reserve: "reservation_submitted",
-  newsletter: "newsletter_subscribed", call: "call_clicked",
+  newsletter: "newsletter_subscribed", call: "call_clicked", pack: "buyers_pack_requested",
 };
 
 const LABELS: Record<ConversionKind, string | undefined> = {
@@ -36,6 +36,8 @@ const LABELS: Record<ConversionKind, string | undefined> = {
   reserve: process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_RESERVE,
   newsletter: process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_NEWSLETTER,
   call: process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_CALL,
+  // A Buyer's Pack request is a lead with contact details, so it counts as an enquiry for Ads.
+  pack: process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_PACK ?? process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_ENQUIRY,
 };
 
 /** Routes that are staff tools or unattended screens, never ad landing pages. */

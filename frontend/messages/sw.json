@@ -1831,5 +1831,52 @@
     "stockNote": "Taarifa za stoo zinatoka kwenye kumbukumbu za stoo yetu ya Kampala na husasishwa kila baada ya dakika chache.",
     "contactTitle": "Huna uhakika kifaa kipi kinafaa magari yako?",
     "contactBody": "Tueleze kuhusu magari yako. Tutapendekeza kifaa sahihi kwa kila gari na kukadiria unachoweza kuokoa, bila malipo."
+  },
+  "buyersPack": {
+    "eyebrow": "Bado hujawa tayari kwa nukuu?",
+    "title": "Chukua Kifurushi cha Mnunuzi wa FET.",
+    "body": "Linganisha vifaa kwa muda wako. Tuambie tutume wapi, tutakutumia kifurushi kwa barua pepe mara moja. Hatutakupigia simu isipokuwa ukiomba.",
+    "inside1": "Orodha kamili ya bei, ikiwemo ufungaji",
+    "inside2": "Kifaa kipi kinafaa kila gari lako",
+    "inside3": "Taarifa za kifaa na vyeti vyake",
+    "inside4": "Jinsi tathmini ya mafuta ya bure inavyofanya kazi",
+    "fieldName": "Jina lako",
+    "fieldEmail": "Barua pepe",
+    "fieldPhone": "Simu au WhatsApp (si lazima)",
+    "fieldFleet": "Magari katika kundi lako",
+    "fieldVehicle": "Hasa",
+    "fieldCompany": "Kampuni (si lazima)",
+    "choose": "Chagua",
+    "optional": "Si lazima",
+    "fleet": {
+      "1": "Moja tu",
+      "2-5": "2 hadi 5",
+      "6-20": "6 hadi 20",
+      "21-50": "21 hadi 50",
+      "50+": "Zaidi ya 50"
+    },
+    "vehicle": {
+      "car": "Magari madogo / mabasi madogo",
+      "suv": "SUV / vani",
+      "lighttruck": "Malori madogo na ya kati",
+      "heavytruck": "Malori makubwa",
+      "mixed": "Mchanganyiko"
+    },
+    "submit": "Nitumie Kifurushi cha Mnunuzi",
+    "sending": "Inatuma…",
+    "error": "Hatukuweza kukituma sasa hivi. Tafadhali jaribu tena, au tuandikie WhatsApp +256 740 026 294.",
+    "privacy": "Tunatumia taarifa zako kukutumia kifurushi na kufuatilia kuhusu Fuel Eco Tech tu.",
+    "errName": "Tafadhali andika jina lako.",
+    "errEmail": "Tafadhali andika barua pepe sahihi.",
+    "errPhone": "Tafadhali andika namba ya simu sahihi.",
+    "errFleet": "Tafadhali chagua idadi ya magari.",
+    "doneLabel": "Kinakuja",
+    "doneTitle": "Asante, {name}. Angalia barua pepe yako.",
+    "doneBody": "Kifurushi kiko kwenye barua pepe yako. Unaweza pia kufungua kila kitu sasa:",
+    "dlGuide": "Kifaa kipi kinafaa (PDF)",
+    "dlDatasheet": "Taarifa za kifaa (PDF)",
+    "dlCatalogue": "Katalogi ya FET na stoo ya leo",
+    "nextStep": "Ukiwa tayari, tathmini ya mafuta ya bure ndiyo hatua inayofuata. Haina gharama wala haikulazimishi chochote.",
+    "nextCta": "Omba tathmini ya mafuta bila malipo"
   }
 }
