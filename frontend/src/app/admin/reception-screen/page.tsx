@@ -19,7 +19,7 @@ export default function ReceptionScreenPage() {
   const [hours, setHours] = useState("4");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [mode, setMode] = useState<"reception" | "projector" | "street">("reception");
+  const [mode, setMode] = useState<"reception" | "tv" | "street">("reception");
 
   useEffect(() => {
     apiAdmin<{ data: { welcome: Welcome } }>("/admin/display").then((r) => {
@@ -38,7 +38,7 @@ export default function ReceptionScreenPage() {
     finally { setBusy(false); }
   };
 
-  const src = mode === "street" ? "/display/street" : mode === "projector" ? "/display/projector" : "/display";
+  const src = mode === "street" ? "/display/street" : mode === "tv" ? "/display?mode=tv" : "/display";
 
   return (
     <div className="pb-12">
@@ -47,7 +47,6 @@ export default function ReceptionScreenPage() {
         subtitle="Welcome a visiting client by name on the reception TV, and preview the reception and street screens."
         actions={<>
           <a className="c-btn" href="/display" target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4" />Open reception screen</a>
-          <a className="c-btn" href="/display/projector" target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4" />Open projector screen</a>
           <a className="c-btn" href="/display/street" target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4" />Open street screen</a>
         </>}
       />
@@ -81,8 +80,8 @@ export default function ReceptionScreenPage() {
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-[15px] font-semibold text-ink inline-flex items-center gap-2"><MonitorPlay className="w-4 h-4 text-ink-muted" />Preview</h3>
             <div className="o-seg">
-              <button aria-pressed={mode === "reception"} onClick={() => setMode("reception")}>Reception TV</button>
-              <button aria-pressed={mode === "projector"} onClick={() => setMode("projector")}>Projector</button>
+              <button aria-pressed={mode === "reception"} onClick={() => setMode("reception")}>Reception (projector)</button>
+              <button aria-pressed={mode === "tv"} onClick={() => setMode("tv")}>TV version</button>
               <button aria-pressed={mode === "street"} onClick={() => setMode("street")}>Street</button>
             </div>
           </div>
