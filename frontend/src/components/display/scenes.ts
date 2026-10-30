@@ -89,6 +89,16 @@ export const SECTORS: SectorScene[] = [
   },
 ];
 
+/** Standing lines for the information band, woven between the latest articles. */
+export const TICKER_LINES = [
+  "Free on-site fuel assessment for fleets: scan the code on screen or visit vitorra.org",
+  "Fuel Eco Tech: 13.9% less fuel in an independent field test by CTI GmbH, Germany",
+  "SEAL Wound Spray: US FDA 510(k) cleared, 36-month shelf life",
+  "Ugandan Arabica for export: grades, terms and samples on request",
+  "Talk to us on WhatsApp: +256 740 026 294",
+  "Visit us: Padre Pio House, Plot 32, Lumumba Avenue, Kampala",
+];
+
 export const CREDENTIALS = [
   { name: "CTI GmbH", what: "Fuel use measured on a working vehicle" },
   { name: "AVL Technologies", what: "Laboratory validation" },

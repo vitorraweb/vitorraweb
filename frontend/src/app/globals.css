@@ -1606,3 +1606,6 @@
 .vx[data-mode="projector"] img.vx-rise { width: 26vmin !important; }
 .vx[data-mode="projector"] .vx-rise { animation-name: vx-rise-crisp; }
 @keyframes vx-rise-crisp { from { opacity: 0; transform: translateY(0.4em); } to { opacity: 1; transform: none; } }
+/* Information band ticker on the screens — always moving (a TV has no reduced-motion preference). */
+.vx .vx-ticker { animation: vx-ticker var(--dur, 60s) linear infinite; }
+@keyframes vx-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }

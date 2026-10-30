@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { API_BASE_URL, CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/constants";
-import { useKioskClock, useKioskWeather, weatherEntry } from "@/lib/kiosk";
-import { CREDENTIALS, SECTORS, durationOf, storyFor, type Mode, type Scene, type SectorScene } from "./scenes";
+import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
+import { CREDENTIALS, SECTORS, TICKER_LINES, durationOf, storyFor, type Mode, type Scene, type SectorScene } from "./scenes";
 
 /* ─── The stage ───────────────────────────────────────────────────────────────
    A full-screen loop for the reception TV and the street-facing screen.
@@ -81,9 +81,12 @@ function Loop({ mode, pin }: { mode: Mode; pin?: string | null }) {
       <div className="hero-grain absolute inset-0 pointer-events-none" style={{ opacity: light || projector ? 0 : street ? 0.025 : 0.035 }} />
       <ScreenCare />
 
-      {/* Projectors usually crop the edges (overscan), so their safe area is wider. */}
-      <div className="relative z-10 h-full flex flex-col" style={{ padding: projector ? "6.5vmin 7.5vmin 5vmin" : "4.2vmin 5vmin 3.4vmin", translate: `${dx}px ${dy}px`, transition: "translate 4s ease", textShadow: street && !light && !projector ? "0 0.25vmin 1.6vmin rgba(0,0,0,0.55)" : undefined }}>
-        <TopBar mode={mode} hidden={scene.kind === "ident"} />
+      {/* The whole overlay — story and information band — drifts together
+          against burn-in. Projectors usually crop the edges (overscan), so
+          their safe area is wider. */}
+      <div className="relative z-10 h-full flex flex-col" style={{ translate: `${dx}px ${dy}px`, transition: "translate 4s ease" }}>
+      <div className="flex-1 min-h-0 flex flex-col" style={{ padding: projector ? "6.5vmin 7.5vmin 2.4vmin" : "4.2vmin 5vmin 2.2vmin", textShadow: street && !light && !projector ? "0 0.25vmin 1.6vmin rgba(0,0,0,0.55)" : undefined }}>
+        <TopBar hidden={scene.kind === "ident"} />
         <div key={`${scene.id}-${loop}`} className="flex-1 min-h-0 flex">
           {scene.kind === "ident" && <Ident street={big} />}
           {scene.kind === "welcome" && welcome && <WelcomeScene welcome={welcome} />}
@@ -92,6 +95,8 @@ function Loop({ mode, pin }: { mode: Mode; pin?: string | null }) {
           {scene.kind === "visit" && <Visit street={big} panel={projector} here={street} />}
         </div>
         <Progress story={story} index={index} seconds={seconds} loop={loop} />
+      </div>
+      <BroadcastBar big={big} inset={projector ? "7.5vmin" : "5vmin"} />
       </div>
     </div>
   );
@@ -153,11 +158,7 @@ function Backdrops({ activeSector, kind, seconds, street, light, projector = fal
 
 /* ── Chrome ─────────────────────────────────────────────────────────────── */
 
-function TopBar({ mode, hidden }: { mode: Mode; hidden: boolean }) {
-  const { time, date } = useKioskClock();
-  const weather = useKioskWeather();
-  const W = weatherEntry(weather.code).icon;
-
+function TopBar({ hidden }: { hidden: boolean }) {
   return (
     <header className="flex items-start justify-between transition-opacity duration-700" style={{ opacity: hidden ? 0 : 1 }}>
       <div className="flex items-center" style={{ gap: "1.6vmin" }}>
@@ -167,18 +168,108 @@ function TopBar({ mode, hidden }: { mode: Mode; hidden: boolean }) {
           <p className="uppercase" style={{ fontSize: "1.15vmin", letterSpacing: "0.32em", color: "var(--vx-gold)", marginTop: "0.7vmin" }}>Holdings Limited</p>
         </div>
       </div>
-      {mode !== "street" ? (
-        <div className="text-right leading-none">
-          <p className="font-display tabular-nums" style={{ fontSize: "5vmin", fontWeight: 300 }}>{time}</p>
-          <p className="uppercase flex items-center justify-end" style={{ fontSize: "1.2vmin", letterSpacing: "0.24em", color: "var(--vx-muted)", marginTop: "1vmin", gap: "1vmin" }}>
-            <span>{date}</span>
-            {weather.tempNow !== null && <><span style={{ color: "var(--vx-gold)" }}>·</span><W style={{ width: "1.6vmin", height: "1.6vmin" }} /><span>{weather.tempNow}° Kampala</span></>}
-          </p>
-        </div>
-      ) : (
-        <p className="font-display" style={{ fontSize: "3.4vmin", color: "var(--vx-gold)" }}>vitorra.org</p>
-      )}
+      <p className="font-display" style={{ fontSize: "3.4vmin", color: "var(--vx-gold)" }}>vitorra.org</p>
     </header>
+  );
+}
+
+/* ── The information band ────────────────────────────────────────────────
+   Like a news channel's lower bar: always on, always the same place, solid
+   black so it reads over any film, in daylight and on a projector. Time and
+   date, Kampala weather with the next three days, today's shilling rates,
+   then a ticker of company news and the latest articles. Each feed refreshes
+   itself and falls back quietly if it is offline. */
+const BAND = { bg: "#000000", fg: "#FFFFFF", gold: "#F0C85A", dim: "rgba(255,255,255,0.72)", rule: "rgba(240,200,90,0.45)" };
+
+function Cell({ pad, gap, children }: { pad: string; gap: string; children: React.ReactNode }) {
+  return <div className="flex items-center shrink-0" style={{ padding: `0 ${pad}`, borderRight: `1px solid ${BAND.rule}`, gap }}>{children}</div>;
+}
+
+function BroadcastBar({ big, inset }: { big: boolean; inset: string }) {
+  const { time } = useKioskClock();
+  const [today, setToday] = useState("");
+  useEffect(() => {
+    const set = () => setToday(new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toUpperCase());
+    set(); const t = setInterval(set, 60_000); return () => clearInterval(t);
+  }, []);
+  const weather = useKioskWeather();
+  const fx = useKioskFx();
+  const headlines = useKioskHeadlines();
+  const Now = weatherEntry(weather.code).icon;
+
+  const fs = big ? 2.3 : 1.75;                       // base text size, vmin
+  const v = (n: number) => `${(fs * n).toFixed(2)}vmin`;
+  const items = useMemo(() => {
+    const news = headlines.map((h) => h.title);
+    const out: string[] = [];
+    for (let i = 0; i < Math.max(news.length, TICKER_LINES.length); i++) {
+      if (TICKER_LINES[i]) out.push(TICKER_LINES[i]);
+      if (news[i]) out.push(news[i]);
+    }
+    return out;
+  }, [headlines]);
+  // A steady reading speed whatever the number of items: about 9 characters a second.
+  const seconds = Math.max(40, Math.round(items.join("   ").length / 9));
+
+  return (
+    <div className="relative shrink-0 flex items-stretch overflow-hidden" style={{ background: BAND.bg, color: BAND.fg, height: big ? "9.5vmin" : "7.4vmin", borderTop: `0.35vmin solid ${BAND.gold}`, paddingLeft: inset, textShadow: "none" }}>
+      {/* Time */}
+      <div className="flex flex-col justify-center shrink-0 leading-none" style={{ background: BAND.gold, color: "#000", padding: `0 ${v(1.1)}`, marginLeft: `calc(-1 * ${inset})`, paddingLeft: inset }}>
+        <span className="tabular-nums" style={{ fontSize: v(1.75), fontWeight: 800, letterSpacing: "-0.02em" }}>{time}</span>
+        <span style={{ fontSize: v(0.62), fontWeight: 700, letterSpacing: "0.14em", marginTop: v(0.25) }}>{today}</span>
+      </div>
+
+      {/* Weather */}
+      <Cell pad={v(1.2)} gap={v(0.6)}>
+        <Now style={{ width: v(1.4), height: v(1.4), color: BAND.gold }} />
+        <span className="leading-none">
+          <span className="block tabular-nums" style={{ fontSize: v(1.3), fontWeight: 700 }}>{weather.tempNow !== null ? `${weather.tempNow}°` : "—"}</span>
+          <span className="block" style={{ fontSize: v(0.6), fontWeight: 700, letterSpacing: "0.12em", color: BAND.dim, marginTop: v(0.2) }}>KAMPALA</span>
+        </span>
+        <span className="flex portrait:hidden" style={{ gap: v(0.9), marginLeft: v(0.6) }}>
+          {weather.days.slice(1, 4).map((d) => {
+            const I = weatherEntry(d.code).icon;
+            return (
+              <span key={d.label} className="flex flex-col items-center leading-none" style={{ gap: v(0.2) }}>
+                <span style={{ fontSize: v(0.58), fontWeight: 700, letterSpacing: "0.1em", color: BAND.dim }}>{d.label.toUpperCase()}</span>
+                <I style={{ width: v(0.9), height: v(0.9) }} />
+                <span className="tabular-nums" style={{ fontSize: v(0.72), fontWeight: 600 }}>{d.hi}°</span>
+              </span>
+            );
+          })}
+        </span>
+      </Cell>
+
+      {/* Shilling rates */}
+      <Cell pad={v(1.2)} gap={v(0.6)}>
+        <span className="leading-none">
+          <span className="block" style={{ fontSize: v(0.58), fontWeight: 700, letterSpacing: "0.12em", color: BAND.gold }}>UGX TODAY</span>
+          <span className="flex tabular-nums" style={{ gap: v(0.9), marginTop: v(0.3), fontSize: v(0.95), fontWeight: 700 }}>
+            <span><span style={{ color: BAND.dim, fontWeight: 600 }}>USD </span>{fx.ugxPerUsd ? Math.round(fx.ugxPerUsd).toLocaleString("en-US") : "—"}</span>
+            <span><span style={{ color: BAND.dim, fontWeight: 600 }}>EUR </span>{fx.ugxPerEur ? Math.round(fx.ugxPerEur).toLocaleString("en-US") : "—"}</span>
+          </span>
+        </span>
+      </Cell>
+
+      {/* Ticker */}
+      <div className="flex items-center shrink-0" style={{ padding: `0 ${v(0.8)}` }}>
+        <span style={{ background: BAND.gold, color: "#000", fontSize: v(0.62), fontWeight: 800, letterSpacing: "0.14em", padding: `${v(0.35)} ${v(0.6)}`, borderRadius: v(0.2) }}>VITORRA NEWS</span>
+      </div>
+      <div className="relative flex-1 min-w-0 overflow-hidden flex items-center" style={{ maskImage: "linear-gradient(90deg, transparent 0, #000 3%, #000 96%, transparent 100%)" }}>
+        <div className="vx-ticker flex items-center w-max" style={{ ["--dur" as string]: `${seconds}s` }}>
+          {[0, 1].map((copy) => (
+            <div key={copy} className="flex items-center shrink-0" aria-hidden={copy === 1}>
+              {items.map((t, i) => (
+                <span key={`${copy}-${i}`} className="flex items-center shrink-0" style={{ fontSize: v(0.98), fontWeight: 600, paddingRight: v(2) }}>
+                  {t}
+                  <span aria-hidden="true" style={{ display: "inline-block", width: v(0.35), height: v(0.35), background: BAND.gold, transform: "rotate(45deg)", marginLeft: v(2) }} />
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
