@@ -1627,8 +1627,8 @@
    projected), and no blur in the entrance animation. */
 .vx[data-mode="projector"] :is(h1, h2) { font-weight: 600 !important; letter-spacing: -0.015em !important; }
 .vx[data-mode="projector"] .vx-stat { font-weight: 500 !important; letter-spacing: -0.03em !important; }
-.vx[data-mode="projector"] .font-display { font-weight: 600; }
-.vx[data-mode="projector"] p:not(.font-display):not(.uppercase) { font-size: max(2.4vmin, 18px) !important; font-weight: 500; }
+.vx[data-mode="projector"] .font-sans { font-weight: 600; }
+.vx[data-mode="projector"] p:not(.font-sans):not(.uppercase) { font-size: max(2.4vmin, 18px) !important; font-weight: 500; }
 .vx[data-mode="projector"] .uppercase { letter-spacing: 0.12em !important; font-size: max(2.1vmin, 16px) !important; font-weight: 700; }
 .vx[data-mode="projector"] .vx-draw { height: 4px !important; }
 .vx[data-mode="projector"] img.vx-rise { width: 26vmin !important; }

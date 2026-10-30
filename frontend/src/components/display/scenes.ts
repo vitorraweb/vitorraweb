@@ -68,7 +68,7 @@ export const SECTORS: SectorScene[] = [
     tag: "Vitorra Coffee",
     film: "/videos/coffee-hero.mp4",
     poster: "/videos/coffee-hero-poster.jpg",
-    grade: "brightness(0.42) contrast(1.18) saturate(1.25) sepia(0.22)",
+    grade: "brightness(0.62) contrast(1.14) saturate(1.2) sepia(0.18)",
     streetGrade: "brightness(0.78) contrast(1.12) saturate(1.2) sepia(0.12)",
     line1: "Ugandan Arabica,",
     line2: "graded and exported at origin.",
