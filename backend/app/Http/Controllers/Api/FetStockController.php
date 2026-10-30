@@ -148,7 +148,7 @@ class FetStockController extends Controller
             'models'    => FetStockMovement::MODELS,
             'asAt'      => CarbonImmutable::now(),
             'printedBy' => $request->user()?->name,
-        ])->setPaper('a4');
+        ])->setPaper('a4', 'landscape')->setOption('dpi', 96)->setOption('defaultFont', 'DejaVu Sans')->setOption('isFontSubsettingEnabled', true);
 
         return $pdf->download('vitorra-fet-where-kept-'.now()->toDateString().'.pdf');
     }
@@ -217,7 +217,7 @@ class FetStockController extends Controller
             'summary' => $summary,
             'models'  => FetStockMovement::MODELS,
             'printedBy' => $request->user()?->name,
-        ])->setPaper('a4');
+        ])->setPaper('a4')->setOption('dpi', 96)->setOption('defaultFont', 'DejaVu Sans')->setOption('isFontSubsettingEnabled', true);
 
         return $pdf->download('vitorra-fet-status-'.$start->toDateString().'.pdf');
     }

@@ -1,24 +1,42 @@
-@extends('documents._layout', ['docTitle' => 'FET Status'])
+@extends('documents._report', [
+    'docTitle'    => 'FET Status',
+    'docSubtitle' => 'Week of '.$start->format('j M').' – '.$end->format('j M Y'),
+    'docRef'      => 'FET-WK-'.$start->format('Y-m-d'),
+])
 
 {{-- Weekly FET status sheet for Finance: what left stock, who picked it up,
      and where each model stands at the end of the week. Printed and signed. --}}
 @section('content')
+    @php
+        $soldOut   = -$out->where('type', 'sold')->sum('quantity');
+        $corrected = -$out->where('type', 'adjustment')->sum('quantity');
+        $all       = collect($summary);
+    @endphp
+
     <table class="meta">
-        <tr><td class="label">Week</td><td>{{ $start->format('l j F Y') }} &ndash; {{ $end->format('l j F Y') }}</td></tr>
-        @php
-            $soldOut = -$out->where('type', 'sold')->sum('quantity');
-            $corrected = -$out->where('type', 'adjustment')->sum('quantity');
-        @endphp
-        <tr><td class="label">Devices out</td><td><strong>{{ $soldOut }}</strong>@if ($corrected) &nbsp;<span style="color: #999;">(and {{ $corrected }} removed in a stock-count correction)</span>@endif</td></tr>
-        <tr><td class="label">Printed by</td><td>{{ $printedBy ?? '—' }}</td></tr>
+        <tr>
+            <td><div class="k">Period</div><div class="v">{{ $start->format('l j F') }} – {{ $end->format('l j F Y') }}</div></td>
+            <td><div class="k">Main store</div><div class="v">{{ \App\Models\FetStockMovement::MAIN_HOLDER }}</div></td>
+            <td><div class="k">Printed by</div><div class="v">{{ $printedBy ?? '—' }}</div></td>
+        </tr>
     </table>
 
-    <table class="items">
+    <table class="kpis">
+        <tr>
+            <td><div class="k">Opening stock</div><div class="v">{{ $all->sum('opening') }}</div><div class="n">devices on {{ $start->format('j M') }}</div></td>
+            <td><div class="k">Received</div><div class="v">{{ $all->sum('received') + $all->sum('returned') }}</div><div class="n">incl. {{ $all->sum('returned') }} returned</div></td>
+            <td><div class="k">Out</div><div class="v">{{ $soldOut }}</div><div class="n">@if ($corrected) and {{ $corrected }} removed in a count @else sold or installed @endif</div></td>
+            <td class="dark"><div class="k">Closing stock</div><div class="v">{{ $all->sum('closing') }}</div><div class="n">devices on {{ $end->format('j M') }}</div></td>
+        </tr>
+    </table>
+
+    <h3>Devices out this week</h3>
+    <table class="report">
         <thead>
             <tr>
-                <th style="width: 70px;">Date</th>
+                <th style="width: 62px;">Date</th>
                 <th>Model</th>
-                <th class="amount" style="width: 40px;">Qty</th>
+                <th class="num" style="width: 34px;">Qty</th>
                 <th>Taken from</th>
                 <th>Picked up by</th>
                 <th>Reference</th>
@@ -26,64 +44,64 @@
             </tr>
         </thead>
         <tbody>
-            @forelse ($out as $m)
-                <tr>
+            @forelse ($out as $i => $m)
+                <tr class="{{ $i % 2 ? 'alt' : '' }}">
                     <td>{{ $m->moved_on->format('D j M') }}</td>
-                    <td>{{ $models[$m->model]['label'] ?? $m->model }}@if ($m->type === 'adjustment')<br><span style="font-size: 9px; color: #999;">Stock-count correction</span>@endif</td>
-                    <td class="amount"><strong>{{ -$m->quantity }}</strong></td>
+                    <td>{{ $models[$m->model]['label'] ?? $m->model }}@if ($m->type === 'adjustment')<br><span class="tag grey">Count correction</span>@endif</td>
+                    <td class="num"><strong>{{ -$m->quantity }}</strong></td>
                     <td>{{ $m->holder ?: '—' }}</td>
                     <td>{{ $m->picked_by ?: '—' }}</td>
-                    <td>{{ $m->reference ?: '—' }}</td>
-                    <td style="font-size: 10px; color: #454545;">{{ $m->note ?: '' }}</td>
+                    <td class="nw">{{ $m->reference ?: '—' }}</td>
+                    <td class="dim">{{ $m->note ?: '' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="7" style="color: #999; padding: 16px 10px;">No devices went out of stock this week.</td></tr>
+                <tr><td colspan="7" class="empty">No devices went out of stock this week.</td></tr>
             @endforelse
         </tbody>
     </table>
 
-    <p style="margin-top: 28px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: #7A6020; font-weight: bold;">Stock for the week, per model</p>
-    <table class="items" style="margin-top: 6px;">
+    <h3>Stock per model</h3>
+    <table class="report">
         <thead>
             <tr>
                 <th>Model</th>
-                <th class="amount">Opening</th>
-                <th class="amount">Received</th>
-                <th class="amount">Out</th>
-                <th class="amount">Returned</th>
-                <th class="amount">Corrected</th>
-                <th class="amount">Closing</th>
+                <th class="num">Opening</th>
+                <th class="num">Received</th>
+                <th class="num">Out</th>
+                <th class="num">Returned</th>
+                <th class="num">Corrected</th>
+                <th class="num">Closing</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($summary as $row)
-                <tr>
+            @foreach (array_values($summary) as $i => $row)
+                <tr class="{{ $i % 2 ? 'alt' : '' }}">
                     <td>{{ $row['label'] }}</td>
-                    <td class="amount">{{ $row['opening'] }}</td>
-                    <td class="amount">{{ $row['received'] ?: '–' }}</td>
-                    <td class="amount">{{ $row['out'] ?: '–' }}</td>
-                    <td class="amount">{{ $row['returned'] ?: '–' }}</td>
-                    <td class="amount">{{ $row['adjusted'] ? sprintf('%+d', $row['adjusted']) : '–' }}</td>
-                    <td class="amount"><strong>{{ $row['closing'] }}</strong></td>
+                    <td class="num">{{ $row['opening'] }}</td>
+                    <td class="num {{ $row['received'] ? '' : 'dim' }}">{{ $row['received'] ?: '–' }}</td>
+                    <td class="num {{ $row['out'] ? '' : 'dim' }}">{{ $row['out'] ?: '–' }}</td>
+                    <td class="num {{ $row['returned'] ? '' : 'dim' }}">{{ $row['returned'] ?: '–' }}</td>
+                    <td class="num {{ $row['adjusted'] ? '' : 'dim' }}">{{ $row['adjusted'] ? sprintf('%+d', $row['adjusted']) : '–' }}</td>
+                    <td class="num"><strong>{{ $row['closing'] }}</strong></td>
                 </tr>
             @endforeach
-            <tr>
-                <td><strong>All FET</strong></td>
-                <td class="amount">{{ collect($summary)->sum('opening') }}</td>
-                <td class="amount">{{ collect($summary)->sum('received') ?: '–' }}</td>
-                <td class="amount">{{ collect($summary)->sum('out') ?: '–' }}</td>
-                <td class="amount">{{ collect($summary)->sum('returned') ?: '–' }}</td>
-                <td class="amount">{{ collect($summary)->sum('adjusted') ? sprintf('%+d', collect($summary)->sum('adjusted')) : '–' }}</td>
-                <td class="amount"><strong>{{ collect($summary)->sum('closing') }}</strong></td>
+            <tr class="total">
+                <td>All FET</td>
+                <td class="num">{{ $all->sum('opening') }}</td>
+                <td class="num">{{ $all->sum('received') ?: '–' }}</td>
+                <td class="num">{{ $all->sum('out') ?: '–' }}</td>
+                <td class="num">{{ $all->sum('returned') ?: '–' }}</td>
+                <td class="num">{{ $all->sum('adjusted') ? sprintf('%+d', $all->sum('adjusted')) : '–' }}</td>
+                <td class="num">{{ $all->sum('closing') }}</td>
             </tr>
         </tbody>
     </table>
 
-    <table style="width: 100%; margin-top: 48px; font-size: 11px;">
+    <table class="signoff">
         <tr>
-            <td style="width: 33%; padding-right: 18px;"><div style="border-top: 1px solid #1E1E1E; padding-top: 6px;">Prepared by (Finance)</div></td>
-            <td style="width: 33%; padding: 0 9px;"><div style="border-top: 1px solid #1E1E1E; padding-top: 6px;">Checked by</div></td>
-            <td style="width: 33%; padding-left: 18px;"><div style="border-top: 1px solid #1E1E1E; padding-top: 6px;">Date</div></td>
+            <td><div class="role">Prepared by &middot; Finance</div><div class="line"></div><div class="lbl">Name &amp; signature</div><div class="line"></div><div class="lbl">Date</div></td>
+            <td><div class="role">Confirmed by &middot; Operations</div><div class="line"></div><div class="lbl">Name &amp; signature</div><div class="line"></div><div class="lbl">Date</div></td>
+            <td><div class="role">Approved by</div><div class="line"></div><div class="lbl">Name &amp; signature</div><div class="line"></div><div class="lbl">Date</div></td>
         </tr>
     </table>
 @endsection
