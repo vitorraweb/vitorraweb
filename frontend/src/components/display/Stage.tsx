@@ -27,7 +27,11 @@ const DRIFT = [[0, 0], [3, -2], [-2, 3], [2, 2], [-3, -1]];
 const THEMES = {
   reception: { "--vx-bg": "#09090A", "--vx-fg": "#F4EFE6", "--vx-gold": "#C5B27A", "--vx-muted": "rgba(244,239,230,0.72)", "--vx-track": "rgba(244,239,230,0.16)", "--vx-line": "rgba(197,178,122,0.35)" },
   street:    { "--vx-bg": "#0E0E10", "--vx-fg": "#FFFFFF", "--vx-gold": "#EED596", "--vx-muted": "rgba(255,255,255,0.9)", "--vx-track": "rgba(255,255,255,0.3)", "--vx-line": "rgba(238,213,150,0.6)" },
-  projector: { "--vx-bg": "#000000", "--vx-fg": "#FFFFFF", "--vx-gold": "#F5D57C", "--vx-muted": "#FFFFFF", "--vx-track": "rgba(255,255,255,0.35)", "--vx-line": "rgba(245,213,124,0.7)" },
+  /* Projector in a corridor with daylight on the wall: outside light lifts
+     every dark area towards grey, so only full-strength colours survive —
+     pure white, pure black, a saturated gold, and no pale "muted" greys. */
+  projector:      { "--vx-bg": "#000000", "--vx-fg": "#FFFFFF", "--vx-gold": "#FFCC33", "--vx-muted": "#FFFFFF", "--vx-track": "rgba(255,255,255,0.4)", "--vx-line": "#FFCC33" },
+  projectorLight: { "--vx-bg": "#FFFFFF", "--vx-fg": "#000000", "--vx-gold": "#4E3600", "--vx-muted": "#000000", "--vx-track": "rgba(0,0,0,0.3)", "--vx-line": "#4E3600" },
   daylight:  { "--vx-bg": "#F5F0E6", "--vx-fg": "#17140F", "--vx-gold": "#8A6A1F", "--vx-muted": "rgba(23,20,15,0.74)", "--vx-track": "rgba(23,20,15,0.15)", "--vx-line": "rgba(138,106,31,0.45)" },
 } as const;
 
@@ -68,12 +72,12 @@ function Loop({ mode, pin }: { mode: Mode; pin?: string | null }) {
   // outdoors in sun, and on a projector, which cannot show black at all.
   const light = (street && (scene.kind === "ident" || scene.kind === "proof"))
     || (projector && (scene.kind === "ident" || scene.kind === "proof" || scene.kind === "welcome"));
-  const theme = light ? THEMES.daylight : projector ? THEMES.projector : street ? THEMES.street : THEMES.reception;
+  const theme = light ? (projector ? THEMES.projectorLight : THEMES.daylight) : projector ? THEMES.projector : street ? THEMES.street : THEMES.reception;
 
   return (
     <div className="vx fixed inset-0 overflow-hidden select-none cursor-none" data-mode={mode}
       style={{ ...theme, background: "var(--vx-bg)", color: "var(--vx-fg)", transition: "background-color 1.2s ease, color 1.2s ease" } as React.CSSProperties}>
-      <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} light={light} />
+      <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} light={light} projector={projector} />
       <div className="hero-grain absolute inset-0 pointer-events-none" style={{ opacity: light || projector ? 0 : street ? 0.025 : 0.035 }} />
       <ScreenCare />
 
@@ -95,7 +99,7 @@ function Loop({ mode, pin }: { mode: Mode; pin?: string | null }) {
 
 /* ── Backgrounds: films for the businesses, a living gold field for the rest ── */
 
-function Backdrops({ activeSector, kind, seconds, street, light }: { activeSector: string | null; kind: Scene["kind"]; seconds: number; street: boolean; light: boolean }) {
+function Backdrops({ activeSector, kind, seconds, street, light, projector = false }: { activeSector: string | null; kind: Scene["kind"]; seconds: number; street: boolean; light: boolean; projector?: boolean }) {
   const videos = useRef<Record<string, HTMLVideoElement | null>>({});
 
   useEffect(() => {
@@ -113,7 +117,9 @@ function Backdrops({ activeSector, kind, seconds, street, light }: { activeSecto
       <div className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: !light && (kind === "ident" || kind === "welcome" || kind === "proof") ? 1 : 0 }}>
         <div className="vx-aurora absolute -inset-[20%]" />
       </div>
-      <div className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: light ? 1 : 0, background: "radial-gradient(60% 70% at 75% 25%, #FFFFFF 0%, rgba(255,255,255,0) 70%), radial-gradient(50% 60% at 15% 85%, rgba(197,178,122,0.28) 0%, rgba(197,178,122,0) 70%), #F5F0E6" }} />
+      <div className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: light ? 1 : 0, background: projector
+        ? "linear-gradient(90deg, #4E3600 0, #4E3600 1.2vmin, transparent 1.2vmin), #FFFFFF"
+        : "radial-gradient(60% 70% at 75% 25%, #FFFFFF 0%, rgba(255,255,255,0) 70%), radial-gradient(50% 60% at 15% 85%, rgba(197,178,122,0.28) 0%, rgba(197,178,122,0) 70%), #F5F0E6" }} />
 
       {/* Visit: the building itself */}
       <div className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: kind === "visit" ? 1 : 0 }}>
@@ -127,7 +133,7 @@ function Backdrops({ activeSector, kind, seconds, street, light }: { activeSecto
             ref={(el) => { videos.current[s.id] = el; }}
             src={s.film} poster={s.poster} muted loop playsInline preload="auto"
             className={`absolute inset-0 h-full w-full object-cover ${activeSector === s.id ? "vx-kenburns" : ""}`}
-            style={{ filter: street ? s.streetGrade ?? "brightness(0.95) contrast(1.08) saturate(1.12)" : s.grade ?? "brightness(0.68) contrast(1.06)", ["--dur" as string]: `${seconds}s` }}
+            style={{ filter: projector ? "brightness(1) contrast(1.28) saturate(1.35)" : street ? s.streetGrade ?? "brightness(0.95) contrast(1.08) saturate(1.12)" : s.grade ?? "brightness(0.68) contrast(1.06)", ["--dur" as string]: `${seconds}s` }}
           />
         </div>
       ))}
@@ -225,7 +231,7 @@ function WelcomeScene({ welcome }: { welcome: NonNullable<Welcome> }) {
 
 /* On a projector, the words sit on solid dark panels: a projected gradient
    scrim goes grey and muddy, a panel stays crisp. */
-const PANEL: React.CSSProperties = { background: "rgba(8,8,10,0.82)", padding: "2.6vmin 3.2vmin", borderRadius: "1.2vmin" };
+const PANEL: React.CSSProperties = { background: "#000000", padding: "2.8vmin 3.4vmin", borderRadius: "1vmin" };
 
 function SectorView({ s, street, panel = false, seconds }: { s: SectorScene; street: boolean; panel?: boolean; seconds: number }) {
   const n = useCountUp(s.stat.value, s.stat.decimals ?? 0, 1800, 900);

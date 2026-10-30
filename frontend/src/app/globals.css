@@ -1597,10 +1597,12 @@
 /* Projector: light, not dark, does the work on a wall — so heavier strokes,
    no hairlines, tighter tracking on small capitals (wide tracking blurs when
    projected), and no blur in the entrance animation. */
-.vx[data-mode="projector"] :is(h1, h2) { font-weight: 500 !important; }
-.vx[data-mode="projector"] .vx-stat { font-weight: 400 !important; }
-.vx[data-mode="projector"] .font-display { font-weight: 500; }
-.vx[data-mode="projector"] .uppercase { letter-spacing: 0.16em !important; font-size: max(1.9vmin, 15px) !important; font-weight: 600; }
-.vx[data-mode="projector"] .vx-draw { height: 3px !important; }
+.vx[data-mode="projector"] :is(h1, h2) { font-weight: 600 !important; letter-spacing: -0.015em !important; }
+.vx[data-mode="projector"] .vx-stat { font-weight: 500 !important; letter-spacing: -0.03em !important; }
+.vx[data-mode="projector"] .font-display { font-weight: 600; }
+.vx[data-mode="projector"] p:not(.font-display):not(.uppercase) { font-size: max(2.4vmin, 18px) !important; font-weight: 500; }
+.vx[data-mode="projector"] .uppercase { letter-spacing: 0.12em !important; font-size: max(2.1vmin, 16px) !important; font-weight: 700; }
+.vx[data-mode="projector"] .vx-draw { height: 4px !important; }
+.vx[data-mode="projector"] img.vx-rise { width: 26vmin !important; }
 .vx[data-mode="projector"] .vx-rise { animation-name: vx-rise-crisp; }
 @keyframes vx-rise-crisp { from { opacity: 0; transform: translateY(0.4em); } to { opacity: 1; transform: none; } }
