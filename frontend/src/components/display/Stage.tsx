@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { API_BASE_URL, CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/constants";
 import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
-import { CREDENTIALS, SECTORS, TICKER_LINES, durationOf, storyFor, type Mode, type Scene, type SectorScene } from "./scenes";
+import { CREDENTIALS, FILMS, TICKER_LINES, durationOf, storyFor, type Mode, type ReelScene, type Scene, type SectorScene } from "./scenes";
 
 /* ─── The stage ───────────────────────────────────────────────────────────────
    A full-screen loop for the reception TV and the street-facing screen.
@@ -67,7 +67,7 @@ function Loop({ mode, pin }: { mode: Mode; pin?: string | null }) {
   const projector = mode === "projector";
   // Bright modes (street, projector) share the big type and brighter films.
   const big = mode !== "reception";
-  const activeSector = scene.kind === "sector" ? scene.id : null;
+  const activeSector = scene.kind === "sector" || scene.kind === "reel" ? scene.id : null;
   // Daylight: the brand scenes go ivory where dark would read as a hole —
   // outdoors in sun, and on a projector, which cannot show black at all.
   const light = (street && (scene.kind === "ident" || scene.kind === "proof"))
@@ -90,6 +90,7 @@ function Loop({ mode, pin }: { mode: Mode; pin?: string | null }) {
         <div key={`${scene.id}-${loop}`} className="flex-1 min-h-0 flex">
           {scene.kind === "ident" && <Ident street={big} />}
           {scene.kind === "welcome" && welcome && <WelcomeScene welcome={welcome} />}
+          {scene.kind === "reel" && <ReelView r={scene} street={big} panel={projector} />}
           {scene.kind === "sector" && <SectorView s={scene} street={big} panel={projector} seconds={seconds} />}
           {scene.kind === "proof" && <Proof street={big} />}
           {scene.kind === "visit" && <Visit street={big} panel={projector} here={street} />}
@@ -108,7 +109,7 @@ function Backdrops({ activeSector, kind, seconds, street, light, projector = fal
   const videos = useRef<Record<string, HTMLVideoElement | null>>({});
 
   useEffect(() => {
-    for (const s of SECTORS) {
+    for (const s of FILMS) {
       const v = videos.current[s.id];
       if (!v) continue;
       if (s.id === activeSector) { v.currentTime = 0; void v.play().catch(() => {}); }
@@ -132,13 +133,15 @@ function Backdrops({ activeSector, kind, seconds, street, light, projector = fal
           className={kind === "visit" ? "object-cover vx-kenburns" : "object-cover"} style={{ filter: street ? "brightness(0.72) saturate(1.05)" : "brightness(0.62) saturate(0.95)", ["--dur" as string]: `${seconds}s` }} />
       </div>
 
-      {SECTORS.map((s) => (
+      {FILMS.map((s) => (
         <div key={s.id} className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: activeSector === s.id ? 1 : 0 }}>
+          {/* A feature reel plays once, uncropped and ungraded (it is already
+              finished film); the business films loop under a slow push-in. */}
           <video
             ref={(el) => { videos.current[s.id] = el; }}
-            src={s.film} poster={s.poster} muted loop playsInline preload="auto"
-            className={`absolute inset-0 h-full w-full object-cover ${activeSector === s.id ? "vx-kenburns" : ""}`}
-            style={{ filter: projector ? "brightness(1) contrast(1.28) saturate(1.35)" : street ? s.streetGrade ?? "brightness(0.95) contrast(1.08) saturate(1.12)" : s.grade ?? "brightness(0.86) contrast(1.06) saturate(1.08)", ["--dur" as string]: `${seconds}s` }}
+            src={s.film} poster={s.poster} muted loop={!s.reel} playsInline preload="auto"
+            className={`absolute inset-0 h-full w-full object-cover ${activeSector === s.id && !s.reel ? "vx-kenburns" : ""}`}
+            style={{ filter: s.reel ? (projector ? "brightness(1.18) contrast(1.12) saturate(1.2)" : street ? "brightness(1.1) saturate(1.1)" : undefined) : projector ? "brightness(1) contrast(1.28) saturate(1.35)" : street ? s.streetGrade ?? "brightness(0.95) contrast(1.08) saturate(1.12)" : s.grade ?? "brightness(0.86) contrast(1.06) saturate(1.08)", ["--dur" as string]: `${seconds}s` }}
           />
         </div>
       ))}
@@ -146,11 +149,13 @@ function Backdrops({ activeSector, kind, seconds, street, light, projector = fal
       {/* Scrims: the type always sits on dark, whatever the footage does.
           Outdoors they are lighter and confined to where the words are, so the
           film itself stays bright in daylight. */}
-      <div className="absolute inset-0 pointer-events-none transition-opacity duration-[1400ms]" style={{ opacity: light ? 0 : 1, background: street
+      <div className="absolute inset-0 pointer-events-none transition-opacity duration-[1400ms]" style={{ opacity: light || kind === "reel" ? 0 : 1, background: street
         ? "linear-gradient(90deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 40%)"
         : kind === "sector" || kind === "visit" ? "linear-gradient(90deg, rgba(9,9,10,0.4) 0%, rgba(9,9,10,0) 45%)"
         : "linear-gradient(90deg, rgba(9,9,10,0.88) 0%, rgba(9,9,10,0.45) 48%, rgba(9,9,10,0.15) 100%)" }} />
-      <div className="absolute inset-0 pointer-events-none transition-opacity duration-[1400ms]" style={{ opacity: light ? 0 : 1, background: street
+      <div className="absolute inset-0 pointer-events-none transition-opacity duration-[1400ms]" style={{ opacity: light ? 0 : 1, background: kind === "reel"
+        ? "linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 30%), linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 14%)"
+        : street
         ? "linear-gradient(0deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 30%), linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 14%)"
         : kind === "sector" || kind === "visit" ? "linear-gradient(0deg, rgba(9,9,10,0.55) 0%, rgba(9,9,10,0) 32%), linear-gradient(180deg, rgba(9,9,10,0.6) 0%, rgba(9,9,10,0) 16%)"
         : "linear-gradient(0deg, rgba(9,9,10,0.92) 0%, rgba(9,9,10,0) 55%), linear-gradient(180deg, rgba(9,9,10,0.75) 0%, rgba(9,9,10,0) 22%)" }} />
@@ -331,8 +336,47 @@ const GLASS: React.CSSProperties = { background: "rgba(0,0,0,0.42)", backdropFil
 /* Outdoors the films are graded bright for daylight, so the glass is darker to keep the words crisp. */
 const STREET_GLASS: React.CSSProperties = { ...GLASS, background: "rgba(0,0,0,0.7)" };
 
+/** Seconds since this scene began, ticking four times a second. */
+function useElapsed(): number {
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    const start = performance.now();
+    const id = setInterval(() => setT((performance.now() - start) / 1000), 250);
+    return () => clearInterval(id);
+  }, []);
+  return t;
+}
+
+/* ── The FET film: captions timed to the picture, out of the way of its titles ── */
+
+function ReelView({ r, street, panel = false }: { r: ReelScene; street: boolean; panel?: boolean }) {
+  const t = useElapsed();
+  const cap = r.captions.find((c) => t >= c.from && t < c.to) ?? null;
+  const shown = cap ?? r.captions.filter((c) => c.from <= t).at(-1) ?? r.captions[0];
+  return (
+    <div className="w-full self-end" style={{ paddingBottom: "1vmin" }}>
+      <div style={{ maxWidth: street ? "104vmin" : "84vmin", opacity: cap ? 1 : 0, transform: cap ? "none" : "translateY(1.2vmin)", transition: "opacity 700ms ease, transform 900ms cubic-bezier(0.16,1,0.3,1)", ...(panel ? PANEL : street ? STREET_GLASS : GLASS) }}>
+        <p className="flex items-center uppercase" style={{ gap: "1.6vmin", fontSize: "1.4vmin", letterSpacing: "0.32em" }}>
+          <span style={{ color: "var(--vx-gold)" }}>{r.tag}</span>
+          <span style={{ width: "5vmin", height: 1, background: "var(--vx-gold)" }} />
+          <span>The device</span>
+        </p>
+        <h2 key={shown.from} className="font-sans vx-rise" style={{ fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1.08, marginTop: "1.8vmin", fontSize: street ? "6.2vmin" : "5.4vmin" }}>
+          <span className="block">{shown.line1}</span>
+          <span className="block" style={{ color: "var(--vx-gold)" }}>{shown.line2}</span>
+        </h2>
+      </div>
+    </div>
+  );
+}
+
 function SectorView({ s, street, panel = false, seconds }: { s: SectorScene; street: boolean; panel?: boolean; seconds: number }) {
   const n = useCountUp(s.stat.value, s.stat.decimals ?? 0, 1800, 900);
+  // The headline turns over every few seconds so a long scene keeps telling.
+  const t = useElapsed();
+  const per = seconds / s.beats.length;
+  const b = Math.min(s.beats.length - 1, Math.floor(t / per));
+  const beat = s.beats[b];
   return (
     <div className="w-full flex items-end justify-between portrait:flex-col portrait:items-start portrait:justify-end" style={{ gap: "3vmin" }}>
       <div className="vx-rise min-w-0" style={{ maxWidth: street ? "78vmin" : "70vmin", ["--d" as string]: "0.15s", ...(panel ? PANEL : street ? STREET_GLASS : GLASS) }}>
@@ -341,10 +385,16 @@ function SectorView({ s, street, panel = false, seconds }: { s: SectorScene; str
           <span className="vx-draw" style={{ width: "5vmin", height: 1, background: "var(--vx-gold)", ["--d" as string]: "0.4s" }} />
           <span>{s.tag}</span>
         </p>
-        <h2 className="font-sans" style={{ fontWeight: 600, letterSpacing: "-0.025em", lineHeight: 1.1, marginTop: "1.6vmin", fontSize: street ? "5.2vmin" : "4.4vmin" }}>
-          <span className="vx-rise block" style={{ ["--d" as string]: "0.45s" }}>{s.line1}</span>
-          <span className="vx-rise block" style={{ color: "var(--vx-gold)", ["--d" as string]: "0.75s" }}>{s.line2}</span>
+        <h2 key={b} className="font-sans" style={{ fontWeight: 600, letterSpacing: "-0.025em", lineHeight: 1.1, marginTop: "1.6vmin", fontSize: street ? "5.2vmin" : "4.4vmin", minHeight: "2.2em" }}>
+          <span className="vx-rise block" style={{ ["--d" as string]: b === 0 ? "0.45s" : "0.05s" }}>{beat.line1}</span>
+          <span className="vx-rise block" style={{ color: "var(--vx-gold)", ["--d" as string]: b === 0 ? "0.75s" : "0.25s" }}>{beat.line2}</span>
         </h2>
+        {/* Which of the card's statements is showing */}
+        <div className="flex" style={{ gap: "0.8vmin", marginTop: "1.4vmin" }} aria-hidden="true">
+          {s.beats.map((_, i) => (
+            <span key={i} style={{ height: "0.3vmin", minHeight: 2, width: i === b ? "4vmin" : "1.6vmin", background: i === b ? "var(--vx-gold)" : "rgba(255,255,255,0.28)", transition: "width 600ms ease, background-color 600ms ease" }} />
+          ))}
+        </div>
         <div className="vx-rise flex items-end" style={{ gap: "2.2vmin", marginTop: "2vmin", paddingTop: "1.8vmin", borderTop: "1px solid rgba(255,255,255,0.16)", ["--d" as string]: "0.9s" }}>
           <p className="vx-stat font-sans tabular-nums leading-none shrink-0" style={{ fontWeight: 700, fontSize: street ? "10vmin" : "8.4vmin", letterSpacing: "-0.045em" }}>
             {s.stat.prefix}{n}
