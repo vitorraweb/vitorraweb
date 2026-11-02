@@ -36,18 +36,18 @@ const THEMES = {
   projector:      { "--vx-bg": "#000000", "--vx-fg": "#FFFFFF", "--vx-gold": "#FFCC33", "--vx-muted": "#FFFFFF", "--vx-track": "rgba(255,255,255,0.4)", "--vx-line": "#FFCC33" },
 } as const;
 
-export function Stage({ mode, pin, at, hold }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null }) {
+export function Stage({ mode, pin, at, hold, turn }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number }) {
   return (
     <div className="fixed inset-0 grid place-items-center" style={{ background: "#000" }}>
       {/* The 1920×1080 frame: everything inside measures itself against this box. */}
       <div className="relative overflow-hidden" style={{ width: "min(100vw, 177.778vh)", height: "min(100vh, 56.25vw)", containerType: "size" }}>
-        {pin === "check" ? <ProjectorCheck /> : <Loop mode={mode} pin={pin} at={at} hold={hold} />}
+        {pin === "check" ? <ProjectorCheck /> : <Loop mode={mode} pin={pin} at={at} hold={hold} turn={turn} />}
       </div>
     </div>
   );
 }
 
-function Loop({ mode, pin, at, hold }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null }) {
+function Loop({ mode, pin, at, hold, turn = 0 }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number }) {
   const welcome = useWelcome(mode);
   const story = useMemo(() => storyFor(mode, !!welcome), [mode, welcome]);
   const [i, setI] = useState(0);
@@ -81,7 +81,7 @@ function Loop({ mode, pin, at, hold }: { mode: Mode; pin?: string | null; at?: D
   const theme = projector ? THEMES.projector : street ? THEMES.street : THEMES.reception;
   const accent = scene.kind === "sector" || scene.kind === "reel" ? scene.accent : theme["--vx-gold"];
   // What this moment puts behind the words: the film, or its own photograph.
-  const look = scene.kind === "sector" ? lookOf(scene, moment, daypart) : null;
+  const look = scene.kind === "sector" ? lookOf(scene, moment, daypart, loop + turn) : null;
 
   return (
     <div className="vx absolute inset-0 overflow-hidden select-none cursor-none" data-mode={mode} data-daypart={daypart}
@@ -100,7 +100,7 @@ function Loop({ mode, pin, at, hold }: { mode: Mode; pin?: string | null; at?: D
           {scene.kind === "ident" && <Ident />}
           {scene.kind === "welcome" && welcome && <WelcomeScene welcome={welcome} />}
           {scene.kind === "reel" && <ReelView r={scene} street={big} panel={projector} />}
-          {scene.kind === "sector" && <SectorView s={scene} moment={moment} daypart={daypart} road={street} />}
+          {scene.kind === "sector" && <SectorView s={scene} moment={moment} daypart={daypart} turn={loop + turn} road={street} />}
           {scene.kind === "proof" && <Proof seconds={seconds} />}
           {scene.kind === "visit" && <Visit panel={projector} road={street} />}
         </div>
@@ -321,7 +321,7 @@ function Ident() {
       <h1 className="vx-mega font-sans vx-rise" style={{ fontSize: "38cqmin", fontWeight: 800, lineHeight: 0.92, letterSpacing: "-0.05em", marginTop: "2cqmin", marginLeft: "-0.06em", ["--d" as string]: "0.5s" }}>VITORRA</h1>
       <div className="vx-draw" style={{ width: "26cqmin", height: "0.6cqmin", background: "var(--vx-accent)", margin: "2.4cqmin 0", ["--d" as string]: "1.2s" }} />
       <h2 className="vx-mega font-sans vx-rise" style={{ fontSize: "7cqmin", fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: "var(--vx-accent)", ["--d" as string]: "1.5s" }}>
-        BUILT FOR WHAT MOVES EAST AFRICA.
+        BUILT FOR WHAT MOVES EAST AFRICA
       </h2>
     </div>
   );
@@ -393,9 +393,17 @@ function fitSize(lines: string[], room: number, max: number): number {
   return Math.min(max, room / (longest * 0.64));
 }
 
+/** This loop's headline and proof: the time of day first, otherwise the next headline in turn. */
+function copyOf(s: SectorScene, daypart: Daypart, turn: number): { hero: Moment; proof: Moment } {
+  const timed = s.timed?.[daypart];
+  if (timed) return timed;
+  const heroes = [s.hero, ...(s.more ?? [])];
+  return { hero: heroes[turn % heroes.length], proof: s.proof };
+}
+
 /** What sits behind the words at this moment of this business's film. */
-function lookOf(s: SectorScene, moment: number, daypart: Daypart): Still | null {
-  const copy = s.timed?.[daypart] ?? { hero: s.hero, proof: s.proof };
+function lookOf(s: SectorScene, moment: number, daypart: Daypart, turn: number): Still | null {
+  const copy = copyOf(s, daypart, turn);
   if (moment === 1) return copy.hero.still ?? null;
   if (moment === 2) return copy.proof.still ?? null;
   if (moment === 3) return s.ctaStill ?? null;
@@ -406,8 +414,8 @@ function lookOf(s: SectorScene, moment: number, daypart: Daypart): Still | null 
    its own, the headline, the proof, the call to action. The compositions differ
    on purpose (number-led, product-led, image-led, call-to-action): same family,
    not one template. */
-function SectorView({ s, moment, daypart, road }: { s: SectorScene; moment: number; daypart: Daypart; road: boolean }) {
-  const copy = s.timed?.[daypart] ?? { hero: s.hero, proof: s.proof };
+function SectorView({ s, moment, daypart, turn, road }: { s: SectorScene; moment: number; daypart: Daypart; turn: number; road: boolean }) {
+  const copy = copyOf(s, daypart, turn);
   return (
     <div className="w-full self-end" style={{ paddingBottom: "0.6cqmin" }}>
       {moment === 0 && <div key="picture" className="vx-rise"><SectorTag large>{s.tag}</SectorTag></div>}
@@ -421,7 +429,7 @@ function SectorView({ s, moment, daypart, road }: { s: SectorScene; moment: numb
 /* QR codes are for people who can stop. On the road the action is a short
    address to remember: nobody should be asked to scan from a moving car. */
 function CallToAction({ s, road }: { s: SectorScene; road: boolean }) {
-  const lines = wrapLines(s.qr.label);
+  const lines = s.cta?.lines ?? wrapLines(s.qr.label);
   return (
     <div className="flex items-end justify-between" style={{ gap: "6cqmin" }}>
       <div className="min-w-0">
@@ -429,6 +437,7 @@ function CallToAction({ s, road }: { s: SectorScene; road: boolean }) {
         <h2 className="vx-mega font-sans vx-rise" style={{ fontSize: `${fitSize(lines, road ? 150 : 118, 15)}cqmin`, fontWeight: 800, lineHeight: 0.98, letterSpacing: "-0.035em", marginTop: "2cqmin", textTransform: "uppercase", ["--d" as string]: "0.3s" }}>
           {lines.map((l) => <span key={l} className="block">{l}</span>)}
         </h2>
+        {s.cta && <div className="font-sans vx-rise" style={{ fontSize: "5cqmin", fontWeight: 700, letterSpacing: "-0.01em", marginTop: "1.8cqmin", ["--d" as string]: "0.5s" }}>{s.cta.sub}</div>}
         {road && <div className="vx-mega font-sans vx-rise" style={{ fontSize: "7.4cqmin", fontWeight: 800, letterSpacing: "-0.02em", marginTop: "2.4cqmin", color: "var(--vx-accent)", ["--d" as string]: "0.7s" }}>{s.url}</div>}
       </div>
       {!road && <QrCard src={s.qr.src} label={s.qr.label} size="27cqmin" delay="0.6s" />}
@@ -484,7 +493,7 @@ function Proof({ seconds }: { seconds: number }) {
   const c = CREDENTIALS[n];
   return (
     <div className="self-end w-full" style={{ paddingBottom: "3cqmin" }}>
-      <h2 className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1, fontSize: "4.6cqmin", textTransform: "uppercase", color: "var(--vx-gold)", ["--d" as string]: "0.1s" }}>Independently certified.</h2>
+      <h2 className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1, fontSize: "4.6cqmin", textTransform: "uppercase", color: "var(--vx-gold)", ["--d" as string]: "0.1s" }}>Proof, not promises</h2>
       <div key={n}>
         <div className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.02, marginTop: "3cqmin", fontSize: "15cqmin" }}>{c.name}</div>
         <div className="font-sans vx-rise" style={{ fontSize: "4cqmin", fontWeight: 600, marginTop: "2cqmin", ["--d" as string]: "0.25s" }}>{c.what}</div>
@@ -497,10 +506,10 @@ function Visit({ panel = false, road = false }: { panel?: boolean; road?: boolea
   return (
     <div className="w-full flex items-end justify-between" style={{ gap: "5cqmin" }}>
       <div className="vx-rise min-w-0" style={{ ["--d" as string]: "0.15s", ...(panel ? PANEL : {}) }}>
-        <SectorTag>{road ? "You are here" : "Visit us"}</SectorTag>
+        <SectorTag>{road ? "Vitorra" : "Visit us"}</SectorTag>
         <h2 className="vx-mega font-sans" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.02, marginTop: "2cqmin", fontSize: "11cqmin" }}>
-          <span className="vx-rise block" style={{ ["--d" as string]: "0.4s" }}>PADRE PIO HOUSE,</span>
-          <span className="vx-rise block" style={{ color: "var(--vx-accent)", ["--d" as string]: "0.7s" }}>LUMUMBA AVENUE.</span>
+          <span className="vx-rise block" style={{ ["--d" as string]: "0.4s" }}>{road ? "YOU'LL FIND US HERE" : "FIND VITORRA"}</span>
+          <span className="vx-rise block" style={{ color: "var(--vx-accent)", ["--d" as string]: "0.7s" }}>{road ? "PADRE PIO HOUSE" : "ON LUMUMBA AVENUE"}</span>
         </h2>
         <div className="vx-rise flex flex-wrap items-baseline" style={{ marginTop: "2.2cqmin", columnGap: "5cqmin", rowGap: "1.2cqmin", ["--d" as string]: "1.1s" }}>
           <Contact label="Call" value={CONTACT_PHONE} />

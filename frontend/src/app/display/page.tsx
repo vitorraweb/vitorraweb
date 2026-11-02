@@ -19,6 +19,7 @@ import { DAYPARTS, type Daypart } from "@/components/display/scenes";
    &moment=0…3             → hold one moment of a film: picture, headline,
                               proof, call to action.
    &at=morning|day|rush|night → preview a time of day; otherwise Kampala's clock.
+   &turn=1                 → preview a business's next headline in rotation.
 
    Composed for 1920×1080: any other shape of screen shows it centred in 16:9.
 
@@ -34,7 +35,7 @@ function Screen() {
   const at = DAYPARTS.find((d) => d === q.get("at")) ?? null;
   const moment = Number(q.get("moment"));
   const hold = q.has("moment") && [0, 1, 2, 3].includes(moment) ? moment : null;
-  return <Stage mode={mode} pin={q.get("scene")} at={at as Daypart | null} hold={hold} />;
+  return <Stage mode={mode} pin={q.get("scene")} at={at as Daypart | null} hold={hold} turn={Number(q.get("turn")) || 0} />;
 }
 
 export default function DisplayPage() {

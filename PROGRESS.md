@@ -2093,6 +2093,26 @@ From the creative direction guide. The information management wants stays on scr
 
 ---
 
+## The screen's revised campaign copy (2 November 2026) — live
+
+Marketing's reviewers proposed shorter, benefit-led wording, and each line was checked against the evidence before use.
+
+- **In:** LESS FUEL MORE BUSINESS, GO FURTHER ON EVERY LITRE, FITTED TO THE FUEL LINE NOT YOUR ENGINE, 13.9% FUEL SAVED, TRAFFIC BURNS FUEL WE HELP YOU BURN LESS, SECONDS MATTER BE READY, 36 MONTHS READY WHEN NEEDED, WAKE UP TO UGANDA, BORN ON MOUNT ELGON MADE FOR THE WORLD, MOVE GOODS MOVE BUSINESS, YOUR CARGO OUR ROUTE, ONE CONTACT ALL THE WAY, READY TO MOVE?, PROOF, NOT PROMISES, and the friendlier location lines. No full stops in big headlines. The FET price is off the screen.
+- **Headlines rotate:** FET, SEAL and Logistics show a different headline each time the loop comes round.
+- **Every FET saving line keeps the test beside it,** so no headline reads as a promise.
+
+**Held back, and why**
+- **32 months:** their copy said 32, read from a number caught counting up. The shelf life is 36.
+- **SAVE UP TO 13.9%:** one test on one vehicle is not a ceiling or a range.
+- **CUT FUEL NOT PERFORMANCE:** the evidence measures fuel use only, nothing on performance. Usable if a test covers it.
+- **UGANDA GROWN WORLD READY, READY FOR THE WORLD:** UCDA and EUDR are still unconfirmed.
+- **WE'LL GET IT THERE, NEITHER SHOULD YOUR CARGO, ZERO CONFUSION:** delivery promises we cannot guarantee.
+- **TASTE WHERE IT COMES FROM:** invites tasting while coffee is export-only.
+
+**Worth a decision:** PROOF, NOT PROMISES sits awkwardly beside the Hariss trial, which measured no saving so far. MEASURED NOT GUESSED is a safer swap.
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**

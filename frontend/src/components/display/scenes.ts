@@ -83,12 +83,16 @@ export type SectorScene = {
   product?: { src: string; alt: string };
   hero: Moment;
   proof: Moment;
+  /** Other headlines, one each time the loop comes round, so the screen does not repeat itself. */
+  more?: Moment[];
   /** Replaces the headline and proof at certain times of day. */
   timed?: Partial<Record<Daypart, { hero: Moment; proof: Moment }>>;
   /** QR for people who can stop; a short address for the road, where nobody should scan. */
   qr: { src: string; label: string };
   url: string;
   ctaStill?: Still;
+  /** A line with some personality above the plain instruction. */
+  cta?: { lines: string[]; sub: string };
 };
 
 /** A feature film played once, start to finish, with captions timed to it. */
@@ -115,28 +119,48 @@ export type Scene =
   | { kind: "proof"; id: "proof" }
   | { kind: "visit"; id: "visit" };
 
+/* Every FET headline carries the test beside it: a saving is only ever stated
+   as what one test measured, never as a promise. */
+const FET_SMALL = "13.9% measured on one working VW T5 · CTI GmbH, Germany";
 const FET_RESULT: Moment = {
   number: { value: 13.9, decimals: 1, unit: "%", size: 47 },
-  lines: ["LESS FUEL USED."],
+  lines: ["FUEL SAVED"],
   accent: [0],
   small: "Measured on one working VW T5 · CTI GmbH, Germany",
   max: 9.5,
   still: { src: "/display/fet-device.jpg", shift: "44%", filter: "brightness(0.82) contrast(1.12) saturate(1.2)", wash: "none" },
 };
-const FET_PRICE: Moment = {
-  lines: ["FROM UGX 1,891,000.", "INSTALLATION INCLUDED."],
+const FET_LEAD: Moment = {
+  lines: ["LESS FUEL", "MORE BUSINESS"],
   accent: [1],
-  small: "No engine modification.",
-  room: 118,
+  small: FET_SMALL,
+  room: 122,
+  max: 16,
+  still: { src: "/images/stock/road-mountains.jpg", position: "50% 60%", filter: "brightness(0.7) contrast(1.2) saturate(1.05)", wash: "left" },
+};
+const FET_LITRE: Moment = {
+  lines: ["GO FURTHER", "ON EVERY LITRE"],
+  accent: [1],
+  small: FET_SMALL,
+  room: 122,
+  max: 16,
+  still: { src: "/images/stock/hills-road.jpg", position: "60% 60%", filter: "brightness(0.68) contrast(1.2) saturate(1)", wash: "left" },
+};
+const FET_FITTED: Moment = {
+  lines: ["FITTED TO THE FUEL LINE", "NOT YOUR ENGINE"],
+  accent: [1],
+  small: "No engine modification",
+  room: 122,
   max: 10.5,
   still: { src: "/display/fet-engine.jpg", position: "60% 50%", filter: "brightness(0.9) contrast(1.1)", wash: "left" },
 };
 const FET_TRAFFIC: { hero: Moment; proof: Moment } = {
   hero: {
-    lines: ["TRAFFIC BURNS FUEL.", "YOUR FLEET SHOULDN'T", "BURN MORE THAN IT NEEDS."],
+    lines: ["TRAFFIC BURNS FUEL", "WE HELP YOU BURN LESS"],
     accent: [0],
-    room: 128,
-    max: 10.5,
+    small: FET_SMALL,
+    room: 134,
+    max: 13,
     still: { src: "/images/stock/highway-sunset.jpg", position: "50% 70%", filter: "brightness(0.66) contrast(1.24) saturate(0.86)", wash: "bottom" },
   },
   proof: FET_RESULT,
@@ -144,11 +168,11 @@ const FET_TRAFFIC: { hero: Moment; proof: Moment } = {
 
 const COFFEE_SMALL = "Single-origin Arabica · Mount Elgon";
 const COFFEE_EXPORT: Moment = {
-  number: { value: 1, unit: "TONNE.", size: 40, beside: true },
-  lines: ["EXPORT ORDERS START HERE."],
-  small: "Samples · Grades · Terms on request",
+  lines: ["BORN ON MOUNT ELGON", "MADE FOR THE WORLD"],
+  accent: [1],
+  small: "Export orders from 1 tonne · Samples on request",
   room: 118,
-  max: 8.6,
+  max: 12,
   still: { src: "/images/stock/ship-aerial.jpg", position: "62% 50%", filter: "brightness(0.74) contrast(1.16) saturate(0.82) sepia(0.32)", wash: "left" },
 };
 
@@ -161,8 +185,9 @@ export const SECTORS: SectorScene[] = [
     poster: "/videos/fet-hero-poster.jpg",
     accent: "#3DF0A0",
     tint: "2,34,26",
-    hero: FET_RESULT,
-    proof: FET_PRICE,
+    hero: FET_LEAD,
+    more: [FET_LITRE, FET_FITTED],
+    proof: FET_RESULT,
     timed: { morning: FET_TRAFFIC, rush: FET_TRAFFIC },
     qr: { src: "/display/qr/fet.svg", label: "Book a free fuel assessment" },
     url: "vitorra.org/fet",
@@ -176,10 +201,11 @@ export const SECTORS: SectorScene[] = [
     accent: "#FF2B3A",
     tint: "30,3,8",
     product: { src: "/display/seal-pro.png", alt: "SEAL PRO wound spray" },
-    hero: { lines: ["WHEN", "SECONDS", "MATTER."], accent: [2], small: "Hemostatic wound spray", room: 104, max: 21 },
+    hero: { lines: ["WHEN", "SECONDS", "MATTER"], accent: [2], small: "Hemostatic wound spray", room: 104, max: 21 },
+    more: [{ lines: ["SECONDS", "MATTER", "BE READY"], accent: [2], small: "Hemostatic wound spray", room: 104, max: 21 }],
     proof: {
       number: { value: 36, unit: "MONTHS", size: 62, beside: true },
-      lines: ["SHELF LIFE."],
+      lines: ["READY WHEN NEEDED"],
       small: "Room temperature · US FDA 510(k) cleared",
       max: 10,
       still: { src: "", wash: "full" },
@@ -199,7 +225,7 @@ export const SECTORS: SectorScene[] = [
     accent: "#FF9D2E",
     tint: "34,15,4",
     hero: {
-      lines: ["UGANDA.", "IN EVERY CUP."],
+      lines: ["UGANDA", "IN EVERY CUP"],
       accent: [1],
       small: COFFEE_SMALL,
       room: 112,
@@ -210,9 +236,9 @@ export const SECTORS: SectorScene[] = [
     timed: {
       morning: {
         hero: {
-          lines: ["START STRONG.", "UGANDAN ARABICA."],
+          lines: ["WAKE UP", "TO UGANDA"],
           accent: [1],
-          small: COFFEE_SMALL,
+          small: "Single-origin Mount Elgon Arabica",
           room: 102,
           max: 14,
           still: { src: "/images/stock/coffee-cherries.jpg", position: "100% 44%", filter: "brightness(0.84) contrast(1.12) saturate(1.1)", wash: "left" },
@@ -232,17 +258,23 @@ export const SECTORS: SectorScene[] = [
     poster: "/videos/logistics-hero-poster.jpg",
     accent: "#38BDFF",
     tint: "3,24,48",
-    hero: { lines: ["FROM KAMPALA", "TO WHERE", "BUSINESS MOVES."], accent: [1, 2], small: "Freight · Warehousing · Customs", room: 112, max: 13.5 },
+    hero: { lines: ["FROM KAMPALA", "TO WHERE", "BUSINESS MOVES"], accent: [1, 2], small: "Freight · Warehousing · Customs", room: 112, max: 13.5 },
+    more: [
+      { lines: ["MOVE GOODS", "MOVE BUSINESS"], accent: [1], small: "Freight · Warehousing · Customs", room: 122, max: 17 },
+      { lines: ["YOUR CARGO", "OUR ROUTE"], accent: [1], small: "Freight · Warehousing · Customs", room: 122, max: 17 },
+    ],
     proof: {
-      lines: ["ONE NAMED", "CONTACT.", "QUOTE TO DELIVERY."],
-      accent: [2],
+      lines: ["ONE CONTACT", "ALL THE WAY"],
+      accent: [1],
+      small: "From quote to delivery",
       room: 106,
-      max: 13,
+      max: 15,
       still: { src: "/images/stock/warehouse-dark.jpg", position: "80% 40%", filter: "brightness(0.84) contrast(1.14) saturate(0.9)", wash: "left" },
     },
     qr: { src: "/display/qr/logistics.svg", label: "Request a freight quote" },
     url: "vitorra.org/freight",
     ctaStill: { src: "", wash: "full" },
+    cta: { lines: ["READY TO MOVE?"], sub: "GET A FREIGHT QUOTE" },
   },
 ];
 
@@ -279,14 +311,14 @@ export const FET_INSTALL: ReelScene = {
   length: 18.8,
   captions: [
     { from: 4.9, to: 8.4, line1: "A real installation.", line2: "Kampala, Uganda." },
-    { from: 8.9, to: 13.6, line1: "Fitted on the fuel line.", line2: "No engine modification." },
+    { from: 8.9, to: 13.6, line1: "Fitted to the fuel line,", line2: "not your engine." },
     { from: 14.1, to: 18.1, line1: "Fuel Eco Tech, fitted.", line2: "Ask for a free fuel assessment." },
   ],
 };
 
 /** Every photograph the moments use, loaded up front so none ever fades in half-drawn. */
 export const STILLS: string[] = Array.from(new Set(SECTORS.flatMap((s) => [
-  s.hero.still, s.proof.still, s.ctaStill,
+  s.hero.still, s.proof.still, s.ctaStill, ...(s.more ?? []).map((m) => m.still),
   ...Object.values(s.timed ?? {}).flatMap((t) => [t.hero.still, t.proof.still]),
 ]).map((v) => v?.src).filter((v): v is string => !!v)));
 
@@ -302,7 +334,7 @@ export const FILMS: { id: string; film: string; poster: string; grade?: string; 
 
 /** Standing lines for the information band, woven between the latest articles. */
 export const TICKER_LINES = [
-  "Free on-site fuel assessment for fleets: scan the code on screen or visit vitorra.org",
+  "Free on-site fuel assessment for fleets: visit vitorra.org/fet",
   "Fuel Eco Tech: 13.9% less fuel in an independent field test by CTI GmbH, Germany",
   "SEAL Wound Spray: US FDA 510(k) cleared, 36-month shelf life",
   "Ugandan Arabica for export: grades, terms and samples on request",
