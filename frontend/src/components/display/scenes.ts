@@ -23,11 +23,29 @@ export type Daypart = "morning" | "day" | "rush" | "night";
 
 export const DAYPARTS: Daypart[] = ["morning", "day", "rush", "night"];
 
-/** Morning runs 05:00–10:00, rush 16:30–20:00, night 20:00–05:00. */
-export function daypartAt(date: Date): Daypart {
+function kampalaMinutes(date: Date): number {
   const [h, m] = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Kampala", hour: "2-digit", minute: "2-digit", hour12: false })
     .format(date).split(":").map(Number);
-  const mins = (h % 24) * 60 + m;
+  return (h % 24) * 60 + m;
+}
+
+/** The street screen's picture against the light outside. Kampala sits on the equator, so
+ *  sunrise and sunset barely move through the year and a clock is a fair light meter. */
+export type Light = "sun" | "soft" | "night";
+
+export function lightAt(date: Date): Light {
+  const mins = kampalaMinutes(date);
+  if (mins >= 510 && mins < 990) return "sun";     // 08:30 to 16:30
+  if (mins >= 405 && mins < 1140) return "soft";   // 06:45 to 08:30, 16:30 to 19:00
+  return "night";
+}
+
+/** The light for a previewed time of day (?at=day), matching what that part of the day looks like. */
+export const LIGHT_FOR: Record<Daypart, Light> = { morning: "soft", day: "sun", rush: "soft", night: "night" };
+
+/** Morning runs 05:00–10:00, rush 16:30–20:00, night 20:00–05:00. */
+export function daypartAt(date: Date): Daypart {
+  const mins = kampalaMinutes(date);
   if (mins >= 300 && mins < 600) return "morning";
   if (mins >= 990 && mins < 1200) return "rush";
   if (mins >= 1200 || mins < 300) return "night";

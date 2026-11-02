@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import Image from "next/image";
 import { API_BASE_URL, CONTACT_PHONE } from "@/lib/constants";
 import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
-import { COPY_DRAFT_KEY, DEFAULT_COPY, FILMS, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, storyFor, type Daypart, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
+import { COPY_DRAFT_KEY, DEFAULT_COPY, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
 
 /* ─── The stage ───────────────────────────────────────────────────────────────
    A full-screen loop for the reception TV and the street-facing screen.
@@ -22,6 +22,11 @@ import { COPY_DRAFT_KEY, DEFAULT_COPY, FILMS, MONTAGE, MOMENT_STARTS, SECTORS, S
 
 type Welcome = { name: string; line: string } | null;
 
+/** One setting for how large the screen's words are: 1 is the original size. Small print
+ *  and the utility bar are left out, so they stay readable. */
+const TYPE_SCALE = 0.8;
+const scaled = (size: number) => `${(size * TYPE_SCALE).toFixed(2)}cqmin`;
+
 const DRIFT = [[0, 0], [3, -2], [-2, 3], [2, 2], [-3, -1]];
 
 /* Colour tokens. Reception is a dim lobby; the street screen competes with
@@ -35,6 +40,16 @@ const THEMES = {
      pure white, pure black, a saturated gold, and no pale "muted" greys. */
   projector:      { "--vx-bg": "#000000", "--vx-fg": "#FFFFFF", "--vx-gold": "#FFCC33", "--vx-muted": "#FFFFFF", "--vx-track": "rgba(255,255,255,0.4)", "--vx-line": "#FFCC33" },
 } as const;
+
+/* The street screen follows the sun. By day the picture is lifted and the words get a
+   heavier edge, because sunlight washes out contrast before it washes out anything else.
+   After dark the whole screen drops, words included: white type is what glares at night.
+   This changes the picture only; the panel's own brightness is set on its controller. */
+const LIGHT: Record<Light, { picture: string; words: string; shadow: string }> = {
+  sun:   { picture: "brightness(1.42) contrast(1.1) saturate(1.3)", words: "none", shadow: "0 0.3cqmin 2.2cqmin rgba(0,0,0,0.85)" },
+  soft:  { picture: "brightness(1.06) contrast(1.08) saturate(1.12)", words: "none", shadow: "0 0.25cqmin 1.8cqmin rgba(0,0,0,0.7)" },
+  night: { picture: "brightness(0.6) contrast(1.04) saturate(0.92)", words: "brightness(0.78)", shadow: "0 0.2cqmin 1.2cqmin rgba(0,0,0,0.5)" },
+};
 
 export function Stage({ mode, pin, at, hold, turn, draft }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number; draft?: boolean }) {
   return (
@@ -88,6 +103,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
 
   const moment = useMoment(`${scene.id}-${loop}`, seconds, hold);
   const daypart = useDaypart(at);
+  const light = useLight(mode === "street", at);
 
   const street = mode === "street";
   const projector = mode === "projector";
@@ -102,8 +118,8 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
   return (
     <CopyContext.Provider value={copy}>
     <div className="vx absolute inset-0 overflow-hidden select-none cursor-none" data-mode={mode} data-daypart={daypart}
-      style={{ ...theme, "--vx-accent": accent, background: "var(--vx-bg)", color: "var(--vx-fg)", transition: "background-color 1.2s ease, color 1.2s ease" } as unknown as React.CSSProperties}>
-      <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} projector={projector} moment={moment} look={look} night={daypart === "night"} />
+      style={{ ...theme, "--vx-accent": accent, "--vx-small": street ? "3cqmin" : "2.3cqmin", "--vx-tag": street ? "2.5cqmin" : "2.1cqmin", background: "var(--vx-bg)", color: "var(--vx-fg)", transition: "background-color 1.2s ease, color 1.2s ease" } as unknown as React.CSSProperties}>
+      <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} projector={projector} moment={moment} look={look} night={!light && daypart === "night"} grade={light ? LIGHT[light].picture : undefined} />
       <div className="hero-grain absolute inset-0 pointer-events-none" style={{ opacity: projector ? 0 : street ? 0.025 : 0.035 }} />
       <ScreenCare />
       {ad && <AdvertFilm ad={ad} onEnd={endAd} />}
@@ -111,8 +127,8 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
       {/* The whole overlay — story and information band — drifts together
           against burn-in. Projectors usually crop the edges (overscan), so
           their safe area is wider. */}
-      <div className="relative z-10 h-full flex flex-col" style={{ translate: `${dx}px ${dy}px`, transition: "translate 4s ease" }}>
-      <div className="flex-1 min-h-0 flex flex-col" style={{ padding: projector ? "6.5cqmin 7.5cqmin 1.6cqmin" : "3.4cqmin 5cqmin 1.4cqmin", textShadow: street && !projector ? "0 0.25cqmin 1.6cqmin rgba(0,0,0,0.5)" : undefined }}>
+      <div className="relative z-10 h-full flex flex-col" style={{ translate: `${dx}px ${dy}px`, filter: light ? LIGHT[light].words : undefined, transition: "translate 4s ease, filter 8s ease" }}>
+      <div className="flex-1 min-h-0 flex flex-col" style={{ padding: projector ? "6.5cqmin 7.5cqmin 1.6cqmin" : "3.4cqmin 5cqmin 1.4cqmin", textShadow: light ? LIGHT[light].shadow : undefined }}>
         <TopBar hidden={scene.kind === "ident"} />
         <div key={`${scene.id}-${loop}`} className="relative flex-1 min-h-0 flex" style={{ visibility: ad ? "hidden" : undefined }}>
           {scene.kind === "ident" && <Ident />}
@@ -133,7 +149,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
 
 /* ── Backgrounds: films for the businesses, a living gold field for the rest ── */
 
-function Backdrops({ activeSector, kind, seconds, street, projector = false, moment, look, night }: { activeSector: string | null; kind: Scene["kind"]; seconds: number; street: boolean; projector?: boolean; moment: number; look: Still | null; night: boolean }) {
+function Backdrops({ activeSector, kind, seconds, street, projector = false, moment, look, night, grade }: { activeSector: string | null; kind: Scene["kind"]; seconds: number; street: boolean; projector?: boolean; moment: number; look: Still | null; night: boolean; grade?: string }) {
   const sector = SECTORS.find((s) => s.id === activeSector);
   const videos = useRef<Record<string, HTMLVideoElement | null>>({});
 
@@ -155,7 +171,7 @@ function Backdrops({ activeSector, kind, seconds, street, projector = false, mom
   };
 
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0" style={{ filter: grade, transition: "filter 8s ease" }}>
       {/* Brand field: welcome and credentials, a gold glow on black */}
       <div className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: kind === "welcome" || kind === "proof" ? 1 : 0 }}>
         <div className="vx-aurora absolute -inset-[20%]" />
@@ -254,7 +270,7 @@ function TopBar({ hidden }: { hidden: boolean }) {
    a good car, not a news channel. Spacing instead of boxes, one touch of gold,
    and quiet enough that the campaign is always seen first. Each feed refreshes
    itself and falls back quietly if it is offline. */
-const BAND = { bg: "#060608", fg: "rgba(255,255,255,0.86)", dim: "rgba(255,255,255,0.56)", gold: "#E9C766" };
+const BAND = { bg: "#060608", fg: "rgba(255,255,255,0.92)", dim: "rgba(255,255,255,0.68)", gold: "#E9C766" };
 
 function UtilityBar({ big, inset }: { big: boolean; inset: string }) {
   const { ticker, ui } = useContext(CopyContext);
@@ -339,9 +355,9 @@ function Ident() {
       <div className="vx-rise" style={{ ["--d" as string]: "0.1s" }}>
         <Image src="/logo.png" alt="" width={160} height={160} style={{ width: "6.4cqmin", height: "auto" }} priority />
       </div>
-      <h1 className="vx-mega font-sans vx-rise" style={{ fontSize: "38cqmin", fontWeight: 800, lineHeight: 0.92, letterSpacing: "-0.05em", marginTop: "2cqmin", marginLeft: "-0.06em", ["--d" as string]: "0.5s" }}>VITORRA</h1>
+      <h1 className="vx-mega font-sans vx-rise" style={{ fontSize: scaled(38), fontWeight: 800, lineHeight: 0.92, letterSpacing: "-0.05em", marginTop: "2cqmin", marginLeft: "-0.06em", ["--d" as string]: "0.5s" }}>VITORRA</h1>
       <div className="vx-draw" style={{ width: "26cqmin", height: "0.6cqmin", background: "var(--vx-accent)", margin: "2.4cqmin 0", ["--d" as string]: "1.2s" }} />
-      <h2 className="vx-mega font-sans vx-rise" style={{ fontSize: "5cqmin", fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: "var(--vx-accent)", ["--d" as string]: "1.5s" }}>
+      <h2 className="vx-mega font-sans vx-rise" style={{ fontSize: scaled(5), fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: "var(--vx-accent)", ["--d" as string]: "1.5s" }}>
         {ui.ident}
       </h2>
     </div>
@@ -355,8 +371,8 @@ function WelcomeScene({ welcome }: { welcome: NonNullable<Welcome> }) {
     <div className="self-end w-full" style={{ paddingBottom: "4cqmin" }}>
       <p className="vx-rise uppercase" style={{ fontSize: "1.6cqmin", letterSpacing: "0.42em", color: "var(--vx-gold)", ["--d" as string]: "0.2s" }}>{ui.welcomeLabel}</p>
       <h1 className="font-sans" style={{ fontWeight: 600, letterSpacing: "-0.035em", lineHeight: 1.02, marginTop: "2.4cqmin" }}>
-        <span className="vx-rise block" style={{ fontSize: "11cqmin", ["--d" as string]: "0.45s" }}>Welcome,</span>
-        <span className="vx-rise block" style={{ color: "var(--vx-gold)", fontSize: `min(11cqmin, calc(150cqw / ${Math.max(chars, 9)}))`, ["--d" as string]: "0.8s" }}>{welcome.name}</span>
+        <span className="vx-rise block" style={{ fontSize: scaled(11), ["--d" as string]: "0.45s" }}>Welcome,</span>
+        <span className="vx-rise block" style={{ color: "var(--vx-gold)", fontSize: `min(${scaled(11)}, calc(120cqw / ${Math.max(chars, 9)}))`, ["--d" as string]: "0.8s" }}>{welcome.name}</span>
       </h1>
       <p className="vx-rise" style={{ fontSize: "2.6cqmin", color: "var(--vx-muted)", marginTop: "3.4cqmin", maxWidth: "70cqmin", ["--d" as string]: "1.2s" }}>
         {welcome.line || ui.welcomeLine}
@@ -390,10 +406,10 @@ function ReelView({ r, street, panel = false }: { r: ReelScene; street: boolean;
     <div className="w-full self-end" style={{ paddingBottom: "1cqmin" }}>
       <div style={{ maxWidth: "150cqmin", width: "fit-content", opacity: cap ? 1 : 0, transform: cap ? "none" : "translateY(1.2cqmin)", transition: "opacity 700ms ease, transform 900ms cubic-bezier(0.16,1,0.3,1)", ...(panel ? PANEL : {}) }}>
         <SectorTag>{r.tag}</SectorTag>
-        <h2 key={shown.from} className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.04, marginTop: "1.8cqmin", fontSize: street ? "8cqmin" : "7.4cqmin" }}>
+        <h2 key={shown.from} className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.04, marginTop: "1.8cqmin", fontSize: scaled(street ? 8 : 7.4) }}>
           <span className="block">{shown.line1}</span>
           {shown.line2 && <span className="block" style={{ color: "var(--vx-accent)" }}>{shown.line2}</span>}
-          {shown.sub?.map((l, i) => <span key={i} className="block" style={{ color: "var(--vx-accent)", fontSize: "4.2cqmin", fontWeight: 700, letterSpacing: "-0.015em", lineHeight: 1.2, marginTop: i === 0 ? "1.2cqmin" : 0 }}>{l}</span>)}
+          {shown.sub?.map((l, i) => <span key={i} className="block" style={{ color: "var(--vx-accent)", fontSize: scaled(4.2), fontWeight: 700, letterSpacing: "-0.015em", lineHeight: 1.2, marginTop: i === 0 ? "1.2cqmin" : 0 }}>{l}</span>)}
         </h2>
       </div>
     </div>
@@ -403,8 +419,8 @@ function ReelView({ r, street, panel = false }: { r: ReelScene; street: boolean;
 /** The business's name, in its colour: present in every frame, so any single glance says whose message this is. */
 function SectorTag({ children, large = false }: { children: React.ReactNode; large?: boolean }) {
   return (
-    <div className="font-sans flex items-center" style={{ gap: "1.2cqmin", fontSize: large ? "6.4cqmin" : "2.1cqmin", fontWeight: 700, letterSpacing: large ? "-0.02em" : "0.06em", textTransform: "uppercase", lineHeight: 1 }}>
-      <span style={{ width: large ? "1.4cqmin" : "0.6cqmin", height: large ? "6.4cqmin" : "2.1cqmin", background: "var(--vx-accent)" }} />
+    <div className="font-sans flex items-center" style={{ gap: "1.2cqmin", fontSize: large ? scaled(6.4) : "var(--vx-tag)", fontWeight: 700, letterSpacing: large ? "-0.02em" : "0.06em", textTransform: "uppercase", lineHeight: 1 }}>
+      <span style={{ width: large ? "1.4cqmin" : "0.6cqmin", height: large ? scaled(6.4) : "var(--vx-tag)", background: "var(--vx-accent)" }} />
       {children}
     </div>
   );
@@ -457,11 +473,11 @@ function CallToAction({ s, road }: { s: SectorScene; road: boolean }) {
     <div className="flex items-end justify-between" style={{ gap: "6cqmin" }}>
       <div className="min-w-0">
         <div className="vx-rise" style={{ ["--d" as string]: "0.1s" }}><SectorTag>{s.tag}</SectorTag></div>
-        <h2 className="vx-mega font-sans vx-rise" style={{ fontSize: `${fitSize(lines, road ? 150 : 118, 15)}cqmin`, fontWeight: 800, lineHeight: 0.98, letterSpacing: "-0.035em", marginTop: "2cqmin", textTransform: "uppercase", ["--d" as string]: "0.3s" }}>
+        <h2 className="vx-mega font-sans vx-rise" style={{ fontSize: scaled(fitSize(lines, road ? 150 : 118, 15)), fontWeight: 800, lineHeight: 0.98, letterSpacing: "-0.035em", marginTop: "2cqmin", textTransform: "uppercase", ["--d" as string]: "0.3s" }}>
           {lines.map((l, i) => <span key={i} className="block">{l}</span>)}
         </h2>
-        {s.cta && <div className="font-sans vx-rise" style={{ fontSize: "5cqmin", fontWeight: 700, letterSpacing: "-0.01em", marginTop: "1.8cqmin", ["--d" as string]: "0.5s" }}>{s.cta.sub}</div>}
-        {road && <div className="vx-mega font-sans vx-rise" style={{ fontSize: "7.4cqmin", fontWeight: 800, letterSpacing: "-0.02em", marginTop: "2.4cqmin", color: "var(--vx-accent)", ["--d" as string]: "0.7s" }}>{s.url}</div>}
+        {s.cta && <div className="font-sans vx-rise" style={{ fontSize: scaled(5), fontWeight: 700, letterSpacing: "-0.01em", marginTop: "1.8cqmin", ["--d" as string]: "0.5s" }}>{s.cta.sub}</div>}
+        {road && <div className="vx-mega font-sans vx-rise" style={{ fontSize: scaled(7.4), fontWeight: 800, letterSpacing: "-0.02em", marginTop: "2.4cqmin", color: "var(--vx-accent)", ["--d" as string]: "0.7s" }}>{s.url}</div>}
       </div>
       {!road && <QrCard src={s.qr.src} label={s.qr.label} size="27cqmin" delay="0.6s" />}
     </div>
@@ -487,13 +503,13 @@ function MomentView({ tag, m }: { tag: string; m: Moment }) {
     <div>
       <div className="vx-rise" style={{ ["--d" as string]: "0.1s" }}><SectorTag>{tag}</SectorTag></div>
       {m.number && <BigNumber n={m.number} />}
-      <h2 className="vx-mega font-sans" style={{ fontSize: `${size}cqmin`, fontWeight: 800, lineHeight: 1, letterSpacing: "-0.035em", marginTop: m.number ? "0.6cqmin" : "2cqmin" }}>
+      <h2 className="vx-mega font-sans" style={{ fontSize: scaled(size), fontWeight: 800, lineHeight: 1, letterSpacing: "-0.035em", marginTop: m.number ? "0.6cqmin" : "2cqmin" }}>
         {m.lines.map((l, i) => (
           <span key={i} className="vx-rise block" style={{ color: m.accent?.includes(i) ? "var(--vx-accent)" : undefined, ["--d" as string]: `${0.3 + i * 0.3}s` }}>{l}</span>
         ))}
       </h2>
       {m.small && (
-        <div className="font-sans vx-rise" style={{ fontSize: "2.5cqmin", fontWeight: 600, marginTop: "1.8cqmin", ["--d" as string]: "1.2s" }}>{m.small}</div>
+        <div className="font-sans vx-rise" style={{ fontSize: "var(--vx-small)", fontWeight: 700, marginTop: "1.8cqmin", ["--d" as string]: "1.2s" }}>{m.small}</div>
       )}
     </div>
   );
@@ -502,7 +518,7 @@ function MomentView({ tag, m }: { tag: string; m: Moment }) {
 function BigNumber({ n }: { n: NonNullable<Moment["number"]> }) {
   const shown = useCountUp(n.value, n.decimals ?? 0, 1500, 300);
   return (
-    <div className="vx-stat vx-mega font-sans tabular-nums vx-rise flex items-baseline" style={{ fontSize: `${n.size}cqmin`, fontWeight: 800, lineHeight: 0.92, letterSpacing: "-0.055em", marginTop: "0.6cqmin", marginLeft: "-0.04em", color: n.beside ? "var(--vx-accent)" : "#fff" }}>
+    <div className="vx-stat vx-mega font-sans tabular-nums vx-rise flex items-baseline" style={{ fontSize: scaled(n.size), fontWeight: 800, lineHeight: 0.92, letterSpacing: "-0.055em", marginTop: "0.6cqmin", marginLeft: "-0.04em", color: n.beside ? "var(--vx-accent)" : "#fff" }}>
       {shown}
       <span style={{ fontSize: n.beside ? "0.26em" : "0.6em", letterSpacing: "-0.02em", marginLeft: n.beside ? "0.16em" : "0.05em", color: "#fff" }}>{n.unit}</span>
     </div>
@@ -517,10 +533,10 @@ function Proof({ seconds }: { seconds: number }) {
   const c = credentials[n];
   return (
     <div className="self-end w-full" style={{ paddingBottom: "3cqmin" }}>
-      <h2 className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1, fontSize: "4.6cqmin", textTransform: "uppercase", color: "var(--vx-gold)", ["--d" as string]: "0.1s" }}>{ui.proofHeading}</h2>
+      <h2 className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1, fontSize: scaled(4.6), textTransform: "uppercase", color: "var(--vx-gold)", ["--d" as string]: "0.1s" }}>{ui.proofHeading}</h2>
       <div key={n}>
-        <div className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.02, marginTop: "3cqmin", fontSize: "15cqmin" }}>{c.name}</div>
-        <div className="font-sans vx-rise" style={{ fontSize: "4cqmin", fontWeight: 600, marginTop: "2cqmin", ["--d" as string]: "0.25s" }}>{c.what}</div>
+        <div className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.02, marginTop: "3cqmin", fontSize: scaled(15) }}>{c.name}</div>
+        <div className="font-sans vx-rise" style={{ fontSize: scaled(4), fontWeight: 600, marginTop: "2cqmin", ["--d" as string]: "0.25s" }}>{c.what}</div>
       </div>
     </div>
   );
@@ -532,7 +548,7 @@ function Visit({ panel = false, road = false }: { panel?: boolean; road?: boolea
     <div className="w-full flex items-end justify-between" style={{ gap: "5cqmin" }}>
       <div className="vx-rise min-w-0" style={{ ["--d" as string]: "0.15s", ...(panel ? PANEL : {}) }}>
         <SectorTag>{road ? ui.roadTag : ui.visitTag}</SectorTag>
-        <h2 className="vx-mega font-sans" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.02, marginTop: "2cqmin", fontSize: "11cqmin" }}>
+        <h2 className="vx-mega font-sans" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.02, marginTop: "2cqmin", fontSize: scaled(11) }}>
           <span className="vx-rise block" style={{ ["--d" as string]: "0.4s" }}>{road ? ui.road1 : ui.visit1}</span>
           <span className="vx-rise block" style={{ color: "var(--vx-accent)", ["--d" as string]: "0.7s" }}>{road ? ui.road2 : ui.visit2}</span>
         </h2>
@@ -550,7 +566,7 @@ function Contact({ label, value }: { label: string; value: string }) {
   return (
     <p>
       <span className="uppercase block" style={{ fontSize: "1.8cqmin", fontWeight: 700, letterSpacing: "0.16em", color: "var(--vx-muted)" }}>{label}</span>
-      <span className="font-sans block" style={{ fontSize: "3.8cqmin", fontWeight: 700, marginTop: "0.5cqmin" }}>{value}</span>
+      <span className="font-sans block" style={{ fontSize: scaled(3.8), fontWeight: 700, marginTop: "0.5cqmin" }}>{value}</span>
     </p>
   );
 }
@@ -642,6 +658,19 @@ function useMoment(key: string, seconds: number, hold?: number | null): number {
   }, [key, seconds]);
   if (hold !== null && hold !== undefined) return hold;
   return at.key === key ? at.n : 0;
+}
+
+/** The light outside, for the street screen only, checked every minute. */
+function useLight(street: boolean, forced?: Daypart | null): Light | null {
+  const [light, setLight] = useState<Light>("sun");
+  useEffect(() => {
+    const set = () => setLight(lightAt(new Date()));
+    const first = setTimeout(set, 0);
+    const t = setInterval(set, 60_000);
+    return () => { clearTimeout(first); clearInterval(t); };
+  }, []);
+  if (!street) return null;
+  return forced ? LIGHT_FOR[forced] : light;
 }
 
 /** Kampala time of day, checked every minute. `forced` (?at=rush) previews one. */

@@ -2125,6 +2125,12 @@ Numbers (13.9%, 36), prices, web addresses, QR codes and pictures are deliberate
 
 ---
 
+**Street screen follows the sun (2 November 2026):** by Kampala's clock the picture lifts for strong daylight (08:30 to 16:30), eases at dawn and dusk, and after 19:00 drops by about 40% with the white words dimmed too, so it does not glare. Small lines are larger and heavier on the street. Settings: `LIGHT` in `display/Stage.tsx`, `lightAt` in `scenes.ts`; preview with `&at=day|morning|night`. ⚠ This changes the picture only. The panel's own brightness is set on its controller or remote, which the website cannot reach.
+
+**Type size (2 November 2026):** headlines and numbers on the screens are 20% smaller, at John's request. One setting, `TYPE_SCALE` in `display/Stage.tsx`; small print and the utility bar are left out so they stay readable.
+
+---
+
 ## Screen wording corrections (2 November 2026) — live
 
 From the marked-up design sheet (`1 1.jpg`). Applied as written: the VITORRA line (CONNECTING INNOVATION WITH BUSINESS OPPORTUNITIES), EASY INSTALLATION with its two lines, and the list of uses (backed by the manufacturer's presentation).

@@ -18,7 +18,7 @@ import { DAYPARTS, type Daypart } from "@/components/display/scenes";
    /display?scene=fet      → hold one scene (for checking a screen's set-up).
    &moment=0…3             → hold one moment of a film: picture, headline,
                               proof, call to action.
-   &at=morning|day|rush|night → preview a time of day; otherwise Kampala's clock.
+   &at=morning|day|rush|night → preview a time of day and its street brightness; otherwise Kampala's clock.
    &turn=1                 → preview a business's next headline in rotation.
    &draft=1                → preview unsaved wording from Operations → Screen wording.
 
