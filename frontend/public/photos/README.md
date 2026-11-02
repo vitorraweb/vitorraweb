@@ -15,6 +15,8 @@ their use honest: none of them is evidence.
 | `poster-coffee.jpg`, `poster-logistics.jpg` | Coffee / logistics film covers | Edited stills; logistics film is stock, not our fleet |
 | `seal-range-*.png` | SEAL range cards | Cut-outs of the official product photos, real labels. Shown at one height: true relative sizes are unknown |
 
+`/display/seal-pro.png` (reception and street screens) is the can cut out of Olivia's `banners/keyvisual-seal.webp`, because the `seal-range-pro.png` cut-out breaks up at screen size.
+
 Real proof photography (the FET in the field) stays in `public/products/fet/`.
 
 The homepage, coffee and logistics heroes stay on the earlier licensed photographs (team's choice, 27 Oct 2026).

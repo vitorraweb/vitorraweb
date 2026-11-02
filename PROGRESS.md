@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 28 October 2026
+**Last updated:** 2 November 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -34,7 +34,7 @@
 | **Online payments — Flutterwave** (cards + MTN/Airtel) across FET reserve, invoices, installments, coffee | ✅ **Built & tested** — needs activation (keys + webhook secret) |
 | **Multilingual careers portal** (EN / SW / **FR** pilot) | ✅ **Built** |
 | **Zero-cost upgrades** (keyless FX, auto holidays, phone validation) | ✅ **Built** |
-| **Reception lobby display** (`/display`) | ✅ **Built & redesigned** (Oct) — all four business lines now run their own film; point the front-desk TV's browser at it |
+| **Reception and street screen** (`/display`) | 🔨 **Rebuilt for 1920×1080 as outdoor-style advertising** (2 Nov), not yet deployed — new films to follow |
 | **Site could not reach the API** (blocked sign-in + all forms) | ✅ **Fixed & live** — API now served through the site itself |
 | **Leave approval — two people required** (Operations + Finance), nobody signs their own | ✅ **Live** — Joseph Rwabu holds the Finance signature |
 | **Staff offboarding** (`staff:offboard`) + departed accounts can no longer sign in | ✅ **Live** |
@@ -2045,6 +2045,32 @@ Switching on (needs a Microsoft 365 admin; full steps in `docs/microsoft-teams.m
 3. `scripts/.venv/bin/python scripts/build_teams_app.py --client-id …` → upload `teams-app/dist/vitorra-teams.zip` in the Teams admin center.
 
 Server: `composer install` (new `firebase/php-jwt`), `migrate --force` (meetings, teams_notifications, users.microsoft_email/microsoft_oid), `config:cache`. `teams:deliver` rides the existing cron.
+
+---
+
+## The screen rebuilt as outdoor advertising (2 November 2026) — built, not yet deployed
+
+From John's research on current digital outdoor screens: the screen read as a website on a wall (glass cards, four statements in turn). It now reads like the big city screens: dark colour, one idea, type you can read from across the road in two or three seconds.
+
+- **1920×1080:** the picture is composed for exactly that size and stays 16:9 on any screen (black bars on other shapes).
+- **New opening:** VITORRA, BUILT FOR WHAT MOVES EAST AFRICA, over Kampala.
+- **Film slots unchanged:** 24 seconds a business (26 on the street), the FET film 27.5, and the news ticker as it was. Inside each slot the screen moves through picture, headline, proof, then call to action with a large QR code.
+- **A world for each business:** FET green with a huge 13.9%, "Measured on one working VW T5"; SEAL red with the can alone, WHEN SECONDS MATTER; Coffee amber, UGANDA. IN EVERY CUP.; Logistics blue, FROM KAMPALA TO WHERE BUSINESS MOVES.
+- **Follows Kampala's clock:** FET says TRAFFIC BURNS FUEL at morning and evening rush; Coffee says START STRONG. UGANDAN ARABICA. in the morning; after 8pm the picture drops by 30% so the screen never glares. The street screen no longer goes ivory in the day.
+- **Credentials and visit:** credentials show one at a time, large; the visit scene drops the email address to keep it short.
+- **SEAL can:** cut out afresh from Olivia's key visual, because the older cut-out breaks up at this size.
+
+- **A real FET fitting in Kampala** (added the same day): 19 seconds of our own footage, after the 3D film and before the FET result: the car, the device in hand, the engine bay, the fitting, the device in the fuel line. This makes the loop about 19 seconds longer. It is the first FET film on the screen shot at full 1080p. The first 1.25 seconds are cut because the customer's number plate was readable, and every frame of what remains was checked for it.
+
+**Decided against:** "KAMPALA, START STRONG ☕" from the research. The retail shop is closed, so it would advertise a cup nobody on that road can buy; the export-true version above keeps the idea. Weather-driven copy is also left out for now: the forecast shows in the information band, but no message changes with it.
+
+**⏳ Open**
+- The vehicle, coffee-bean and truck hero pictures in the research need the new films. The FET (1024×576), SEAL (854×480) and coffee (1280×720) films are below 1080p and will look soft until replaced. Supply new ones at 1920×1080, dark and cinematic, H.264.
+- Confirm the car's owner is happy to appear on a public screen. The plate is out, but the car is recognisable to anyone who knows it.
+- Nobody has watched this on the real street screen, TV or projector yet.
+- "Uganda. In every cup." is a brand line on an export business: Marketing and the Director to confirm they are happy with it.
+
+> Technical detail (engineering): `Stage` wraps a 16:9 `container-type: size` frame and all sizing moved from `vmin` to `cqmin`; `useMoment` (timers, re-renders only at a turn), `useDaypart` + `daypartAt` (Africa/Kampala); `Moment`, `MOMENT_STARTS`, `accent`/`tint`/`product`/`timed` in `scenes.ts`; `beats`, the glass panels and portrait layouts removed; `?moment=` and `?at=` for checks; `public/display/seal-pro.png`. Frontend only: no server update.
 
 ---
 

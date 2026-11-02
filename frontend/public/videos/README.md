@@ -23,6 +23,7 @@ answer, and "we think someone downloaded it" is not.
 | `fet-hero.mp4`, `fet.mp4` | Supplied by Vitorra (FET manufacturer material) | Own/supplied |
 | `seal-hero.mp4` | Supplied by Vitorra (SEAL manufacturer material) | Own/supplied |
 | `coffee-hero.mp4` | Supplied by Vitorra | Own/supplied |
+| `fet-install.mp4` | Real FET installation in Kampala, filmed by Vitorra (`John.mov`, 2 November 2026). Converted to H.264; the first 1.25s is cut so the customer's number plate never appears. ⚠ Do not use the uncut original on a public screen | Own |
 | `logistics-hero.mp4` | [Pexels video 13742716](https://www.pexels.com/video/trucks-in-port-13742716/) — "Trucks in Port" | [Pexels licence](https://www.pexels.com/license/) — free for commercial use, no attribution required |
 
 > On stock footage: containers in any port shot carry shipping-line marks
@@ -39,6 +40,8 @@ answer, and "we think someone downloaded it" is not.
 - **Resolution:** 1920×1080 (1080p) preferred, 1280×720 (720p) acceptable
 - **Max file size:** 20 MB per clip
 - **Poster:** JPG, same resolution as video, ~200 KB
+
+- **The screens (`/display`):** composed for 1920×1080, so supply new films at exactly that size. Shoot or grade them dark, with the subject right of centre: from about 3 seconds the words take the left side.
 
 ## To add a new slide
 

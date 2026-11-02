@@ -1,21 +1,54 @@
 /* ─── The screen's story ───────────────────────────────────────────────────────
-   One loop, about three minutes, built like a luxury window display
-   rather than a dashboard: one idea per scene, one number you can read from
-   the street, and a QR code for the person who stops.
+   One loop, about three minutes, built like international outdoor advertising
+   rather than a dashboard: dark saturated worlds, one idea at a time, type you
+   can read from across the road in two or three seconds.
+
+   Each business keeps its long film slot. Inside that slot the film runs through
+   four moments (picture, headline, proof, call to action), and any single frame
+   still makes sense to someone who only glances up once.
 
    Copy rules (same as the website): no claim beyond what the product's own
-   testing and clearance say. Numbers are the ones published on vitorra.org.
+   testing and clearance say. FET's 13.9% is one test on one vehicle, never a
+   promise. SEAL says US FDA only. Coffee is export only: the retail shop is
+   closed, so nothing here may read as an offer to buy a cup or a bag in Kampala.
    ─────────────────────────────────────────────────────────────────────────── */
 
-/** reception: a TV in the lobby · street: the screen facing the road (daylight)
+/** reception: a TV in the lobby · street: the screen facing the road
  *  · projector: the reception story projected onto a wall (projectors cannot show
  *  black, so it is bright, heavy and high-contrast). */
 export type Mode = "reception" | "street" | "projector";
 
+/** Kampala time of day. The copy and the darkness of the picture follow it. */
+export type Daypart = "morning" | "day" | "rush" | "night";
+
+export const DAYPARTS: Daypart[] = ["morning", "day", "rush", "night"];
+
+/** Morning runs 05:00–10:00, rush 16:30–20:00, night 20:00–05:00. */
+export function daypartAt(date: Date): Daypart {
+  const [h, m] = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Kampala", hour: "2-digit", minute: "2-digit", hour12: false })
+    .format(date).split(":").map(Number);
+  const mins = (h % 24) * 60 + m;
+  if (mins >= 300 && mins < 600) return "morning";
+  if (mins >= 990 && mins < 1200) return "rush";
+  if (mins >= 1200 || mins < 300) return "night";
+  return "day";
+}
+
+/** One idea on screen: a huge number or a huge line, and at most one small line. */
+export type Moment = {
+  number?: { value: number; decimals?: number; unit: string };
+  lines: string[];
+  /** Which of `lines` carry the business's accent colour. */
+  accent?: number[];
+  small?: string;
+};
+
+/** Where each moment begins, as a share of the film's slot (24s: 0, 3, 13, 19). */
+export const MOMENT_STARTS = [0, 0.125, 0.54, 0.79];
+
 export type SectorScene = {
   kind: "sector";
   id: string;
-  index: string;
   tag: string;
   film: string;
   poster: string;
@@ -23,9 +56,15 @@ export type SectorScene = {
   grade?: string;
   /** The same for the street screen, where everything is brighter for daylight. */
   streetGrade?: string;
-  /** The card's headline, as a few true statements shown in turn (about six seconds each). */
-  beats: { line1: string; line2: string }[];
-  stat: { value: number; decimals?: number; prefix?: string; unit: string; caption: string };
+  /** The business's one vivid colour, and the deep colour its words sit on. */
+  accent: string;
+  tint: string;
+  /** A cut-out shown alone on the deep colour during the headline and proof. */
+  product?: { src: string; alt: string };
+  hero: Moment;
+  proof: Moment;
+  /** Replaces the headline and proof at certain times of day. */
+  timed?: Partial<Record<Daypart, { hero: Moment; proof: Moment }>>;
   qr: { src: string; label: string };
 };
 
@@ -36,6 +75,9 @@ export type ReelScene = {
   tag: string;
   film: string;
   poster: string;
+  accent: string;
+  /** CSS filter for footage straight from a phone; finished films have none. */
+  grade?: string;
   /** Seconds the scene holds: the film's own length. */
   length: number;
   /** Captions shown between `from` and `to` seconds; none while the film shows its own titles. */
@@ -50,69 +92,92 @@ export type Scene =
   | { kind: "proof"; id: "proof" }
   | { kind: "visit"; id: "visit" };
 
+const FET_RESULT: Moment = {
+  number: { value: 13.9, decimals: 1, unit: "%" },
+  lines: ["LESS FUEL USED."],
+  small: "Measured on one working VW T5 · CTI GmbH, Germany",
+};
+const FET_PRICE: Moment = {
+  lines: ["FROM UGX 1,891,000.", "INSTALLATION INCLUDED."],
+  accent: [1],
+  small: "No engine modification.",
+};
+const FET_TRAFFIC = {
+  hero: { lines: ["TRAFFIC BURNS FUEL.", "YOUR FLEET SHOULDN'T", "BURN MORE THAN IT NEEDS."], accent: [0] },
+  proof: FET_RESULT,
+};
+
+const COFFEE_SMALL = "Single-origin Arabica · Mount Elgon";
+
 export const SECTORS: SectorScene[] = [
   {
     kind: "sector",
     id: "fet",
-    index: "01",
     tag: "Fuel Eco Tech",
     film: "/videos/fet-hero.mp4",
     poster: "/videos/fet-hero-poster.jpg",
-    beats: [
-      { line1: "Lower fuel bills,", line2: "measured on your own vehicles." },
-      { line1: "Fitted by our technicians,", line2: "with no engine modification." },
-      { line1: "From UGX 1,891,000,", line2: "installation included." },
-      { line1: "It starts with a free", line2: "on-site fuel assessment." },
-    ],
-    stat: { value: 13.9, decimals: 1, unit: "%", caption: "less fuel · VW T5 field test · CTI GmbH, Germany" },
+    accent: "#3DF0A0",
+    tint: "2,34,26",
+    hero: FET_RESULT,
+    proof: FET_PRICE,
+    timed: { morning: FET_TRAFFIC, rush: FET_TRAFFIC },
     qr: { src: "/display/qr/fet.svg", label: "Book a free fuel assessment" },
   },
   {
     kind: "sector",
     id: "seal",
-    index: "02",
     tag: "SEAL Wound Spray",
     film: "/videos/seal-hero.mp4",
     poster: "/videos/seal-hero-poster.jpg",
-    beats: [
-      { line1: "Fast bleeding control,", line2: "for the people first on the scene." },
-      { line1: "One formula, three formats:", line2: "OTC, PRO and HemoSEAL Pet." },
-      { line1: "Single use, kept at room temperature,", line2: "tested to MIL-STD-810H." },
-      { line1: "Supplied to organisations,", line2: "with full documentation on request." },
-    ],
-    stat: { value: 36, unit: "months", caption: "shelf life at room temperature · US FDA 510(k) cleared" },
+    accent: "#FF2B3A",
+    tint: "30,3,8",
+    product: { src: "/display/seal-pro.png", alt: "SEAL PRO wound spray" },
+    hero: { lines: ["WHEN", "SECONDS", "MATTER."], accent: [2], small: "Hemostatic wound spray" },
+    proof: {
+      number: { value: 36, unit: "months" },
+      lines: ["SHELF LIFE."],
+      small: "Room temperature · US FDA 510(k) cleared",
+    },
     qr: { src: "/display/qr/seal.svg", label: "See the three formats" },
   },
   {
     kind: "sector",
     id: "coffee",
-    index: "03",
     tag: "Vitorra Coffee",
     film: "/videos/coffee-hero.mp4",
     poster: "/videos/coffee-hero-poster.jpg",
-    grade: "brightness(0.62) contrast(1.14) saturate(1.2) sepia(0.18)",
-    streetGrade: "brightness(0.78) contrast(1.12) saturate(1.2) sepia(0.12)",
-    beats: [
-      { line1: "Ugandan Arabica,", line2: "graded and exported at origin." },
-      { line1: "Export orders", line2: "from one tonne." },
-      { line1: "Grades, terms and samples", line2: "on request." },
-    ],
-    stat: { value: 1, unit: "tonne", caption: "minimum export order · samples on request" },
+    grade: "brightness(0.5) contrast(1.18) saturate(1.25) sepia(0.2)",
+    streetGrade: "brightness(0.56) contrast(1.18) saturate(1.28) sepia(0.16)",
+    accent: "#FF9D2E",
+    tint: "34,15,4",
+    hero: { lines: ["UGANDA.", "IN EVERY CUP."], accent: [1], small: COFFEE_SMALL },
+    proof: {
+      number: { value: 1, unit: "tonne" },
+      lines: ["EXPORT MINIMUM."],
+      small: "Grades, terms and samples on request",
+    },
+    timed: {
+      morning: {
+        hero: { lines: ["START STRONG.", "UGANDAN ARABICA."], accent: [1], small: COFFEE_SMALL },
+        proof: {
+          number: { value: 1, unit: "tonne" },
+          lines: ["EXPORT MINIMUM."],
+          small: "Grades, terms and samples on request",
+        },
+      },
+    },
     qr: { src: "/display/qr/coffee.svg", label: "Export terms and grades" },
   },
   {
     kind: "sector",
     id: "logistics",
-    index: "04",
     tag: "Logistics",
     film: "/videos/logistics-hero.mp4",
     poster: "/videos/logistics-hero-poster.jpg",
-    beats: [
-      { line1: "Freight across East Africa,", line2: "port to door." },
-      { line1: "One named contact,", line2: "from quote to delivery." },
-      { line1: "Tell us the route,", line2: "we'll quote the move." },
-    ],
-    stat: { value: 1, unit: "contact", caption: "one named person from quote to delivery" },
+    accent: "#38BDFF",
+    tint: "3,24,48",
+    hero: { lines: ["FROM KAMPALA", "TO WHERE BUSINESS MOVES."], accent: [1], small: "Freight · Warehousing · Customs" },
+    proof: { lines: ["ONE NAMED CONTACT.", "QUOTE TO DELIVERY."], accent: [1] },
     qr: { src: "/display/qr/logistics.svg", label: "Request a freight quote" },
   },
 ];
@@ -126,6 +191,7 @@ export const FET_REEL: ReelScene = {
   tag: "Fuel Eco Tech",
   film: "/videos/fet-reel.mp4",
   poster: "/videos/fet-reel-poster.jpg",
+  accent: "#3DF0A0",
   length: 27.5,
   captions: [
     { from: 2.6, to: 9.2, line1: "Meet Fuel Eco Tech.", line2: "Precision-built for your fuel line." },
@@ -134,9 +200,30 @@ export const FET_REEL: ReelScene = {
   ],
 };
 
+/* A real fitting in Kampala, November 2026: the car, the device in hand, the
+   engine bay, the fitting, the device in the fuel line. The first second of the
+   original is trimmed because the customer's number plate is readable in it.
+   No caption for the first five seconds: the device and its label are the shot. */
+export const FET_INSTALL: ReelScene = {
+  kind: "reel",
+  id: "fet-install",
+  tag: "Fuel Eco Tech",
+  film: "/videos/fet-install.mp4",
+  poster: "/videos/fet-install-poster.jpg",
+  accent: "#3DF0A0",
+  grade: "brightness(0.96) contrast(1.12) saturate(1.14)",
+  length: 18.8,
+  captions: [
+    { from: 4.9, to: 8.4, line1: "A real installation.", line2: "Kampala, Uganda." },
+    { from: 8.9, to: 13.6, line1: "Fitted on the fuel line.", line2: "No engine modification." },
+    { from: 14.1, to: 18.1, line1: "Fuel Eco Tech, fitted.", line2: "Ask for a free fuel assessment." },
+  ],
+};
+
 /** Every film the screen plays, for the backdrop layer. */
 export const FILMS: { id: string; film: string; poster: string; grade?: string; streetGrade?: string; reel?: boolean }[] = [
   { id: FET_REEL.id, film: FET_REEL.film, poster: FET_REEL.poster, reel: true },
+  { id: FET_INSTALL.id, film: FET_INSTALL.film, poster: FET_INSTALL.poster, grade: FET_INSTALL.grade, reel: true },
   ...SECTORS,
 ];
 
@@ -160,7 +247,7 @@ export const CREDENTIALS = [
 ];
 
 /** Seconds each kind of scene holds — long enough to watch the film and read
- *  every card, the pace of a lobby film rather than a slideshow. */
+ *  every moment, the pace of a lobby film rather than a slideshow. */
 export function durationOf(scene: Scene, mode: Mode): number {
   const street = mode === "street";
   switch (scene.kind) {
@@ -178,8 +265,9 @@ export function storyFor(mode: Mode, hasWelcome: boolean): Scene[] {
   return [
     { kind: "ident", id: "ident" },
     ...(mode !== "street" && hasWelcome ? [{ kind: "welcome", id: "welcome" } as const] : []),
-    // FET leads: the film of the device, then the installation and the result.
+    // FET leads: the film of the device, a real fitting in Kampala, then the result.
     FET_REEL,
+    FET_INSTALL,
     ...SECTORS,
     { kind: "proof", id: "proof" },
     { kind: "visit", id: "visit" },
