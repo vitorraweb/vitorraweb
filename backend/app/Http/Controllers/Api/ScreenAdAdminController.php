@@ -65,11 +65,13 @@ class ScreenAdAdminController extends Controller
     {
         $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
         $this->from($booking, [Booking::PAYMENT_CONFIRMED, Booking::APPROVED]);
+        // Taken off air mid-campaign: the days already shown are not refunded.
+        $started = $booking->status === Booking::APPROVED && $booking->start_date->toDateString() <= now('Africa/Kampala')->toDateString();
         $booking->update(['status' => Booking::REJECTED, 'reviewed_by' => $request->user()->id, 'reviewed_at' => now(), 'review_note' => $data['reason']]);
         Audit::log('screen_ad.rejected', "Refused {$booking->reference}: {$data['reason']}");
         $this->tell($booking, "We cannot run your advert: {$booking->reference}", [
             "We are sorry, we are unable to run this advert. Reason: {$data['reason']}",
-            'Our team will contact you about your refund.',
+            ($started ? 'We will refund the unused days of your campaign' : 'We will refund you in full').' within '.config('screen_ads.refund_working_days').' working days, to the account you paid from.',
         ]);
 
         return response()->json(['data' => $booking->fresh()]);

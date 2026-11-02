@@ -110,7 +110,7 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
                 </button>
               ))}
             </div>
-            <p className="t-small text-ink-muted mt-4">Every package is for a {seconds}-second video, on screen every day, {p.on_air}. Need a longer video? <Link className="q-link" href="/enquire?message=I%20would%20like%20a%20quote%20for%20a%20longer%20advert%20on%20the%20street%20screen.">Ask us for a quote</Link>.</p>
+            <p className="t-small text-ink-muted mt-4">The price shown is the full amount you pay. Every package is for a {seconds}-second video, on screen every day, {p.on_air}. Need a longer video? <Link className="q-link" href="/enquire?message=I%20would%20like%20a%20quote%20for%20a%20longer%20advert%20on%20the%20street%20screen.">Ask us for a quote</Link>.</p>
           </section>
         )}
 
@@ -125,7 +125,8 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
 
         {step === 2 && (
           <section>
-            <p className="t-body text-ink-soft mb-6">Upload one {seconds}-second video, MP4 (H.264), 1920 × 1080, up to {p.video.max_mb} MB. The screen plays it without sound.</p>
+            <p className="t-body text-ink-soft mb-3">Upload one {seconds}-second video, MP4 (H.264), 1920 × 1080, up to {p.video.max_mb} MB. The screen plays it without sound.</p>
+            <p className="t-small text-ink-muted mb-6">We can&apos;t run adverts that are illegal, false or misleading, or that show sexual, violent or hateful content. We also don&apos;t run political or religious campaigning, or adverts for betting, alcohol or tobacco. The screen faces a public road, so nothing should distract drivers, including flashing images.</p>
             <label className="flex items-center gap-3 rounded-edge px-4 min-h-16 border border-dashed border-line-strong bg-paper-deep cursor-pointer">
               {progress !== null ? <Loader2 aria-hidden="true" className="w-5 h-5 animate-spin" /> : video ? <Check aria-hidden="true" className="w-5 h-5 text-ok-ink" /> : <Upload aria-hidden="true" className="w-5 h-5 text-gold-ink" />}
               <span className="t-body">{progress !== null ? `Uploading ${progress}%` : video ? `${video.name} uploaded` : "Choose your video"}</span>
@@ -145,7 +146,7 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
             <label className="block"><span className="t-small block mb-1.5">Anything we should know? (optional)</span><textarea rows={3} value={f.notes} onChange={(e) => set("notes", e.target.value)} className={`${cls} py-3`} /></label>
             <label className="flex gap-3 items-start t-small">
               <input type="checkbox" required checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-1" />
-              <span>I own or have the rights to this video. I understand Vitorra reviews every advert after payment, may refuse one, and will refund it if so.</span>
+              <span>I own or have the rights to this video and it follows the advert rules. Vitorra reviews every advert after payment. If it is refused before it starts, I get a full refund within 10 working days. If it is taken off air after it starts, I get the unused days back.</span>
             </label>
             <Turnstile ref={turnstile} action="screen_ad" onVerify={setToken} onExpire={() => setToken("")} />
             <button disabled={busy} className="q-btn bg-ink text-paper hover:bg-black">{busy ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : null}Confirm booking</button>

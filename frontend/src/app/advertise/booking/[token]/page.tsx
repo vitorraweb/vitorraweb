@@ -10,7 +10,7 @@ const STAGE: Record<string, { title: string; body: string }> = {
   payment_submitted: { title: "We're checking your payment", body: "Thank you. We'll email you as soon as your transfer is confirmed." },
   payment_confirmed: { title: "Payment received", body: "We're reviewing your video and will confirm your campaign shortly." },
   approved: { title: "Your advert is approved", body: "It will run on the Vitorra street screen on the dates below." },
-  rejected: { title: "We can't run this advert", body: "Our team will contact you about your refund." },
+  rejected: { title: "We can't run this advert", body: "We will send your refund within 10 working days, to the account you paid from." },
   refunded: { title: "Refund sent", body: "Your refund has been sent." },
   cancelled: { title: "This booking was cancelled", body: "Talk to us if you would like to book again." },
 };

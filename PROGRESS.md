@@ -2119,13 +2119,21 @@ Businesses pick a package, a start date, upload a 15-second video, book, pay by 
 
 **Prices (Finance's rate card, Joseph Rwabu's sheet, 2 November):** Trial 7 days UGX 150,000; Standard 30 days 450,000; Growth 30 days 850,000; High Visibility 30 days 1,600,000. John chose packages over the sheet's weekly 10-minute calendar, whose formula the sheet itself marks as unapproved (a full 7 days comes to 105,000 against Trial at 150,000).
 
+**Decided by John, 2 November (Finance left these to him):**
+- **Plays an hour:** Trial and Standard 15, Growth 30, High Visibility 60. Cost per play falls from about UGX 89 (Trial) to 62, 59 and 56.
+- **On screen:** every day, 6am to 10pm.
+- **VAT:** the price shown is the full amount the customer pays. If VAT applies, it comes out of that price.
+- **Longer videos:** quoted through Enquiries at the package price × video length ÷ 15. A 30-second Standard is UGX 900,000.
+- **Pricing:** packages only. No 10-minute calendar.
+- **Refunds:** refused before starting, full refund within 10 working days to the account that paid. Taken off air after starting, the unused days back on the same terms.
+- **Payments:** Daniel Tuke checks each transfer; Joseph Rwabu covers.
+- **Advert rules:** no illegal, false, misleading, sexual, violent or hateful content; no political or religious campaigning; no betting, alcohol or tobacco; nothing that distracts drivers, including flashing images. Thurayya Nakayima reviews; Victor Lojum covers.
+
 **⏳ To switch it on**
-1. **Finance confirms:** plays an hour for Growth and High Visibility (placeholders 30 and 60; Trial and Standard use 15, from the rate card's 4-minute loop), the 16 on-air hours (placeholder 6am to 10pm), and how longer videos are quoted.
-2. **Agree the terms:** refund timing and wording, what content is refused, and who decides. The customer's tick-box wording is a placeholder.
-3. **Storage:** create a Vercel Blob store and set `BLOB_READ_WRITE_TOKEN`. The real upload has not been tested until this exists.
-4. **Server update:** pull, `migrate --force` (`2026_11_02_000001`), `config:cache`, `route:cache`. The console's Screen bookings screen cannot load until this is done.
-5. **Access:** existing staff with a custom permission set need "Street screen bookings" ticked in `/admin/staff`.
-6. **Open it:** `SCREEN_ADS_ENABLED=true` on the backend and on Vercel, then redeploy. To preview first, set the same `SCREEN_ADS_PREVIEW_KEY` on both.
+1. **Storage:** create a Vercel Blob store and set `BLOB_READ_WRITE_TOKEN`. The real upload has not been tested until this exists.
+2. **Server update:** pull, `migrate --force` (`2026_11_02_000001`), `config:cache`, `route:cache`. The console's Screen bookings screen cannot load until this is done.
+3. **Access:** existing staff with a custom permission set need "Street screen bookings" ticked in `/admin/staff`.
+4. **Open it:** `SCREEN_ADS_ENABLED=true` on the backend and on Vercel, then redeploy. To preview first, set the same `SCREEN_ADS_PREVIEW_KEY` on both.
 
 **Known limits:** no check that the screen is oversold; money is not posted to Vitorra Books automatically; unpaid bookings do not expire (staff cancel them).
 

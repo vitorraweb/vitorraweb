@@ -11,9 +11,9 @@
 | Joseph Rwabu, 2 November 2026): fixed packages of 15-second plays. The sheet's
 | per-10-minute formula is marked unapproved and is deliberately not used.
 |
-| ⚠ plays_per_hour: the rate card is built on a 15-second play in a 4-minute
-| loop, which gives Trial and Standard 15 an hour. Growth and High Visibility
-| are PLACEHOLDERS until Finance gives their figures.
+| plays_per_hour: the rate card's 15-second play in a 4-minute loop gives Trial
+| and Standard 15 an hour. Growth doubles it and High Visibility doubles it again,
+| so a bigger package costs a little less per play (decided 2 November 2026).
 */
 
 return [
@@ -23,16 +23,16 @@ return [
     'site_url'    => env('FRONTEND_URL', 'https://vitorra.org'),
 
     'lead_days' => 3,       // Earliest start, to allow for payment and review.
+    'refund_working_days' => 10,
 
     'packages' => [
         'trial'    => ['label' => 'Trial', 'price_ugx' => 150000, 'days' => 7, 'plays_per_hour' => 15],
         'standard' => ['label' => 'Standard', 'price_ugx' => 450000, 'days' => 30, 'plays_per_hour' => 15],
-        'growth'   => ['label' => 'Growth', 'price_ugx' => 850000, 'days' => 30, 'plays_per_hour' => 30],             // plays: PLACEHOLDER
-        'high'     => ['label' => 'High Visibility', 'price_ugx' => 1600000, 'days' => 30, 'plays_per_hour' => 60],   // plays: PLACEHOLDER
+        'growth'   => ['label' => 'Growth', 'price_ugx' => 850000, 'days' => 30, 'plays_per_hour' => 30],
+        'high'     => ['label' => 'High Visibility', 'price_ugx' => 1600000, 'days' => 30, 'plays_per_hour' => 60],
     ],
 
-    // On screen every day of a campaign, Kampala time. The rate card assumes a
-    // 16-hour operating day; 6am to 10pm is a PLACEHOLDER until Finance sets the hours.
+    // On screen every day of a campaign, Kampala time: the rate card's 16-hour day.
     'on_air' => ['from' => 6, 'to' => 22, 'label' => '6am to 10pm'],
 
     'video' => [

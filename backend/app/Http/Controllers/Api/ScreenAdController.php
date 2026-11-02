@@ -99,7 +99,7 @@ class ScreenAdController extends Controller
                 'Thank you. Your campaign is reserved, and we need your bank transfer to continue.',
                 'Amount: UGX '.number_format($booking->price_ugx),
                 'Use your reference '.$booking->reference.' on the transfer, then upload your proof of payment using the link below.',
-                'Your advert goes on screen after we confirm payment and review your video. If we cannot run it, we will contact you about a refund.',
+                'Your advert goes on screen after we confirm payment and review your video. If we cannot run it, we will refund you in full within '.config('screen_ads.refund_working_days').' working days.',
             ],
             $this->link($token), 'View your booking',
         ));

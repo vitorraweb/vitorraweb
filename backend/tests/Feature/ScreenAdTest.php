@@ -149,9 +149,16 @@ class ScreenAdTest extends TestCase
         $b = Booking::where('reference', $this->book()['reference'])->first();
         $b->update(['status' => Booking::PAYMENT_CONFIRMED]);
         $this->postJson("/api/admin/screen-ads/{$b->id}/reject", ['reason' => 'Misleading claims'], $this->h($this->staff('marketing', ['screen_ads'])))->assertOk();
-        Mail::assertSent(ScreenAdNotice::class, fn ($m) => str_contains($m->heading, 'cannot run') && in_array('Our team will contact you about your refund.', $m->lines, true));
+        Mail::assertSent(ScreenAdNotice::class, fn ($m) => str_contains($m->heading, 'cannot run') && in_array('We will refund you in full within 10 working days, to the account you paid from.', $m->lines, true));
 
         $this->postJson("/api/admin/screen-ads/{$b->id}/refunded", [], $this->h($this->staff('finance', ['accounting'])))->assertOk()->assertJsonPath('data.status', Booking::REFUNDED);
+    }
+
+    public function test_an_advert_pulled_mid_campaign_refunds_only_the_unused_days(): void
+    {
+        $b = $this->approved();
+        $this->postJson("/api/admin/screen-ads/{$b->id}/reject", ['reason' => 'Complaint upheld'], $this->h($this->staff('marketing', ['screen_ads'])))->assertOk();
+        Mail::assertSent(ScreenAdNotice::class, fn ($m) => in_array('We will refund the unused days of your campaign within 10 working days, to the account you paid from.', $m->lines, true));
     }
 
     public function test_nothing_runs_outside_the_on_air_hours(): void
