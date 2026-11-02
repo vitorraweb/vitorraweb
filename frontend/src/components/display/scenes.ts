@@ -34,13 +34,33 @@ export function daypartAt(date: Date): Daypart {
   return "day";
 }
 
+/** A photograph that takes over from the film for one moment. Every message
+ *  gets its own picture, composed around the words. */
+export type Still = {
+  src: string;
+  /** Which part of the picture to keep in frame. */
+  position?: string;
+  filter?: string;
+  /** Slides the picture sideways to clear room for the words, as on black. */
+  shift?: string;
+  /** How the business's colour falls across it: from the left, from below, or as a solid field. */
+  wash?: Wash;
+};
+
+export type Wash = "left" | "bottom" | "full" | "none";
+
 /** One idea on screen: a huge number or a huge line, and at most one small line. */
 export type Moment = {
-  number?: { value: number; decimals?: number; unit: string };
+  number?: { value: number; decimals?: number; unit: string; size: number; beside?: boolean };
   lines: string[];
   /** Which of `lines` carry the business's accent colour. */
   accent?: number[];
   small?: string;
+  still?: Still;
+  /** The width the words may take, in cqmin (the frame is 178 wide). */
+  room?: number;
+  /** The largest the headline may be, in cqmin. */
+  max?: number;
 };
 
 /** Where each moment begins, as a share of the film's slot (24s: 0, 3, 13, 19). */
@@ -59,13 +79,16 @@ export type SectorScene = {
   /** The business's one vivid colour, and the deep colour its words sit on. */
   accent: string;
   tint: string;
-  /** A cut-out shown alone on the deep colour during the headline and proof. */
+  /** A cut-out shown alone on the deep colour during the headline. */
   product?: { src: string; alt: string };
   hero: Moment;
   proof: Moment;
   /** Replaces the headline and proof at certain times of day. */
   timed?: Partial<Record<Daypart, { hero: Moment; proof: Moment }>>;
+  /** QR for people who can stop; a short address for the road, where nobody should scan. */
   qr: { src: string; label: string };
+  url: string;
+  ctaStill?: Still;
 };
 
 /** A feature film played once, start to finish, with captions timed to it. */
@@ -93,21 +116,41 @@ export type Scene =
   | { kind: "visit"; id: "visit" };
 
 const FET_RESULT: Moment = {
-  number: { value: 13.9, decimals: 1, unit: "%" },
+  number: { value: 13.9, decimals: 1, unit: "%", size: 47 },
   lines: ["LESS FUEL USED."],
+  accent: [0],
   small: "Measured on one working VW T5 · CTI GmbH, Germany",
+  max: 9.5,
+  still: { src: "/display/fet-device.jpg", shift: "44%", filter: "brightness(0.82) contrast(1.12) saturate(1.2)", wash: "none" },
 };
 const FET_PRICE: Moment = {
   lines: ["FROM UGX 1,891,000.", "INSTALLATION INCLUDED."],
   accent: [1],
   small: "No engine modification.",
+  room: 118,
+  max: 10.5,
+  still: { src: "/display/fet-engine.jpg", position: "60% 50%", filter: "brightness(0.9) contrast(1.1)", wash: "left" },
 };
-const FET_TRAFFIC = {
-  hero: { lines: ["TRAFFIC BURNS FUEL.", "YOUR FLEET SHOULDN'T", "BURN MORE THAN IT NEEDS."], accent: [0] },
+const FET_TRAFFIC: { hero: Moment; proof: Moment } = {
+  hero: {
+    lines: ["TRAFFIC BURNS FUEL.", "YOUR FLEET SHOULDN'T", "BURN MORE THAN IT NEEDS."],
+    accent: [0],
+    room: 128,
+    max: 10.5,
+    still: { src: "/images/stock/highway-sunset.jpg", position: "50% 70%", filter: "brightness(0.66) contrast(1.24) saturate(0.86)", wash: "bottom" },
+  },
   proof: FET_RESULT,
 };
 
 const COFFEE_SMALL = "Single-origin Arabica · Mount Elgon";
+const COFFEE_EXPORT: Moment = {
+  number: { value: 1, unit: "TONNE.", size: 40, beside: true },
+  lines: ["EXPORT ORDERS START HERE."],
+  small: "Samples · Grades · Terms on request",
+  room: 118,
+  max: 8.6,
+  still: { src: "/images/stock/ship-aerial.jpg", position: "62% 50%", filter: "brightness(0.74) contrast(1.16) saturate(0.82) sepia(0.32)", wash: "left" },
+};
 
 export const SECTORS: SectorScene[] = [
   {
@@ -122,6 +165,7 @@ export const SECTORS: SectorScene[] = [
     proof: FET_PRICE,
     timed: { morning: FET_TRAFFIC, rush: FET_TRAFFIC },
     qr: { src: "/display/qr/fet.svg", label: "Book a free fuel assessment" },
+    url: "vitorra.org/fet",
   },
   {
     kind: "sector",
@@ -132,13 +176,17 @@ export const SECTORS: SectorScene[] = [
     accent: "#FF2B3A",
     tint: "30,3,8",
     product: { src: "/display/seal-pro.png", alt: "SEAL PRO wound spray" },
-    hero: { lines: ["WHEN", "SECONDS", "MATTER."], accent: [2], small: "Hemostatic wound spray" },
+    hero: { lines: ["WHEN", "SECONDS", "MATTER."], accent: [2], small: "Hemostatic wound spray", room: 104, max: 21 },
     proof: {
-      number: { value: 36, unit: "months" },
+      number: { value: 36, unit: "MONTHS", size: 62, beside: true },
       lines: ["SHELF LIFE."],
       small: "Room temperature · US FDA 510(k) cleared",
+      max: 10,
+      still: { src: "", wash: "full" },
     },
     qr: { src: "/display/qr/seal.svg", label: "See the three formats" },
+    url: "vitorra.org/seal",
+    ctaStill: { src: "/images/stock/ambulance-motion.jpg", position: "50% 50%", filter: "brightness(0.8) contrast(1.15) saturate(1.1) hue-rotate(-14deg)", wash: "left" },
   },
   {
     kind: "sector",
@@ -150,23 +198,31 @@ export const SECTORS: SectorScene[] = [
     streetGrade: "brightness(0.56) contrast(1.18) saturate(1.28) sepia(0.16)",
     accent: "#FF9D2E",
     tint: "34,15,4",
-    hero: { lines: ["UGANDA.", "IN EVERY CUP."], accent: [1], small: COFFEE_SMALL },
-    proof: {
-      number: { value: 1, unit: "tonne" },
-      lines: ["EXPORT MINIMUM."],
-      small: "Grades, terms and samples on request",
+    hero: {
+      lines: ["UGANDA.", "IN EVERY CUP."],
+      accent: [1],
+      small: COFFEE_SMALL,
+      room: 112,
+      max: 16,
+      still: { src: "/photos/process-coffee-hands.jpg", position: "100% 62%", filter: "brightness(0.8) contrast(1.2) saturate(1.2) sepia(0.12)", wash: "left" },
     },
+    proof: COFFEE_EXPORT,
     timed: {
       morning: {
-        hero: { lines: ["START STRONG.", "UGANDAN ARABICA."], accent: [1], small: COFFEE_SMALL },
-        proof: {
-          number: { value: 1, unit: "tonne" },
-          lines: ["EXPORT MINIMUM."],
-          small: "Grades, terms and samples on request",
+        hero: {
+          lines: ["START STRONG.", "UGANDAN ARABICA."],
+          accent: [1],
+          small: COFFEE_SMALL,
+          room: 102,
+          max: 14,
+          still: { src: "/images/stock/coffee-cherries.jpg", position: "100% 44%", filter: "brightness(0.84) contrast(1.12) saturate(1.1)", wash: "left" },
         },
+        proof: COFFEE_EXPORT,
       },
     },
     qr: { src: "/display/qr/coffee.svg", label: "Export terms and grades" },
+    url: "vitorra.org/coffee",
+    ctaStill: { src: "/images/stock/coffee-roaster.jpg", position: "50% 60%", filter: "brightness(0.7) contrast(1.16) saturate(1.1)", wash: "left" },
   },
   {
     kind: "sector",
@@ -176,9 +232,17 @@ export const SECTORS: SectorScene[] = [
     poster: "/videos/logistics-hero-poster.jpg",
     accent: "#38BDFF",
     tint: "3,24,48",
-    hero: { lines: ["FROM KAMPALA", "TO WHERE BUSINESS MOVES."], accent: [1], small: "Freight · Warehousing · Customs" },
-    proof: { lines: ["ONE NAMED CONTACT.", "QUOTE TO DELIVERY."], accent: [1] },
+    hero: { lines: ["FROM KAMPALA", "TO WHERE", "BUSINESS MOVES."], accent: [1, 2], small: "Freight · Warehousing · Customs", room: 112, max: 13.5 },
+    proof: {
+      lines: ["ONE NAMED", "CONTACT.", "QUOTE TO DELIVERY."],
+      accent: [2],
+      room: 106,
+      max: 13,
+      still: { src: "/images/stock/warehouse-dark.jpg", position: "80% 40%", filter: "brightness(0.84) contrast(1.14) saturate(0.9)", wash: "left" },
+    },
     qr: { src: "/display/qr/logistics.svg", label: "Request a freight quote" },
+    url: "vitorra.org/freight",
+    ctaStill: { src: "", wash: "full" },
   },
 ];
 
@@ -219,6 +283,15 @@ export const FET_INSTALL: ReelScene = {
     { from: 14.1, to: 18.1, line1: "Fuel Eco Tech, fitted.", line2: "Ask for a free fuel assessment." },
   ],
 };
+
+/** Every photograph the moments use, loaded up front so none ever fades in half-drawn. */
+export const STILLS: string[] = Array.from(new Set(SECTORS.flatMap((s) => [
+  s.hero.still, s.proof.still, s.ctaStill,
+  ...Object.values(s.timed ?? {}).flatMap((t) => [t.hero.still, t.proof.still]),
+]).map((v) => v?.src).filter((v): v is string => !!v)));
+
+/** The brand frame's montage, faint behind the name. */
+export const MONTAGE = ["/images/stock/kampala-skyline.jpg", "/images/stock/port-aerial.jpg", "/images/stock/coffee-roaster.jpg"];
 
 /** Every film the screen plays, for the backdrop layer. */
 export const FILMS: { id: string; film: string; poster: string; grade?: string; streetGrade?: string; reel?: boolean }[] = [

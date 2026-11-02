@@ -23,7 +23,14 @@ const nextConfig: NextConfig = {
   // trailing-slash redirect is off; redirects() below restores it for pages.
   skipTrailingSlashRedirect: true,
   async redirects() {
-    return [{ source: "/:path((?!ingest/|api/).+)/", destination: "/:path", permanent: true }];
+    return [
+      { source: "/:path((?!ingest/|api/).+)/", destination: "/:path", permanent: true },
+      // Short addresses shown on the road-facing screen, where nobody should scan a QR code.
+      { source: "/fet", destination: "/enquire?sector=FET&utm_source=display&utm_medium=street&utm_campaign=fet", permanent: false },
+      { source: "/seal", destination: "/products/seal-wound-spray?utm_source=display&utm_medium=street&utm_campaign=seal", permanent: false },
+      { source: "/coffee", destination: "/products/coffee?utm_source=display&utm_medium=street&utm_campaign=coffee", permanent: false },
+      { source: "/freight", destination: "/enquire?sector=LOGISTICS&utm_source=display&utm_medium=street&utm_campaign=freight", permanent: false },
+    ];
   },
   // Emits .next/standalone — a self-contained Node server bundled with only the
   // node_modules actually reached at runtime. Required for the Docker image we

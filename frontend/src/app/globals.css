@@ -1638,6 +1638,18 @@
 /* A product hangs in its colour, breathing slowly. */
 .vx .vx-float { animation: vx-float 9s ease-in-out infinite alternate; }
 @keyframes vx-float { from { transform: translateY(-0.9cqh) rotate(-1.2deg); } to { transform: translateY(0.9cqh) rotate(1.2deg); } }
+/* Photographs move slower than a film: alive, never zooming. */
+.vx .vx-drift { animation: vx-drift var(--dur, 14s) linear both; }
+@keyframes vx-drift { from { transform: scale(1.01); } to { transform: scale(1.05); } }
+/* A band of light crosses the product every few seconds. */
+.vx .vx-sweep { background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.3) 50%, transparent 62%); background-size: 300% 100%; animation: vx-sweep 6.5s ease-in-out infinite; }
+.vx .vx-sweep-wide { mix-blend-mode: color-dodge; }
+@keyframes vx-sweep { from { background-position: 130% 0; } 60%, to { background-position: -30% 0; } }
+/* The brand frame's montage: each picture fades up, holds and fades away. */
+.vx .vx-montage { opacity: 0; animation: vx-montage var(--dur, 4s) ease-in-out var(--d, 0s) forwards; }
+@keyframes vx-montage { 0% { opacity: 0; } 25%, 75% { opacity: 1; } 100% { opacity: 0; } }
+.vx .vx-montage-last { animation-name: vx-montage-last; }
+@keyframes vx-montage-last { 0% { opacity: 0; } 25%, 100% { opacity: 1; } }
 /* Information band ticker on the screens — always moving (a TV has no reduced-motion preference). */
 .vx .vx-ticker { animation: vx-ticker var(--dur, 60s) linear infinite; }
 @keyframes vx-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }

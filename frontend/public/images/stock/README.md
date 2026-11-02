@@ -42,12 +42,12 @@ permission or attribution required (credit is given below anyway). None is an
 | `coffee-roaster.jpg` | Coffee band | [Unsplash 6HR8vpjYUHo](https://unsplash.com/photos/6HR8vpjYUHo) | [@yaanapi](https://unsplash.com/@yaanapi) |
 | `coffee-valley.jpg` | Coffee opening; homepage door 03 | [Unsplash VJRTZNYNE4E](https://unsplash.com/photos/VJRTZNYNE4E) | [@nandhukumarndd](https://unsplash.com/@nandhukumarndd) |
 | `engine-hands.jpg` | FET band | [Unsplash Fd6osyVbtG4](https://unsplash.com/photos/Fd6osyVbtG4) | [@christianbuehner](https://unsplash.com/@christianbuehner) |
-| `highway-sunset.jpg` | (held in reserve) | [Unsplash 2kSQVzmbtlU](https://unsplash.com/photos/2kSQVzmbtlU) | [@allysphotos](https://unsplash.com/@allysphotos) |
+| `highway-sunset.jpg` | Reception/street screen (traffic message) | [Unsplash 2kSQVzmbtlU](https://unsplash.com/photos/2kSQVzmbtlU) | [@allysphotos](https://unsplash.com/@allysphotos) |
 | `hills-road.jpg` | Homepage band | [Unsplash zSY8YVbZoE0](https://unsplash.com/photos/zSY8YVbZoE0) | [@willv78](https://unsplash.com/@willv78) |
 | `kampala-skyline.jpg` | Homepage opening | [Unsplash Q3ymlvOJGFs](https://unsplash.com/photos/Q3ymlvOJGFs) | [@kutesir](https://unsplash.com/@kutesir) |
 | `port-aerial.jpg` | Logistics opening; homepage door 04 | [Unsplash a-E__y8y5Wo](https://unsplash.com/photos/a-E__y8y5Wo) | [@some_random_guy](https://unsplash.com/@some_random_guy) |
 | `road-mountains.jpg` | FET opening; homepage door 01 | [Unsplash gDa6bciSpxQ](https://unsplash.com/photos/gDa6bciSpxQ) | [@willv78](https://unsplash.com/@willv78) |
-| `ship-aerial.jpg` | (held in reserve) | [Unsplash FPKnAO-CF6M](https://unsplash.com/photos/FPKnAO-CF6M) | [@ventiviews](https://unsplash.com/@ventiviews) |
+| `ship-aerial.jpg` | Reception/street screen (coffee export) | [Unsplash FPKnAO-CF6M](https://unsplash.com/photos/FPKnAO-CF6M) | [@ventiviews](https://unsplash.com/@ventiviews) |
 | `ship-wake.jpg` | Logistics band | [Unsplash q6j5mSRpi50](https://unsplash.com/photos/q6j5mSRpi50) | [@fejuz](https://unsplash.com/@fejuz) |
 | `trauma-kit-open.jpg` | SEAL opening; homepage door 02 | [Unsplash MaKsx8JNbiI](https://unsplash.com/photos/MaKsx8JNbiI) | [@matnapo](https://unsplash.com/@matnapo) |
 | `warehouse-dark.jpg` | Logistics, what we need | [Unsplash VnMbc9Szs-E](https://unsplash.com/photos/VnMbc9Szs-E) | [@arumvisuals](https://unsplash.com/@arumvisuals) |

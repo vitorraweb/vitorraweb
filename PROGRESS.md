@@ -2074,6 +2074,25 @@ From John's research on current digital outdoor screens: the screen read as a we
 
 ---
 
+## The screen, art-directed: "the advertisement speaks, the interface whispers" (2 November 2026) — live
+
+From the creative direction guide. The information management wants stays on screen, but the campaign now takes the eye first. Film slots, ticker and loop length are unchanged.
+
+- **Quiet interface:** a slimmer bottom bar with no boxes or gold block, a small logo and web address, a fainter full-screen hint and progress line.
+- **Each message has its own picture:** FET's device on black beside a huge 13.9%, and the device highlighted in an engine for the price; an evening road for the traffic message; hands and beans for Coffee, cherries in the morning, a container ship for export; a warehouse for "one named contact"; a clean blue field for the freight quote. Logistics no longer repeats one yard.
+- **Scale:** 13.9% fills about a third of the screen height; 36 is the picture; the SEAL can is rim-lit with light passing over it and runs off the bottom of the frame.
+- **Brand frame:** VITORRA at huge size over a faint montage of Kampala, the port and the roaster.
+- **No white slides, including on the projector.** This reverses the October ivory projector scenes, which were chosen for daylight on the corridor wall: check it on the real wall.
+- **Road-facing screen:** short addresses instead of QR codes: vitorra.org/fet, /seal, /coffee, /freight. They carry `utm_source=display`. TV and projector keep QR codes.
+
+**Decided against:** "1 TONNE. READY FOR EXPORT." UCDA registration and EUDR readiness are still unconfirmed, so it would claim more than the records show; the screen says 1 TONNE. EXPORT ORDERS START HERE. Coffee packaging stays off the screen while the shop is closed. Stock pictures are not presented as Mount Elgon or as Vitorra's own.
+
+**Needs a shoot or a motion studio, not code:** a real traffic/fleet film with green flow lines, steam and a macro bean with Mount Elgon behind it, a real Vitorra logistics person for "one named contact", real export staging (sacks, pallets, container doorway), and a more photographic FET product shot. The current FET device is the 3D film's render.
+
+> Technical detail (engineering): `Still`, `Wash`, `STILLS`, `MONTAGE`, `Moment.room/max/number.size`, `SectorScene.url/ctaStill` in `scenes.ts`; `lookOf`, `CallToAction`, `UtilityBar` in `Stage.tsx`; `light` theme removed; `vx-drift`, `vx-sweep`, `vx-montage` in `globals.css`; `public/display/fet-device.jpg` and `fet-engine.jpg` are frames from `fet-reel.mp4`; short addresses in `next.config.ts`.
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**
