@@ -2113,6 +2113,18 @@ Marketing's reviewers proposed shorter, benefit-led wording, and each line was c
 
 ---
 
+## Change the screen wording from the console (2 November 2026) — website live; server update pending
+
+**Operations → Screen wording** (`/admin/screen-wording`, `screen_ads` module): 105 lines across 13 groups, in screen order, with a live preview that updates while typing, for the street screen, TV or projector. **Publish** sends them, and running screens change within about a minute with no reload. Every change goes in the activity log. "Use original" reverts one line, and leaving an optional line empty hides it. Long lines shrink to fit.
+
+Numbers (13.9%, 36), prices, web addresses, QR codes and pictures are deliberately not editable. A warning appears on risky wording (savings ranges, "guarantee", Ugandan approval for SEAL, coffee retail or export-ready, warranty, delivery promises); it advises and does not block.
+
+**Server:** pull, `route:cache` (new route). No migration.
+
+> Technical detail (engineering): `walk()` in `scenes.ts` both lists the fields (`copyFields`) and applies changes (`applyCopy`); changes live in the `display_copy` setting, returned by `GET /display`; `PUT /admin/display/copy`; `CopyContext` and `useScreenData` in `Stage.tsx`; `?draft=1` reads unsaved edits from localStorage. To add a new line, add it to the story and it appears in the console.
+
+---
+
 ## Screen wording corrections (2 November 2026) — live
 
 From the marked-up design sheet (`1 1.jpg`). Applied as written: the VITORRA line (CONNECTING INNOVATION WITH BUSINESS OPPORTUNITIES), EASY INSTALLATION with its two lines, and the list of uses (backed by the manufacturer's presentation).

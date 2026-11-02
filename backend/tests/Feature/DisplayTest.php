@@ -37,4 +37,23 @@ class DisplayTest extends TestCase
         $this->app['auth']->forgetGuards();
         $this->withHeaders($this->staff('admin'))->putJson('/api/admin/display/welcome', ['name' => '<script>x</script>'])->assertStatus(422);
     }
+
+    public function test_the_console_changes_screen_wording_and_screens_receive_it(): void
+    {
+        $this->withHeaders($this->staff('admin'))->putJson('/api/admin/display/copy', ['copy' => ['ui.ident' => '  NEW LINE ', 'fet.proof.small' => '']])->assertOk();
+
+        $copy = $this->getJson('/api/display')->json('data.copy');
+        $this->assertSame('NEW LINE', $copy['ui.ident']);
+        $this->assertSame('', $copy['fet.proof.small']);
+        $this->assertTrue(\App\Models\ActivityLog::where('action', 'display.copy')->exists());
+    }
+
+    public function test_screen_wording_refuses_markup_bad_fields_and_strangers(): void
+    {
+        $this->withHeaders($this->staff('admin'))->putJson('/api/admin/display/copy', ['copy' => ['ui.ident' => '<script>x</script>']])->assertUnprocessable();
+        $this->withHeaders($this->staff('admin'))->putJson('/api/admin/display/copy', ['copy' => ['Bad Key!' => 'x']])->assertUnprocessable();
+        $this->app['auth']->forgetGuards();
+        $this->flushHeaders();
+        $this->putJson('/api/admin/display/copy', ['copy' => []])->assertUnauthorized();
+    }
 }

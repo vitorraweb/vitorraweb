@@ -308,6 +308,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/meetings', [MeetingController::class, 'index']);
         Route::get('/display', [DisplayController::class, 'show']);
         Route::put('/display/welcome', [DisplayController::class, 'updateWelcome'])->middleware('throttle:30,1');
+        Route::put('/display/copy', [DisplayController::class, 'updateCopy'])->middleware(['perm:screen_ads', 'throttle:30,1']);
         Route::post('/meetings', [MeetingController::class, 'store']);
         Route::patch('/meetings/{meeting}', [MeetingController::class, 'update']);
         Route::delete('/meetings/{meeting}', [MeetingController::class, 'destroy']);

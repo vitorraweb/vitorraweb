@@ -326,6 +326,154 @@ export const STILLS: string[] = Array.from(new Set(SECTORS.flatMap((s) => [
   ...Object.values(s.timed ?? {}).flatMap((t) => [t.hero.still, t.proof.still]),
 ]).map((v) => v?.src).filter((v): v is string => !!v)));
 
+/** Words that are not part of a business's story. */
+const UI = {
+  ident: "CONNECTING INNOVATION WITH BUSINESS OPPORTUNITIES",
+  welcomeLabel: "Today at Vitorra",
+  welcomeLine: "Please make yourself comfortable. Someone will be with you shortly.",
+  proofHeading: "Proof, not promises",
+  visitTag: "Visit us",
+  visit1: "FIND VITORRA",
+  visit2: "ON LUMUMBA AVENUE",
+  roadTag: "Vitorra",
+  road1: "YOU'LL FIND US HERE",
+  road2: "PADRE PIO HOUSE",
+  scan: "Scan with your phone",
+  news: "Vitorra News",
+  advert: "Advertisement",
+};
+
+/* ─── Editable wording ────────────────────────────────────────────────────────
+   Console → Operations → Screen wording changes the words without a release.
+   One walk over the story both lists every editable line (for the console) and
+   applies the saved changes (for the screens), so the two can never disagree.
+   Numbers, prices, links and pictures are deliberately not fields: a proof
+   figure should only change through the evidence behind it.                  */
+
+export type CopyField = { key: string; group: string; label: string; value: string; preview: string; optional?: boolean };
+type Say = (f: CopyField) => string;
+
+export type ScreenCopy = {
+  sectors: SectorScene[];
+  reels: ReelScene[];
+  ticker: string[];
+  credentials: { name: string; what: string }[];
+  ui: typeof UI;
+};
+
+const EXTRA_TICKER_LINES = 3;
+
+function walk(say: Say): ScreenCopy {
+  const seen = new Map<Moment, Moment>(); // Shared moments are one set of fields, not two.
+
+  const moment = (path: string, group: string, name: string, m: Moment, preview: string): Moment => {
+    const done = seen.get(m);
+    if (done) return done;
+    const said = m.lines.map((value, i) => ({ i, text: say({ key: `${path}.line${i}`, group, label: `${name}: line ${i + 1}`, value, preview, optional: m.lines.length > 1 }) }));
+    const kept = said.filter((l) => l.text.trim());
+    const lines = kept.length ? kept : m.lines.map((text, i) => ({ i, text }));
+    const out: Moment = {
+      ...m,
+      lines: lines.map((l) => l.text),
+      accent: m.accent ? lines.flatMap((l, n) => (m.accent?.includes(l.i) ? [n] : [])) : undefined,
+    };
+    if (m.number && /[a-z]/i.test(m.number.unit)) {
+      out.number = { ...m.number, unit: say({ key: `${path}.unit`, group, label: `${name}: word beside the number`, value: m.number.unit, preview }) };
+    }
+    if (m.small !== undefined) {
+      out.small = say({ key: `${path}.small`, group, label: `${name}: small line`, value: m.small, preview, optional: true }) || undefined;
+    }
+    seen.set(m, out);
+    return out;
+  };
+
+  const sectors = SECTORS.map((s) => {
+    const group = s.tag;
+    const at = (q: string) => `scene=${s.id}&${q}`;
+    const next: SectorScene = { ...s, tag: say({ key: `${s.id}.tag`, group, label: "Business name", value: s.tag, preview: at("moment=0") }) };
+    next.hero = moment(`${s.id}.hero`, group, "Main headline", s.hero, at("moment=1"));
+    next.more = s.more?.map((m, i) => moment(`${s.id}.more${i}`, group, `Next loop headline ${i + 1}`, m, at(`moment=1&turn=${i + 1}`)));
+    next.proof = moment(`${s.id}.proof`, group, "Proof", s.proof, at("moment=2"));
+    if (s.timed) {
+      next.timed = Object.fromEntries((Object.entries(s.timed) as [Daypart, { hero: Moment; proof: Moment }][]).map(([part, t]) => {
+        const words = part === "morning" && s.id === "coffee" ? "Morning headline" : "Rush-hour headline";
+        return [part, {
+          hero: moment(`${s.id}.${part}`, group, words, t.hero, at(`moment=1&at=${part}`)),
+          proof: moment(`${s.id}.proof`, group, "Proof", t.proof, at(`moment=2&at=${part}`)),
+        }];
+      }));
+    }
+    next.qr = { ...s.qr, label: say({ key: `${s.id}.cta`, group, label: s.cta ? "Call to action: plain instruction (used on QR codes)" : "Call to action", value: s.qr.label, preview: at("moment=3") }) };
+    if (s.cta) {
+      next.cta = {
+        lines: s.cta.lines.map((value, i) => say({ key: `${s.id}.cta.line${i}`, group, label: "Call to action: headline", value, preview: at("moment=3") })),
+        sub: say({ key: `${s.id}.cta.sub`, group, label: "Call to action: line under it", value: s.cta.sub, preview: at("moment=3") }),
+      };
+    }
+    return next;
+  });
+
+  const reels = [FET_REEL, FET_INSTALL].map((r) => {
+    const group = r === FET_REEL ? "Fuel Eco Tech: 3D film captions" : "Fuel Eco Tech: installation film captions";
+    const preview = `scene=${r.id}`;
+    return {
+      ...r,
+      captions: r.captions.map((c, i) => ({
+        ...c,
+        line1: say({ key: `${r.id}.c${i}.title`, group, label: `Caption ${i + 1}: title`, value: c.line1, preview }),
+        line2: c.line2 === undefined ? undefined : say({ key: `${r.id}.c${i}.line`, group, label: `Caption ${i + 1}: second line`, value: c.line2, preview, optional: true }),
+        sub: c.sub?.map((value, n) => say({ key: `${r.id}.c${i}.sub${n}`, group, label: `Caption ${i + 1}: line ${n + 2}`, value, preview, optional: true })).filter((l) => l.trim()),
+      })),
+    };
+  });
+
+  const group = "Ticker";
+  const ticker = [
+    ...TICKER_LINES.map((value, i) => say({ key: `ticker.${i}`, group, label: `Line ${i + 1}`, value, preview: "scene=ident", optional: true })),
+    ...Array.from({ length: EXTRA_TICKER_LINES }, (_, i) => say({ key: `ticker.extra${i}`, group, label: `Extra line ${i + 1}`, value: "", preview: "scene=ident", optional: true })),
+  ].filter((l) => l.trim());
+
+  const credentials = CREDENTIALS.map((c, i) => ({
+    name: say({ key: `cred.${i}.name`, group: "Credentials", label: `Credential ${i + 1}: name`, value: c.name, preview: "scene=proof" }),
+    what: say({ key: `cred.${i}.what`, group: "Credentials", label: `Credential ${i + 1}: what it covers`, value: c.what, preview: "scene=proof", optional: true }),
+  }));
+
+  const uiField = (key: keyof typeof UI, group: string, label: string, preview: string, optional = false) =>
+    say({ key: `ui.${key}`, group, label, value: UI[key], preview, optional });
+  const ui: typeof UI = {
+    ident: uiField("ident", "Opening", "Line under VITORRA", "scene=ident"),
+    welcomeLabel: uiField("welcomeLabel", "Reception welcome", "Small label", "scene=ident&mode=tv"),
+    welcomeLine: uiField("welcomeLine", "Reception welcome", "Line when reception leaves it blank", "scene=ident&mode=tv"),
+    proofHeading: uiField("proofHeading", "Credentials", "Heading", "scene=proof"),
+    visitTag: uiField("visitTag", "Visit (TV and projector)", "Small label", "scene=visit&mode=tv"),
+    visit1: uiField("visit1", "Visit (TV and projector)", "Headline: line 1", "scene=visit&mode=tv"),
+    visit2: uiField("visit2", "Visit (TV and projector)", "Headline: line 2", "scene=visit&mode=tv"),
+    roadTag: uiField("roadTag", "Visit (street screen)", "Small label", "scene=visit"),
+    road1: uiField("road1", "Visit (street screen)", "Headline: line 1", "scene=visit"),
+    road2: uiField("road2", "Visit (street screen)", "Headline: line 2", "scene=visit"),
+    scan: uiField("scan", "Small labels", "Under QR codes", "scene=visit&mode=tv"),
+    news: uiField("news", "Small labels", "Ticker label", "scene=ident"),
+    advert: uiField("advert", "Small labels", "On paid adverts", "scene=ident"),
+  };
+
+  return { sectors, reels, ticker, credentials, ui };
+}
+
+/** Where the console keeps unsaved wording for its live preview. */
+export const COPY_DRAFT_KEY = "vitorra-screen-copy-draft";
+
+/** Every editable line, for the console. */
+export function copyFields(): CopyField[] {
+  const fields: CopyField[] = [];
+  walk((f) => { fields.push(f); return f.value; });
+  return fields;
+}
+
+/** The story's words with the saved changes applied. An empty value hides a line that can be hidden. */
+export function applyCopy(changes: Record<string, string>): ScreenCopy {
+  return walk((f) => (f.key in changes && (changes[f.key].trim() || f.optional) ? changes[f.key] : f.value));
+}
+
 /** The brand frame's montage, faint behind the name. */
 export const MONTAGE = ["/images/stock/kampala-skyline.jpg", "/images/stock/port-aerial.jpg", "/images/stock/coffee-roaster.jpg"];
 
@@ -355,6 +503,9 @@ export const CREDENTIALS = [
   { name: "Zurich Insurance", what: "Product liability" },
 ];
 
+/** The default wording, before any changes load. Kept below everything it reads. */
+export const DEFAULT_COPY = applyCopy({});
+
 /** Seconds each kind of scene holds — long enough to watch the film and read
  *  every moment, the pace of a lobby film rather than a slideshow. */
 export function durationOf(scene: Scene, mode: Mode): number {
@@ -370,14 +521,13 @@ export function durationOf(scene: Scene, mode: Mode): number {
 }
 
 /** The loop for a mode. The welcome is indoor-only: a visitor's name never goes on the street. */
-export function storyFor(mode: Mode, hasWelcome: boolean): Scene[] {
+export function storyFor(mode: Mode, hasWelcome: boolean, copy: ScreenCopy = DEFAULT_COPY): Scene[] {
   return [
     { kind: "ident", id: "ident" },
     ...(mode !== "street" && hasWelcome ? [{ kind: "welcome", id: "welcome" } as const] : []),
     // FET leads: the film of the device, a real fitting in Kampala, then the result.
-    FET_REEL,
-    FET_INSTALL,
-    ...SECTORS,
+    ...copy.reels,
+    ...copy.sectors,
     { kind: "proof", id: "proof" },
     { kind: "visit", id: "visit" },
   ];

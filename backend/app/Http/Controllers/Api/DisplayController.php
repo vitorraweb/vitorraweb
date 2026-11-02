@@ -21,8 +21,45 @@ class DisplayController extends Controller
 {
     public function show(): JsonResponse
     {
-        return response()->json(['data' => ['welcome' => $this->welcome()]])
+        return response()->json(['data' => ['welcome' => $this->welcome(), 'copy' => (object) $this->copy()]])
             ->header('Cache-Control', 'public, max-age=30');
+    }
+
+    /**
+     * Replace the screens' edited wording. Only the changes are stored, keyed by
+     * the field names the console sends, so anything left alone keeps following
+     * the default in the code. An empty value hides that line.
+     */
+    public function updateCopy(Request $request): JsonResponse
+    {
+        $request->validate(['copy' => ['present', 'array', 'max:300']]);
+
+        // Field names contain dots, so these are checked by hand: the validator
+        // would read each dot as a level of nesting.
+        $copy = [];
+        foreach ($request->input('copy') as $key => $value) {
+            abort_unless(preg_match('/^[a-z0-9_.-]{1,80}$/', (string) $key), 422, 'Unknown field.');
+            $value = trim((string) $value);
+            abort_if(is_array($value) || mb_strlen($value) > 200 || preg_match('/[<>{}]/', $value), 422, 'Keep each line plain text, under 200 characters.');
+            $copy[$key] = $value;
+        }
+
+        $before = $this->copy();
+        Setting::put(['display_copy' => $copy]);
+        $changed = array_keys(array_diff_assoc($copy, $before) + array_diff_assoc($before, $copy));
+        if ($changed) {
+            Audit::log('display.copy', 'Changed screen wording: '.collect($changed)->map(fn ($k) => $k.' → "'.($copy[$k] ?? '(default)').'"')->implode('; '));
+        }
+
+        return response()->json(['data' => ['copy' => (object) $copy]]);
+    }
+
+    /** @return array<string, string> */
+    private function copy(): array
+    {
+        $copy = Setting::get('display_copy', []);
+
+        return is_array($copy) ? $copy : [];
     }
 
     public function updateWelcome(Request $request): JsonResponse

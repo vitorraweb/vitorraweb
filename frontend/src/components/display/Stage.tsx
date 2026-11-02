@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { API_BASE_URL, CONTACT_PHONE } from "@/lib/constants";
 import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
-import { CREDENTIALS, FILMS, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, TICKER_LINES, daypartAt, durationOf, storyFor, type Daypart, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
+import { COPY_DRAFT_KEY, DEFAULT_COPY, FILMS, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, storyFor, type Daypart, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
 
 /* ─── The stage ───────────────────────────────────────────────────────────────
    A full-screen loop for the reception TV and the street-facing screen.
@@ -36,20 +36,23 @@ const THEMES = {
   projector:      { "--vx-bg": "#000000", "--vx-fg": "#FFFFFF", "--vx-gold": "#FFCC33", "--vx-muted": "#FFFFFF", "--vx-track": "rgba(255,255,255,0.4)", "--vx-line": "#FFCC33" },
 } as const;
 
-export function Stage({ mode, pin, at, hold, turn }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number }) {
+export function Stage({ mode, pin, at, hold, turn, draft }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number; draft?: boolean }) {
   return (
     <div className="fixed inset-0 grid place-items-center" style={{ background: "#000" }}>
       {/* The 1920×1080 frame: everything inside measures itself against this box. */}
       <div className="relative overflow-hidden" style={{ width: "min(100vw, 177.778vh)", height: "min(100vh, 56.25vw)", containerType: "size" }}>
-        {pin === "check" ? <ProjectorCheck /> : <Loop mode={mode} pin={pin} at={at} hold={hold} turn={turn} />}
+        {pin === "check" ? <ProjectorCheck /> : <Loop mode={mode} pin={pin} at={at} hold={hold} turn={turn} draft={draft} />}
       </div>
     </div>
   );
 }
 
-function Loop({ mode, pin, at, hold, turn = 0 }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number }) {
-  const welcome = useWelcome(mode);
-  const story = useMemo(() => storyFor(mode, !!welcome), [mode, welcome]);
+const CopyContext = createContext(DEFAULT_COPY);
+
+function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number; draft?: boolean }) {
+  const { welcome, changes } = useScreenData(mode, draft);
+  const copy = useMemo(() => applyCopy(changes), [changes]);
+  const story = useMemo(() => storyFor(mode, !!welcome, copy), [mode, welcome, copy]);
   const [i, setI] = useState(0);
   const [loop, setLoop] = useState(0);
   const pinned = pin ? story.findIndex((s) => s.id === pin) : -1;
@@ -97,6 +100,7 @@ function Loop({ mode, pin, at, hold, turn = 0 }: { mode: Mode; pin?: string | nu
   const look = scene.kind === "sector" ? lookOf(scene, moment, daypart, loop + turn) : null;
 
   return (
+    <CopyContext.Provider value={copy}>
     <div className="vx absolute inset-0 overflow-hidden select-none cursor-none" data-mode={mode} data-daypart={daypart}
       style={{ ...theme, "--vx-accent": accent, background: "var(--vx-bg)", color: "var(--vx-fg)", transition: "background-color 1.2s ease, color 1.2s ease" } as unknown as React.CSSProperties}>
       <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} projector={projector} moment={moment} look={look} night={daypart === "night"} />
@@ -123,6 +127,7 @@ function Loop({ mode, pin, at, hold, turn = 0 }: { mode: Mode; pin?: string | nu
       <UtilityBar big={big} inset={projector ? "7.5cqmin" : "5cqmin"} />
       </div>
     </div>
+    </CopyContext.Provider>
   );
 }
 
@@ -252,6 +257,7 @@ function TopBar({ hidden }: { hidden: boolean }) {
 const BAND = { bg: "#060608", fg: "rgba(255,255,255,0.86)", dim: "rgba(255,255,255,0.56)", gold: "#E9C766" };
 
 function UtilityBar({ big, inset }: { big: boolean; inset: string }) {
+  const { ticker, ui } = useContext(CopyContext);
   const { time } = useKioskClock();
   const [today, setToday] = useState("");
   useEffect(() => {
@@ -268,12 +274,12 @@ function UtilityBar({ big, inset }: { big: boolean; inset: string }) {
   const items = useMemo(() => {
     const news = headlines.map((h) => h.title);
     const out: string[] = [];
-    for (let i = 0; i < Math.max(news.length, TICKER_LINES.length); i++) {
-      if (TICKER_LINES[i]) out.push(TICKER_LINES[i]);
+    for (let i = 0; i < Math.max(news.length, ticker.length); i++) {
+      if (ticker[i]) out.push(ticker[i]);
       if (news[i]) out.push(news[i]);
     }
     return out;
-  }, [headlines]);
+  }, [headlines, ticker]);
   // A steady reading speed whatever the number of items: about 9 characters a second.
   const seconds = Math.max(40, Math.round(items.join("   ").length / 9));
 
@@ -294,7 +300,7 @@ function UtilityBar({ big, inset }: { big: boolean; inset: string }) {
         {"   "}EUR <span style={{ color: BAND.fg }}>{fx.ugxPerEur ? Math.round(fx.ugxPerEur).toLocaleString("en-US") : "—"}</span>
       </span>
       {/* The one touch of gold on the bar */}
-      <span className="shrink-0" style={{ color: BAND.gold, fontWeight: 700 }}>Vitorra News</span>
+      <span className="shrink-0" style={{ color: BAND.gold, fontWeight: 700 }}>{ui.news}</span>
       <div className="relative flex-1 min-w-0 overflow-hidden flex items-center" style={{ marginLeft: "-1.6cqmin", color: "rgba(255,255,255,0.72)", maskImage: "linear-gradient(90deg, transparent 0, #000 3%, #000 96%, transparent 100%)" }}>
         <div className="vx-ticker flex items-center w-max" style={{ ["--dur" as string]: `${seconds}s` }}>
           {[0, 1].map((copy) => (
@@ -327,6 +333,7 @@ function Progress({ story, index, seconds, loop }: { story: Scene[]; index: numb
 /* ── Scenes ─────────────────────────────────────────────────────────────── */
 
 function Ident() {
+  const { ui } = useContext(CopyContext);
   return (
     <div className="self-end w-full" style={{ paddingBottom: "3cqmin" }}>
       <div className="vx-rise" style={{ ["--d" as string]: "0.1s" }}>
@@ -335,23 +342,24 @@ function Ident() {
       <h1 className="vx-mega font-sans vx-rise" style={{ fontSize: "38cqmin", fontWeight: 800, lineHeight: 0.92, letterSpacing: "-0.05em", marginTop: "2cqmin", marginLeft: "-0.06em", ["--d" as string]: "0.5s" }}>VITORRA</h1>
       <div className="vx-draw" style={{ width: "26cqmin", height: "0.6cqmin", background: "var(--vx-accent)", margin: "2.4cqmin 0", ["--d" as string]: "1.2s" }} />
       <h2 className="vx-mega font-sans vx-rise" style={{ fontSize: "5cqmin", fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: "var(--vx-accent)", ["--d" as string]: "1.5s" }}>
-        CONNECTING INNOVATION WITH BUSINESS OPPORTUNITIES
+        {ui.ident}
       </h2>
     </div>
   );
 }
 
 function WelcomeScene({ welcome }: { welcome: NonNullable<Welcome> }) {
+  const { ui } = useContext(CopyContext);
   const chars = Array.from(welcome.name).length;
   return (
     <div className="self-end w-full" style={{ paddingBottom: "4cqmin" }}>
-      <p className="vx-rise uppercase" style={{ fontSize: "1.6cqmin", letterSpacing: "0.42em", color: "var(--vx-gold)", ["--d" as string]: "0.2s" }}>Today at Vitorra</p>
+      <p className="vx-rise uppercase" style={{ fontSize: "1.6cqmin", letterSpacing: "0.42em", color: "var(--vx-gold)", ["--d" as string]: "0.2s" }}>{ui.welcomeLabel}</p>
       <h1 className="font-sans" style={{ fontWeight: 600, letterSpacing: "-0.035em", lineHeight: 1.02, marginTop: "2.4cqmin" }}>
         <span className="vx-rise block" style={{ fontSize: "11cqmin", ["--d" as string]: "0.45s" }}>Welcome,</span>
         <span className="vx-rise block" style={{ color: "var(--vx-gold)", fontSize: `min(11cqmin, calc(150cqw / ${Math.max(chars, 9)}))`, ["--d" as string]: "0.8s" }}>{welcome.name}</span>
       </h1>
       <p className="vx-rise" style={{ fontSize: "2.6cqmin", color: "var(--vx-muted)", marginTop: "3.4cqmin", maxWidth: "70cqmin", ["--d" as string]: "1.2s" }}>
-        {welcome.line || "Please make yourself comfortable. Someone will be with you shortly."}
+        {welcome.line || ui.welcomeLine}
       </p>
     </div>
   );
@@ -385,7 +393,7 @@ function ReelView({ r, street, panel = false }: { r: ReelScene; street: boolean;
         <h2 key={shown.from} className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.04, marginTop: "1.8cqmin", fontSize: street ? "8cqmin" : "7.4cqmin" }}>
           <span className="block">{shown.line1}</span>
           {shown.line2 && <span className="block" style={{ color: "var(--vx-accent)" }}>{shown.line2}</span>}
-          {shown.sub?.map((l) => <span key={l} className="block" style={{ color: "var(--vx-accent)", fontSize: "4.2cqmin", fontWeight: 700, letterSpacing: "-0.015em", lineHeight: 1.2, marginTop: l === shown.sub?.[0] ? "1.2cqmin" : 0 }}>{l}</span>)}
+          {shown.sub?.map((l, i) => <span key={i} className="block" style={{ color: "var(--vx-accent)", fontSize: "4.2cqmin", fontWeight: 700, letterSpacing: "-0.015em", lineHeight: 1.2, marginTop: i === 0 ? "1.2cqmin" : 0 }}>{l}</span>)}
         </h2>
       </div>
     </div>
@@ -450,7 +458,7 @@ function CallToAction({ s, road }: { s: SectorScene; road: boolean }) {
       <div className="min-w-0">
         <div className="vx-rise" style={{ ["--d" as string]: "0.1s" }}><SectorTag>{s.tag}</SectorTag></div>
         <h2 className="vx-mega font-sans vx-rise" style={{ fontSize: `${fitSize(lines, road ? 150 : 118, 15)}cqmin`, fontWeight: 800, lineHeight: 0.98, letterSpacing: "-0.035em", marginTop: "2cqmin", textTransform: "uppercase", ["--d" as string]: "0.3s" }}>
-          {lines.map((l) => <span key={l} className="block">{l}</span>)}
+          {lines.map((l, i) => <span key={i} className="block">{l}</span>)}
         </h2>
         {s.cta && <div className="font-sans vx-rise" style={{ fontSize: "5cqmin", fontWeight: 700, letterSpacing: "-0.01em", marginTop: "1.8cqmin", ["--d" as string]: "0.5s" }}>{s.cta.sub}</div>}
         {road && <div className="vx-mega font-sans vx-rise" style={{ fontSize: "7.4cqmin", fontWeight: 800, letterSpacing: "-0.02em", marginTop: "2.4cqmin", color: "var(--vx-accent)", ["--d" as string]: "0.7s" }}>{s.url}</div>}
@@ -481,7 +489,7 @@ function MomentView({ tag, m }: { tag: string; m: Moment }) {
       {m.number && <BigNumber n={m.number} />}
       <h2 className="vx-mega font-sans" style={{ fontSize: `${size}cqmin`, fontWeight: 800, lineHeight: 1, letterSpacing: "-0.035em", marginTop: m.number ? "0.6cqmin" : "2cqmin" }}>
         {m.lines.map((l, i) => (
-          <span key={l} className="vx-rise block" style={{ color: m.accent?.includes(i) ? "var(--vx-accent)" : undefined, ["--d" as string]: `${0.3 + i * 0.3}s` }}>{l}</span>
+          <span key={i} className="vx-rise block" style={{ color: m.accent?.includes(i) ? "var(--vx-accent)" : undefined, ["--d" as string]: `${0.3 + i * 0.3}s` }}>{l}</span>
         ))}
       </h2>
       {m.small && (
@@ -503,12 +511,13 @@ function BigNumber({ n }: { n: NonNullable<Moment["number"]> }) {
 
 /* One credential at a time, large: six names in a grid is a slide; one name is a statement. */
 function Proof({ seconds }: { seconds: number }) {
+  const { credentials, ui } = useContext(CopyContext);
   const t = useElapsed();
-  const n = Math.min(CREDENTIALS.length - 1, Math.floor(t / (seconds / CREDENTIALS.length)));
-  const c = CREDENTIALS[n];
+  const n = Math.min(credentials.length - 1, Math.floor(t / (seconds / credentials.length)));
+  const c = credentials[n];
   return (
     <div className="self-end w-full" style={{ paddingBottom: "3cqmin" }}>
-      <h2 className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1, fontSize: "4.6cqmin", textTransform: "uppercase", color: "var(--vx-gold)", ["--d" as string]: "0.1s" }}>Proof, not promises</h2>
+      <h2 className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1, fontSize: "4.6cqmin", textTransform: "uppercase", color: "var(--vx-gold)", ["--d" as string]: "0.1s" }}>{ui.proofHeading}</h2>
       <div key={n}>
         <div className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.02, marginTop: "3cqmin", fontSize: "15cqmin" }}>{c.name}</div>
         <div className="font-sans vx-rise" style={{ fontSize: "4cqmin", fontWeight: 600, marginTop: "2cqmin", ["--d" as string]: "0.25s" }}>{c.what}</div>
@@ -518,13 +527,14 @@ function Proof({ seconds }: { seconds: number }) {
 }
 
 function Visit({ panel = false, road = false }: { panel?: boolean; road?: boolean }) {
+  const { ui } = useContext(CopyContext);
   return (
     <div className="w-full flex items-end justify-between" style={{ gap: "5cqmin" }}>
       <div className="vx-rise min-w-0" style={{ ["--d" as string]: "0.15s", ...(panel ? PANEL : {}) }}>
-        <SectorTag>{road ? "Vitorra" : "Visit us"}</SectorTag>
+        <SectorTag>{road ? ui.roadTag : ui.visitTag}</SectorTag>
         <h2 className="vx-mega font-sans" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.02, marginTop: "2cqmin", fontSize: "11cqmin" }}>
-          <span className="vx-rise block" style={{ ["--d" as string]: "0.4s" }}>{road ? "YOU'LL FIND US HERE" : "FIND VITORRA"}</span>
-          <span className="vx-rise block" style={{ color: "var(--vx-accent)", ["--d" as string]: "0.7s" }}>{road ? "PADRE PIO HOUSE" : "ON LUMUMBA AVENUE"}</span>
+          <span className="vx-rise block" style={{ ["--d" as string]: "0.4s" }}>{road ? ui.road1 : ui.visit1}</span>
+          <span className="vx-rise block" style={{ color: "var(--vx-accent)", ["--d" as string]: "0.7s" }}>{road ? ui.road2 : ui.visit2}</span>
         </h2>
         <div className="vx-rise flex flex-wrap items-baseline" style={{ marginTop: "2.2cqmin", columnGap: "5cqmin", rowGap: "1.2cqmin", ["--d" as string]: "1.1s" }}>
           <Contact label="Call" value={CONTACT_PHONE} />
@@ -546,6 +556,7 @@ function Contact({ label, value }: { label: string; value: string }) {
 }
 
 function QrCard({ src, label, size, delay, whatsapp = false, card }: { src: string; label: string; size: string; delay: string; whatsapp?: boolean; card?: React.CSSProperties }) {
+  const { ui } = useContext(CopyContext);
   return (
     <div className="vx-rise flex flex-col items-center shrink-0" style={{ gap: "1.4cqmin", ["--d" as string]: delay, ...card, ...(card ? { padding: "1.4cqmin" } : {}) }}>
       <div className="relative shrink-0 bg-white" style={{ width: size, height: size, padding: "1.2cqmin", borderRadius: "1.4cqmin", boxShadow: card ? undefined : "0 2cqmin 6cqmin rgba(0,0,0,0.45)", border: "1px solid rgba(0,0,0,0.08)" }}>
@@ -557,7 +568,7 @@ function QrCard({ src, label, size, delay, whatsapp = false, card }: { src: stri
           </span>
         )}
       </div>
-      <p className="font-sans" style={{ fontSize: "2.6cqmin", fontWeight: 800, letterSpacing: "0.02em", textTransform: "uppercase" }}>Scan with your phone</p>
+      <p className="font-sans" style={{ fontSize: "2.6cqmin", fontWeight: 800, letterSpacing: "0.02em", textTransform: "uppercase" }}>{ui.scan}</p>
     </div>
   );
 }
@@ -609,12 +620,13 @@ function dueAdvert(ads: Advert[], played: Record<number, number>, now: number): 
 }
 
 function AdvertFilm({ ad, onEnd }: { ad: Advert; onEnd: () => void }) {
+  const { ui } = useContext(CopyContext);
   // If a film stalls on an unattended screen, the loop still moves on.
   useEffect(() => { const t = setTimeout(onEnd, (ad.seconds + 3) * 1000); return () => clearTimeout(t); }, [ad, onEnd]);
   return (
     <div className="absolute inset-0 z-[5] bg-black">
       <video src={ad.url} autoPlay muted playsInline onEnded={onEnd} onError={onEnd} className="h-full w-full object-contain" />
-      <span className="absolute font-sans" style={{ right: "5cqmin", bottom: "6.4cqmin", fontSize: "1.5cqmin", fontWeight: 600, letterSpacing: "0.04em", color: "rgba(255,255,255,0.7)" }}>Advertisement</span>
+      <span className="absolute font-sans" style={{ right: "5cqmin", bottom: "6.4cqmin", fontSize: "1.5cqmin", fontWeight: 600, letterSpacing: "0.04em", color: "rgba(255,255,255,0.7)" }}>{ui.advert}</span>
     </div>
   );
 }
@@ -644,19 +656,34 @@ function useDaypart(forced?: Daypart | null): Daypart {
   return forced ?? part;
 }
 
-/** The welcome set by reception (Operations → Reception screen). Indoors only — never fetched for the street screen. */
-function useWelcome(mode: Mode): Welcome {
-  const [w, setW] = useState<Welcome>(null);
+/** What the screen reads from the server every 30 seconds: reception's welcome (indoors only,
+ *  never shown on the street) and any wording changed in the console, so a change reaches the
+ *  screens without a reload. `draft` previews unsaved edits from the console's editor. */
+function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes: Record<string, string> } {
+  const [welcome, setWelcome] = useState<Welcome>(null);
+  const [changes, setChanges] = useState<Record<string, string>>({});
   useEffect(() => {
-    if (mode === "street") return;
+    if (draft) {
+      const read = () => { try { setChanges(JSON.parse(localStorage.getItem(COPY_DRAFT_KEY) ?? "{}")); } catch { setChanges({}); } };
+      const first = setTimeout(read, 0);
+      window.addEventListener("storage", read);
+      return () => { clearTimeout(first); window.removeEventListener("storage", read); };
+    }
     let live = true;
     const load = () => fetch(`${API_BASE_URL}/display`, { headers: { Accept: "application/json" } })
-      .then((r) => r.json()).then((j) => { if (live) setW(j?.data?.welcome ?? null); }).catch(() => {});
-    load();
+      .then((r) => r.json()).then((j) => {
+        if (!live) return;
+        if (mode !== "street") setWelcome(j?.data?.welcome ?? null);
+        setChanges((old) => {
+          const next = j?.data?.copy ?? {};
+          return JSON.stringify(old) === JSON.stringify(next) ? old : next;
+        });
+      }).catch(() => {});
+    void load();
     const t = setInterval(load, 30_000);
     return () => { live = false; clearInterval(t); };
-  }, [mode]);
-  return w;
+  }, [mode, draft]);
+  return { welcome, changes };
 }
 
 /* ── Screen care: full screen and never asleep ─────────────────────────────
