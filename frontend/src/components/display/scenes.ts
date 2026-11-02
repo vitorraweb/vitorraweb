@@ -108,7 +108,8 @@ export type ReelScene = {
   /** Seconds the scene holds: the film's own length. */
   length: number;
   /** Captions shown between `from` and `to` seconds; none while the film shows its own titles. */
-  captions: { from: number; to: number; line1: string; line2: string }[];
+  /** `sub` shows as smaller accent lines under a large title, in place of line2. */
+  captions: { from: number; to: number; line1: string; line2?: string; sub?: string[] }[];
 };
 
 export type Scene =
@@ -290,9 +291,12 @@ export const FET_REEL: ReelScene = {
   accent: "#3DF0A0",
   length: 27.5,
   captions: [
-    { from: 2.6, to: 9.2, line1: "Meet Fuel Eco Tech.", line2: "Precision-built for your fuel line." },
-    { from: 9.8, to: 14.2, line1: "Fitted between the fuel pump", line2: "and the filter." },
-    { from: 14.8, to: 20.4, line1: "No engine modification.", line2: "From a 1.0L car to a 16L truck." },
+    // "German-tested", and 13.9% from one test: the evidence does not support
+    // "German-engineered" or "up to 15%" (the top of one vehicle's range, with new
+    // injectors and EGR fitted first). See PROGRESS.md.
+    { from: 2.6, to: 9.2, line1: "GERMAN-TESTED TECHNOLOGY", sub: ["13.9% LESS FUEL IN ONE VEHICLE TEST"] },
+    { from: 9.8, to: 14.2, line1: "EASY INSTALLATION", sub: ["FITTED DIRECTLY INTO THE FUEL LINE", "NO ENGINE MODIFICATION OR ECU REMAPPING REQUIRED"] },
+    { from: 14.8, to: 20.4, line1: "ENGINEERED FOR PETROL AND DIESEL", sub: ["PERSONAL VEHICLES, PUBLIC TRANSPORT, CONSTRUCTION", "& HEAVY EQUIPMENT, MARINE, FLEETS & LOGISTICS"] },
   ],
 };
 

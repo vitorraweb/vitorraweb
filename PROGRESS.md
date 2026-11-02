@@ -2113,6 +2113,17 @@ Marketing's reviewers proposed shorter, benefit-led wording, and each line was c
 
 ---
 
+## Screen wording corrections (2 November 2026) — live
+
+From the marked-up design sheet (`1 1.jpg`). Applied as written: the VITORRA line (CONNECTING INNOVATION WITH BUSINESS OPPORTUNITIES), EASY INSTALLATION with its two lines, and the list of uses (backed by the manufacturer's presentation).
+
+**Changed to what the evidence supports**
+- **SAVES UPTO 15%\* ON FUEL became 13.9% LESS FUEL IN ONE VEHICLE TEST.** 15% is the top of one vehicle's logged range (VW T5, -13% to -15%), with injectors and EGR renewed just before fitting, and the sheet's asterisk has no footnote. Our own savings overview shows about 7% on the two Actros trucks.
+- **GERMAN-ENGINEERED TECHNOLOGY became GERMAN-TESTED TECHNOLOGY.** Nothing on file says where the device is engineered; the CTI test and qm-solutions certification are German.
+- **ENGINEERED FOR EVERY ENGINE became ENGINEERED FOR PETROL AND DIESEL.** Fit depends on engine size, fuel line and injection system, and is confirmed by assessment.
+
+---
+
 ## Selling advert time on the street screen (2 November 2026) — on the website, hidden; server update pending
 
 Businesses pick a package, a start date, upload a 15-second video, book, pay by bank transfer and upload proof. Finance confirms the money, the team reviews the video, and approved adverts play on the street screen between scenes at their booked rate. Refused adverts stay on the list until Finance records the refund. Without the flag or a preview key, the page and its API answer 404, and it is in no menu for customers, sitemap or search result.

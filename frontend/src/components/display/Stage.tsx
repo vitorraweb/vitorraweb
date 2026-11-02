@@ -224,7 +224,7 @@ function Backdrops({ activeSector, kind, seconds, street, projector = false, mom
         ? "linear-gradient(90deg, rgba(9,9,10,0.88) 0%, rgba(9,9,10,0.45) 48%, rgba(9,9,10,0.15) 100%)"
         : "none" }} />
       <div className="absolute inset-0 pointer-events-none" style={{ background: kind === "reel"
-        ? "linear-gradient(0deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0) 46%), linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0) 12%)"
+        ? "linear-gradient(0deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.72) 26%, rgba(0,0,0,0) 54%), linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0) 12%)"
         : "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 22%), linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 14%)" }} />
 
       {/* After dark the picture settles lower, so a big screen never glares. */}
@@ -334,8 +334,8 @@ function Ident() {
       </div>
       <h1 className="vx-mega font-sans vx-rise" style={{ fontSize: "38cqmin", fontWeight: 800, lineHeight: 0.92, letterSpacing: "-0.05em", marginTop: "2cqmin", marginLeft: "-0.06em", ["--d" as string]: "0.5s" }}>VITORRA</h1>
       <div className="vx-draw" style={{ width: "26cqmin", height: "0.6cqmin", background: "var(--vx-accent)", margin: "2.4cqmin 0", ["--d" as string]: "1.2s" }} />
-      <h2 className="vx-mega font-sans vx-rise" style={{ fontSize: "7cqmin", fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: "var(--vx-accent)", ["--d" as string]: "1.5s" }}>
-        BUILT FOR WHAT MOVES EAST AFRICA
+      <h2 className="vx-mega font-sans vx-rise" style={{ fontSize: "5cqmin", fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: "var(--vx-accent)", ["--d" as string]: "1.5s" }}>
+        CONNECTING INNOVATION WITH BUSINESS OPPORTUNITIES
       </h2>
     </div>
   );
@@ -384,7 +384,8 @@ function ReelView({ r, street, panel = false }: { r: ReelScene; street: boolean;
         <SectorTag>{r.tag}</SectorTag>
         <h2 key={shown.from} className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.04, marginTop: "1.8cqmin", fontSize: street ? "8cqmin" : "7.4cqmin" }}>
           <span className="block">{shown.line1}</span>
-          <span className="block" style={{ color: "var(--vx-accent)" }}>{shown.line2}</span>
+          {shown.line2 && <span className="block" style={{ color: "var(--vx-accent)" }}>{shown.line2}</span>}
+          {shown.sub?.map((l) => <span key={l} className="block" style={{ color: "var(--vx-accent)", fontSize: "4.2cqmin", fontWeight: 700, letterSpacing: "-0.015em", lineHeight: 1.2, marginTop: l === shown.sub?.[0] ? "1.2cqmin" : 0 }}>{l}</span>)}
         </h2>
       </div>
     </div>
