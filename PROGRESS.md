@@ -34,7 +34,7 @@
 | **Online payments — Flutterwave** (cards + MTN/Airtel) across FET reserve, invoices, installments, coffee | ✅ **Built & tested** — needs activation (keys + webhook secret) |
 | **Multilingual careers portal** (EN / SW / **FR** pilot) | ✅ **Built** |
 | **Zero-cost upgrades** (keyless FX, auto holidays, phone validation) | ✅ **Built** |
-| **Reception and street screen** (`/display`) | 🔨 **Rebuilt for 1920×1080 as outdoor-style advertising** (2 Nov), not yet deployed — new films to follow |
+| **Reception and street screen** (`/display`) | ✅ **Rebuilt for 1920×1080 as outdoor-style advertising** (live 2 Nov) — reload each screen once; new films to follow |
 | **Site could not reach the API** (blocked sign-in + all forms) | ✅ **Fixed & live** — API now served through the site itself |
 | **Leave approval — two people required** (Operations + Finance), nobody signs their own | ✅ **Live** — Joseph Rwabu holds the Finance signature |
 | **Staff offboarding** (`staff:offboard`) + departed accounts can no longer sign in | ✅ **Live** |
@@ -2048,7 +2048,7 @@ Server: `composer install` (new `firebase/php-jwt`), `migrate --force` (meetings
 
 ---
 
-## The screen rebuilt as outdoor advertising (2 November 2026) — built, not yet deployed
+## The screen rebuilt as outdoor advertising (2 November 2026) — live
 
 From John's research on current digital outdoor screens: the screen read as a website on a wall (glass cards, four statements in turn). It now reads like the big city screens: dark colour, one idea, type you can read from across the road in two or three seconds.
 
