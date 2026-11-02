@@ -2117,7 +2117,7 @@ Marketing's reviewers proposed shorter, benefit-led wording, and each line was c
 
 **Operations → Screen wording** (`/admin/screen-wording`, `screen_ads` module): 105 lines across 13 groups, in screen order, with a live preview that updates while typing, for the street screen, TV or projector. **Publish** sends them, and running screens change within about a minute with no reload. Every change goes in the activity log. "Use original" reverts one line, and leaving an optional line empty hides it. Long lines shrink to fit.
 
-Numbers (13.9%, 36), prices, web addresses, QR codes and pictures are deliberately not editable. A warning appears on risky wording (savings ranges, "guarantee", Ugandan approval for SEAL, coffee retail or export-ready, warranty, delivery promises); it advises and does not block.
+Numbers (13.9%, 36), prices, web addresses, QR codes and pictures are deliberately not editable. There are no claim warnings: John asked for them to be removed, so the person publishing is responsible for the wording.
 
 **Server:** pull, `route:cache` (new route). No migration.
 

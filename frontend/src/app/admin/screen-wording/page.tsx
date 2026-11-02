@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Loader2, RotateCcw, Send } from "lucide-react";
+import { Loader2, RotateCcw, Send } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/admin-ui";
 import { COPY_DRAFT_KEY, copyFields, type CopyField } from "@/components/display/scenes";
@@ -10,21 +10,7 @@ import { COPY_DRAFT_KEY, copyFields, type CopyField } from "@/components/display
    Change the words on the reception and street screens without a release. The
    preview shows unsaved edits; Publish sends them, and running screens pick them
    up within about a minute. Numbers, prices, links and pictures are not here on
-   purpose. Warnings advise; the person publishing decides.                   */
-
-const RULES: [RegExp, string][] = [
-  [/\bup\s?to\b|\d\s?%/i, "A saving must read as one test on one vehicle (13.9%, VW T5), never as a promise or a range."],
-  [/guarantee|always|every (engine|vehicle|time)|proven|certified|german.?engineered/i, "This is an absolute claim. Check we hold the evidence for it."],
-  [/\bnda\b|uganda.*approv|approved in uganda/i, "SEAL can only state its US FDA 510(k) clearance, not Ugandan approval."],
-  [/organic|ready for export|world.?ready|shop|buy now|order now/i, "Coffee is export only, from 1 tonne. Organic and export-ready claims are unconfirmed."],
-  [/warrant/i, "The warranty period is undecided: the catalogue and the website disagree."],
-  [/real.?time|no delays?|on time|every time|we.?ll get it there/i, "Logistics cannot promise delivery times, border clearance or live tracking."],
-  [/ugx\s?[\d,]+/i, "Prices are normally kept off the screens."],
-];
-
-function warningFor(text: string): string | null {
-  return RULES.find(([rule]) => rule.test(text))?.[1] ?? null;
-}
+   purpose.                                                                   */
 
 export default function ScreenWordingPage() {
   const fields = useMemo(() => copyFields(), []);
@@ -65,7 +51,6 @@ export default function ScreenWordingPage() {
     });
   };
   const blocked = fields.filter((f) => !f.optional && !current(f).trim());
-  const warnings = fields.filter((f) => f.key in edits && warningFor(current(f))).length;
 
   const publish = async () => {
     setBusy(true); setNote("");
@@ -86,7 +71,6 @@ export default function ScreenWordingPage() {
       </>} />
       {note && <p role="status" className="text-[13px] mb-3">{note}</p>}
       {blocked.length > 0 && <p role="alert" className="text-[13px] mb-3" style={{ color: "var(--o-danger)" }}>{blocked[0].group}, {blocked[0].label}: this line can&apos;t be empty.</p>}
-      {warnings > 0 && <p role="alert" className="text-[13px] mb-3 flex items-center gap-2"><AlertTriangle aria-hidden="true" className="w-4 h-4" style={{ color: "var(--o-danger)" }} />{warnings} {warnings === 1 ? "line needs" : "lines need"} a second look before publishing.</p>}
 
       {loading ? <Loader2 aria-label="Loading" className="w-5 h-5 animate-spin" /> : (
         <div className="grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-5 items-start">
@@ -99,7 +83,6 @@ export default function ScreenWordingPage() {
                 </summary>
                 <div className="p-4 space-y-3">
                   {list.map((f) => {
-                    const warn = f.key in edits ? warningFor(current(f)) : null;
                     return (
                       <label key={f.key} className="block">
                         <span className="flex items-center justify-between gap-2 text-[12.5px] mb-1">
@@ -107,7 +90,6 @@ export default function ScreenWordingPage() {
                           {f.key in edits && <button type="button" className="underline text-[12px]" onClick={(e) => { e.preventDefault(); edit(f, f.value); }}>Use original</button>}
                         </span>
                         <input value={current(f)} maxLength={200} onFocus={() => setPreview(f.preview)} onChange={(e) => edit(f, e.target.value)} className="c-input w-full" />
-                        {warn && <span className="block text-[12.5px] mt-1" style={{ color: "var(--o-danger)" }}>{warn}</span>}
                       </label>
                     );
                   })}
