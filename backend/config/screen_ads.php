@@ -5,14 +5,15 @@
 | Advertising on the street screen
 |--------------------------------------------------------------------------
 | The one place the prices live. The website reads them from the API and the
-| server recomputes every booking from them, so they cannot drift apart.
+| server takes every booking's price from here, so they cannot drift apart.
 |
-| Monthly price = base × duration factor × visibility factor × days factor,
-| rounded to the nearest UGX 1,000.
+| Prices: Finance's rate card (Vitorra_Weekly_Advertising_Booking_Calendar.xlsx,
+| Joseph Rwabu, 2 November 2026): fixed packages of 15-second plays. The sheet's
+| per-10-minute formula is marked unapproved and is deliberately not used.
 |
-| ⚠ ONLY base_ugx IS FINANCE-APPROVED. Every factor and plays_per_hour below is
-| a working example from the proposal or a placeholder. `enabled` must stay
-| false until Finance signs them off. See PROGRESS.md.
+| ⚠ plays_per_hour: the rate card is built on a 15-second play in a 4-minute
+| loop, which gives Trial and Standard 15 an hour. Growth and High Visibility
+| are PLACEHOLDERS until Finance gives their figures.
 */
 
 return [
@@ -21,38 +22,25 @@ return [
     'preview_key' => env('SCREEN_ADS_PREVIEW_KEY'),
     'site_url'    => env('FRONTEND_URL', 'https://vitorra.org'),
 
-    'base_ugx'      => 450000,  // Finance-approved: 15s, standard, 5 days a week, 30 days.
-    'campaign_days' => 30,
-    'lead_days'     => 3,       // Earliest start, to allow for payment and review.
+    'lead_days' => 3,       // Earliest start, to allow for payment and review.
 
-    // Seconds => factor. Longer films use more screen time.
-    'durations' => [
-        10 => 0.75,  // PLACEHOLDER: "lower tier", no figure agreed.
-        15 => 1.00,  // Finance-approved base.
-        30 => 1.50,  // Example.
+    'packages' => [
+        'trial'    => ['label' => 'Trial', 'price_ugx' => 150000, 'days' => 7, 'plays_per_hour' => 15],
+        'standard' => ['label' => 'Standard', 'price_ugx' => 450000, 'days' => 30, 'plays_per_hour' => 15],
+        'growth'   => ['label' => 'Growth', 'price_ugx' => 850000, 'days' => 30, 'plays_per_hour' => 30],             // plays: PLACEHOLDER
+        'high'     => ['label' => 'High Visibility', 'price_ugx' => 1600000, 'days' => 30, 'plays_per_hour' => 60],   // plays: PLACEHOLDER
     ],
 
-    // Behind the customer's words, each level is a number of plays an hour.
-    'visibility' => [
-        'standard' => ['label' => 'Standard', 'blurb' => 'Consistent visibility throughout the day', 'factor' => 1.00, 'plays_per_hour' => 4],
-        'high'     => ['label' => 'High Visibility', 'blurb' => 'Appears more frequently', 'factor' => 1.30, 'plays_per_hour' => 8],
-        'maximum'  => ['label' => 'Maximum Visibility', 'blurb' => 'Highest available exposure', 'factor' => 1.60, 'plays_per_hour' => 12],
-    ],
-
-    // Days a week => factor. 5, 6 and 7 are examples; 1 to 4 are placeholders.
-    'day_factors' => [1 => 0.40, 2 => 0.55, 3 => 0.70, 4 => 0.85, 5 => 1.00, 6 => 1.10, 7 => 1.20],
-
-    // When it runs. Choosing these does not change the price. Kampala time.
-    'periods' => [
-        'morning' => ['label' => 'Morning', 'hours' => '6am to 10am', 'from' => 6, 'to' => 10],
-        'midday'  => ['label' => 'Midday', 'hours' => '10am to 4pm', 'from' => 10, 'to' => 16],
-        'evening' => ['label' => 'Evening', 'hours' => '4pm to 9pm', 'from' => 16, 'to' => 21],
-    ],
+    // On screen every day of a campaign, Kampala time. The rate card assumes a
+    // 16-hour operating day; 6am to 10pm is a PLACEHOLDER until Finance sets the hours.
+    'on_air' => ['from' => 6, 'to' => 22, 'label' => '6am to 10pm'],
 
     'video' => [
+        // The only length the rate card prices. Longer films go to a quote.
+        'seconds' => 15,
         'max_mb' => 200,
         'min_width' => 1280,
-        // A film may be up to this many seconds off the length chosen.
+        // A film may be up to this many seconds off.
         'tolerance_seconds' => 1,
     ],
 ];

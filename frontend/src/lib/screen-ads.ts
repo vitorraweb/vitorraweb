@@ -1,49 +1,25 @@
-/* Advertising on the street screen. Prices come from the API (config/screen_ads.php
-   in the backend), so this file only does the sum. The server repeats it on every
-   booking and its answer is the one that counts. */
+/* Advertising on the street screen. Packages come from the API
+   (config/screen_ads.php in the backend), Finance's rate card. */
+
+export type Package = { id: string; label: string; price_ugx: number; days: number; plays_per_hour: number };
 
 export type Pricing = {
-  base_ugx: number;
-  campaign_days: number;
+  packages: Package[];
   lead_days: number;
-  durations: { seconds: number; factor: number }[];
-  visibility: { id: string; label: string; blurb: string; factor: number; plays_per_hour: number }[];
-  day_factors: Record<string, number>;
-  periods: { id: string; label: string; hours: string }[];
-  video: { max_mb: number; min_width: number; tolerance_seconds: number };
+  on_air: string;
+  video: { seconds: number; max_mb: number; min_width: number; tolerance_seconds: number };
 };
-
-export const DAYS = [
-  { id: "mon", short: "Mon" }, { id: "tue", short: "Tue" }, { id: "wed", short: "Wed" }, { id: "thu", short: "Thu" },
-  { id: "fri", short: "Fri" }, { id: "sat", short: "Sat" }, { id: "sun", short: "Sun" },
-];
-
-export const DAY_PRESETS = [
-  { label: "Weekdays", days: ["mon", "tue", "wed", "thu", "fri"] },
-  { label: "Weekend", days: ["sat", "sun"] },
-  { label: "Every day", days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] },
-];
-
-export function monthlyPrice(p: Pricing, seconds: number, visibility: string, days: number): number | null {
-  const d = p.durations.find((x) => x.seconds === seconds)?.factor;
-  const v = p.visibility.find((x) => x.id === visibility)?.factor;
-  const n = p.day_factors[String(days)];
-  if (d === undefined || v === undefined || n === undefined) return null;
-  return Math.round((p.base_ugx * d * v * n) / 1000) * 1000;
-}
 
 export type BookingView = {
   reference: string;
   status: string;
   company: string;
-  duration: number;
-  visibility: string;
+  package: string;
   plays_per_hour: number;
-  days: string[];
-  periods: string[];
+  on_air: string;
   start_date: string;
   end_date: string;
-  monthly_ugx: number;
+  price_ugx: number;
   proof_received: boolean;
   review_note: string | null;
   bank: { bank: string; account_name: string; branch: string; account_number: string; swift: string } | null;

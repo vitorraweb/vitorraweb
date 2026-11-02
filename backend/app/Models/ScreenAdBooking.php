@@ -28,8 +28,6 @@ class ScreenAdBooking extends Model
         self::APPROVED, self::REJECTED, self::REFUNDED, self::CANCELLED,
     ];
 
-    public const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-
     protected $guarded = ['id'];
 
     protected $hidden = ['access_token_hash', 'proof_path'];
@@ -37,7 +35,6 @@ class ScreenAdBooking extends Model
     protected function casts(): array
     {
         return [
-            'days' => 'array', 'periods' => 'array', 'pricing_snapshot' => 'array',
             'start_date' => 'date', 'end_date' => 'date',
             'proof_at' => 'datetime', 'payment_confirmed_at' => 'datetime',
             'reviewed_at' => 'datetime', 'refunded_at' => 'datetime',
@@ -68,13 +65,7 @@ class ScreenAdBooking extends Model
         $now = \Illuminate\Support\Carbon::instance(\DateTime::createFromInterface($at))->setTimezone('Africa/Kampala');
         if ($this->status !== self::APPROVED) return false;
         if ($now->toDateString() < $this->start_date->toDateString() || $now->toDateString() > $this->end_date->toDateString()) return false;
-        if (! in_array(strtolower($now->format('D')), $this->days, true)) return false;
 
-        foreach ($this->periods as $key) {
-            $p = config("screen_ads.periods.$key");
-            if ($p && $now->hour >= $p['from'] && $now->hour < $p['to']) return true;
-        }
-
-        return false;
+        return $now->hour >= config('screen_ads.on_air.from') && $now->hour < config('screen_ads.on_air.to');
     }
 }

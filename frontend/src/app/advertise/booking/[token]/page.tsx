@@ -60,7 +60,7 @@ export default function BookingPage({ params }: { params: Promise<{ token: strin
       {b.bank && (
         <section className="mt-10 border border-line rounded-edge p-6">
           <h2 className="t-label text-ink-muted">Pay by bank transfer</h2>
-          <p className="font-display text-[2.25rem] leading-none mt-4 tabular-nums">UGX {b.monthly_ugx.toLocaleString("en-US")}</p>
+          <p className="font-display text-[2.25rem] leading-none mt-4 tabular-nums">UGX {b.price_ugx.toLocaleString("en-US")}</p>
           <dl className="mt-6 grid grid-cols-[9rem_1fr] gap-y-2 t-body">
             <dt className="text-ink-muted">Bank</dt><dd>{b.bank.bank}, {b.bank.branch}</dd>
             <dt className="text-ink-muted">Account name</dt><dd>{b.bank.account_name}</dd>
@@ -79,10 +79,8 @@ export default function BookingPage({ params }: { params: Promise<{ token: strin
 
       <dl className="mt-10 grid grid-cols-[9rem_1fr] gap-y-2 t-body">
         <dt className="text-ink-muted">Advertiser</dt><dd>{b.company}</dd>
-        <dt className="text-ink-muted">Video</dt><dd>{b.duration} seconds</dd>
-        <dt className="text-ink-muted">Visibility</dt><dd>{b.visibility}, about {b.plays_per_hour} appearances an hour</dd>
-        <dt className="text-ink-muted">Days</dt><dd className="capitalize">{b.days.join(", ")}</dd>
-        <dt className="text-ink-muted">Times</dt><dd>{b.periods.join(", ")}</dd>
+        <dt className="text-ink-muted">Package</dt><dd>{b.package}, about {b.plays_per_hour} appearances an hour</dd>
+        <dt className="text-ink-muted">On screen</dt><dd>Every day, {b.on_air}</dd>
         <dt className="text-ink-muted">Campaign</dt><dd>{date(b.start_date)} to {date(b.end_date)}</dd>
       </dl>
     </div>

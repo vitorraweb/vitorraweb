@@ -12,8 +12,8 @@ import { Empty, PageHeader, StatusBadge } from "@/components/admin/admin-ui";
 
 type Booking = {
   id: number; reference: string; status: string; company: string; contact_name: string; email: string; phone: string | null; notes: string | null;
-  duration_seconds: number; visibility: string; plays_per_hour: number; days: string[]; periods: string[]; start_date: string; end_date: string;
-  monthly_ugx: number; video_url: string; video_seconds: number; video_width: number | null; video_height: number | null; proof_name: string | null; review_note: string | null; created_at: string;
+  package: string; plays_per_hour: number; start_date: string; end_date: string;
+  price_ugx: number; video_url: string; video_seconds: number; video_width: number | null; video_height: number | null; proof_name: string | null; review_note: string | null; created_at: string;
 };
 
 const ugx = (n: number) => `UGX ${n.toLocaleString("en-US")}`;
@@ -68,7 +68,7 @@ export default function ScreenAdsPage() {
                   <tr key={b.id} className="cursor-pointer" onClick={() => setOpen(open === b.id ? null : b.id)}>
                     <td>{b.reference}</td><td>{b.company}</td>
                     <td>{day(b.start_date)} to {day(b.end_date)}</td>
-                    <td className="tabular-nums">{ugx(b.monthly_ugx)}</td><td><StatusBadge status={b.status} /></td>
+                    <td className="tabular-nums">{ugx(b.price_ugx)}</td><td><StatusBadge status={b.status} /></td>
                   </tr>,
                 ];
                 if (open === b.id) rows.push(
@@ -78,9 +78,8 @@ export default function ScreenAdsPage() {
                       <video src={b.video_url} controls muted playsInline className="w-full bg-black" />
                       <div className="text-[14px] space-y-1.5">
                         <p>{b.contact_name} · {b.email}{b.phone ? ` · ${b.phone}` : ""}</p>
-                        <p>{b.duration_seconds}-second video ({Math.round(b.video_seconds)}s, {b.video_width} × {b.video_height})</p>
-                        <p className="capitalize">{b.visibility}: {b.plays_per_hour} plays an hour</p>
-                        <p className="capitalize">{b.days.join(", ")} · {b.periods.join(", ")}</p>
+                        <p>Video: {Math.round(b.video_seconds)}s, {b.video_width} × {b.video_height}</p>
+                        <p className="capitalize">{b.package}: {b.plays_per_hour} plays an hour</p>
                         {b.notes && <p>Note: {b.notes}</p>}
                         {b.review_note && <p>Refused: {b.review_note}</p>}
                         <div className="flex flex-wrap gap-2 pt-3">

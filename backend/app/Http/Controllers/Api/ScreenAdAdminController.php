@@ -43,7 +43,7 @@ class ScreenAdAdminController extends Controller
     {
         $this->from($booking, [Booking::PAYMENT_SUBMITTED]);
         $booking->update(['status' => Booking::PAYMENT_CONFIRMED, 'payment_confirmed_by' => $request->user()->id, 'payment_confirmed_at' => now()]);
-        Audit::log('screen_ad.payment_confirmed', "Confirmed UGX {$booking->monthly_ugx} for {$booking->reference}");
+        Audit::log('screen_ad.payment_confirmed', "Confirmed UGX {$booking->price_ugx} for {$booking->reference}");
         $this->tell($booking, "Payment received: {$booking->reference}", ['We have your payment. We are now reviewing your video and will confirm your campaign shortly.']);
 
         return response()->json(['data' => $booking->fresh()]);
@@ -79,7 +79,7 @@ class ScreenAdAdminController extends Controller
     {
         $this->from($booking, [Booking::REJECTED]);
         $booking->update(['status' => Booking::REFUNDED, 'refunded_by' => $request->user()->id, 'refunded_at' => now()]);
-        Audit::log('screen_ad.refunded', "Recorded refund of UGX {$booking->monthly_ugx} for {$booking->reference}");
+        Audit::log('screen_ad.refunded', "Recorded refund of UGX {$booking->price_ugx} for {$booking->reference}");
         $this->tell($booking, "Refund sent: {$booking->reference}", ['Your refund has been sent.']);
 
         return response()->json(['data' => $booking->fresh()]);

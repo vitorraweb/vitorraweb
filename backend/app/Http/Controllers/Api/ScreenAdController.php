@@ -7,7 +7,6 @@ use App\Mail\ScreenAdNotice;
 use App\Models\ScreenAdBooking;
 use App\Models\Setting;
 use App\Rules\PhoneNumber;
-use App\Services\ScreenAds\Pricing;
 use App\Support\Phone;
 use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +15,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use InvalidArgumentException;
 
 /**
  * Public side of advertising on the street screen: price, book, pay by bank
@@ -29,14 +27,20 @@ class ScreenAdController extends Controller
     /** Vercel Blob only: a booking can never point the screen at another host. */
     private const VIDEO_URL = '#^https://[a-z0-9]+\.public\.blob\.vercel-storage\.com/screen-ads/[A-Za-z0-9._\-/%]+\.mp4$#';
 
-    public function pricing(Request $request, Pricing $pricing): JsonResponse
+    public function pricing(Request $request): JsonResponse
     {
         $this->guard($request);
+        $c = config('screen_ads');
 
-        return response()->json(['data' => $pricing->forWebsite()]);
+        return response()->json(['data' => [
+            'packages'  => collect($c['packages'])->map(fn ($p, $id) => ['id' => $id] + $p)->values(),
+            'lead_days' => $c['lead_days'],
+            'on_air'    => $c['on_air']['label'],
+            'video'     => $c['video'],
+        ]]);
     }
 
-    public function store(Request $request, Pricing $pricing): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         $this->guard($request);
         $c = config('screen_ads');
@@ -47,12 +51,7 @@ class ScreenAdController extends Controller
             'email'          => ['required', 'email', 'max:255'],
             'phone'          => ['required', 'string', 'max:50', new PhoneNumber()],
             'notes'          => ['nullable', 'string', 'max:1000'],
-            'duration'       => ['required', 'integer', Rule::in(array_keys($c['durations']))],
-            'visibility'     => ['required', Rule::in(array_keys($c['visibility']))],
-            'days'           => ['required', 'array', 'min:1', 'max:7'],
-            'days.*'         => ['required', Rule::in(ScreenAdBooking::DAYS), 'distinct'],
-            'periods'        => ['required', 'array', 'min:1'],
-            'periods.*'      => ['required', Rule::in(array_keys($c['periods'])), 'distinct'],
+            'package'        => ['required', Rule::in(array_keys($c['packages']))],
             'start_date'     => ['required', 'date_format:Y-m-d', 'after_or_equal:'.now('Africa/Kampala')->addDays($c['lead_days'])->toDateString()],
             'video_url'      => ['required', 'string', 'max:500', 'regex:'.self::VIDEO_URL],
             'video_seconds'  => ['required', 'numeric', 'min:1', 'max:120'],
@@ -62,19 +61,15 @@ class ScreenAdController extends Controller
             'terms_accepted' => ['required', 'accepted'],
         ]);
 
-        if (abs($data['video_seconds'] - $data['duration']) > $c['video']['tolerance_seconds']) {
-            return response()->json(['message' => "Your video must be {$data['duration']} seconds long.", 'errors' => ['video_seconds' => ["Your video must be {$data['duration']} seconds long."]]], 422);
+        $seconds = $c['video']['seconds'];
+        if (abs($data['video_seconds'] - $seconds) > $c['video']['tolerance_seconds']) {
+            return response()->json(['message' => "Your video must be {$seconds} seconds long.", 'errors' => ['video_seconds' => ["Your video must be {$seconds} seconds long."]]], 422);
         }
         if ($data['video_width'] <= $data['video_height']) {
             return response()->json(['message' => 'Your video must be landscape.', 'errors' => ['video_width' => ['Your video must be landscape.']]], 422);
         }
 
-        try {
-            $quote = $pricing->quote((int) $data['duration'], $data['visibility'], count($data['days']));
-        } catch (InvalidArgumentException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
-
+        $package = $c['packages'][$data['package']];
         $token = Str::random(48);
         $start = \Illuminate\Support\Carbon::parse($data['start_date']);
         $booking = ScreenAdBooking::create([
@@ -86,15 +81,11 @@ class ScreenAdController extends Controller
             'email'             => $data['email'],
             'phone'             => Phone::e164($data['phone']),
             'notes'             => $data['notes'] ?? null,
-            'duration_seconds'  => $data['duration'],
-            'visibility'        => $data['visibility'],
-            'plays_per_hour'    => $quote['plays_per_hour'],
-            'days'              => array_values(array_intersect(ScreenAdBooking::DAYS, $data['days'])),
-            'periods'           => array_values($data['periods']),
+            'package'           => $data['package'],
+            'price_ugx'         => $package['price_ugx'],
+            'plays_per_hour'    => $package['plays_per_hour'],
             'start_date'        => $start,
-            'end_date'          => $start->copy()->addDays($c['campaign_days'] - 1),
-            'monthly_ugx'       => $quote['monthly_ugx'],
-            'pricing_snapshot'  => $quote,
+            'end_date'          => $start->copy()->addDays($package['days'] - 1),
             'video_url'         => $data['video_url'],
             'video_seconds'     => $data['video_seconds'],
             'video_width'       => $data['video_width'],
@@ -106,14 +97,14 @@ class ScreenAdController extends Controller
             "Your screen booking {$booking->reference}",
             [
                 'Thank you. Your campaign is reserved, and we need your bank transfer to continue.',
-                'Amount: UGX '.number_format($booking->monthly_ugx),
+                'Amount: UGX '.number_format($booking->price_ugx),
                 'Use your reference '.$booking->reference.' on the transfer, then upload your proof of payment using the link below.',
                 'Your advert goes on screen after we confirm payment and review your video. If we cannot run it, we will contact you about a refund.',
             ],
             $this->link($token), 'View your booking',
         ));
         $this->notify(config('mail.team_address'), new ScreenAdNotice("New screen booking {$booking->reference}", [
-            "{$booking->company}: {$booking->duration_seconds}-second advert, UGX ".number_format($booking->monthly_ugx).'. Awaiting payment.',
+            "{$booking->company}: {$package['label']} package, UGX ".number_format($booking->price_ugx).'. Awaiting payment.',
         ]));
 
         return response()->json(['data' => $this->present($booking) + ['token' => $token]], 201);
@@ -147,7 +138,7 @@ class ScreenAdController extends Controller
         ]);
 
         $this->notify(config('mail.team_address'), new ScreenAdNotice("Payment proof for {$booking->reference}", [
-            "{$booking->company} uploaded proof of UGX ".number_format($booking->monthly_ugx).'. Finance to check the bank and confirm.',
+            "{$booking->company} uploaded proof of UGX ".number_format($booking->price_ugx).'. Finance to check the bank and confirm.',
         ]));
 
         return response()->json(['data' => $this->present($booking->fresh())]);
@@ -159,7 +150,7 @@ class ScreenAdController extends Controller
         $now = now();
         $ads = ScreenAdBooking::where('status', ScreenAdBooking::APPROVED)->get()
             ->filter(fn (ScreenAdBooking $b) => $b->isOnAirAt($now))
-            ->map(fn (ScreenAdBooking $b) => ['id' => $b->id, 'url' => $b->video_url, 'seconds' => $b->duration_seconds, 'plays_per_hour' => $b->plays_per_hour])
+            ->map(fn (ScreenAdBooking $b) => ['id' => $b->id, 'url' => $b->video_url, 'seconds' => (int) config('screen_ads.video.seconds'), 'plays_per_hour' => $b->plays_per_hour])
             ->values();
 
         return response()->json(['data' => $ads])->header('Cache-Control', 'public, max-age=60');
@@ -178,14 +169,12 @@ class ScreenAdController extends Controller
             'reference'   => $b->reference,
             'status'      => $b->status,
             'company'     => $b->company,
-            'duration'    => $b->duration_seconds,
-            'visibility'  => config("screen_ads.visibility.{$b->visibility}.label", $b->visibility),
+            'package'     => config("screen_ads.packages.{$b->package}.label", $b->package),
             'plays_per_hour' => $b->plays_per_hour,
-            'days'        => $b->days,
-            'periods'     => collect($b->periods)->map(fn ($p) => config("screen_ads.periods.$p.label", $p))->values(),
+            'on_air'      => config('screen_ads.on_air.label'),
             'start_date'  => $b->start_date->toDateString(),
             'end_date'    => $b->end_date->toDateString(),
-            'monthly_ugx' => $b->monthly_ugx,
+            'price_ugx'   => $b->price_ugx,
             'proof_received' => (bool) $b->proof_at,
             'review_note' => $b->status === ScreenAdBooking::REJECTED ? $b->review_note : null,
             // Only while there is something to pay.

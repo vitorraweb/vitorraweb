@@ -20,15 +20,12 @@ return new class extends Migration
             $t->string('phone')->nullable();
             $t->text('notes')->nullable();
 
-            $t->unsignedSmallInteger('duration_seconds');
-            $t->string('visibility');
+            // The package as sold, so a later price change never rewrites a booking.
+            $t->string('package');
+            $t->unsignedBigInteger('price_ugx');
             $t->unsignedSmallInteger('plays_per_hour');
-            $t->json('days');
-            $t->json('periods');
             $t->date('start_date');
             $t->date('end_date');
-            $t->unsignedBigInteger('monthly_ugx');
-            $t->json('pricing_snapshot');
 
             $t->string('video_url', 500);
             $t->decimal('video_seconds', 6, 2);
