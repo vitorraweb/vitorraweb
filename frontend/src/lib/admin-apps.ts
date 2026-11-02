@@ -103,6 +103,7 @@ export const ADMIN_APPS: AdminApp[] = [
       { label: "Suppliers", href: "/admin/suppliers", icon: Truck,       module: "suppliers", keywords: "vendors onboarding" },
       { label: "Meetings",  href: "/admin/meetings",  icon: Video,       keywords: "teams microsoft join call" },
       { label: "Reception screen", href: "/admin/reception-screen", icon: MonitorPlay, keywords: "display tv lobby welcome visitor street screen" },
+      { label: "Screen bookings", href: "/admin/screen-ads", icon: Megaphone, module: ["screen_ads", "accounting"], keywords: "street screen advert advertising paid booking" },
     ],
   },
   {

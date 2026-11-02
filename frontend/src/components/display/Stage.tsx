@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { API_BASE_URL, CONTACT_PHONE } from "@/lib/constants";
 import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
@@ -57,14 +57,27 @@ function Loop({ mode, pin, at, hold, turn = 0 }: { mode: Mode; pin?: string | nu
   const scene = story[index];
   const seconds = durationOf(scene, mode);
 
+  const adverts = useAdverts(mode);
+  const played = useRef<Record<number, number>>({});
+  const [ad, setAd] = useState<Advert | null>(null);
+
+  const advance = useCallback(() => {
+    setI((n) => (n + 1) % story.length);
+    if (index === story.length - 1) setLoop((l) => l + 1);
+  }, [index, story.length]);
+
+  // Paid adverts go between scenes, never over one, each at its booked rate.
   useEffect(() => {
-    if (pinned >= 0) return;
+    if (pinned >= 0 || ad) return;
     const t = setTimeout(() => {
-      setI((n) => (n + 1) % story.length);
-      if (index === story.length - 1) setLoop((l) => l + 1);
+      const due = dueAdvert(adverts, played.current, Date.now());
+      if (due) { played.current[due.id] = Date.now(); setAd(due); }
+      else advance();
     }, seconds * 1000);
     return () => clearTimeout(t);
-  }, [index, seconds, story.length, pinned]);
+  }, [index, seconds, pinned, ad, adverts, advance]);
+
+  const endAd = useCallback(() => { setAd(null); advance(); }, [advance]);
 
   const [drift, setDrift] = useState(0);
   useEffect(() => { const t = setInterval(() => setDrift((d) => (d + 1) % DRIFT.length), 180_000); return () => clearInterval(t); }, []);
@@ -89,6 +102,7 @@ function Loop({ mode, pin, at, hold, turn = 0 }: { mode: Mode; pin?: string | nu
       <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} projector={projector} moment={moment} look={look} night={daypart === "night"} />
       <div className="hero-grain absolute inset-0 pointer-events-none" style={{ opacity: projector ? 0 : street ? 0.025 : 0.035 }} />
       <ScreenCare />
+      {ad && <AdvertFilm ad={ad} onEnd={endAd} />}
 
       {/* The whole overlay — story and information band — drifts together
           against burn-in. Projectors usually crop the edges (overscan), so
@@ -96,7 +110,7 @@ function Loop({ mode, pin, at, hold, turn = 0 }: { mode: Mode; pin?: string | nu
       <div className="relative z-10 h-full flex flex-col" style={{ translate: `${dx}px ${dy}px`, transition: "translate 4s ease" }}>
       <div className="flex-1 min-h-0 flex flex-col" style={{ padding: projector ? "6.5cqmin 7.5cqmin 1.6cqmin" : "3.4cqmin 5cqmin 1.4cqmin", textShadow: street && !projector ? "0 0.25cqmin 1.6cqmin rgba(0,0,0,0.5)" : undefined }}>
         <TopBar hidden={scene.kind === "ident"} />
-        <div key={`${scene.id}-${loop}`} className="relative flex-1 min-h-0 flex">
+        <div key={`${scene.id}-${loop}`} className="relative flex-1 min-h-0 flex" style={{ visibility: ad ? "hidden" : undefined }}>
           {scene.kind === "ident" && <Ident />}
           {scene.kind === "welcome" && welcome && <WelcomeScene welcome={welcome} />}
           {scene.kind === "reel" && <ReelView r={scene} street={big} panel={projector} />}
@@ -563,6 +577,45 @@ function useCountUp(target: number, decimals: number, ms: number, delayMs: numbe
     return () => cancelAnimationFrame(raf);
   }, [target, ms, delayMs]);
   return v.toFixed(decimals);
+}
+
+/* ── Paid adverts (street screen only) ───────────────────────────────────── */
+
+type Advert = { id: number; url: string; seconds: number; plays_per_hour: number };
+
+/** What the server says may run now. Only approved, paid adverts in their booked days and times. */
+function useAdverts(mode: Mode): Advert[] {
+  const [ads, setAds] = useState<Advert[]>([]);
+  useEffect(() => {
+    if (mode !== "street") return;
+    const load = () => fetch(`${API_BASE_URL}/display/adverts`, { headers: { Accept: "application/json" } })
+      .then((r) => r.json()).then((j) => setAds(j?.data ?? [])).catch(() => {});
+    void load();
+    const t = setInterval(load, 60_000);
+    return () => clearInterval(t);
+  }, [mode]);
+  return ads;
+}
+
+/** The advert most overdue against its plays an hour, if any. */
+function dueAdvert(ads: Advert[], played: Record<number, number>, now: number): Advert | null {
+  let best: Advert | null = null, late = 0;
+  for (const a of ads) {
+    const by = now - (played[a.id] ?? 0) - 3_600_000 / a.plays_per_hour;
+    if (by >= 0 && (!best || by > late)) { best = a; late = by; }
+  }
+  return best;
+}
+
+function AdvertFilm({ ad, onEnd }: { ad: Advert; onEnd: () => void }) {
+  // If a film stalls on an unattended screen, the loop still moves on.
+  useEffect(() => { const t = setTimeout(onEnd, (ad.seconds + 3) * 1000); return () => clearTimeout(t); }, [ad, onEnd]);
+  return (
+    <div className="absolute inset-0 z-[5] bg-black">
+      <video src={ad.url} autoPlay muted playsInline onEnded={onEnd} onError={onEnd} className="h-full w-full object-contain" />
+      <span className="absolute font-sans" style={{ right: "5cqmin", bottom: "6.4cqmin", fontSize: "1.5cqmin", fontWeight: 600, letterSpacing: "0.04em", color: "rgba(255,255,255,0.7)" }}>Advertisement</span>
+    </div>
+  );
 }
 
 /** Which of the film's four moments is on screen. Changes only at the turn of a

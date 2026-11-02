@@ -23,5 +23,5 @@ export const config = {
        - any path with a "." (static assets: images, sitemap.xml, robots.txt …)
      NOTE: /account is intentionally NOT excluded — the customer portal is
      localized along with the rest of the public site.                         */
-  matcher: ["/((?!api|admin|staff|careers|suppliers|display|trial|contract|scan|teams|ingest|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|admin|staff|careers|suppliers|advertise|display|trial|contract|scan|teams|ingest|_next|_vercel|.*\\..*).*)"],
 };

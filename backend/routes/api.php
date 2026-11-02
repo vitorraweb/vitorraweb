@@ -177,6 +177,15 @@ Route::post('/fet/buyers-pack', [\App\Http\Controllers\Api\FetBuyersPackControll
 Route::get('/spotlight', [\App\Http\Controllers\Api\SpotlightController::class, 'current'])->middleware('throttle:120,1');
 // Reception / street screen: what to show beyond its built-in story (the welcome).
 Route::get('/display', [DisplayController::class, 'show'])->middleware('throttle:60,1');
+Route::get('/display/adverts', [\App\Http\Controllers\Api\ScreenAdController::class, 'onAir'])->middleware('throttle:60,1');
+
+// Advertising on the street screen. Hidden until SCREEN_ADS_ENABLED (see config/screen_ads.php).
+Route::prefix('screen-ads')->controller(\App\Http\Controllers\Api\ScreenAdController::class)->group(function () {
+    Route::get('/pricing', 'pricing')->middleware('throttle:60,1');
+    Route::post('/bookings', 'store')->middleware(['turnstile', 'throttle:6,1']);
+    Route::get('/bookings/{token}', 'show')->middleware('throttle:30,1');
+    Route::post('/bookings/{token}/proof', 'proof')->middleware('throttle:10,1');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -304,6 +313,23 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/meetings/{meeting}', [MeetingController::class, 'destroy']);
 
         // Operational modules — each gated by the staff member's permissions.
+        // Street-screen bookings: Finance moves the money, the screen's owners decide what runs.
+        Route::prefix('screen-ads')->controller(\App\Http\Controllers\Api\ScreenAdAdminController::class)->group(function () {
+            Route::middleware('perm:screen_ads,accounting')->group(function () {
+                Route::get('/', 'index');
+                Route::get('/{booking}/proof', 'proof');
+            });
+            Route::middleware('perm:accounting')->group(function () {
+                Route::post('/{booking}/confirm-payment', 'confirmPayment');
+                Route::post('/{booking}/refunded', 'refunded');
+            });
+            Route::middleware('perm:screen_ads')->group(function () {
+                Route::post('/{booking}/approve', 'approve');
+                Route::post('/{booking}/reject', 'reject');
+                Route::post('/{booking}/cancel', 'cancel');
+            });
+        });
+
         Route::middleware('perm:enquiries')->group(function () {
             Route::get('/enquiries', [AdminController::class, 'enquiries']);
             Route::get('/enquiries/assignable-users', [AdminController::class, 'assignableUsers']);

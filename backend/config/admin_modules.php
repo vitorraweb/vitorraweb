@@ -40,6 +40,7 @@ return [
         // php artisan staff:grant-module quotations <email> ...
         'quotations'         => 'Quotations',
         'google_ads'         => 'Google Ads',
+        'screen_ads'         => 'Street screen bookings',
     ],
 
     // department key => human label
@@ -60,10 +61,10 @@ return [
      * so the trial module is granted to marketing in its own right.
      */
     'departments' => [
-        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'fet', 'fet_trials', 'newsletter', 'tasks', 'people', 'executive', 'suppliers', 'accounting', 'google_ads'],
-        'operations' => ['dashboard', 'orders', 'fet', 'fet_trials', 'enquiries', 'messages', 'customers', 'tasks', 'people', 'suppliers'],
+        'leadership' => ['dashboard', 'enquiries', 'customers', 'prospects', 'products', 'blog', 'media', 'messages', 'orders', 'fet', 'fet_trials', 'newsletter', 'tasks', 'people', 'executive', 'suppliers', 'accounting', 'google_ads', 'screen_ads'],
+        'operations' => ['dashboard', 'orders', 'fet', 'fet_trials', 'enquiries', 'messages', 'customers', 'tasks', 'people', 'suppliers', 'screen_ads'],
         'finance'    => ['dashboard', 'orders', 'customers', 'enquiries', 'tasks', 'people', 'executive', 'suppliers', 'accounting', 'google_ads'],
-        'marketing'  => ['dashboard', 'blog', 'media', 'prospects', 'fet_trials', 'enquiries', 'customers', 'newsletter', 'tasks', 'google_ads'],
+        'marketing'  => ['dashboard', 'blog', 'media', 'prospects', 'fet_trials', 'enquiries', 'customers', 'newsletter', 'tasks', 'google_ads', 'screen_ads'],
         'sales'      => ['dashboard', 'enquiries', 'prospects', 'customers', 'orders', 'fet', 'fet_trials', 'tasks'],
         'it'         => ['dashboard', 'media', 'tasks'],
     ],

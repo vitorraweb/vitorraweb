@@ -2113,6 +2113,26 @@ Marketing's reviewers proposed shorter, benefit-led wording, and each line was c
 
 ---
 
+## Selling advert time on the street screen (2 November 2026) — built, hidden, not deployed
+
+Businesses can build a campaign, see the price change as they choose, upload a video, book, pay by bank transfer and upload proof. Finance confirms the money, the team reviews the video, and approved adverts play on the street screen between scenes at their booked rate, on their days and times. Refused adverts stay on the list until Finance records the refund.
+
+It stays hidden until Finance approves the prices: without the flag or a preview key, the page and its API answer 404, and it is in no menu, sitemap or search result.
+
+**⏳ To switch it on**
+1. **Finance approves in `backend/config/screen_ads.php`:** only UGX 450,000 is approved. Still open: the 10-second price; the 30-second factor; High and Maximum factors; 1 to 7 day factors (1 to 4 days are placeholders); plays an hour for each level; the 45 to 60 second quote process.
+2. **Agree the terms:** refund timing and wording, what content is refused, and who decides. The customer's tick-box wording is a placeholder.
+3. **Storage:** create a Vercel Blob store; set `BLOB_READ_WRITE_TOKEN`. It adds a small monthly cost. The real upload has not been tested until this exists.
+4. **Server update:** pull, `migrate --force` (`2026_11_02_000001`), `config:cache`, `route:cache`.
+5. **Access:** existing staff with a custom permission set need "Street screen bookings" ticked in `/admin/staff`.
+6. **Open it:** `SCREEN_ADS_ENABLED=true` on the backend and on Vercel, then redeploy. To preview first, set the same `SCREEN_ADS_PREVIEW_KEY` on both.
+
+**Known limits:** no check that the screen is oversold; money is not posted to Vitorra Books automatically; bookings do not expire if unpaid (staff cancel them).
+
+> Technical detail (engineering): `config/screen_ads.php`, `ScreenAdBooking`, `Services/ScreenAds/Pricing`, `ScreenAdController`, `ScreenAdAdminController`, `ScreenAdNotice`; frontend `app/advertise`, `components/advertise/BookingFlow`, `lib/screen-ads{,-gate}.ts`, `app/api/screen-ads/upload`, `app/admin/screen-ads`, adverts in `display/Stage.tsx`. New dependency `@vercel/blob`. Tests: `ScreenAdTest` (12). **596 backend tests passing.** Payment proofs are encrypted with `SecureFile`.
+
+---
+
 ## ⏳ Remaining / pending
 
 **Revenue-blocking**
