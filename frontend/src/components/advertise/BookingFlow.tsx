@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { upload } from "@vercel/blob/client";
+import { uploadPresigned } from "@vercel/blob/client";
 import { ArrowRight, Check, Loader2, Upload } from "lucide-react";
 import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { API_BASE_URL as API } from "@/lib/constants";
@@ -60,12 +60,15 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
     setProgress(0);
     try {
       const name = `screen-ads/${crypto.randomUUID()}.mp4`;
-      const blob = await upload(name, file, {
+      const blob = await uploadPresigned(name, file, {
         access: "public", contentType: "video/mp4", handleUploadUrl: "/api/screen-ads/upload", clientPayload: preview, multipart: true,
         onUploadProgress: (e) => setProgress(Math.round(e.percentage)),
       });
       setVideo({ url: blob.url, seconds: meta.seconds, width: meta.width, height: meta.height, size: file.size, name: file.name });
-    } catch { setError("The upload didn't finish. Please try again."); } finally { setProgress(null); }
+    } catch (err) {
+      console.error("Video upload failed", err);
+      setError("The upload didn't finish. Please try again.");
+    } finally { setProgress(null); }
   };
 
   const confirm = async (e: React.FormEvent) => {
