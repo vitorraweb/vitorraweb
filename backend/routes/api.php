@@ -312,6 +312,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/display', [DisplayController::class, 'show']);
         Route::put('/display/welcome', [DisplayController::class, 'updateWelcome'])->middleware('throttle:30,1');
         Route::put('/display/copy', [DisplayController::class, 'updateCopy'])->middleware(['perm:screen_ads', 'throttle:30,1']);
+        // Screen editor: Vitorra's own videos and designs, and the running order.
+        Route::middleware('perm:screen_ads')->controller(\App\Http\Controllers\Api\ScreenMediaController::class)->group(function () {
+            Route::get('/screen-media', 'index');
+            Route::post('/screen-media', 'store');
+            Route::patch('/screen-media/{media}', 'update');
+            Route::delete('/screen-media/{media}', 'destroy');
+            Route::put('/display/programme', 'programmeUpdate');
+        });
         Route::post('/meetings', [MeetingController::class, 'store']);
         Route::patch('/meetings/{meeting}', [MeetingController::class, 'update']);
         Route::delete('/meetings/{meeting}', [MeetingController::class, 'destroy']);

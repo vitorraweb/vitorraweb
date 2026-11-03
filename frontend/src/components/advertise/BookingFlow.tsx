@@ -7,16 +7,16 @@ import { uploadPresigned } from "@vercel/blob/client";
 import { ArrowRight, Check, Loader2, Upload } from "lucide-react";
 import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { API_BASE_URL as API } from "@/lib/constants";
-import { isH264, readVideo, type Pricing } from "@/lib/screen-ads";
+import { IMAGE_TYPES, isH264, readImage, readVideo, type Pricing } from "@/lib/screen-ads";
 
 /* The booking journey: pick a package, a start date, upload the video, leave
    your details, then pay by bank transfer. */
 
 const cls = "w-full min-h-12 rounded-edge px-3.5 t-body border border-line-strong bg-white text-ink outline-none focus:border-ink transition-colors";
 const choice = (on: boolean) => `text-left rounded-edge border px-4 py-3 transition-colors ${on ? "border-ink bg-ink text-paper" : "border-line-strong hover:border-ink"}`;
-const TITLES = ["Choose your package", "Choose your start date", "Upload your video", "Your details"];
+const TITLES = ["Choose your package", "Choose your start date", "Upload your advert", "Your details"];
 
-type Video = { url: string; seconds: number; width: number; height: number; size: number; name: string };
+type Video = { url: string; seconds: number | null; width: number; height: number; size: number; name: string; kind: "video" | "image" };
 
 export function BookingFlow({ preview, draft }: { preview: string; draft: boolean }) {
   const router = useRouter();
@@ -51,6 +51,7 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
   const pick = async (file: File | undefined) => {
     if (!file) return;
     setError(""); setVideo(null);
+    if (IMAGE_TYPES[file.type]) { await pickDesign(file); return; }
     if (file.size > p.video.max_mb * 1024 * 1024) { setError(`Please keep your video under ${p.video.max_mb} MB.`); return; }
     const meta = await readVideo(file);
     if (!meta || !(await isH264(file))) { setError("Please export your video as MP4 (H.264) and try again: the screen cannot play this format."); return; }
@@ -64,9 +65,30 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
         access: "public", contentType: "video/mp4", handleUploadUrl: "/api/screen-ads/upload", clientPayload: preview, multipart: true,
         onUploadProgress: (e) => setProgress(Math.round(e.percentage)),
       });
-      setVideo({ url: blob.url, seconds: meta.seconds, width: meta.width, height: meta.height, size: file.size, name: file.name });
+      setVideo({ url: blob.url, seconds: meta.seconds, width: meta.width, height: meta.height, size: file.size, name: file.name, kind: "video" });
     } catch (err) {
       console.error("Video upload failed", err);
+      setError("The upload didn't finish. Please try again.");
+    } finally { setProgress(null); }
+  };
+
+  /* A design instead of a video: one 1920 × 1080 image, shown for the same 15 seconds. */
+  const pickDesign = async (file: File) => {
+    if (file.size > 20 * 1024 * 1024) { setError("Please keep your design under 20 MB."); return; }
+    const meta = await readImage(file);
+    if (!meta) { setError("We couldn't read this image. Please save it as PNG or JPG and try again."); return; }
+    if (meta.width < p.video.min_width || Math.abs(meta.width / meta.height - 16 / 9) > 0.03) {
+      setError(`This design is ${meta.width} × ${meta.height}. The screen needs a landscape 16:9 design, ideally 1920 × 1080.`); return;
+    }
+    setProgress(0);
+    try {
+      const blob = await uploadPresigned(`screen-ads/${crypto.randomUUID()}.${IMAGE_TYPES[file.type]}`, file, {
+        access: "public", contentType: file.type, handleUploadUrl: "/api/screen-ads/upload", clientPayload: preview,
+        onUploadProgress: (e) => setProgress(Math.round(e.percentage)),
+      });
+      setVideo({ url: blob.url, seconds: null, width: meta.width, height: meta.height, size: file.size, name: file.name, kind: "image" });
+    } catch (err) {
+      console.error("Design upload failed", err);
       setError("The upload didn't finish. Please try again.");
     } finally { setProgress(null); }
   };
@@ -80,7 +102,7 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
         method: "POST", headers,
         body: JSON.stringify({
           ...f, package: chosen.id, start_date: start, terms_accepted: terms, turnstile_token: token,
-          video_url: video.url, video_seconds: video.seconds, video_width: video.width, video_height: video.height, video_size: video.size,
+          media_type: video.kind, video_url: video.url, video_seconds: video.seconds, video_width: video.width, video_height: video.height, video_size: video.size,
         }),
       });
       const j = await r.json();
@@ -113,7 +135,7 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
                 </button>
               ))}
             </div>
-            <p className="t-small text-ink-muted mt-4">The price shown is the full amount you pay. Every package is for a {seconds}-second video, on screen every day, {p.on_air}. Need a longer video? <Link className="q-link" href="/enquire?message=I%20would%20like%20a%20quote%20for%20a%20longer%20advert%20on%20the%20street%20screen.">Ask us for a quote</Link>.</p>
+            <p className="t-small text-ink-muted mt-4">The price shown is the full amount you pay. Every package is for a {seconds}-second video or a 1920 × 1080 design, on screen every day, {p.on_air}. Need a longer video? <Link className="q-link" href="/enquire?message=I%20would%20like%20a%20quote%20for%20a%20longer%20advert%20on%20the%20street%20screen.">Ask us for a quote</Link>.</p>
           </section>
         )}
 
@@ -128,12 +150,12 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
 
         {step === 2 && (
           <section>
-            <p className="t-body text-ink-soft mb-3">Upload one {seconds}-second video, MP4 (H.264), 1920 × 1080, up to {p.video.max_mb} MB. The screen plays it without sound.</p>
+            <p className="t-body text-ink-soft mb-3">Upload one {seconds}-second video (MP4, H.264, 1920 × 1080, up to {p.video.max_mb} MB), or one design (PNG, JPG or WebP, 1920 × 1080, up to 20 MB) that is shown for {seconds} seconds. The screen plays it without sound.</p>
             <p className="t-small text-ink-muted mb-6">We can&apos;t run adverts that are illegal, false or misleading, or that show sexual, violent or hateful content. We also don&apos;t run political or religious campaigning, or adverts for betting, alcohol or tobacco. The screen faces a public road, so nothing should distract drivers, including flashing images.</p>
             <label className="flex items-center gap-3 rounded-edge px-4 min-h-16 border border-dashed border-line-strong bg-paper-deep cursor-pointer">
               {progress !== null ? <Loader2 aria-hidden="true" className="w-5 h-5 animate-spin" /> : video ? <Check aria-hidden="true" className="w-5 h-5 text-ok-ink" /> : <Upload aria-hidden="true" className="w-5 h-5 text-gold-ink" />}
-              <span className="t-body">{progress !== null ? `Uploading ${progress}%` : video ? `${video.name} uploaded` : "Choose your video"}</span>
-              <input type="file" accept="video/mp4,.mp4" className="hidden" disabled={progress !== null} onChange={(e) => void pick(e.target.files?.[0])} />
+              <span className="t-body">{progress !== null ? `Uploading ${progress}%` : video ? `${video.name} uploaded` : "Choose your video or design"}</span>
+              <input type="file" accept="video/mp4,.mp4,image/png,image/jpeg,image/webp" className="hidden" disabled={progress !== null} onChange={(e) => void pick(e.target.files?.[0])} />
             </label>
           </section>
         )}

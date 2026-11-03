@@ -26,6 +26,20 @@ export type BookingView = {
   token?: string;
 };
 
+/** A design's size in pixels, or null if the browser cannot read it. */
+export function readImage(file: File): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve({ width: img.naturalWidth, height: img.naturalHeight }); };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+
+/** The image types the screen shows, by extension. */
+export const IMAGE_TYPES: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
+
 /** H.264 is named in the file's header, at the start or the end. A browser that plays a
  *  file proves little: a Mac plays HEVC happily, and the street player may show black. */
 export async function isH264(file: File): Promise<boolean> {

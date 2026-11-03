@@ -16,7 +16,7 @@ export const MIN_HOUSE_SECONDS = 60;
 /** A scene shorter than this is not worth starting. */
 const MIN_SLICE = 5;
 
-export type Advert = { id: number; url: string; seconds: number; plays_per_hour: number; units: number };
+export type Advert = { id: number; url: string; seconds: number; plays_per_hour: number; units: number; kind?: "video" | "image" };
 
 export type Cycle = {
   queue: Advert[];   // still to play this cycle

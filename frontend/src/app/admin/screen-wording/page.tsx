@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Loader2, RotateCcw, Send } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/admin-ui";
+import { ScreenRunningOrder } from "@/components/admin/ScreenRunningOrder";
 import { COPY_DRAFT_KEY, copyFields, type CopyField } from "@/components/display/scenes";
 
 /* ─── Operations → Screen wording ─────────────────────────────────────────────
@@ -12,7 +13,7 @@ import { COPY_DRAFT_KEY, copyFields, type CopyField } from "@/components/display
    up within about a minute. Numbers, prices, links and pictures are not here on
    purpose.                                                                   */
 
-export default function ScreenWordingPage() {
+function WordingTab({ tabs }: { tabs: React.ReactNode }) {
   const fields = useMemo(() => copyFields(), []);
   const groups = useMemo(() => {
     const out = new Map<string, CopyField[]>();
@@ -65,10 +66,11 @@ export default function ScreenWordingPage() {
 
   return (
     <div>
-      <PageHeader title="Screen wording" subtitle="Change the words on the reception and street screens. Numbers, prices and links stay locked." actions={<>
+      <PageHeader title="Screen editor" subtitle="Change the words on the reception and street screens. Numbers, prices and links stay locked." actions={<>
         {dirty && <button type="button" className="c-btn" onClick={() => setEdits(saved)}><RotateCcw aria-hidden="true" className="w-4 h-4" />Discard changes</button>}
         <button type="button" className="c-btn c-btn-primary" disabled={!dirty || busy || blocked.length > 0} onClick={() => void publish()}>{busy ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Send aria-hidden="true" className="w-4 h-4" />}Publish</button>
       </>} />
+      {tabs}
       {note && <p role="status" className="text-[13px] mb-3">{note}</p>}
       {blocked.length > 0 && <p role="alert" className="text-[13px] mb-3" style={{ color: "var(--o-danger)" }}>{blocked[0].group}, {blocked[0].label}: this line can&apos;t be empty.</p>}
 
@@ -114,6 +116,28 @@ export default function ScreenWordingPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── Operations → Screen editor ─────────────────────────────────────────────
+   Two tabs: what plays and in what order (videos, designs, built-in scenes),
+   and the words on the screens.                                              */
+export default function ScreenEditorPage() {
+  const [tab, setTab] = useState<"order" | "words">("order");
+  const tabs = (
+    <div role="tablist" aria-label="Screen editor" className="flex gap-5 mb-4" style={{ borderBottom: "1px solid var(--o-line)" }}>
+      {([["order", "Running order"], ["words", "Wording"]] as const).map(([id, label]) => (
+        <button key={id} type="button" role="tab" aria-selected={tab === id} className="c-tab" onClick={() => setTab(id)}>{label}</button>
+      ))}
+    </div>
+  );
+  if (tab === "words") return <WordingTab tabs={tabs} />;
+  return (
+    <div>
+      <PageHeader title="Screen editor" subtitle="What the screens play, in what order. Add videos and 1920 × 1080 designs, switch scenes off, move them up or down." />
+      {tabs}
+      <ScreenRunningOrder />
     </div>
   );
 }

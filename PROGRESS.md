@@ -2125,6 +2125,18 @@ Numbers (13.9%, 36), prices, web addresses, QR codes and pictures are deliberate
 
 ---
 
+## Screen editor and designs (3 November 2026) — website live; server update needed
+
+- **Customer designs:** a booking can use a 1920 × 1080 design (PNG, JPG or WebP, 16:9, up to 20 MB) instead of a video. It is shown for the same 15 seconds, uses the same unit, and is logged and reported like a video. The terms say so.
+- **Screen editor** (Operations; was Screen wording), two tabs:
+  - **Running order:** every scene in order: the built-in films and messages, and videos (MP4, up to 60 seconds) or 1920 × 1080 designs added here. Move them up and down, switch any of them off, remove added ones. Each added item has an optional two-line caption, seconds on screen for designs, which screens show it (street, reception TV, projector) and optional start and end dates. Saved straight away; screens follow within a minute. On the street screen this is the house content that fills unsold time.
+  - **Wording:** unchanged.
+- Uploads from the editor are staff-only (checked against the console sign-in).
+
+**Server:** pull, `migrate --force` (`2026_11_03_000002`), `config:cache`, `route:cache`.
+
+---
+
 ## Street screen programme, inventory and delivery evidence (3 November 2026) — live; server update needed
 
 Finance's backlog for the street screen, the website part.

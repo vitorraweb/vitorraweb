@@ -164,4 +164,38 @@ class ScreenProgrammeTest extends TestCase
         $this->assertSame(3150000, $d['break_even_ugx']);
         $this->assertSame(5, $d['held_by_day'][now('Africa/Kampala')->toDateString()]);
     }
+
+    public function test_staff_add_their_own_media_and_screens_receive_it_in_order(): void
+    {
+        $h = $this->admin();
+        $url = 'https://abc.public.blob.vercel-storage.com/screen-media/poster.png';
+        $id = $this->postJson('/api/admin/screen-media', ['kind' => 'image', 'url' => $url, 'title' => 'Poster', 'line1' => 'NEW', 'seconds' => 10, 'screens' => ['street']], $h)->assertCreated()->json('data.id');
+        $this->postJson('/api/admin/screen-media', ['kind' => 'image', 'url' => 'https://evil.test/x.png', 'title' => 'x', 'seconds' => 10, 'screens' => ['street']], $h)->assertUnprocessable();
+        $this->postJson('/api/admin/screen-media', ['kind' => 'video', 'url' => $url, 'title' => 'x', 'seconds' => 10, 'screens' => ['street'], 'starts_on' => '2030-01-01'], $h)->assertCreated();
+
+        $this->putJson('/api/admin/display/programme', ['order' => ["media-{$id}", 'ident', 'fet'], 'hidden' => ['seal']], $h)->assertOk();
+
+        $d = $this->getJson('/api/display')->json('data');
+        $this->assertSame(["media-{$id}", 'ident', 'fet'], $d['programme']['order']);
+        $this->assertSame(['seal'], $d['programme']['hidden']);
+        $this->assertCount(1, $d['media']); // the 2030 one is not live yet
+        $this->assertSame('NEW', $d['media'][0]['line1']);
+
+        $this->deleteJson("/api/admin/screen-media/{$id}", [], $h)->assertOk();
+        $this->assertSame(['ident', 'fet'], $this->getJson('/api/display')->json('data.programme.order'));
+    }
+
+    public function test_a_customer_can_book_a_1080_design_shown_for_15_seconds(): void
+    {
+        $img = 'https://abc.public.blob.vercel-storage.com/screen-ads/design.png';
+        $this->postJson('/api/screen-ads/bookings', $this->payload(['media_type' => 'image', 'video_url' => $img, 'video_seconds' => null, 'video_width' => 1080, 'video_height' => 1920]))->assertUnprocessable();
+        $this->postJson('/api/screen-ads/bookings', $this->payload(['media_type' => 'video', 'video_url' => $img]))->assertUnprocessable();
+        $this->postJson('/api/screen-ads/bookings', $this->payload(['media_type' => 'image', 'video_url' => $img, 'video_seconds' => null]))->assertCreated();
+
+        $b = Booking::latest('id')->first();
+        $this->assertSame('image', $b->media_type);
+        $b->update(['status' => Booking::APPROVED, 'start_date' => now()->subDay()->toDateString()]);
+        $this->travelTo(now('Africa/Kampala')->setTime(12, 0));
+        $this->assertSame('image', $this->getJson('/api/display/adverts')->json('data.0.kind'));
+    }
 }

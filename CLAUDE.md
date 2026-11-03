@@ -110,6 +110,9 @@ Each business film keeps its long slot (24s, street 26s) and runs four moments i
 ### Street screen programme (November 2026)
 `/display/street` runs Finance's 4-minute programme (`display/programme.ts`): 12 paid 15-second units plus at least 60s of house content, clock-based so a sold unit gets exactly 15 plays an hour. Packages are units (Trial and Standard 1, Growth 2, High Visibility 4); booking refuses over 12 per day (`Services/ScreenAds/Inventory`). The screen, connected from Screen bookings (`?screen=` key, kept in localStorage), posts `/display/heartbeat` each minute and `/display/plays` per advert: the evidence behind delivery reports and the downtime log (`screen:watch`). Terms at `/advertise/terms`.
 
+### Screen editor (November 2026)
+Operations → **Screen editor** (`/admin/screen-wording`): **Running order** (`components/admin/ScreenRunningOrder.tsx`) orders and switches off built-in scenes and adds Vitorra's own videos and 1920 × 1080 designs (`screen_media`, `ScreenMediaController`, setting `display_programme`; uploads to Blob under `screen-media/`, staff-only via the console token), and **Wording**. `storyFor()` applies the order. Customer adverts may be a 1920 × 1080 design shown for 15 seconds (`media_type`).
+
 ### Screen wording in the console (November 2026)
 Operations → **Screen wording** (`/admin/screen-wording`, `screen_ads` module) edits every word on the screens; changes are stored in the `display_copy` setting and reach running screens through `GET /display` within a minute. The defaults stay in `scenes.ts`, and `walk()` is the single list of editable fields. Numbers, prices, links and pictures are not editable. See PROGRESS.md.
 

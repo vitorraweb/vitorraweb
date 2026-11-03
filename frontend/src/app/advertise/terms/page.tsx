@@ -31,7 +31,7 @@ export default async function ScreenAdTermsPage({ searchParams }: { searchParams
       </Section>
 
       <Section title="3. Your advert and our review">
-        <p>You supply one 15-second video: MP4 (H.264), 1920 × 1080, landscape. It plays without sound. You confirm that you own it or have the rights to it.</p>
+        <p>You supply one 15-second video (MP4, H.264, 1920 × 1080, landscape), which plays without sound, or one 1920 × 1080 design (PNG, JPG or WebP), which is shown for 15 seconds. You confirm that you own it or have the rights to it.</p>
         <p>We review every advert after payment. We do not run adverts that are illegal, false or misleading, or that show sexual, violent or hateful content; political or religious campaigning; adverts for betting, alcohol or tobacco; or anything that could distract drivers, including flashing images.</p>
         <p>If we refuse your advert before it starts, we refund you in full within 10 working days, to the account you paid from. If we have to take it off air after it starts, we refund the unused days on the same terms.</p>
       </Section>

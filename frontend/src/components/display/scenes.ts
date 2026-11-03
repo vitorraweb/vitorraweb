@@ -130,8 +130,24 @@ export type ReelScene = {
   captions: { from: number; to: number; line1: string; line2?: string; sub?: string[] }[];
 };
 
+/** A video or 1080 design of Vitorra's own, added in the console's Screen editor. */
+export type MediaScene = {
+  kind: "media";
+  id: string;
+  media: "video" | "image";
+  url: string;
+  seconds: number;
+  line1?: string | null;
+  line2?: string | null;
+  screens: string[];
+};
+
+/** The running order from the Screen editor: scene ids in order, and those switched off. */
+export type Programme = { order: string[]; hidden: string[] };
+
 export type Scene =
   | { kind: "ident"; id: "ident" }
+  | MediaScene
   | ReelScene
   | { kind: "welcome"; id: "welcome" }
   | SectorScene
@@ -535,18 +551,38 @@ export function durationOf(scene: Scene, mode: Mode): number {
     case "sector": return street ? 26 : 24;
     case "proof": return 16;
     case "visit": return 18;
+    case "media": return scene.seconds;
   }
 }
 
 /** The loop for a mode. The welcome is indoor-only: a visitor's name never goes on the street. */
-export function storyFor(mode: Mode, hasWelcome: boolean, copy: ScreenCopy = DEFAULT_COPY): Scene[] {
-  return [
+/** The built-in scenes in their original order, with names for the Screen editor. */
+export const BUILT_IN_SCENES: { id: string; label: string }[] = [
+  { id: "ident", label: "Opening: VITORRA" },
+  { id: FET_REEL.id, label: "Fuel Eco Tech: 3D film" },
+  { id: FET_INSTALL.id, label: "Fuel Eco Tech: installation film" },
+  ...SECTORS.map((s) => ({ id: s.id, label: `${s.tag}: film and messages` })),
+  { id: "proof", label: "Credentials" },
+  { id: "visit", label: "Visit us" },
+];
+
+/** Built-in scenes and the console's own media, put in the editor's running order with
+ *  anything switched off left out. The reception welcome always follows the opening. */
+export function storyFor(mode: Mode, hasWelcome: boolean, copy: ScreenCopy = DEFAULT_COPY, media: MediaScene[] = [], programme: Programme = { order: [], hidden: [] }): Scene[] {
+  const all: Scene[] = [
     { kind: "ident", id: "ident" },
-    ...(mode !== "street" && hasWelcome ? [{ kind: "welcome", id: "welcome" } as const] : []),
     // FET leads: the film of the device, a real fitting in Kampala, then the result.
     ...copy.reels,
     ...copy.sectors,
     { kind: "proof", id: "proof" },
     { kind: "visit", id: "visit" },
+    ...media.filter((m) => m.screens.includes(mode)),
   ];
+  const rank = (id: string) => { const n = programme.order.indexOf(id); return n < 0 ? Number.MAX_SAFE_INTEGER : n; };
+  const ordered = programme.order.length ? [...all].sort((a, b) => rank(a.id) - rank(b.id)) : all;
+  const shown = ordered.filter((s) => !programme.hidden.includes(s.id));
+  const story = shown.length ? shown : [all[0]];
+  const welcome = mode !== "street" && hasWelcome ? [{ kind: "welcome", id: "welcome" } as const] : [];
+  const at = story.findIndex((s) => s.id === "ident");
+  return at < 0 ? [...welcome, ...story] : [...story.slice(0, at + 1), ...welcome, ...story.slice(at + 1)];
 }

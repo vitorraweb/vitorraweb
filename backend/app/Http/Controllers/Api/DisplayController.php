@@ -21,7 +21,12 @@ class DisplayController extends Controller
 {
     public function show(): JsonResponse
     {
-        return response()->json(['data' => ['welcome' => $this->welcome(), 'copy' => (object) $this->copy()]])
+        return response()->json(['data' => [
+            'welcome' => $this->welcome(),
+            'copy' => (object) $this->copy(),
+            'programme' => ScreenMediaController::programme(),
+            'media' => \App\Models\ScreenMedia::orderBy('id')->get()->filter->isLive()->map->forScreen()->values(),
+        ]])
             ->header('Cache-Control', 'public, max-age=30');
     }
 

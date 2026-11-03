@@ -25,7 +25,7 @@ use Illuminate\Validation\Rule;
 class ScreenAdController extends Controller
 {
     /** Vercel Blob only: a booking can never point the screen at another host. */
-    private const VIDEO_URL = '#^https://[a-z0-9]+\.public\.blob\.vercel-storage\.com/screen-ads/[A-Za-z0-9._\-/%]+\.mp4$#';
+    private const VIDEO_URL = '#^https://[a-z0-9]+\.public\.blob\.vercel-storage\.com/screen-ads/[A-Za-z0-9._\-/%]+\.(mp4|png|jpe?g|webp)$#';
 
     public function pricing(Request $request): JsonResponse
     {
@@ -54,8 +54,9 @@ class ScreenAdController extends Controller
             'notes'          => ['nullable', 'string', 'max:1000'],
             'package'        => ['required', Rule::in(array_keys($c['packages']))],
             'start_date'     => ['required', 'date_format:Y-m-d', 'after_or_equal:'.now('Africa/Kampala')->addDays($c['lead_days'])->toDateString()],
+            'media_type'     => ['nullable', Rule::in(['video', 'image'])],
             'video_url'      => ['required', 'string', 'max:500', 'regex:'.self::VIDEO_URL],
-            'video_seconds'  => ['required', 'numeric', 'min:1', 'max:120'],
+            'video_seconds'  => ['required_unless:media_type,image', 'nullable', 'numeric', 'min:1', 'max:120'],
             'video_width'    => ['required', 'integer', 'min:'.$c['video']['min_width']],
             'video_height'   => ['required', 'integer', 'min:1'],
             'video_size'     => ['required', 'integer', 'min:1', 'max:'.($c['video']['max_mb'] * 1024 * 1024)],
@@ -63,6 +64,16 @@ class ScreenAdController extends Controller
         ]);
 
         $seconds = $c['video']['seconds'];
+        $image = ($data['media_type'] ?? 'video') === 'image';
+        if ($image !== (bool) preg_match('/\.(png|jpe?g|webp)$/i', $data['video_url'])) {
+            return response()->json(['message' => 'The file does not match its type.'], 422);
+        }
+        if ($image) {
+            $data['video_seconds'] = $seconds; // A design is shown for the full 15 seconds.
+            if (abs($data['video_width'] / max(1, $data['video_height']) - 16 / 9) > 0.03) {
+                return response()->json(['message' => 'Your design must be 16:9, ideally 1920 × 1080.', 'errors' => ['video_width' => ['Your design must be 16:9, ideally 1920 × 1080.']]], 422);
+            }
+        }
         if (abs($data['video_seconds'] - $seconds) > $c['video']['tolerance_seconds']) {
             return response()->json(['message' => "Your video must be {$seconds} seconds long.", 'errors' => ['video_seconds' => ["Your video must be {$seconds} seconds long."]]], 422);
         }
@@ -97,6 +108,7 @@ class ScreenAdController extends Controller
             'start_date'        => $start,
             'end_date'          => $start->copy()->addDays($package['days'] - 1),
             'video_url'         => $data['video_url'],
+            'media_type'        => $image ? 'image' : 'video',
             'video_seconds'     => $data['video_seconds'],
             'video_width'       => $data['video_width'],
             'video_height'      => $data['video_height'],
@@ -160,7 +172,7 @@ class ScreenAdController extends Controller
         $now = now();
         $ads = ScreenAdBooking::where('status', ScreenAdBooking::APPROVED)->get()
             ->filter(fn (ScreenAdBooking $b) => $b->isOnAirAt($now))
-            ->map(fn (ScreenAdBooking $b) => ['id' => $b->id, 'url' => $b->video_url, 'seconds' => (int) config('screen_ads.video.seconds'), 'plays_per_hour' => $b->plays_per_hour, 'units' => $b->units])
+            ->map(fn (ScreenAdBooking $b) => ['id' => $b->id, 'url' => $b->video_url, 'seconds' => (int) config('screen_ads.video.seconds'), 'plays_per_hour' => $b->plays_per_hour, 'units' => $b->units, 'kind' => $b->media_type])
             ->values();
 
         return response()->json(['data' => $ads])->header('Cache-Control', 'public, max-age=60');

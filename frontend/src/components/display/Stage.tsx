@@ -5,6 +5,7 @@ import Image from "next/image";
 import { API_BASE_URL, CONTACT_PHONE } from "@/lib/constants";
 import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
 import { newCycle, next, slice, spent, type Advert, type Cycle } from "./programme";
+import type { MediaScene, Programme } from "./scenes";
 import { COPY_DRAFT_KEY, DEFAULT_COPY, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
 
 /* ─── The stage ───────────────────────────────────────────────────────────────
@@ -66,9 +67,9 @@ export function Stage({ mode, pin, at, hold, turn, draft }: { mode: Mode; pin?: 
 const CopyContext = createContext(DEFAULT_COPY);
 
 function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number; draft?: boolean }) {
-  const { welcome, changes } = useScreenData(mode, draft);
+  const { welcome, changes, media, programme: order } = useScreenData(mode, draft);
   const copy = useMemo(() => applyCopy(changes), [changes]);
-  const story = useMemo(() => storyFor(mode, !!welcome, copy), [mode, welcome, copy]);
+  const story = useMemo(() => storyFor(mode, !!welcome, copy, media, order), [mode, welcome, copy, media, order]);
   const [i, setI] = useState(0);
   const [loop, setLoop] = useState(0);
   const pinned = pin ? story.findIndex((s) => s.id === pin) : -1;
@@ -156,6 +157,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
       <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} projector={projector} moment={moment} look={look} night={!light && daypart === "night"} grade={light ? LIGHT[light].picture : undefined} />
       <div className="hero-grain absolute inset-0 pointer-events-none" style={{ opacity: projector ? 0 : street ? 0.025 : 0.035 }} />
       <ScreenCare />
+      {scene.kind === "media" && <MediaLayer key={`${scene.id}-${loop}`} m={scene} />}
       {ad && <AdvertFilm key={ad.started} ad={ad.advert} onEnd={endAd} />}
 
       {/* The whole overlay — story and information band — drifts together
@@ -163,7 +165,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
           their safe area is wider. */}
       <div className="relative z-10 h-full flex flex-col" style={{ translate: `${dx}px ${dy}px`, filter: light ? LIGHT[light].words : undefined, transition: "translate 4s ease, filter 8s ease" }}>
       <div className="flex-1 min-h-0 flex flex-col" style={{ padding: projector ? "6.5cqmin 7.5cqmin 1.6cqmin" : "3.4cqmin 5cqmin 1.4cqmin", textShadow: light ? LIGHT[light].shadow : undefined }}>
-        <TopBar hidden={scene.kind === "ident"} />
+        <TopBar hidden={scene.kind === "ident" || (scene.kind === "media" && !scene.line1 && !scene.line2)} />
         <div key={`${scene.id}-${loop}`} className="relative flex-1 min-h-0 flex" style={{ visibility: ad ? "hidden" : undefined }}>
           {scene.kind === "ident" && <Ident />}
           {scene.kind === "welcome" && welcome && <WelcomeScene welcome={welcome} />}
@@ -171,6 +173,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
           {scene.kind === "sector" && <SectorView s={scene} moment={moment} daypart={daypart} turn={loop + turn} road={street} />}
           {scene.kind === "proof" && <Proof seconds={seconds} />}
           {scene.kind === "visit" && <Visit panel={projector} road={street} />}
+          {scene.kind === "media" && (scene.line1 || scene.line2) && <MediaCaption m={scene} street={big} panel={projector} />}
         </div>
         <Progress story={story} index={index} seconds={seconds} loop={loop} />
       </div>
@@ -691,13 +694,16 @@ function AdvertFilm({ ad, onEnd }: { ad: Advert; onEnd: (seconds: number, comple
   const finish = useCallback((completed: boolean) => {
     if (done.current) return;
     done.current = true;
-    onEnd(film.current?.currentTime ?? 0, completed);
-  }, [onEnd]);
+    onEnd(ad.kind === "image" ? (completed ? ad.seconds : 0) : (film.current?.currentTime ?? 0), completed);
+  }, [onEnd, ad]);
   // If a film stalls on an unattended screen, the loop still moves on, and the play is logged as incomplete.
   useEffect(() => { const t = setTimeout(() => finish(false), (ad.seconds + 3) * 1000); return () => clearTimeout(t); }, [ad, finish]);
   return (
     <div className="absolute inset-0 z-[5] bg-black">
-      <video ref={film} src={ad.url} autoPlay muted playsInline onEnded={() => finish(true)} onError={() => finish(false)} className="h-full w-full object-contain" />
+      {ad.kind === "image"
+        // eslint-disable-next-line @next/next/no-img-element -- the customer's design, shown exactly as supplied
+        ? <img src={ad.url} alt="" onLoad={() => setTimeout(() => finish(true), ad.seconds * 1000)} onError={() => finish(false)} className="h-full w-full object-contain" />
+        : <video ref={film} src={ad.url} autoPlay muted playsInline onEnded={() => finish(true)} onError={() => finish(false)} className="h-full w-full object-contain" />}
       <span className="absolute font-sans" style={{ right: "5cqmin", bottom: "6.4cqmin", fontSize: "1.5cqmin", fontWeight: 600, letterSpacing: "0.04em", color: "rgba(255,255,255,0.7)" }}>{ui.advert}</span>
     </div>
   );
@@ -744,31 +750,64 @@ function useDaypart(forced?: Daypart | null): Daypart {
 /** What the screen reads from the server every 30 seconds: reception's welcome (indoors only,
  *  never shown on the street) and any wording changed in the console, so a change reaches the
  *  screens without a reload. `draft` previews unsaved edits from the console's editor. */
-function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes: Record<string, string> } {
+function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes: Record<string, string>; media: MediaScene[]; programme: Programme } {
   const [welcome, setWelcome] = useState<Welcome>(null);
   const [changes, setChanges] = useState<Record<string, string>>({});
+  const [media, setMedia] = useState<MediaScene[]>([]);
+  const [programme, setProgramme] = useState<Programme>({ order: [], hidden: [] });
   useEffect(() => {
-    if (draft) {
-      const read = () => { try { setChanges(JSON.parse(localStorage.getItem(COPY_DRAFT_KEY) ?? "{}")); } catch { setChanges({}); } };
-      const first = setTimeout(read, 0);
-      window.addEventListener("storage", read);
-      return () => { clearTimeout(first); window.removeEventListener("storage", read); };
-    }
+    if (!draft) return;
+    const read = () => { try { setChanges(JSON.parse(localStorage.getItem(COPY_DRAFT_KEY) ?? "{}")); } catch { setChanges({}); } };
+    const first = setTimeout(read, 0);
+    window.addEventListener("storage", read);
+    return () => { clearTimeout(first); window.removeEventListener("storage", read); };
+  }, [draft]);
+  useEffect(() => {
     let live = true;
+    const same = <T,>(old: T, next: T) => (JSON.stringify(old) === JSON.stringify(next) ? old : next);
     const load = () => fetch(`${API_BASE_URL}/display`, { headers: { Accept: "application/json" } })
       .then((r) => r.json()).then((j) => {
         if (!live) return;
         if (mode !== "street") setWelcome(j?.data?.welcome ?? null);
-        setChanges((old) => {
-          const next = j?.data?.copy ?? {};
-          return JSON.stringify(old) === JSON.stringify(next) ? old : next;
-        });
+        if (!draft) setChanges((old) => same(old, j?.data?.copy ?? {}));
+        setProgramme((old) => same(old, { order: j?.data?.programme?.order ?? [], hidden: j?.data?.programme?.hidden ?? [] }));
+        setMedia((old) => same(old, (j?.data?.media ?? []).map((m: { id: string; kind: "video" | "image"; url: string; seconds: number; line1?: string; line2?: string; screens: string[] }) => ({
+          kind: "media", id: m.id, media: m.kind, url: m.url, seconds: m.seconds, line1: m.line1, line2: m.line2, screens: m.screens,
+        }))));
       }).catch(() => {});
     void load();
     const t = setInterval(load, 30_000);
     return () => { live = false; clearInterval(t); };
   }, [mode, draft]);
-  return { welcome, changes };
+  return { welcome, changes, media, programme };
+}
+
+/* ── Vitorra's own media, added in the Screen editor ─────────────────────── */
+
+/** A video plays once, a design holds with a slow push-in; either fills the 16:9 frame. */
+function MediaLayer({ m }: { m: MediaScene }) {
+  return (
+    <div className="absolute inset-0 z-[4] bg-black overflow-hidden">
+      {m.media === "video"
+        ? <video src={m.url} autoPlay muted playsInline className="h-full w-full object-cover" />
+        // eslint-disable-next-line @next/next/no-img-element -- an uploaded design, shown as it was made
+        : <img src={m.url} alt="" className="h-full w-full object-cover vx-drift" style={{ ["--dur" as string]: `${m.seconds}s` }} />}
+      {(m.line1 || m.line2) && <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 45%)" }} />}
+    </div>
+  );
+}
+
+function MediaCaption({ m, street, panel = false }: { m: MediaScene; street: boolean; panel?: boolean }) {
+  return (
+    <div className="w-full self-end" style={{ paddingBottom: "1cqmin" }}>
+      <div className="vx-rise" style={{ maxWidth: "150cqmin", width: "fit-content", ...(panel ? PANEL : {}) }}>
+        <h2 className="vx-mega font-sans" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.04, fontSize: scaled(street ? 8 : 7.4) }}>
+          {m.line1 && <span className="block">{m.line1}</span>}
+          {m.line2 && <span className="block" style={{ color: "var(--vx-accent)" }}>{m.line2}</span>}
+        </h2>
+      </div>
+    </div>
+  );
 }
 
 /* ── Screen care: full screen and never asleep ─────────────────────────────
