@@ -146,7 +146,7 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
             <label className="block"><span className="t-small block mb-1.5">Anything we should know? (optional)</span><textarea rows={3} value={f.notes} onChange={(e) => set("notes", e.target.value)} className={`${cls} py-3`} /></label>
             <label className="flex gap-3 items-start t-small">
               <input type="checkbox" required checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-1" />
-              <span>I own or have the rights to this video and it follows the advert rules. Vitorra reviews every advert after payment. If it is refused before it starts, I get a full refund within 10 working days. If it is taken off air after it starts, I get the unused days back.</span>
+              <span>I own or have the rights to this video, and I agree to the <a className="q-link" href={`/advertise/terms${preview ? `?preview=${encodeURIComponent(preview)}` : ""}`} target="_blank" rel="noreferrer">advertising terms</a>: payment before review, a full refund if it is refused before it starts, cancellation for a full refund until it starts, and missed airtime made up or refunded.</span>
             </label>
             <Turnstile ref={turnstile} action="screen_ad" onVerify={setToken} onExpire={() => setToken("")} />
             <button disabled={busy} className="q-btn bg-ink text-paper hover:bg-black">{busy ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : null}Confirm booking</button>

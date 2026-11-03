@@ -25,12 +25,32 @@ return [
     'lead_days' => 3,       // Earliest start, to allow for payment and review.
     'refund_working_days' => 10,
 
+    // Each package is a number of the programme's 15-second units: one unit
+    // plays once in every 4-minute cycle, which is 15 plays an hour.
     'packages' => [
-        'trial'    => ['label' => 'Trial', 'price_ugx' => 150000, 'days' => 7, 'plays_per_hour' => 15],
-        'standard' => ['label' => 'Standard', 'price_ugx' => 450000, 'days' => 30, 'plays_per_hour' => 15],
-        'growth'   => ['label' => 'Growth', 'price_ugx' => 850000, 'days' => 30, 'plays_per_hour' => 30],
-        'high'     => ['label' => 'High Visibility', 'price_ugx' => 1600000, 'days' => 30, 'plays_per_hour' => 60],
+        'trial'    => ['label' => 'Trial', 'price_ugx' => 150000, 'days' => 7, 'units' => 1, 'plays_per_hour' => 15],
+        'standard' => ['label' => 'Standard', 'price_ugx' => 450000, 'days' => 30, 'units' => 1, 'plays_per_hour' => 15],
+        'growth'   => ['label' => 'Growth', 'price_ugx' => 850000, 'days' => 30, 'units' => 2, 'plays_per_hour' => 30],
+        'high'     => ['label' => 'High Visibility', 'price_ugx' => 1600000, 'days' => 30, 'units' => 4, 'plays_per_hour' => 60],
     ],
+
+    // Finance's programme: a 4-minute cycle of 12 paid 15-second units and at
+    // least 60 seconds of Vitorra's own content. Unsold units play our content.
+    'programme' => [
+        'cycle_seconds'     => 240,
+        'unit_seconds'      => 15,
+        'units'             => 12,
+        'break_even_units'  => 7,   // Finance's illustrative break-even, in Standard-priced units.
+    ],
+
+    // An unpaid booking holds its units this long, then frees them.
+    'hold_hours' => 72,
+
+    // Delivery: below this share of booked plays, the missed plays are owed.
+    'delivery_threshold' => 0.95,
+
+    // The screen counts as down when it has not checked in for this long during on-air hours.
+    'downtime_after_minutes' => 3,
 
     // On screen every day of a campaign, Kampala time: the rate card's 16-hour day.
     'on_air' => ['from' => 6, 'to' => 22, 'label' => '6am to 10pm'],

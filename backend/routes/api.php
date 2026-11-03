@@ -178,6 +178,9 @@ Route::get('/spotlight', [\App\Http\Controllers\Api\SpotlightController::class, 
 // Reception / street screen: what to show beyond its built-in story (the welcome).
 Route::get('/display', [DisplayController::class, 'show'])->middleware('throttle:60,1');
 Route::get('/display/adverts', [\App\Http\Controllers\Api\ScreenAdController::class, 'onAir'])->middleware('throttle:60,1');
+// The connected street screen reporting that it is alive, and each paid advert it played.
+Route::post('/display/heartbeat', [\App\Http\Controllers\Api\ScreenDeviceController::class, 'heartbeat'])->middleware('throttle:10,1');
+Route::post('/display/plays', [\App\Http\Controllers\Api\ScreenDeviceController::class, 'play'])->middleware('throttle:120,1');
 
 // Advertising on the street screen. Hidden until SCREEN_ADS_ENABLED (see config/screen_ads.php).
 Route::prefix('screen-ads')->controller(\App\Http\Controllers\Api\ScreenAdController::class)->group(function () {
@@ -318,7 +321,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('screen-ads')->controller(\App\Http\Controllers\Api\ScreenAdAdminController::class)->group(function () {
             Route::middleware('perm:screen_ads,accounting')->group(function () {
                 Route::get('/', 'index');
+                Route::get('/inventory', 'inventory');
                 Route::get('/{booking}/proof', 'proof');
+                Route::get('/{booking}/report', 'report');
+                Route::get('/{booking}/report.csv', 'reportCsv');
             });
             Route::middleware('perm:accounting')->group(function () {
                 Route::post('/{booking}/confirm-payment', 'confirmPayment');
@@ -328,6 +334,10 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/{booking}/approve', 'approve');
                 Route::post('/{booking}/reject', 'reject');
                 Route::post('/{booking}/cancel', 'cancel');
+                Route::post('/{booking}/extend', 'extend');
+                Route::post('/screen-key', 'screenKey');
+                Route::post('/downtime', 'downtimeAdd');
+                Route::patch('/downtime/{downtime}', 'downtimeNote');
             });
         });
 

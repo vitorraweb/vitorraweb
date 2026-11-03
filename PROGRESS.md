@@ -2125,6 +2125,28 @@ Numbers (13.9%, 36), prices, web addresses, QR codes and pictures are deliberate
 
 ---
 
+## Street screen programme, inventory and delivery evidence (3 November 2026) — live; server update needed
+
+Finance's backlog for the street screen, the website part.
+
+- **4-minute programme:** 12 paid 15-second units and at least 60 seconds of Vitorra's own content per cycle, run by the clock so every sold unit gets exactly 15 plays an hour. Adverts are spread between our scenes. Each cycle shows the next slice of our content, and unsold units go back to our content. Measured on the real screen: 6 sold units gave 6 plays per 4-minute cycle, on time.
+- **Inventory:** Trial and Standard are 1 unit, Growth 2, High Visibility 4. Booking refuses anything that would sell more than 12 units on any day. Unpaid bookings hold their units for 72 hours.
+- **Break-even:** Screen bookings shows paid units today against Finance's 7 (UGX 3,150,000 a month), with an 8-week calendar.
+- **Evidence of delivery:** the connected screen logs every play. Each campaign shows plays booked against delivered, and the report downloads as a spreadsheet. Below 95%, it shows the missed plays and their value; **Extend for missed airtime** makes them up.
+- **Downtime log:** the screen checks in every minute. A gap of 3+ minutes in on-air hours is logged automatically and closes when it returns; Operations is emailed if it lasts 15 minutes. Staff can add reasons and log planned outages by hand.
+- **Terms:** `/advertise/terms` covers payment, review, cancellation (free until the campaign starts), reporting, missed airtime (made up, or that share refunded) and keeping artwork (campaign plus 12 months). Linked from the booking.
+- **Artwork:** each approved video is kept and downloadable from the booking.
+
+**⏳ To switch on**
+1. Server: pull, `migrate --force` (`2026_11_03_000001`), `config:cache`, `route:cache`. The `screen:watch` job runs from the existing scheduler.
+2. Operations → Screen bookings → **Connect street screen**, then open the link once on the street screen's browser. Until then no plays or downtime are recorded.
+
+**Not website work (Operations):** maintenance, surge protection, cooling, technical support, and a named daily operator.
+
+> Technical detail (engineering): `display/programme.ts` (clock-based cycle), `useScreenKey`, `report()` and the heartbeat in `Stage.tsx`; backend `ScreenDeviceController` (heartbeat, plays; `X-Screen-Key`, hash in settings), `Services/ScreenAds/Inventory` (units by day, free units, delivery), `screen:watch`, tables `screen_plays`, `screen_downtimes`, `units` on bookings. Tests: `ScreenProgrammeTest` (10).
+
+---
+
 **Street screen follows the sun (2 November 2026):** by Kampala's clock the picture lifts for strong daylight (08:30 to 16:30), eases at dawn and dusk, and after 19:00 drops by about 40% with the white words dimmed too, so it does not glare. Small lines are larger and heavier on the street. Settings: `LIGHT` in `display/Stage.tsx`, `lightAt` in `scenes.ts`; preview with `&at=day|morning|night`. ⚠ This changes the picture only. The panel's own brightness is set on its controller or remote, which the website cannot reach.
 
 **Type size (2 November 2026):** headlines and numbers on the screens are 20% smaller, at John's request. One setting, `TYPE_SCALE` in `display/Stage.tsx`; small print and the utility bar are left out so they stay readable.

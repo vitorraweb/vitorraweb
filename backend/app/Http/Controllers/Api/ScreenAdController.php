@@ -35,6 +35,7 @@ class ScreenAdController extends Controller
         return response()->json(['data' => [
             'packages'  => collect($c['packages'])->map(fn ($p, $id) => ['id' => $id] + $p)->values(),
             'lead_days' => $c['lead_days'],
+            'programme' => $c['programme'],
             'on_air'    => $c['on_air']['label'],
             'video'     => $c['video'],
         ]]);
@@ -70,6 +71,14 @@ class ScreenAdController extends Controller
         }
 
         $package = $c['packages'][$data['package']];
+        $first = \Illuminate\Support\Carbon::parse($data['start_date']);
+        $free = app(\App\Services\ScreenAds\Inventory::class)->freeUnits($first, $first->copy()->addDays($package['days'] - 1));
+        if ($free < $package['units']) {
+            $message = $free > 0
+                ? "Only {$free} of the screen's units are free on some of those days. Try a smaller package or a later start date."
+                : 'The screen is fully booked on some of those days. Please try a later start date.';
+            return response()->json(['message' => $message, 'errors' => ['start_date' => [$message]]], 422);
+        }
         $token = Str::random(48);
         $start = \Illuminate\Support\Carbon::parse($data['start_date']);
         $booking = ScreenAdBooking::create([
@@ -84,6 +93,7 @@ class ScreenAdController extends Controller
             'package'           => $data['package'],
             'price_ugx'         => $package['price_ugx'],
             'plays_per_hour'    => $package['plays_per_hour'],
+            'units'             => $package['units'],
             'start_date'        => $start,
             'end_date'          => $start->copy()->addDays($package['days'] - 1),
             'video_url'         => $data['video_url'],
@@ -150,7 +160,7 @@ class ScreenAdController extends Controller
         $now = now();
         $ads = ScreenAdBooking::where('status', ScreenAdBooking::APPROVED)->get()
             ->filter(fn (ScreenAdBooking $b) => $b->isOnAirAt($now))
-            ->map(fn (ScreenAdBooking $b) => ['id' => $b->id, 'url' => $b->video_url, 'seconds' => (int) config('screen_ads.video.seconds'), 'plays_per_hour' => $b->plays_per_hour])
+            ->map(fn (ScreenAdBooking $b) => ['id' => $b->id, 'url' => $b->video_url, 'seconds' => (int) config('screen_ads.video.seconds'), 'plays_per_hour' => $b->plays_per_hour, 'units' => $b->units])
             ->values();
 
         return response()->json(['data' => $ads])->header('Cache-Control', 'public, max-age=60');

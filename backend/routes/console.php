@@ -90,3 +90,6 @@ Schedule::command('receipts:read')->everyMinute()->withoutOverlapping()
 // teams.max_attempts). A no-op without TEAMS_WORKFLOW_WEBHOOK_URL.
 Schedule::command('teams:deliver')->everyMinute()->withoutOverlapping()
     ->onFailure(fn () => logger()->error('Scheduled teams:deliver failed'));
+
+// Street screen: log downtime during on-air hours and alert Operations if it stays down.
+Schedule::command('screen:watch')->everyMinute()->withoutOverlapping();
