@@ -1,7 +1,7 @@
 # Campaign draft: November 2026 — FET free fleet fuel assessment
 
 **Status:** draft for Marketing to review. **Test-send it to the team first** (the console now refuses to send an untested email), then send from Console → Marketing → Campaigns.
-**Updated 30 Oct 2026** with facts checked from the first daily market briefing.
+**Updated 30 Oct 2026** with facts checked from the first daily market briefing, and **3 Nov 2026** with the latest diesel price. **Send this week:** term closes on 4 December.
 **Goal:** booked free fuel assessments (the first step of every FET sale), plus Buyer's Pack requests from people not ready yet.
 **Audience:** the FET prospect list in the console (163 organisations), sent as three segments so the opening line fits each reader.
 **Attachment:** `vitorra-fet-datasheet.pdf` (already public on the website).
@@ -18,7 +18,7 @@
 ## Market facts used (checked 30 Oct 2026)
 
 - **School calendar:** Term Three runs 14 September – 4 December 2026; holidays 5 December – 31 January 2027. Sources: [Pulse Uganda](https://www.pulse.ug/story/education-ministry-third-term-2026-start-date-2026090312354987024), [Daily Monitor](https://www.monitor.co.ug/uganda/news/national/no-date-change-schools-to-reopen-september-14-as-government-warns-against-unauthorised-calendar-shifts-5582988).
-- **Fuel prices:** October 2026 reports put Kampala diesel and petrol at roughly Shs 6,700–7,000 a litre, up sharply this year. Pump prices vary by station, so the emails say "up sharply" and quote no single figure. Sources: [DailyFuels, 4 Oct 2026](https://dailyfuels.com/uganda/?lang=fr), [Daily Monitor commentary](https://www.monitor.co.ug/uganda/oped/commentary/how-expensive-fuel-could-shape-uganda-s-economy-5649132).
+- **Fuel prices (updated 3 Nov):** diesel reached **Shs 7,290 a litre at many Kampala pumps** and Shs 7,150–7,200 upcountry ([Daily Monitor, 30 Oct 2026](https://www.monitor.co.ug/uganda/news/national/diesel-hits-shs7-290-rising-fuel-costs-threaten-business-viability-5652850)). The emails may now say "diesel is above Shs 7,000 a litre in Kampala". Earlier October reports put prices at Shs 6,700–7,000. Sources: [DailyFuels, 4 Oct 2026](https://dailyfuels.com/uganda/?lang=fr), [Daily Monitor commentary](https://www.monitor.co.ug/uganda/oped/commentary/how-expensive-fuel-could-shape-uganda-s-economy-5649132).
 
 ## What we may say (and what we must not)
 
@@ -37,7 +37,7 @@
 
 > Dear {name},
 >
-> Term Three closes on 4 December, and most school buses will then be parked until the end of January. With fuel prices up sharply this year, the holiday is the easiest time to look at what your buses cost to run.
+> Term Three closes on 4 December, and most school buses will then be parked until the end of January. With diesel now above Shs 7,000 a litre in Kampala, the holiday is the easiest time to look at what your buses cost to run.
 >
 > Fuel Eco Tech is a device fitted to the fuel line, with no engine modification. In an independent field test by CTI GmbH in Germany, a VW T5 used 13.9% less fuel with it fitted. Results differ by vehicle and driving, which is why we start with a **free fuel assessment** of your own vehicles, before you decide anything.
 >
@@ -53,7 +53,7 @@
 > Padre Pio House, Plot 32, Lumumba Avenue, Kampala
 
 **First paragraph, transport and cargo version:**
-> Fuel prices have climbed sharply this year, and December is the busiest month on the road. When vehicles run the most, every litre counts most, so now is a good time to see what your fleet's fuel bill could look like.
+> Diesel is now above Shs 7,000 a litre in Kampala, and December is the busiest month on the road. When vehicles run the most, every litre counts most, so now is a good time to see what your fleet's fuel bill could look like.
 
 **First paragraph, general version:**
 > As you plan next year's budget, fuel is likely one of the largest running costs your vehicles carry, and one of the few that repeats every week.

@@ -1,0 +1,84 @@
+{
+  "spotlights": [
+    {
+      "eyebrow": "This month",
+      "title": "Diesel is over Shs 7,000 a litre. Get a free fuel assessment for your fleet.",
+      "body": "We measure your own vehicles first, so you decide on real numbers. School fleets: book before term closes on 4 December.",
+      "title_sw": "Dizeli imepita Shs 7,000 kwa lita. Pata tathmini ya mafuta bila malipo kwa magari yako.",
+      "body_sw": "Tunapima magari yako kwanza, ili uamue kwa takwimu halisi. Magari ya shule: weka nafasi kabla ya muhula kufungwa tarehe 4 Desemba.",
+      "cta_label": "Book yours",
+      "cta_label_sw": "Omba sasa",
+      "cta_url": "/enquire?sector=FET&utm_source=spotlight&utm_campaign=nov26-fleet-assessment",
+      "pages": [
+        "home",
+        "fet"
+      ],
+      "starts_on": "2026-11-03",
+      "ends_on": "2026-12-04"
+    }
+  ],
+  "campaigns": [
+    {
+      "name": "Nov 2026 FET assessment, email 1: schools",
+      "subject": "{name}: a free fuel check for your fleet before December",
+      "preheader": "A free on-site assessment, with prices published up front.",
+      "product": "FET",
+      "paragraphs": [
+        "Dear {name},",
+        "Term Three closes on 4 December, and most school buses will then be parked until the end of January. With diesel now above Shs 7,000 a litre in Kampala, the holiday is the easiest time to look at what your buses cost to run.",
+        "Fuel Eco Tech is a device fitted to the fuel line, with no engine modification. In an independent field test by CTI GmbH in Germany, a VW T5 used 13.9% less fuel with it fitted. Results differ by vehicle and driving, which is why we start with a free fuel assessment of your own vehicles, before you decide anything.",
+        "Our prices are published openly, with installation included: from UGX 1,891,000 for cars and mini-buses up to UGX 10,015,000 for heavy trucks. You can see all four devices and today's stock at vitorra.org/products/fuel-eco-tech/catalogue.",
+        "If you would rather talk, reply to this email or WhatsApp us on +256 740 026 294.",
+        "Kind regards,\nThe Vitorra team\nPadre Pio House, Plot 32, Lumumba Avenue, Kampala"
+      ],
+      "button_label": "Book a free fuel assessment",
+      "button_url": "/enquire?sector=FET&utm_source=campaign&utm_medium=email&utm_campaign=nov26-fleet-assessment"
+    },
+    {
+      "name": "Nov 2026 FET assessment, email 1: transport and cargo",
+      "subject": "{name}: a free fuel check for your fleet before December",
+      "preheader": "A free on-site assessment, with prices published up front.",
+      "product": "FET",
+      "paragraphs": [
+        "Dear {name},",
+        "Diesel is now above Shs 7,000 a litre in Kampala, and December is the busiest month on the road. When vehicles run the most, every litre counts most, so now is a good time to see what your fleet's fuel bill could look like.",
+        "Fuel Eco Tech is a device fitted to the fuel line, with no engine modification. In an independent field test by CTI GmbH in Germany, a VW T5 used 13.9% less fuel with it fitted. Results differ by vehicle and driving, which is why we start with a free fuel assessment of your own vehicles, before you decide anything.",
+        "Our prices are published openly, with installation included: from UGX 1,891,000 for cars and mini-buses up to UGX 10,015,000 for heavy trucks. You can see all four devices and today's stock at vitorra.org/products/fuel-eco-tech/catalogue.",
+        "If you would rather talk, reply to this email or WhatsApp us on +256 740 026 294.",
+        "Kind regards,\nThe Vitorra team\nPadre Pio House, Plot 32, Lumumba Avenue, Kampala"
+      ],
+      "button_label": "Book a free fuel assessment",
+      "button_url": "/enquire?sector=FET&utm_source=campaign&utm_medium=email&utm_campaign=nov26-fleet-assessment"
+    },
+    {
+      "name": "Nov 2026 FET assessment, email 1: other fleets",
+      "subject": "{name}: a free fuel check for your fleet before December",
+      "preheader": "A free on-site assessment, with prices published up front.",
+      "product": "FET",
+      "paragraphs": [
+        "Dear {name},",
+        "As you plan next year's budget, fuel is likely one of the largest running costs your vehicles carry, and one of the few that repeats every week. Diesel is now above Shs 7,000 a litre in Kampala.",
+        "Fuel Eco Tech is a device fitted to the fuel line, with no engine modification. In an independent field test by CTI GmbH in Germany, a VW T5 used 13.9% less fuel with it fitted. Results differ by vehicle and driving, which is why we start with a free fuel assessment of your own vehicles, before you decide anything.",
+        "Our prices are published openly, with installation included: from UGX 1,891,000 for cars and mini-buses up to UGX 10,015,000 for heavy trucks. You can see all four devices and today's stock at vitorra.org/products/fuel-eco-tech/catalogue.",
+        "If you would rather talk, reply to this email or WhatsApp us on +256 740 026 294.",
+        "Kind regards,\nThe Vitorra team\nPadre Pio House, Plot 32, Lumumba Avenue, Kampala"
+      ],
+      "button_label": "Book a free fuel assessment",
+      "button_url": "/enquire?sector=FET&utm_source=campaign&utm_medium=email&utm_campaign=nov26-fleet-assessment"
+    },
+    {
+      "name": "Nov 2026 FET assessment, email 2: follow-up (send 6 days later to non-clickers)",
+      "subject": "The price list, in case it helps",
+      "preheader": "Full prices, which device fits, and the datasheet.",
+      "product": "FET",
+      "paragraphs": [
+        "Dear {name},",
+        "A short follow-up. If you are comparing options, our FET Buyer's Pack has the full price list, which device fits each vehicle, and the datasheet in one place.",
+        "The free assessment stays open whenever you are ready.",
+        "The Vitorra team"
+      ],
+      "button_label": "Get the Buyer's Pack",
+      "button_url": "/products/fuel-eco-tech?utm_source=campaign&utm_medium=email&utm_campaign=nov26-fleet-assessment#fet-pack"
+    }
+  ]
+}

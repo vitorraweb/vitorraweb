@@ -85,6 +85,12 @@ Route::get('/coffee/products', [ProductController::class, 'coffee']);
 // with the key from `php artisan blog:drafts-token` (checked in the controller).
 Route::post('/blog/drafts', \App\Http\Controllers\Api\BlogDraftController::class)
     ->middleware(['auth:sanctum', 'throttle:20,1']);
+// The same key turns the daily market briefing into switched-off drafts:
+// an inactive Spotlight and an unsent campaign (scripts/push_marketing_drafts.py).
+Route::middleware(['auth:sanctum', 'throttle:20,1'])->prefix('drafts')->group(function () {
+    Route::post('/spotlight', [\App\Http\Controllers\Api\MarketingDraftController::class, 'spotlight']);
+    Route::post('/campaign', [\App\Http\Controllers\Api\MarketingDraftController::class, 'campaign']);
+});
 Route::get('/blog/posts', [BlogController::class, 'index']);
 Route::get('/blog/posts/{slug}', [BlogController::class, 'show']);
 // Signed, expiring review link from the "Blog draft to review" email — shows the
