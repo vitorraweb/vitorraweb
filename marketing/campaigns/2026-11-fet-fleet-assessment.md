@@ -7,6 +7,10 @@
 **Attachment:** `vitorra-fet-datasheet.pdf` (already public on the website).
 **Links:** every link carries `?utm_source=campaign&utm_medium=email&utm_campaign=nov26-fleet-assessment`, so bookings show up as campaign leads in the console.
 
+> **Rewritten 3 November 2026 (v2), at John's direction:** Uganda first. The emails now lead with our own installation photos from Kampala (stills from the 2 November fitting film, in `frontend/public/marketing/fet-kampala/`), mention the 12-month warranty, and end every email with an easy question so prospects reply and the conversation continues. The German test appears once, in email 3, as background. The sequence is three emails: email 1 (three segment versions), email 2 "what a fitting looks like" four days later, email 3 "your own numbers" ten days after email 1. The live drafts are made from `marketing/drafts/2026-11-03-fet-v2.json`. The email text below is the earlier version, kept for reference.
+>
+> **Not used, and why:** the `/products/fet/field-*.jpg` photos are the manufacturer's from Europe, so they are not Ugandan proof. "Only Vitorra sells this in Uganda" waits until we confirm an exclusive distribution agreement. The warranty covers manufacturing defects; it is not a promise of savings, so the emails do not say "if it doesn't work for you".
+
 ## Why now (true for each segment)
 
 | Segment | Prospects | The seasonal reason |

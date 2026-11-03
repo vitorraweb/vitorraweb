@@ -50,21 +50,44 @@ class MarketingDraftController extends Controller
             'subject' => ['required', 'string', 'max:255'],
             'preheader' => ['nullable', 'string', 'max:200'],
             'product' => ['nullable', Rule::in(Prospect::PRODUCTS)],
-            'paragraphs' => ['required', 'array', 'min:1', 'max:12'],
+            // Either plain paragraphs, or ordered sections mixing text, headings and our own photos.
+            'paragraphs' => ['required_without:sections', 'array', 'min:1', 'max:12'],
             'paragraphs.*' => ['string', 'max:1200'],
+            'sections' => ['required_without:paragraphs', 'array', 'min:1', 'max:20'],
+            'sections.*.type' => ['required', Rule::in(['heading', 'text', 'image', 'photo_text', 'button'])],
+            'sections.*.text' => ['nullable', 'string', 'max:1200'],
+            'sections.*.src' => ['nullable', 'string', 'max:300', 'regex:#^/[A-Za-z0-9/_\-.]+\.(jpe?g|png|webp)$#'],
+            'sections.*.alt' => ['nullable', 'string', 'max:200'],
             'button_label' => ['nullable', 'required_with:button_url', 'string', 'max:60'],
             'button_url' => ['nullable', 'string', 'max:500', 'regex:#^(/[^/\\\\]|https://)#'],
+            // This key's own earlier drafts that this one replaces; anything else is left alone.
+            'replaces' => ['nullable', 'array', 'max:20'],
+            'replaces.*' => ['integer'],
         ]);
 
         // The "Simple letter" layout: logo, message, one button. Paragraph text is
         // escaped here; the designer cleans everything again on save.
-        $html = collect($data['paragraphs'])->map(fn ($p) => '<p>'.nl2br(e($p)).'</p>')->implode('');
+        $para = fn (string $t) => collect(preg_split('/\n{2,}/', trim($t)))->map(fn ($p) => '<p>'.nl2br(e($p)).'</p>')->implode('');
         $blocks = [
             ['type' => 'logo', 'props' => ['width' => 84, 'paddingY' => 28]],
             ['type' => 'divider', 'props' => ['width' => 100, 'paddingY' => 4]],
-            ['type' => 'text', 'props' => ['html' => $html, 'paddingY' => 28]],
         ];
-        if (! empty($data['button_url'])) {
+        if (! empty($data['sections'])) {
+            foreach ($data['sections'] as $sec) {
+                $src = ! empty($sec['src']) ? EmailDesigner::siteUrl($sec['src']) : null;
+                $blocks[] = match ($sec['type']) {
+                    'heading' => ['type' => 'heading', 'props' => ['text' => (string) ($sec['text'] ?? ''), 'size' => 22, 'align' => 'left', 'paddingY' => 16]],
+                    'image' => ['type' => 'image', 'props' => ['src' => $src, 'alt' => $sec['alt'] ?? '', 'width' => 100, 'paddingY' => 8]],
+                    'button' => ['type' => 'button', 'props' => ['label' => (string) ($data['button_label'] ?? ''), 'url' => (string) ($data['button_url'] ?? '/enquire'), 'color' => '#1E1E1E', 'paddingY' => 16]],
+                    'photo_text' => ['type' => 'columns', 'props' => ['src' => $src, 'alt' => $sec['alt'] ?? '', 'html' => $para((string) ($sec['text'] ?? '')), 'imageSide' => 'left']],
+                    default => ['type' => 'text', 'props' => ['html' => $para((string) ($sec['text'] ?? '')), 'paddingY' => 12]],
+                };
+            }
+        } else {
+            $blocks[] = ['type' => 'text', 'props' => ['html' => collect($data['paragraphs'])->map(fn ($p) => '<p>'.nl2br(e($p)).'</p>')->implode(''), 'paddingY' => 28]];
+        }
+        // The button goes at the end unless a section already placed it.
+        if (! empty($data['button_url']) && ! collect($data['sections'] ?? [])->contains('type', 'button')) {
             $blocks[] = ['type' => 'button', 'props' => ['label' => $data['button_label'], 'url' => $data['button_url'], 'color' => '#1E1E1E', 'paddingY' => 12]];
         }
         $blocks[] = ['type' => 'spacer', 'props' => ['height' => 28]];
@@ -76,6 +99,9 @@ class MarketingDraftController extends Controller
             'skip_avoid' => true, 'status' => 'draft', 'created_by' => $request->user()->id,
         ]);
         Audit::log('marketing.draft_campaign', "Claude added a campaign draft: {$c->name}");
+        if (! empty($data['replaces'])) {
+            ProspectCampaign::whereIn('id', $data['replaces'])->where('created_by', $request->user()->id)->where('status', 'draft')->where('id', '!=', $c->id)->delete();
+        }
 
         return response()->json(['data' => ['id' => $c->id, 'review' => "/admin/marketing/campaigns/{$c->id}"]], 201);
     }

@@ -1,0 +1,197 @@
+{
+  "campaigns": [
+    {
+      "name": "Nov 2026 FET, email 1 of 3: schools",
+      "subject": "{name}: a free fuel check for your vehicles, here in Kampala",
+      "preheader": "Diesel is above Shs 7,000 a litre. We measure your own vehicles first.",
+      "product": "FET",
+      "sections": [
+        {
+          "type": "text",
+          "text": "Dear {name},\n\nTerm Three closes on 4 December, and most school buses will then be parked until the end of January. With diesel now above Shs 7,000 a litre in Kampala, the holiday is the easiest time to look at what your buses cost to run."
+        },
+        {
+          "type": "photo_text",
+          "src": "/marketing/fet-kampala/in-hand.jpg",
+          "alt": "A Fuel Eco Tech device in a Vitorra technician's hand in Kampala",
+          "text": "Fitted here in Kampala\n\nThis is a Fuel Eco Tech device in one of our technicians' hands, just before it went onto a customer's car in Kampala. Vitorra brings Fuel Eco Tech to Uganda, and our own team fits it."
+        },
+        {
+          "type": "text",
+          "text": "It sits on the fuel line, with no engine modification and no change to the vehicle's electronics. Every device carries a 12-month warranty against manufacturing defects. Once it is fitted, you can log your fill-ups in your Vitorra account and see the measured result on your own vehicle.\n\nIt starts with a free on-site fuel assessment. We look at your vehicles and how they are used, then tell you which device fits each one and what it costs. Our prices are published openly, from UGX 1,891,000 installed for cars and mini-buses."
+        },
+        {
+          "type": "text",
+          "text": "One quick question, if you have a minute: how many vehicles do you run, and are they mostly petrol or diesel? Just reply with the numbers, and we will tell you which devices would fit and what they would cost. No obligation."
+        },
+        {
+          "type": "button"
+        },
+        {
+          "type": "text",
+          "text": "Kind regards,\nThe Vitorra team\nWhatsApp +256 740 026 294\nPadre Pio House, Plot 32, Lumumba Avenue, Kampala"
+        }
+      ],
+      "button_label": "Book a free fuel assessment",
+      "button_url": "/enquire?sector=FET&utm_source=campaign&utm_medium=email&utm_campaign=nov26-fleet-assessment",
+      "replaces": [
+        8,
+        9,
+        10,
+        11
+      ]
+    },
+    {
+      "name": "Nov 2026 FET, email 1 of 3: transport and cargo",
+      "subject": "{name}: a free fuel check for your vehicles, here in Kampala",
+      "preheader": "Diesel is above Shs 7,000 a litre. We measure your own vehicles first.",
+      "product": "FET",
+      "sections": [
+        {
+          "type": "text",
+          "text": "Dear {name},\n\nDiesel is now above Shs 7,000 a litre in Kampala, and December is the busiest month on the road. When your vehicles run the most, every litre counts most."
+        },
+        {
+          "type": "photo_text",
+          "src": "/marketing/fet-kampala/in-hand.jpg",
+          "alt": "A Fuel Eco Tech device in a Vitorra technician's hand in Kampala",
+          "text": "Fitted here in Kampala\n\nThis is a Fuel Eco Tech device in one of our technicians' hands, just before it went onto a customer's car in Kampala. Vitorra brings Fuel Eco Tech to Uganda, and our own team fits it."
+        },
+        {
+          "type": "text",
+          "text": "It sits on the fuel line, with no engine modification and no change to the vehicle's electronics. Every device carries a 12-month warranty against manufacturing defects. Once it is fitted, you can log your fill-ups in your Vitorra account and see the measured result on your own vehicle.\n\nIt starts with a free on-site fuel assessment. We look at your vehicles and how they are used, then tell you which device fits each one and what it costs. Our prices are published openly, from UGX 1,891,000 installed for cars and mini-buses."
+        },
+        {
+          "type": "text",
+          "text": "One quick question, if you have a minute: how many vehicles do you run, and are they mostly petrol or diesel? Just reply with the numbers, and we will tell you which devices would fit and what they would cost. No obligation."
+        },
+        {
+          "type": "button"
+        },
+        {
+          "type": "text",
+          "text": "Kind regards,\nThe Vitorra team\nWhatsApp +256 740 026 294\nPadre Pio House, Plot 32, Lumumba Avenue, Kampala"
+        }
+      ],
+      "button_label": "Book a free fuel assessment",
+      "button_url": "/enquire?sector=FET&utm_source=campaign&utm_medium=email&utm_campaign=nov26-fleet-assessment"
+    },
+    {
+      "name": "Nov 2026 FET, email 1 of 3: other fleets",
+      "subject": "{name}: a free fuel check for your vehicles, here in Kampala",
+      "preheader": "Diesel is above Shs 7,000 a litre. We measure your own vehicles first.",
+      "product": "FET",
+      "sections": [
+        {
+          "type": "text",
+          "text": "Dear {name},\n\nAs you plan next year's budget, fuel is likely one of the largest costs your vehicles carry, and one that repeats every week. Diesel is now above Shs 7,000 a litre in Kampala."
+        },
+        {
+          "type": "photo_text",
+          "src": "/marketing/fet-kampala/in-hand.jpg",
+          "alt": "A Fuel Eco Tech device in a Vitorra technician's hand in Kampala",
+          "text": "Fitted here in Kampala\n\nThis is a Fuel Eco Tech device in one of our technicians' hands, just before it went onto a customer's car in Kampala. Vitorra brings Fuel Eco Tech to Uganda, and our own team fits it."
+        },
+        {
+          "type": "text",
+          "text": "It sits on the fuel line, with no engine modification and no change to the vehicle's electronics. Every device carries a 12-month warranty against manufacturing defects. Once it is fitted, you can log your fill-ups in your Vitorra account and see the measured result on your own vehicle.\n\nIt starts with a free on-site fuel assessment. We look at your vehicles and how they are used, then tell you which device fits each one and what it costs. Our prices are published openly, from UGX 1,891,000 installed for cars and mini-buses."
+        },
+        {
+          "type": "text",
+          "text": "One quick question, if you have a minute: how many vehicles do you run, and are they mostly petrol or diesel? Just reply with the numbers, and we will tell you which devices would fit and what they would cost. No obligation."
+        },
+        {
+          "type": "button"
+        },
+        {
+          "type": "text",
+          "text": "Kind regards,\nThe Vitorra team\nWhatsApp +256 740 026 294\nPadre Pio House, Plot 32, Lumumba Avenue, Kampala"
+        }
+      ],
+      "button_label": "Book a free fuel assessment",
+      "button_url": "/enquire?sector=FET&utm_source=campaign&utm_medium=email&utm_campaign=nov26-fleet-assessment"
+    },
+    {
+      "name": "Nov 2026 FET, email 2 of 3: what a fitting looks like (4 days later, everyone who has not booked)",
+      "subject": "{name}, here is what a fitting looks like",
+      "preheader": "Three photos from a recent fitting in Kampala.",
+      "product": "FET",
+      "sections": [
+        {
+          "type": "text",
+          "text": "Dear {name},\n\nA few photos from a recent fitting in Kampala, so you can see exactly what happens."
+        },
+        {
+          "type": "photo_text",
+          "src": "/marketing/fet-kampala/engine-bay.jpg",
+          "alt": "The engine bay before fitting",
+          "text": "1. We look first\n\nWe check the engine, the fuel line and how the vehicle is used. That is what the free assessment covers, before anything is fitted."
+        },
+        {
+          "type": "photo_text",
+          "src": "/marketing/fet-kampala/fitting.jpg",
+          "alt": "A Vitorra technician fitting the device to the fuel line",
+          "text": "2. Fitted to the fuel line\n\nOur technician fits the device between the fuel pump and the filter. Nothing on the engine or its electronics is changed."
+        },
+        {
+          "type": "photo_text",
+          "src": "/marketing/fet-kampala/fitted.jpg",
+          "alt": "Fuel Eco Tech in place on the fuel line",
+          "text": "3. In place\n\nThe device sits on the fuel line. If it ever proves faulty, the 12-month warranty covers it."
+        },
+        {
+          "type": "heading",
+          "text": "Questions we are often asked"
+        },
+        {
+          "type": "text",
+          "text": "Will it affect my vehicle's warranty?\nTell us the make and model, and we will give you written guidance before anything is fitted.\n\nWill it work on all my vehicles?\nFit depends on the engine size, the fuel line and the injection system. That is exactly what the free assessment checks.\n\nHow will I know it is working?\nAfter fitting, you log your fill-ups in your Vitorra account and see your own measured result."
+        },
+        {
+          "type": "text",
+          "text": "Which of your vehicles costs you the most in fuel? Reply and tell us, and we will start the assessment there."
+        },
+        {
+          "type": "button"
+        },
+        {
+          "type": "text",
+          "text": "Kind regards,\nThe Vitorra team\nWhatsApp +256 740 026 294\nPadre Pio House, Plot 32, Lumumba Avenue, Kampala"
+        }
+      ],
+      "button_label": "Book a free fuel assessment",
+      "button_url": "/enquire?sector=FET&utm_source=campaign&utm_medium=email&utm_campaign=nov26-fleet-assessment"
+    },
+    {
+      "name": "Nov 2026 FET, email 3 of 3: your own numbers (10 days after email 1, everyone who has not booked)",
+      "subject": "{name}, work out your own fuel numbers",
+      "preheader": "Enter your own fuel use or monthly spend and see it in shillings.",
+      "product": "FET",
+      "sections": [
+        {
+          "type": "text",
+          "text": "Dear {name},\n\nIf you would like to see the numbers before we meet, our fuel calculator lets you enter your own fuel use, or simply what you spend on fuel each month, and shows what different savings would mean for you in shillings. It starts at 0%, so you can see the cautious case too."
+        },
+        {
+          "type": "photo_text",
+          "src": "/marketing/fet-kampala/fitted.jpg",
+          "alt": "Fuel Eco Tech fitted in Kampala",
+          "text": "Measured on your vehicles\n\nIn an independent test in Germany, a VW T5 used 13.9% less fuel with the device fitted. Every vehicle is different, which is why we measure yours, here in Uganda, before and after."
+        },
+        {
+          "type": "text",
+          "text": "Would a 15-minute call this week help? Reply with a good day and time, or WhatsApp us on +256 740 026 294, and one of our team will call you."
+        },
+        {
+          "type": "button"
+        },
+        {
+          "type": "text",
+          "text": "Kind regards,\nThe Vitorra team\nWhatsApp +256 740 026 294\nPadre Pio House, Plot 32, Lumumba Avenue, Kampala"
+        }
+      ],
+      "button_label": "Try the fuel calculator",
+      "button_url": "/products/fuel-eco-tech?utm_source=campaign&utm_medium=email&utm_campaign=nov26-fleet-assessment#fet-calculator"
+    }
+  ]
+}

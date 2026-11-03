@@ -49,4 +49,29 @@ class MarketingDraftTest extends TestCase
         $this->flushHeaders();
         $this->postJson('/api/drafts/campaign', ['name' => 'x', 'subject' => 'x', 'paragraphs' => ['x']])->assertUnauthorized();
     }
+
+    public function test_a_draft_can_carry_our_own_photos_and_replace_this_keys_old_drafts(): void
+    {
+        $h = $this->key();
+        $old = $this->postJson('/api/drafts/campaign', ['name' => 'v1', 'subject' => 's', 'paragraphs' => ['x']], $h)->json('data.id');
+        $mine = ProspectCampaign::create(['name' => 'staff draft', 'subject' => 's', 'body' => '', 'status' => 'draft', 'created_by' => \App\Models\User::create(['name' => 'S', 'email' => 's-'.uniqid().'@v.org', 'password' => 'x-'.uniqid(), 'role' => 'ops'])->id]);
+
+        $this->postJson('/api/drafts/campaign', ['name' => 'v2', 'subject' => 's', 'replaces' => [$old, $mine->id], 'sections' => [
+            ['type' => 'text', 'text' => "Dear {name},\n\nHello."],
+            ['type' => 'photo_text', 'src' => '/marketing/fet-kampala/fitted.jpg', 'alt' => 'Fitted', 'text' => 'In Kampala.'],
+            ['type' => 'image', 'src' => '/marketing/fet-kampala/in-hand.jpg', 'alt' => 'In hand'],
+        ]], $h)->assertCreated();
+        $this->postJson('/api/drafts/campaign', ['name' => 'v3', 'subject' => 's', 'sections' => [['type' => 'image', 'src' => 'https://evil.test/x.jpg']]], $h)->assertUnprocessable();
+
+        $this->assertNull(ProspectCampaign::find($old));          // its own old draft, replaced
+        $this->assertNotNull(ProspectCampaign::find($mine->id));  // a person's draft, never touched
+        $design = json_encode(ProspectCampaign::where('name', 'v2')->first()->design);
+        $this->assertStringContainsString('fet-kampala\\/fitted.jpg', $design);
+
+        $this->postJson('/api/drafts/campaign', ['name' => 'v4', 'subject' => 's', 'button_label' => 'Book', 'button_url' => '/enquire', 'sections' => [
+            ['type' => 'text', 'text' => 'Hi'], ['type' => 'button'], ['type' => 'text', 'text' => 'Kind regards'],
+        ]], $h)->assertCreated();
+        $types = array_column(ProspectCampaign::where('name', 'v4')->first()->design['blocks'], 'type');
+        $this->assertSame(['logo', 'divider', 'text', 'button', 'text', 'spacer'], $types);
+    }
 }
