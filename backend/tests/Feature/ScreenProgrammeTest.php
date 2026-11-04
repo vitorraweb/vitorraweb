@@ -198,4 +198,42 @@ class ScreenProgrammeTest extends TestCase
         $this->travelTo(now('Africa/Kampala')->setTime(12, 0));
         $this->assertSame('image', $this->getJson('/api/display/adverts')->json('data.0.kind'));
     }
+
+    public function test_a_campaign_in_chosen_slots_gets_the_same_airtime_packed_into_them(): void
+    {
+        $b = $this->booking(['units' => 1, 'slots' => ['morning']]);
+        $this->assertSame(4.0, $b->unitsInSlot());       // 16 on-air hours ÷ 4 morning hours
+        $this->assertSame(60, $b->playsPerHourOnAir());  // a Standard unit, four times as often
+
+        $this->travelTo(CarbonImmutable::parse('2026-11-04 05:00:00', 'UTC')); // 8am Kampala
+        $b->update(['start_date' => '2026-11-01', 'end_date' => '2026-11-30']);
+        $this->assertTrue($b->fresh()->isOnAirAt(now()));
+        $this->travelTo(CarbonImmutable::parse('2026-11-04 10:00:00', 'UTC')); // 1pm Kampala
+        $this->assertFalse($b->fresh()->isOnAirAt(now()));
+        // Delivery: the day's total matches an all-day Standard booking.
+        $this->travelTo(CarbonImmutable::parse('2026-11-05 20:00:00', 'UTC'));
+        $this->assertSame(240, app(Inventory::class)->delivery($b->fresh())['days'][0]['expected']);
+    }
+
+    public function test_each_slot_has_its_own_twelve_units(): void
+    {
+        $this->booking(['units' => 2, 'slots' => ['morning']]);   // takes 8 morning units
+        $this->booking(['units' => 1, 'slots' => ['morning']]);   // and 4 more: mornings are full
+
+        $this->postJson('/api/screen-ads/bookings', $this->payload(['slots' => ['morning']]))->assertUnprocessable()->assertJsonPath('message', fn ($m) => str_contains($m, 'Those times are fully booked'));
+        $this->postJson('/api/screen-ads/bookings', $this->payload(['slots' => ['evening']]))->assertCreated();
+        // All day needs a unit in every slot, including the full morning.
+        $this->postJson('/api/screen-ads/bookings', $this->payload())->assertUnprocessable();
+        // Choosing all three is stored as all day.
+        $this->booking(['units' => 0, 'start_date' => now()->addYears(2)->toDateString(), 'end_date' => now()->addYears(2)->toDateString()]);
+        $this->postJson('/api/screen-ads/bookings', $this->payload(['slots' => ['morning', 'lunchtime', 'evening'], 'start_date' => now('Africa/Kampala')->addDays(60)->toDateString()]))->assertCreated();
+        $this->assertNull(Booking::latest('id')->first()->slots);
+    }
+
+    public function test_the_booking_page_shows_each_packages_airtime_and_the_slots(): void
+    {
+        $d = $this->getJson('/api/screen-ads/pricing')->assertOk()->json('data');
+        $this->assertSame([60, 60, 120, 240], array_column($d['packages'], 'minutes_per_day'));
+        $this->assertSame(['morning', 'lunchtime', 'evening'], array_column($d['slots'], 'id'));
+    }
 }

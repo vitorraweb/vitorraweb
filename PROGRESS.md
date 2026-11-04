@@ -2125,6 +2125,16 @@ Numbers (13.9%, 36), prices, web addresses, QR codes and pictures are deliberate
 
 ---
 
+## Street screen: times of day and airtime in minutes (4 November 2026) — website live; server update needed
+
+From Finance's comment. A customer chooses **all day** or any of **morning (6am to 10am), lunchtime (10am to 4pm), evening (4pm to 10pm)**. Prices stay as approved and so does the airtime each package buys: Trial and Standard 1 hour a day, Growth 2 hours, High Visibility 4 hours (shown on the booking page). Choosing fewer hours plays the advert more often in them: a Standard advert in the mornings only plays about 60 times an hour there, instead of 15 all day. Each time of day has its own 12 units, so one can sell out while the others have room. Delivery reports count against the chosen hours; the screen spreads fractional units across cycles (checked: 60, 24 and 15 plays in a simulated hour for mornings-only, morning-and-evening and all-day bookings). Terms updated.
+
+Finance's "10 minutes against 1 minute" was kept at the current 4× gap (John's decision), now shown in minutes.
+
+**Server:** pull, `migrate --force` (`2026_11_04_000001`), `config:cache`.
+
+---
+
 ## Screen editor and designs (3 November 2026) — website live; server update needed
 
 - **Customer designs:** a booking can use a 1920 × 1080 design (PNG, JPG or WebP, 16:9, up to 20 MB) instead of a video. It is shown for the same 15 seconds, uses the same unit, and is logged and reported like a video. The terms say so.

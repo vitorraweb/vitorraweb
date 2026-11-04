@@ -80,7 +80,7 @@ export default function BookingPage({ params }: { params: Promise<{ token: strin
       <dl className="mt-10 grid grid-cols-[9rem_1fr] gap-y-2 t-body">
         <dt className="text-ink-muted">Advertiser</dt><dd>{b.company}</dd>
         <dt className="text-ink-muted">Package</dt><dd>{b.package}, about {b.plays_per_hour} appearances an hour</dd>
-        <dt className="text-ink-muted">On screen</dt><dd>Every day, {b.on_air}</dd>
+        <dt className="text-ink-muted">On screen</dt><dd>Every day: {b.on_air}</dd>
         <dt className="text-ink-muted">Campaign</dt><dd>{date(b.start_date)} to {date(b.end_date)}</dd>
       </dl>
     </div>

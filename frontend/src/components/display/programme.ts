@@ -18,6 +18,11 @@ const MIN_SLICE = 5;
 
 export type Advert = { id: number; url: string; seconds: number; plays_per_hour: number; units: number; kind?: "video" | "image" };
 
+/** Fractional units carried from one cycle to the next, by advert: a Standard unit packed
+ *  into 10 of the 16 on-air hours is 1.6 units, so it plays 1 or 2 times a cycle and
+ *  averages exactly 1.6. */
+export type Carry = Record<number, number>;
+
 export type Cycle = {
   queue: Advert[];   // still to play this cycle
   total: number;     // paid plays in this cycle
@@ -29,10 +34,17 @@ const CYCLE_MS = CYCLE_SECONDS * 1000;
 
 /** One play per sold unit, interleaved so a 4-unit booking is spread out, not played four in a row.
  *  A new cycle starts where the last one was due to end, so cycles stay exactly four minutes apart. */
-export function newCycle(ads: Advert[], now: number, previous: Cycle | null = null): Cycle {
+export function newCycle(ads: Advert[], now: number, previous: Cycle | null = null, carry: Carry = {}): Cycle {
+  const plays = new Map<number, number>();
+  for (const a of ads) {
+    const owed = (carry[a.id] ?? 0) + a.units;
+    const n = Math.floor(owed + 1e-9);
+    plays.set(a.id, n);
+    carry[a.id] = owed - n;
+  }
   const queue: Advert[] = [];
-  const rounds = Math.max(0, ...ads.map((a) => a.units));
-  for (let r = 0; r < rounds; r++) for (const a of ads) if (a.units > r) queue.push(a);
+  const rounds = Math.max(0, ...plays.values());
+  for (let r = 0; r < rounds; r++) for (const a of ads) if ((plays.get(a.id) ?? 0) > r) queue.push(a);
   const due = previous ? previous.start + CYCLE_MS : now;
   return { queue, total: queue.length, played: 0, start: now - due < 10_000 ? due : now };
 }

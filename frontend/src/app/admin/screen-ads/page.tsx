@@ -12,7 +12,7 @@ import { Empty, PageHeader, StatusBadge } from "@/components/admin/admin-ui";
 
 type Booking = {
   id: number; reference: string; status: string; company: string; contact_name: string; email: string; phone: string | null; notes: string | null;
-  package: string; plays_per_hour: number; start_date: string; end_date: string;
+  package: string; plays_per_hour: number; slots: string[] | null; start_date: string; end_date: string;
   price_ugx: number; video_url: string; video_seconds: number; video_width: number | null; video_height: number | null; proof_name: string | null; review_note: string | null; created_at: string;
 };
 
@@ -186,7 +186,7 @@ export default function ScreenAdsPage() {
                       <div className="text-[14px] space-y-1.5">
                         <p>{b.contact_name} · {b.email}{b.phone ? ` · ${b.phone}` : ""}</p>
                         <p>Video: {Math.round(b.video_seconds)}s, {b.video_width} × {b.video_height}</p>
-                        <p className="capitalize">{b.package}: {b.plays_per_hour} plays an hour</p>
+                        <p className="capitalize">{b.package}: {b.slots?.length ? b.slots.join(", ") : "all day"}</p>
                         {b.notes && <p>Note: {b.notes}</p>}
                         {b.review_note && <p>Refused: {b.review_note}</p>}
                         {delivery[b.id] && (

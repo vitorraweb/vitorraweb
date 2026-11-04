@@ -35,7 +35,7 @@ class ScreenAdBooking extends Model
     protected function casts(): array
     {
         return [
-            'start_date' => 'date', 'end_date' => 'date',
+            'start_date' => 'date', 'end_date' => 'date', 'slots' => 'array',
             'proof_at' => 'datetime', 'payment_confirmed_at' => 'datetime',
             'reviewed_at' => 'datetime', 'refunded_at' => 'datetime',
             'video_seconds' => 'float',
@@ -59,6 +59,36 @@ class ScreenAdBooking extends Model
         return sprintf('VHL-SA-%d-%04d', $year, $n);
     }
 
+    /** The slots this campaign plays in; all of them when none were chosen. */
+    public function slotKeys(): array
+    {
+        return $this->slots ?: array_keys(config('screen_ads.slots'));
+    }
+
+    /** On-air hours a day across its slots. */
+    public function hours(): int
+    {
+        return (int) collect($this->slotKeys())->sum(fn ($k) => config("screen_ads.slots.$k.to") - config("screen_ads.slots.$k.from"));
+    }
+
+    /**
+     * Units it takes in each of its slots. The airtime bought is the same all day or
+     * in part of it, so a Standard unit squeezed into the 4 morning hours takes 4 units
+     * there. May be fractional (the screen spreads it across cycles).
+     */
+    public function unitsInSlot(): float
+    {
+        $day = config('screen_ads.on_air.to') - config('screen_ads.on_air.from');
+
+        return $this->units * $day / max(1, $this->hours());
+    }
+
+    /** Plays an hour while it is on air. */
+    public function playsPerHourOnAir(): int
+    {
+        return (int) round(3600 / config('screen_ads.programme.cycle_seconds') * $this->unitsInSlot());
+    }
+
     /** Whether the advert should be on screen at this moment, by Kampala's clock. */
     public function isOnAirAt(\DateTimeInterface $at): bool
     {
@@ -66,6 +96,10 @@ class ScreenAdBooking extends Model
         if ($this->status !== self::APPROVED) return false;
         if ($now->toDateString() < $this->start_date->toDateString() || $now->toDateString() > $this->end_date->toDateString()) return false;
 
-        return $now->hour >= config('screen_ads.on_air.from') && $now->hour < config('screen_ads.on_air.to');
+        foreach ($this->slotKeys() as $k) {
+            if ($now->hour >= config("screen_ads.slots.$k.from") && $now->hour < config("screen_ads.slots.$k.to")) return true;
+        }
+
+        return false;
     }
 }

@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import Image from "next/image";
 import { API_BASE_URL, CONTACT_PHONE } from "@/lib/constants";
 import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
-import { newCycle, next, slice, spent, type Advert, type Cycle } from "./programme";
+import { newCycle, next, slice, spent, type Advert, type Carry, type Cycle } from "./programme";
 import type { MediaScene, Programme } from "./scenes";
 import { COPY_DRAFT_KEY, DEFAULT_COPY, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
 
@@ -84,13 +84,14 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
   const latest = useRef(adverts);
   useEffect(() => { latest.current = adverts; }, [adverts]);
   const cycle = useRef<Cycle | null>(null);
+  const carry = useRef<Carry>({});
   const [ad, setAd] = useState<{ advert: Advert; started: string } | null>(null);
   const key = useScreenKey(mode);
 
   // The next scene of our own content, starting a new cycle first if this one is done.
   const nextScene = useCallback(() => {
     const now = Date.now();
-    if (programme && (!cycle.current || spent(cycle.current, now))) cycle.current = newCycle(latest.current, now, cycle.current);
+    if (programme && (!cycle.current || spent(cycle.current, now))) cycle.current = newCycle(latest.current, now, cycle.current, carry.current);
     const n = (i + 1) % story.length;
     const natural = durationOf(story[n], mode);
     const s = programme ? slice(cycle.current, natural, now) : natural;
@@ -109,7 +110,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
     if (pinned >= 0 || ad) return;
     const t = setTimeout(() => {
       if (!programme) { nextScene(); return; }
-      cycle.current ??= newCycle(latest.current, Date.now() - seconds * 1000);
+      cycle.current ??= newCycle(latest.current, Date.now() - seconds * 1000, null, carry.current);
       playNext();
     }, seconds * 1000);
     return () => clearTimeout(t);

@@ -14,7 +14,8 @@ import { IMAGE_TYPES, isH264, readImage, readVideo, type Pricing } from "@/lib/s
 
 const cls = "w-full min-h-12 rounded-edge px-3.5 t-body border border-line-strong bg-white text-ink outline-none focus:border-ink transition-colors";
 const choice = (on: boolean) => `text-left rounded-edge border px-4 py-3 transition-colors ${on ? "border-ink bg-ink text-paper" : "border-line-strong hover:border-ink"}`;
-const TITLES = ["Choose your package", "Choose your start date", "Upload your advert", "Your details"];
+const airtime = (m: number) => (m >= 60 && m % 60 === 0 ? `${m / 60} hour${m === 60 ? "" : "s"}` : `${m} minutes`);
+const TITLES = ["Choose your package", "Choose your times and start date", "Upload your advert", "Your details"];
 
 type Video = { url: string; seconds: number | null; width: number; height: number; size: number; name: string; kind: "video" | "image" };
 
@@ -26,6 +27,7 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
   const [step, setStep] = useState(0);
   const [packageId, setPackageId] = useState("standard");
   const [start, setStart] = useState("");
+  const [slots, setSlots] = useState<string[]>([]); // empty: all day
   const [video, setVideo] = useState<Video | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [f, setF] = useState({ company: "", contact_name: "", email: "", phone: "", notes: "" });
@@ -46,6 +48,10 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
 
   const chosen = p.packages.find((x) => x.id === packageId) ?? p.packages[0];
   const seconds = p.video.seconds;
+  // The same daily airtime, concentrated in the hours chosen.
+  const allHours = p.slots.reduce((n, x) => n + x.length, 0);
+  const hours = slots.length ? p.slots.filter((x) => slots.includes(x.id)).reduce((n, x) => n + x.length, 0) : allHours;
+  const playsPerHour = Math.round((chosen.plays_per_hour * allHours) / Math.max(1, hours));
   const earliest = new Date(opened + p.lead_days * 86_400_000).toISOString().slice(0, 10);
 
   const pick = async (file: File | undefined) => {
@@ -101,7 +107,7 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
       const r = await fetch(`${API}/screen-ads/bookings`, {
         method: "POST", headers,
         body: JSON.stringify({
-          ...f, package: chosen.id, start_date: start, terms_accepted: terms, turnstile_token: token,
+          ...f, package: chosen.id, slots, start_date: start, terms_accepted: terms, turnstile_token: token,
           media_type: video.kind, video_url: video.url, video_seconds: video.seconds, video_width: video.width, video_height: video.height, video_size: video.size,
         }),
       });
@@ -131,7 +137,7 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
                 <button key={x.id} type="button" aria-pressed={packageId === x.id} onClick={() => setPackageId(x.id)} className={choice(packageId === x.id)}>
                   <span className="block font-semibold">{x.label}</span>
                   <span className="block font-display text-[1.75rem] leading-tight mt-2 tabular-nums">UGX {x.price_ugx.toLocaleString("en-US")}</span>
-                  <span className="block t-small opacity-80 mt-2">{x.days} days · approx. {x.plays_per_hour} appearances per hour</span>
+                  <span className="block t-small opacity-80 mt-2">{x.days} days · {airtime(x.minutes_per_day)} of airtime a day</span>
                 </button>
               ))}
             </div>
@@ -140,7 +146,24 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
         )}
 
         {step === 1 && (
-          <section>
+          <section className="space-y-10">
+            <div>
+              <h2 className="t-h4 mb-3">When should it play?</h2>
+              <div className="grid sm:grid-cols-4 gap-3">
+                <button type="button" aria-pressed={slots.length === 0} onClick={() => setSlots([])} className={choice(slots.length === 0)}>
+                  <span className="block font-semibold">All day</span><span className="block t-small opacity-80 mt-1">{p.on_air}</span>
+                </button>
+                {p.slots.map((x) => (
+                  <button key={x.id} type="button" aria-pressed={slots.includes(x.id)} onClick={() => {
+                    const next = slots.includes(x.id) ? slots.filter((s) => s !== x.id) : [...slots, x.id];
+                    setSlots(next.length === p.slots.length ? [] : next);
+                  }} className={choice(slots.includes(x.id))}>
+                    <span className="block font-semibold">{x.label}</span><span className="block t-small opacity-80 mt-1">{x.hours}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="t-small text-ink-muted mt-3">Your package&apos;s {airtime(chosen.minutes_per_day)} of airtime a day stays the same. Choose fewer times and it plays more often in them: about {playsPerHour} times an hour{slots.length ? "" : " all day"}.</p>
+            </div>
             <label className="block"><span className="t-h4 block mb-3">Start date</span>
               <input type="date" min={earliest} value={start} onChange={(e) => setStart(e.target.value)} className={`${cls} max-w-[16rem]`} />
             </label>
@@ -190,9 +213,10 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
         <p className="font-display text-[2.5rem] leading-none mt-4 tabular-nums" aria-live="polite">UGX {chosen.price_ugx.toLocaleString("en-US")}</p>
         <ul className="t-small mt-5 space-y-1.5">
           <li>{chosen.label} package</li>
-          <li>{chosen.days} days, every day, {p.on_air}</li>
+          <li>{chosen.days} days, every day, {slots.length ? p.slots.filter((x) => slots.includes(x.id)).map((x) => x.label.toLowerCase()).join(" and ") : `all day, ${p.on_air}`}</li>
+          <li>{airtime(chosen.minutes_per_day)} of airtime a day</li>
           <li>{seconds}-second video</li>
-          <li>Approx. {chosen.plays_per_hour} appearances per hour</li>
+          <li>About {playsPerHour} appearances an hour while on</li>
         </ul>
       </aside>
     </div>

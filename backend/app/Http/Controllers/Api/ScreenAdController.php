@@ -33,7 +33,9 @@ class ScreenAdController extends Controller
         $c = config('screen_ads');
 
         return response()->json(['data' => [
-            'packages'  => collect($c['packages'])->map(fn ($p, $id) => ['id' => $id] + $p)->values(),
+            // Airtime a day: one unit is a 15-second play every 4 minutes for the on-air day.
+            'packages'  => collect($c['packages'])->map(fn ($p, $id) => ['id' => $id] + $p + ['minutes_per_day' => (int) round($p['units'] * ($c['on_air']['to'] - $c['on_air']['from']) * 3600 / $c['programme']['cycle_seconds'] * $c['programme']['unit_seconds'] / 60)])->values(),
+            'slots'     => collect($c['slots'])->map(fn ($s, $id) => ['id' => $id, 'label' => $s['label'], 'hours' => $s['hours'], 'length' => $s['to'] - $s['from']])->values(),
             'lead_days' => $c['lead_days'],
             'programme' => $c['programme'],
             'on_air'    => $c['on_air']['label'],
@@ -53,6 +55,8 @@ class ScreenAdController extends Controller
             'phone'          => ['required', 'string', 'max:50', new PhoneNumber()],
             'notes'          => ['nullable', 'string', 'max:1000'],
             'package'        => ['required', Rule::in(array_keys($c['packages']))],
+            'slots'          => ['nullable', 'array'],
+            'slots.*'        => ['distinct', Rule::in(array_keys($c['slots']))],
             'start_date'     => ['required', 'date_format:Y-m-d', 'after_or_equal:'.now('Africa/Kampala')->addDays($c['lead_days'])->toDateString()],
             'media_type'     => ['nullable', Rule::in(['video', 'image'])],
             'video_url'      => ['required', 'string', 'max:500', 'regex:'.self::VIDEO_URL],
@@ -82,12 +86,19 @@ class ScreenAdController extends Controller
         }
 
         $package = $c['packages'][$data['package']];
+        // All three slots is the same as all day; store it as all day.
+        $slots = array_values(array_intersect(array_keys($c['slots']), $data['slots'] ?? []));
+        if (count($slots) === count($c['slots'])) $slots = [];
+        $probe = new ScreenAdBooking(['units' => $package['units'], 'slots' => $slots ?: null]);
         $first = \Illuminate\Support\Carbon::parse($data['start_date']);
-        $free = app(\App\Services\ScreenAds\Inventory::class)->freeUnits($first, $first->copy()->addDays($package['days'] - 1));
-        if ($free < $package['units']) {
-            $message = $free > 0
-                ? "Only {$free} of the screen's units are free on some of those days. Try a smaller package or a later start date."
-                : 'The screen is fully booked on some of those days. Please try a later start date.';
+        $free = app(\App\Services\ScreenAds\Inventory::class)->freeUnits($first, $first->copy()->addDays($package['days'] - 1), $slots ?: null);
+        if ($free + 0.001 < $probe->unitsInSlot()) {
+            $left = (int) floor($free + 0.001);
+            $message = $slots
+                ? 'Those times are fully booked on some of those days. Try other times, all day, a smaller package or a later start date.'
+                : ($left > 0
+                    ? "Only {$left} of the screen's units are free on some of those days. Try a smaller package, fewer times of day or a later start date."
+                    : 'The screen is fully booked on some of those days. Please try a later start date.');
             return response()->json(['message' => $message, 'errors' => ['start_date' => [$message]]], 422);
         }
         $token = Str::random(48);
@@ -105,6 +116,7 @@ class ScreenAdController extends Controller
             'price_ugx'         => $package['price_ugx'],
             'plays_per_hour'    => $package['plays_per_hour'],
             'units'             => $package['units'],
+            'slots'             => $slots ?: null,
             'start_date'        => $start,
             'end_date'          => $start->copy()->addDays($package['days'] - 1),
             'video_url'         => $data['video_url'],
@@ -172,7 +184,7 @@ class ScreenAdController extends Controller
         $now = now();
         $ads = ScreenAdBooking::where('status', ScreenAdBooking::APPROVED)->get()
             ->filter(fn (ScreenAdBooking $b) => $b->isOnAirAt($now))
-            ->map(fn (ScreenAdBooking $b) => ['id' => $b->id, 'url' => $b->video_url, 'seconds' => (int) config('screen_ads.video.seconds'), 'plays_per_hour' => $b->plays_per_hour, 'units' => $b->units, 'kind' => $b->media_type])
+            ->map(fn (ScreenAdBooking $b) => ['id' => $b->id, 'url' => $b->video_url, 'seconds' => (int) config('screen_ads.video.seconds'), 'plays_per_hour' => $b->playsPerHourOnAir(), 'units' => round($b->unitsInSlot(), 3), 'kind' => $b->media_type])
             ->values();
 
         return response()->json(['data' => $ads])->header('Cache-Control', 'public, max-age=60');
@@ -192,8 +204,8 @@ class ScreenAdController extends Controller
             'status'      => $b->status,
             'company'     => $b->company,
             'package'     => config("screen_ads.packages.{$b->package}.label", $b->package),
-            'plays_per_hour' => $b->plays_per_hour,
-            'on_air'      => config('screen_ads.on_air.label'),
+            'plays_per_hour' => $b->playsPerHourOnAir(),
+            'on_air'      => $b->slots ? collect($b->slots)->map(fn ($k) => config("screen_ads.slots.$k.label").' ('.config("screen_ads.slots.$k.hours").')')->implode(', ') : 'All day, '.config('screen_ads.on_air.label'),
             'start_date'  => $b->start_date->toDateString(),
             'end_date'    => $b->end_date->toDateString(),
             'price_ugx'   => $b->price_ugx,

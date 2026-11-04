@@ -22,7 +22,8 @@ export default async function ScreenAdTermsPage({ searchParams }: { searchParams
 
       <Section title="1. What you are buying">
         <p>The screen runs a four-minute programme: twelve paid 15-second units and at least one minute of Vitorra&apos;s own content. One unit plays your advert once in every four minutes, which is 15 times an hour, every day of your campaign, from 6am to 10pm Kampala time.</p>
-        <p>Trial: 1 unit for 7 days. Standard: 1 unit for 30 days. Growth: 2 units for 30 days. High Visibility: 4 units for 30 days. The price shown when you book is the full amount you pay.</p>
+        <p>Trial: 1 unit for 7 days. Standard: 1 unit for 30 days. Growth: 2 units for 30 days. High Visibility: 4 units for 30 days. One unit is about 60 minutes of airtime a day. The price shown when you book is the full amount you pay.</p>
+        <p>You can run all day, or choose the morning (6am to 10am), lunchtime (10am to 4pm) or evening (4pm to 10pm). Your airtime a day stays the same: in fewer hours, your advert plays more often. Each time of day has its own twelve units, so a popular time can be fully booked when others are not.</p>
         <p>The screen sells no more than twelve units at a time. Your units are reserved when you book and released if we have not received payment within 72 hours.</p>
       </Section>
 

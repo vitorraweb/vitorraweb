@@ -55,6 +55,15 @@ return [
     // On screen every day of a campaign, Kampala time: the rate card's 16-hour day.
     'on_air' => ['from' => 6, 'to' => 22, 'label' => '6am to 10pm'],
 
+    // Parts of the day a customer can choose (Finance, 4 November 2026). A package
+    // buys the same airtime whatever is chosen: choosing fewer hours plays it more
+    // often in them. Each slot has its own 12 units. Together they cover on_air.
+    'slots' => [
+        'morning'   => ['label' => 'Morning', 'hours' => '6am to 10am', 'from' => 6, 'to' => 10],
+        'lunchtime' => ['label' => 'Lunchtime', 'hours' => '10am to 4pm', 'from' => 10, 'to' => 16],
+        'evening'   => ['label' => 'Evening', 'hours' => '4pm to 10pm', 'from' => 16, 'to' => 22],
+    ],
+
     'video' => [
         // The only length the rate card prices. Longer films go to a quote.
         'seconds' => 15,

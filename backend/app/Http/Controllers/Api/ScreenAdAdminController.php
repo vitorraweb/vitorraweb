@@ -75,7 +75,7 @@ class ScreenAdAdminController extends Controller
             ['Booking', $booking->reference], ['Advertiser', $booking->company],
             ['Package', config("screen_ads.packages.{$booking->package}.label", $booking->package)],
             ['Campaign', $booking->start_date->toDateString().' to '.$booking->end_date->toDateString()],
-            ['On air', 'Every day, '.config('screen_ads.on_air.label').', Kampala time'],
+            ['On air', 'Every day, '.($booking->slots ? collect($booking->slots)->map(fn ($k) => config("screen_ads.slots.$k.label").' ('.config("screen_ads.slots.$k.hours").')')->implode(', ') : 'all day, '.config('screen_ads.on_air.label')).', Kampala time'],
             [],
             ['Date', 'Plays booked', 'Plays delivered', 'Delivered %'],
         ];

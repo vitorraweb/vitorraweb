@@ -1,12 +1,15 @@
 /* Advertising on the street screen. Packages come from the API
    (config/screen_ads.php in the backend), Finance's rate card. */
 
-export type Package = { id: string; label: string; price_ugx: number; days: number; plays_per_hour: number };
+export type Package = { id: string; label: string; price_ugx: number; days: number; plays_per_hour: number; minutes_per_day: number };
+
+export type Slot = { id: string; label: string; hours: string; length: number };
 
 export type Pricing = {
   packages: Package[];
   lead_days: number;
   on_air: string;
+  slots: Slot[];
   video: { seconds: number; max_mb: number; min_width: number; tolerance_seconds: number };
 };
 
