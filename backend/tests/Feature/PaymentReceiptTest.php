@@ -8,6 +8,7 @@ use App\Models\FinanceCategory;
 use App\Models\FinanceTransaction;
 use App\Models\Invoice;
 use App\Models\PaymentReceipt;
+use App\Models\Quotation;
 use App\Models\User;
 use App\Services\Payments\OnlineInvoiceSettlement;
 use App\Support\BrandedDocument;
@@ -175,5 +176,106 @@ class PaymentReceiptTest extends TestCase
         $d = BrandedDocument::receiptData(PaymentReceipt::firstOrFail());
         $this->assertSame('coffee', $d['business']);
         $this->assertStringEndsWith('head-coffee-receipt.jpg', $d['header']);
+    }
+
+    private function order(int $price = 2000000): Quotation
+    {
+        $q = Quotation::create([
+            'number' => Quotation::nextNumber('fet'), 'business' => 'fet', 'heading' => 'order_confirmation', 'status' => 'sent',
+            'customer_name' => 'Kampala Fleet Co', 'customer_email' => 'ops@fleet.test', 'currency' => 'UGX',
+            'issue_date' => now()->toDateString(), 'tax_rate' => 0,
+        ]);
+        $q->items()->create(['position' => 0, 'name' => 'FET-PRO-FII', 'quantity' => 2, 'unit_price' => $price / 2, 'line_total' => $price]);
+        $q->recalcTotals();
+
+        return $q->fresh();
+    }
+
+    private function payOrder(Quotation $q, int $amount, string $method = 'mobile_money'): \Illuminate\Testing\TestResponse
+    {
+        $r = $this->withHeaders($this->h())->postJson("/api/admin/accounting/quotations/{$q->id}/payment", [
+            'finance_account_id' => $this->account->id, 'amount' => $amount, 'payment_method' => $method, 'payment_reference' => 'MTN-77',
+        ]);
+        $this->app['auth']->forgetGuards();
+
+        return $r;
+    }
+
+    public function test_order_deposit_gets_a_receipt_at_once_and_carries_to_the_invoice(): void
+    {
+        $order = $this->order(2000000);
+
+        $this->payOrder($order, 1000000)->assertCreated()->assertJsonPath('data.number', 'VHL-RCT-'.now()->year.'-0001');
+
+        $receipt = PaymentReceipt::firstOrFail();
+        $this->assertSame([$order->id, null, 1000000, 0, 1000000], [$receipt->quotation_id, $receipt->invoice_id, $receipt->amount, $receipt->paid_before, $receipt->balance_after]);
+        $this->assertSame('accepted', $order->fresh()->status);
+        // The money waits for approval in the books; the receipt does not.
+        $this->assertSame('draft', FinanceTransaction::where('source', 'quotation')->value('status'));
+
+        $d = BrandedDocument::receiptData($receipt);
+        $this->assertSame('DEPOSIT', $d['receipt']['status']);
+        $this->assertSame('Order No.', $d['info'][2][0]);
+        $this->assertSame('ORDER TOTAL', $d['totals'][0][0]);
+        $this->assertStringContainsString('remains on this order', $d['receipt']['next']);
+
+        // Overpaying the order is refused.
+        $this->payOrder($order, 1500000)->assertStatus(422);
+
+        // The final invoice starts with the deposit already paid.
+        $id = $this->withHeaders($this->h())->postJson("/api/admin/accounting/quotations/{$order->id}/convert", ['kind' => 'final'])->assertCreated()->json('data.id');
+        $this->app['auth']->forgetGuards();
+        $invoice = Invoice::findOrFail($id);
+        $this->assertSame(1000000, $invoice->amount_paid);
+        $this->assertSame($invoice->id, $receipt->fresh()->invoice_id);
+
+        $this->withHeaders($this->h())->postJson("/api/admin/accounting/invoices/{$invoice->id}/send", ['to' => ['ops@fleet.test']])->assertOk();
+        $this->app['auth']->forgetGuards();
+        $this->assertSame('partial', $invoice->fresh()->status);
+
+        // The balance paid on the invoice: its receipt counts the deposit.
+        $this->approve($this->pay($invoice->fresh(), 1000000));
+        $last = PaymentReceipt::latest('id')->firstOrFail();
+        $this->assertSame([1000000, 0], [$last->paid_before, $last->balance_after]);
+        $this->assertSame('paid', $invoice->fresh()->status);
+    }
+
+    public function test_voiding_an_order_payment_voids_the_receipt_and_takes_it_off_the_invoice(): void
+    {
+        $order = $this->order(2000000);
+        $this->payOrder($order, 500000)->assertCreated();
+        $id = $this->withHeaders($this->h())->postJson("/api/admin/accounting/quotations/{$order->id}/convert", ['kind' => 'final'])->json('data.id');
+        $this->app['auth']->forgetGuards();
+        $this->assertSame(500000, Invoice::findOrFail($id)->amount_paid);
+
+        $tx = FinanceTransaction::where('source', 'quotation')->firstOrFail();
+        $this->withHeaders($this->h())->postJson("/api/admin/accounting/transactions/{$tx->id}/void")->assertOk();
+        $this->app['auth']->forgetGuards();
+
+        $this->assertSame('void', PaymentReceipt::firstOrFail()->status);
+        $this->assertSame(0, Invoice::findOrFail($id)->amount_paid);
+    }
+
+    public function test_sales_staff_can_download_and_email_order_receipts_but_not_record_payments(): void
+    {
+        Mail::fake();
+        $order = $this->order();
+        $this->payOrder($order, 300000)->assertCreated();
+        $receipt = PaymentReceipt::firstOrFail();
+
+        $sales = User::create(['name' => 'Sales', 'email' => 'sales@vitorra.org', 'password' => 'changeme123', 'role' => 'ops', 'permissions' => ['quotations']]);
+        $h = ['Authorization' => 'Bearer '.$sales->createToken('t')->plainTextToken];
+
+        $this->withHeaders($h)->getJson("/api/admin/accounting/quotations/{$order->id}/receipts")->assertOk()->assertJsonPath('data.0.document_type', 'order');
+        $this->app['auth']->forgetGuards();
+        $this->withHeaders($h)->get("/api/admin/accounting/payment-receipts/{$receipt->id}/pdf")->assertOk();
+        $this->app['auth']->forgetGuards();
+        $this->withHeaders($h)->postJson("/api/admin/accounting/payment-receipts/{$receipt->id}/send", ['to' => ['ops@fleet.test']])->assertOk();
+        $this->app['auth']->forgetGuards();
+        Mail::assertSent(PaymentReceiptMail::class, fn ($m) => $m->hasTo('ops@fleet.test') && str_contains($m->envelope()->subject, 'order confirmation'));
+
+        $this->withHeaders($h)->postJson("/api/admin/accounting/quotations/{$order->id}/payment", [
+            'finance_account_id' => $this->account->id, 'amount' => 1000, 'payment_method' => 'cash',
+        ])->assertForbidden();
     }
 }

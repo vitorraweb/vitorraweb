@@ -262,6 +262,10 @@ class AccountingController extends Controller
             $this->settleInvoice($transaction->source_id, -$transaction->amount);
             app(PaymentReceipts::class)->voidFor($transaction);
         }
+        // An order payment's receipt was issued on recording, approved or not.
+        if ($transaction->source === 'quotation') {
+            app(PaymentReceipts::class)->voidFor($transaction);
+        }
         $transaction->update(['status' => 'void']);
 
         Audit::log('transaction.void', 'Voided '.$transaction->type.' of '.$transaction->currency.' '.$transaction->amount, $transaction);

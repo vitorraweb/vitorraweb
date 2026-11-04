@@ -46,6 +46,11 @@ class Quotation extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(PaymentReceipt::class);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

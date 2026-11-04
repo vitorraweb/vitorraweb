@@ -32,8 +32,8 @@ class PaymentReceiptMail extends Mailable
     {
         $r = $this->receipt;
         $subject = $this->team
-            ? ($this->customerSent ? 'Copy: ' : 'For review: ')."receipt {$r->number} — {$r->invoice->customer_name}"
-            : "Receipt {$r->number} for invoice {$r->invoice->number} — Vitorra Holdings";
+            ? ($this->customerSent ? 'Copy: ' : 'For review: ')."receipt {$r->number} — {$r->document()->customer_name}"
+            : "Receipt {$r->number} for ".mb_strtolower($r->documentLabel())." {$r->document()->number} — Vitorra Holdings";
 
         return new Envelope(subject: $subject, replyTo: $this->sender ? [$this->sender->email] : []);
     }
@@ -44,8 +44,9 @@ class PaymentReceiptMail extends Mailable
 
         return new Content(text: 'emails.payment-receipt', with: [
             'r'    => $this->receipt,
-            'inv'  => $this->receipt->invoice,
-            'link' => $origin.'/admin/invoices/'.$this->receipt->invoice_id,
+            'doc'   => $this->receipt->document(),
+            'label' => $this->receipt->documentLabel(),
+            'link'  => $origin.($this->receipt->isForOrder() ? '/admin/quotations/'.$this->receipt->quotation_id : '/admin/invoices/'.$this->receipt->invoice_id),
         ]);
     }
 

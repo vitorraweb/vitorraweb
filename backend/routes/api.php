@@ -640,12 +640,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send']);
             Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment']);
             Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
-            // Payment receipts — issued automatically for each approved payment.
+            // Receipts issued for one invoice's payments.
             Route::get('/invoices/{invoice}/receipts', [PaymentReceiptController::class, 'forInvoice']);
-            Route::get('/payment-receipts', [PaymentReceiptController::class, 'index']);
-            Route::get('/payment-receipts/export', [PaymentReceiptController::class, 'export']);
-            Route::get('/payment-receipts/{receipt}/pdf', [PaymentReceiptController::class, 'pdf']);
-            Route::post('/payment-receipts/{receipt}/send', [PaymentReceiptController::class, 'send'])->middleware('throttle:30,1');
             // FET stock overview — devices in/out per model, rolled up by week.
             Route::get('/stock', [FetStockController::class, 'index']);
             Route::get('/stock/export', [FetStockController::class, 'export']);
@@ -684,6 +680,18 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/quotations/{quotation}/send', [QuotationController::class, 'send']);
             Route::post('/quotations/{quotation}/status', [QuotationController::class, 'status']);
             Route::post('/quotations/{quotation}/convert', [QuotationController::class, 'convert'])->middleware('perm:accounting');
+            // Money received on an order (deposit before the invoice): Finance
+            // records it and the receipt is issued at once.
+            Route::post('/quotations/{quotation}/payment', [QuotationController::class, 'recordPayment'])->middleware('perm:accounting');
+            Route::get('/quotations/{quotation}/receipts', [PaymentReceiptController::class, 'forOrder']);
+        });
+        // Payment receipts (orders and invoices): Sales and Finance both list,
+        // download and email them to the customer.
+        Route::middleware('perm:quotations,accounting')->prefix('accounting')->group(function () {
+            Route::get('/payment-receipts', [PaymentReceiptController::class, 'index']);
+            Route::get('/payment-receipts/export', [PaymentReceiptController::class, 'export']);
+            Route::get('/payment-receipts/{receipt}/pdf', [PaymentReceiptController::class, 'pdf']);
+            Route::post('/payment-receipts/{receipt}/send', [PaymentReceiptController::class, 'send'])->middleware('throttle:30,1');
         });
         // The editor's live preview serves both quotations and invoices.
         Route::post('/accounting/documents/preview', DocumentPreviewController::class)

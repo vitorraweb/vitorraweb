@@ -7,14 +7,16 @@ import { Empty } from "@/components/admin/admin-ui";
 import { SendDocumentDialog } from "@/components/admin/SendDocument";
 
 /* ─── Payment receipts ────────────────────────────────────────────────────────
-   Every payment against an invoice — part or full — gets a receipt on the
-   invoice's own branded template once a senior approves it (online payments
-   get theirs straight away). Here Finance records payments with how they were
-   paid, sees each invoice's receipts, emails or downloads them, and exports
-   the whole register to CSV.                                                 */
+   Every customer payment — part or full — gets a receipt on the branded
+   template. In Sales, a payment on an order confirmation (the deposit, before
+   any invoice) gets its receipt the moment Finance records it; on an invoice,
+   once a senior approves it (online payments straight away). Deposits carry
+   onto the invoice the order becomes. Here payments are recorded, receipts
+   downloaded and emailed, and the register exported to CSV.                 */
 
 export type ReceiptRow = {
-  id: number; number: string; invoice_id: number; invoice_number: string | null; customer_name: string | null; customer_email: string | null;
+  id: number; number: string; document_type: "order" | "invoice"; document_label: string; document_number: string | null;
+  quotation_id: number | null; invoice_id: number | null; invoice_number: string | null; customer_name: string | null; customer_email: string | null;
   currency: string; amount: number; paid_before: number; balance_after: number; fully_settled: boolean;
   payment_method: string | null; method_label: string | null; payment_reference: string | null; paid_on: string; status: "issued" | "void"; emailed_at: string | null;
 };
@@ -36,9 +38,11 @@ const day = (d: string) => new Date(d).toLocaleDateString("en-GB", { day: "numer
 type PayInvoice = { id: number; number: string; currency: string; balance: number; customer_name: string };
 type PayAccount = { id: number; name: string; currency: string; is_active?: boolean };
 
-export function RecordPaymentDialog({ invoice, accounts, onClose, onDone }: {
-  invoice: PayInvoice; accounts: PayAccount[]; onClose: () => void; onDone: (msg: string) => void;
+/** Record money received on an invoice, or (kind "order") on an order confirmation / quotation. */
+export function RecordPaymentDialog({ invoice, accounts, onClose, onDone, kind = "invoice" }: {
+  invoice: PayInvoice; accounts: PayAccount[]; onClose: () => void; onDone: (msg: string) => void; kind?: "invoice" | "order";
 }) {
+  const isOrder = kind === "order";
   const usable = accounts.filter((a) => a.currency === invoice.currency && a.is_active !== false);
   const [account, setAccount] = useState(usable[0]?.id ?? 0);
   const [amount, setAmount] = useState(String(toMajor(invoice.currency, invoice.balance)));
@@ -57,11 +61,13 @@ export function RecordPaymentDialog({ invoice, accounts, onClose, onDone }: {
     if (minor > invoice.balance) { setError(`That is more than the ${money(invoice.currency, invoice.balance)} still owed.`); return; }
     setBusy(true); setError("");
     try {
-      await apiAdmin(`/admin/accounting/invoices/${invoice.id}/payment`, {
+      const r = await apiAdmin<{ message?: string }>(`/admin/accounting/${isOrder ? "quotations" : "invoices"}/${invoice.id}/payment`, {
         method: "POST",
         body: JSON.stringify({ finance_account_id: account, amount: minor, occurred_on: date, payment_method: method, payment_reference: reference.trim() || null }),
       });
-      onDone(`Payment of ${money(invoice.currency, minor)} recorded — once a senior officer approves it, the invoice is settled and receipt is issued.`);
+      onDone(isOrder
+        ? (r.message ?? "Receipt issued.")
+        : `Payment of ${money(invoice.currency, minor)} recorded — once a senior officer approves it, the invoice is settled and the receipt is issued.`);
     } catch (e) { setError(e instanceof Error ? e.message : "Failed."); setBusy(false); }
   };
 
@@ -74,13 +80,13 @@ export function RecordPaymentDialog({ invoice, accounts, onClose, onDone }: {
           <button onClick={onClose} className="c-icon-btn" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
-          <p className="text-[12.5px] text-ink-muted">{invoice.customer_name} owes <b className="text-ink">{money(invoice.currency, invoice.balance)}</b>. Enter what was actually received — a part payment is fine.</p>
+          <p className="text-[12.5px] text-ink-muted">{invoice.customer_name} owes <b className="text-ink">{money(invoice.currency, invoice.balance)}</b>{isOrder ? " on this order" : ""}. Enter what was actually received — a deposit or part payment is fine.{isOrder ? " The receipt is issued straight away; the money goes to the books for approval." : ""}</p>
           <label className="block text-[12px] text-ink-muted">Amount received ({invoice.currency})
             <input type="number" min={0} step={invoice.currency === "UGX" ? 1 : 0.01} className="c-input w-full mt-1" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </label>
           {minor > 0 && minor <= invoice.balance && (
             <p className="text-[12px]" style={{ color: part ? "#9c6416" : "#16A34A" }}>
-              {part ? `Part payment — ${money(invoice.currency, invoice.balance - minor)} will remain.` : "Pays the invoice in full."}
+              {part ? `Part payment — ${money(invoice.currency, invoice.balance - minor)} will remain.` : `Pays the ${isOrder ? "order" : "invoice"} in full.`}
             </p>
           )}
           <div className="grid grid-cols-2 gap-3">
@@ -106,7 +112,7 @@ export function RecordPaymentDialog({ invoice, accounts, onClose, onDone }: {
         </div>
         <div className="flex justify-end gap-2 px-4 py-3 border-t border-line">
           <button onClick={onClose} className="c-btn">Cancel</button>
-          <button onClick={submit} disabled={busy} className="c-btn c-btn-primary">{busy && <Loader2 className="w-4 h-4 animate-spin" />}Record payment</button>
+          <button onClick={submit} disabled={busy} className="c-btn c-btn-primary">{busy && <Loader2 className="w-4 h-4 animate-spin" />}{isOrder ? "Record payment & issue receipt" : "Record payment"}</button>
         </div>
       </div>
     </div>
@@ -125,11 +131,11 @@ function ReceiptLine({ r, showInvoice, onSend }: { r: ReceiptRow; showInvoice?: 
           <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={
             void_ ? { background: "rgba(192,57,43,0.1)", color: "var(--o-danger)" }
               : r.fully_settled ? { background: "rgba(22,163,74,0.12)", color: "#16A34A" } : { background: "rgba(156,100,22,0.12)", color: "#9c6416" }
-          }>{void_ ? "void" : r.fully_settled ? "paid in full" : "part payment"}</span>
+          }>{void_ ? "void" : r.fully_settled ? "paid in full" : r.document_type === "order" && r.paid_before === 0 ? "deposit" : "part payment"}</span>
           {r.emailed_at && <span className="text-[11px] text-ink-muted">emailed {day(r.emailed_at)}</span>}
         </div>
         <p className="text-[12px] text-ink-muted">
-          {showInvoice && <>{r.customer_name} · {r.invoice_number} · </>}
+          {showInvoice && <>{r.customer_name} · {r.document_label} {r.document_number}{r.document_type === "order" && r.invoice_number ? ` → ${r.invoice_number}` : ""} · </>}
           <b className="text-ink">{money(r.currency, r.amount)}</b> on {day(r.paid_on)}
           {r.method_label ? ` · ${r.method_label}` : ""}{r.payment_reference ? ` (${r.payment_reference})` : ""}
           {!r.fully_settled && !void_ ? ` · ${money(r.currency, r.balance_after)} left` : ""}
@@ -159,20 +165,29 @@ function SendReceipt({ r, onClose, onSent }: { r: ReceiptRow; onClose: () => voi
 
 /** The receipts issued against one invoice (shown under it in the Invoices list). */
 export function InvoiceReceipts({ invoiceId }: { invoiceId: number }) {
+  return <DocReceipts url={`/admin/accounting/invoices/${invoiceId}/receipts`} empty="No receipts yet — one is issued for each payment once it is approved." />;
+}
+
+/** The receipts issued against one order confirmation / quotation. `version` reloads after a new payment. */
+export function OrderReceipts({ quotationId, version = 0 }: { quotationId: number; version?: number }) {
+  return <DocReceipts key={version} url={`/admin/accounting/quotations/${quotationId}/receipts`} empty="No payments received on this order yet." />;
+}
+
+function DocReceipts({ url, empty, showInvoice }: { url: string; empty: string; showInvoice?: boolean }) {
   const [rows, setRows] = useState<ReceiptRow[] | null>(null);
   const [sending, setSending] = useState<ReceiptRow | null>(null);
   const [msg, setMsg] = useState("");
   const load = useCallback(() => {
-    apiAdmin<{ data: ReceiptRow[] }>(`/admin/accounting/invoices/${invoiceId}/receipts`).then((r) => setRows(r.data)).catch(() => setRows([]));
-  }, [invoiceId]);
+    apiAdmin<{ data: ReceiptRow[] }>(url).then((r) => setRows(r.data)).catch(() => setRows([]));
+  }, [url]);
   useEffect(() => { load(); }, [load]);
 
   if (!rows) return <p className="text-[12px] text-ink-muted flex items-center gap-2 px-1 py-2"><Loader2 className="w-3.5 h-3.5 animate-spin" />Loading receipts…</p>;
   return (
     <div className="space-y-1.5 pt-1">
       {rows.length === 0
-        ? <p className="text-[12px] text-ink-muted px-1">No receipts yet — one is issued for each payment once it is approved.</p>
-        : rows.map((r) => <ReceiptLine key={r.id} r={r} onSend={setSending} />)}
+        ? <p className="text-[12px] text-ink-muted px-1">{empty}</p>
+        : rows.map((r) => <ReceiptLine key={r.id} r={r} showInvoice={showInvoice} onSend={setSending} />)}
       {msg && <p className="text-[12px] px-1" style={{ color: "#16A34A" }}>{msg}</p>}
       {sending && <SendReceipt r={sending} onClose={() => setSending(null)} onSent={(s) => { setSending(null); setMsg(s); load(); }} />}
     </div>
@@ -223,7 +238,7 @@ export function PaymentReceiptsRegister() {
       {msg && <p className="text-sm mb-3" style={{ color: "#16A34A" }}>{msg}</p>}
 
       {loading ? <div className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>
-        : rows.length === 0 ? <Empty label="No receipts in this view. Receipts are issued automatically when an invoice payment is approved." />
+        : rows.length === 0 ? <Empty label="No receipts in this view. A receipt is issued for every payment recorded on an order or approved on an invoice." />
         : <div className="space-y-2">{rows.map((r) => <ReceiptLine key={r.id} r={r} showInvoice onSend={setSending} />)}</div>}
 
       {sending && <SendReceipt r={sending} onClose={() => setSending(null)} onSent={(s) => { setSending(null); setMsg(s); load(); }} />}

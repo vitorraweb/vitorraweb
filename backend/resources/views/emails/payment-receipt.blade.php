@@ -8,8 +8,8 @@
 The customer has NOT received it.
 @endif
 
-Customer: {{ $inv->customer_name }}
-Invoice: {{ $inv->number }}
+Customer: {{ $doc->customer_name }}
+{{ $label }}: {{ $doc->number }}
 Received: {{ $money($r->amount) }} on {{ $r->paid_on->format('j F Y') }}
 Balance remaining: {{ $money($r->balance_after) }}
 @if($note)
@@ -18,23 +18,23 @@ Note from {{ $sender?->name ?? 'the sender' }}:
 {{ $note }}
 @endif
 
-The receipt is attached. The invoice in the console:
+The receipt is attached. Open it in the console:
 {{ $link }}
 @else
-Hello {{ $inv->customer_name }},
+Hello {{ $doc->customer_name }},
 
 Thank you for your payment. Please find attached receipt {{ $r->number }}.
 
-Invoice: {{ $inv->number }}
+{{ $label }}: {{ $doc->number }}
 Amount received: {{ $money($r->amount) }}
 Date received: {{ $r->paid_on->format('j F Y') }}
 @if($r->isFullySettled())
 
-This invoice is now paid in full.
+This {{ mb_strtolower($label) }} is now paid in full.
 @else
 Balance remaining: {{ $money($r->balance_after) }}
-@if($inv->due_date)
-Due date: {{ $inv->due_date->format('j F Y') }}
+@if($doc instanceof \App\Models\Invoice && $doc->due_date)
+Due date: {{ $doc->due_date->format('j F Y') }}
 @endif
 @endif
 @if($note)

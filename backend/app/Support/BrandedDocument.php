@@ -255,18 +255,32 @@ class BrandedDocument
 
     public static function receiptData(PaymentReceipt $receipt): array
     {
-        $invoice = clone $receipt->invoice->loadMissing('items');
-        $invoice->business = in_array($invoice->business, ['coffee', 'fet'], true)
-            ? $invoice->business
-            : ($invoice->sector === 'COFFEE' ? 'coffee' : 'fet');
+        // Printed against what it was issued for: the order, or the invoice.
+        $order = $receipt->isForOrder();
+        $doc = clone $receipt->document()->loadMissing('items');
+        $doc->business = in_array($doc->business, ['coffee', 'fet'], true)
+            ? $doc->business
+            : (($doc->sector ?? null) === 'COFFEE' ? 'coffee' : 'fet');
 
-        $d = self::data($invoice);
+        $d = self::data($doc);
         $c = $receipt->currency;
         $full = $receipt->isFullySettled();
         $void = $receipt->status === 'void';
+        $label = $receipt->documentLabel();
+        $noun = $order ? ($doc->isOrderConfirmation() ? 'order' : 'quotation') : 'invoice';
+        $status = $void ? 'VOID' : ($full ? 'PAID IN FULL' : ($order && $receipt->paid_before === 0 ? 'DEPOSIT' : 'PART PAYMENT'));
+
+        $next = match (true) {
+            $void => 'This receipt has been cancelled because the payment it records was reversed. It is not proof of payment.',
+            $full => "This {$noun} is now paid in full. Thank you.",
+            default => 'A balance of '.self::money($c, $receipt->balance_after)." remains on this {$noun}"
+                .(! $order && $doc->due_date ? ', due by '.self::date($doc->due_date) : '')
+                .'. Please quote '.$doc->number.' with your next payment.',
+        };
 
         return array_merge($d, [
             'kind'           => 'receipt',
+            'is_quote'       => false,
             'number'         => $receipt->number,
             'header'         => resource_path("document-art/head-{$d['business']}-receipt.jpg"),
             'customer_title' => 'RECEIVED FROM',
@@ -274,15 +288,15 @@ class BrandedDocument
             'info'           => array_values(array_filter([
                 ['Receipt No.', $receipt->number],
                 ['Receipt Date', self::date($receipt->paid_on)],
-                ['Invoice No.', $invoice->number],
-                ['Invoice Date', self::date($invoice->issue_date)],
+                [$order ? ($doc->isOrderConfirmation() ? 'Order No.' : 'Quotation No.') : 'Invoice No.', $doc->number],
+                [$order ? ($doc->isOrderConfirmation() ? 'Order Date' : 'Quotation Date') : 'Invoice Date', self::date($doc->issue_date)],
                 ['Payment Method', $receipt->methodLabel()],
                 ['Payment Ref.', $receipt->payment_reference],
                 ['Currency', $c],
-                ['Status', $void ? 'VOID' : ($full ? 'PAID IN FULL' : 'PART PAYMENT')],
+                ['Status', $status],
             ], fn ($r) => filled($r[1]))),
             'totals'         => [
-                ['INVOICE TOTAL', self::money($c, (int) $invoice->total)],
+                [mb_strtoupper($noun).' TOTAL', self::money($c, (int) $doc->total)],
                 ['AMOUNT RECEIVED', self::money($c, $receipt->amount)],
                 ['BALANCE DUE', self::money($c, $receipt->balance_after)],
             ],
@@ -292,24 +306,19 @@ class BrandedDocument
             'conditions'     => [],
             'acceptance'     => null,
             'receipt'        => [
-                'void'    => $void,
-                'status'  => $void ? 'VOID' : ($full ? 'PAID IN FULL' : 'PART PAYMENT'),
-                'full'    => $full,
-                'rows'    => [
-                    ['Invoice total', self::money($c, (int) $invoice->total)],
+                'void'   => $void,
+                'status' => $status,
+                'full'   => $full,
+                'rows'   => [
+                    [ucfirst($noun).' total', self::money($c, (int) $doc->total)],
                     ['Paid before this receipt', self::money($c, $receipt->paid_before)],
                     ['Received on this receipt', self::money($c, $receipt->amount)],
                     ['Total paid to date', self::money($c, $receipt->paidToDate())],
                     ['Balance remaining', self::money($c, $receipt->balance_after)],
                 ],
-                'words'   => 'We acknowledge with thanks receipt of '.self::money($c, $receipt->amount)
-                    .' from '.$invoice->customer_name.' against invoice '.$invoice->number.'.',
-                'next'    => $void
-                    ? 'This receipt has been cancelled because the payment it records was reversed. It is not proof of payment.'
-                    : ($full
-                        ? 'This invoice is now paid in full. Thank you.'
-                        : 'A balance of '.self::money($c, $receipt->balance_after).' remains on this invoice'
-                            .($invoice->due_date ? ', due by '.self::date($invoice->due_date) : '').'. Please quote '.$invoice->number.' with your next payment.'),
+                'words'  => 'We acknowledge with thanks receipt of '.self::money($c, $receipt->amount)
+                    .' from '.$doc->customer_name.' against '.mb_strtolower($label).' '.$doc->number.'.',
+                'next'   => $next,
             ],
             'footer_tab'     => $void ? 'Cancelled receipt – not valid as proof of payment' : 'Payment received – Thank you!',
         ]);

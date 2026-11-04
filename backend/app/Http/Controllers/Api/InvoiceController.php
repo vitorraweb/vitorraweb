@@ -99,7 +99,9 @@ class InvoiceController extends Controller
         }
 
         if ($clients && $invoice->status === 'draft') {
-            $invoice->update(['status' => 'sent', 'sent_at' => now()]);
+            // A deposit received on the order may already be on it.
+            $paid = (int) $invoice->amount_paid;
+            $invoice->update(['status' => $paid <= 0 ? 'sent' : ($paid >= $invoice->total ? 'paid' : 'partial'), 'sent_at' => now()]);
         }
 
         Audit::log('invoice.send', "Emailed {$invoice->number}", $invoice, [

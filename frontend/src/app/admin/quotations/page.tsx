@@ -7,14 +7,17 @@ import { Loader2, Plus, X } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { PageHeader, Empty, StatusBadge } from "@/components/admin/admin-ui";
 import { BUSINESS_LABEL, formatMoney, type Business } from "@/lib/documents";
+import { PaymentReceiptsRegister } from "@/components/admin/PaymentReceipts";
 
 /* ─── Quotations ──────────────────────────────────────────────────────────────
    Every quotation on the Coffee and FET templates, newest first. A row opens
-   the editor; an accepted quotation becomes an invoice from there.          */
+   the editor; an accepted quotation becomes an invoice from there. Payments
+   received on orders are recorded in the editor; the Receipts view lists
+   every receipt issued to customers.                                        */
 
 type Row = {
   id: number; number: string; business: Business | null; status: string; is_expired: boolean; heading?: string;
-  customer_name: string; currency: string; issue_date: string; valid_until: string | null; total: number;
+  customer_name: string; currency: string; issue_date: string; valid_until: string | null; total: number; paid?: number; balance?: number;
   invoices: { id: number; number: string; kind: string }[];
 };
 
@@ -28,6 +31,8 @@ export default function QuotationsPage() {
   const [business, setBusiness] = useState("");
   const [q, setQ] = useState("");
   const [applied, setApplied] = useState("");
+  const [view, setView] = useState<"quotes" | "receipts">(() =>
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "receipts" ? "receipts" : "quotes");
 
   const load = useCallback(async () => {
     const p = new URLSearchParams();
@@ -53,6 +58,12 @@ export default function QuotationsPage() {
         </>}
       />
 
+      <div role="tablist" aria-label="Sales documents" className="c-tabs mb-4">
+        <button role="tab" aria-selected={view === "quotes"} onClick={() => setView("quotes")} className="c-tab">Quotations &amp; orders</button>
+        <button role="tab" aria-selected={view === "receipts"} onClick={() => setView("receipts")} className="c-tab">Receipts</button>
+      </div>
+
+      {view === "receipts" ? <PaymentReceiptsRegister /> : <>
       <div className="c-toolbar">
         <form onSubmit={(e) => { e.preventDefault(); setLoading(true); setApplied(q.trim()); }} className="flex items-center gap-1 flex-1 min-w-[14rem]">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search number or customer…" className="c-input flex-1" aria-label="Search quotations" />
@@ -78,7 +89,7 @@ export default function QuotationsPage() {
         <div className="c-panel overflow-x-auto">
           <table className="c-table min-w-[820px]">
             <thead>
-              <tr><th>Number</th><th>Customer</th><th>Template</th><th>Date</th><th>Valid until</th><th className="text-right">Total</th><th>Status</th><th>Invoiced</th></tr>
+              <tr><th>Number</th><th>Customer</th><th>Template</th><th>Date</th><th>Valid until</th><th className="text-right">Total</th><th className="text-right">Received</th><th>Status</th><th>Invoiced</th></tr>
             </thead>
             <tbody>
               {rows.map((r) => (
@@ -89,6 +100,7 @@ export default function QuotationsPage() {
                   <td className="whitespace-nowrap text-ink-muted">{fmt(r.issue_date)}</td>
                   <td className={`whitespace-nowrap ${r.is_expired ? "text-alert-ink" : "text-ink-muted"}`}>{fmt(r.valid_until)}</td>
                   <td className="text-right tabular-nums whitespace-nowrap">{formatMoney(r.currency, r.total)}</td>
+                  <td className="text-right tabular-nums whitespace-nowrap text-[12.5px]">{r.paid ? <span className={r.balance ? "text-ink-muted" : "text-ok-ink"}>{formatMoney(r.currency, r.paid)}</span> : <span className="text-ink-muted">—</span>}</td>
                   <td><StatusBadge status={r.is_expired ? "overdue" : r.status} label={r.is_expired ? "expired" : r.status} /></td>
                   <td className="text-[12px] text-ink-muted">{r.invoices.length ? r.invoices.map((i) => i.number).join(", ") : "—"}</td>
                 </tr>
@@ -97,6 +109,7 @@ export default function QuotationsPage() {
           </table>
         </div>
       )}
+      </>}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Download, FileText, Loader2, Plus, RefreshCw, Send, X
 import { apiAdmin, auth, canAccess, downloadFile, fetchPdf } from "@/lib/auth";
 import { PageHeader, StatusBadge } from "@/components/admin/admin-ui";
 import { ClientFinder, SendDocumentDialog, type Client } from "@/components/admin/SendDocument";
+import { OrderReceipts, RecordPaymentDialog } from "@/components/admin/PaymentReceipts";
 import {
   BUSINESS_LABEL, CURRENCIES, FET_DETAILS, FET_LINES, HEADING_LABEL, INCOTERMS, KIND_LABEL, blankForm, formatMoney, fromRecord, joinIncoterm,
   splitIncoterm, toMinor, toPayload,
@@ -20,7 +21,7 @@ import {
    Used for quotations and for invoices on the Coffee / FET templates.        */
 
 type Linked = { id: number; number: string; kind: string; status: string };
-type Meta = { id: number; number: string; status: string; is_expired?: boolean; invoices?: Linked[]; quotation?: { id: number; number: string } | null };
+type Meta = { id: number; number: string; status: string; is_expired?: boolean; invoices?: Linked[]; quotation?: { id: number; number: string } | null; total?: number; currency?: string; paid?: number; balance?: number; customer_name?: string };
 
 const API = { quotation: "/admin/accounting/quotations", invoice: "/admin/accounting/invoices" } as const;
 const ROUTE = { quotation: "/admin/quotations", invoice: "/admin/invoices" } as const;
@@ -154,6 +155,22 @@ export default function DocumentEditor({
     setMeta(r.data);
   });
 
+  /* ── money received on the order (deposit before the invoice) ── */
+  const [paying, setPaying] = useState(false);
+  const [accounts, setAccounts] = useState<{ id: number; name: string; currency: string; is_active?: boolean }[]>([]);
+  const [receiptsVersion, setReceiptsVersion] = useState(0);
+  const openPay = () => run("pay", async () => {
+    if (dirty) throw new Error("Save your changes first.");
+    if (!accounts.length) setAccounts((await apiAdmin<{ data: typeof accounts }>("/admin/accounting/accounts")).data);
+    setPaying(true);
+  });
+  const afterPay = (text: string) => {
+    setPaying(false);
+    setMsg({ ok: true, text });
+    setReceiptsVersion((v) => v + 1);
+    if (id) apiAdmin<{ data: Meta & Record<string, unknown> }>(`${API.quotation}/${id}`).then((r) => setMeta(r.data)).catch(() => {});
+  };
+
   const convert = (kind: InvoiceKind) => run(`convert-${kind}`, async () => {
     if (dirty) throw new Error("Save your changes first.");
     const r = await apiAdmin<{ data: { id: number; number: string } }>(`${API.quotation}/${id}/convert`, { method: "POST", body: JSON.stringify({ kind }) });
@@ -220,6 +237,34 @@ export default function DocumentEditor({
             </span>
           )}
         </div>
+      )}
+      {/* Payments received on the order, each with its receipt */}
+      {isQuote && meta && id && !["void", "declined"].includes(meta.status) && (
+        <div className="c-panel p-4 mb-4">
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <span className="text-[13.5px] font-medium text-ink">Payments &amp; receipts</span>
+            {meta.total !== undefined && meta.currency && (
+              <span className="text-[12.5px] text-ink-muted">
+                Received {formatMoney(meta.currency, meta.paid ?? 0)} of {formatMoney(meta.currency, meta.total)}
+                {(meta.balance ?? 0) > 0 ? ` · ${formatMoney(meta.currency, meta.balance ?? 0)} still owed` : " · paid in full"}
+              </span>
+            )}
+            {canInvoice && (meta.balance ?? 1) > 0 && (
+              <button onClick={openPay} disabled={!!busy} className="c-btn c-btn-primary ml-auto">{busy === "pay" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}Record payment</button>
+            )}
+          </div>
+          {!canInvoice && <p className="text-[12px] text-ink-muted mb-2">Finance records payments received; each one gets a receipt you can download or email to the customer here.</p>}
+          <OrderReceipts quotationId={id} version={receiptsVersion} />
+        </div>
+      )}
+      {paying && meta && id && (
+        <RecordPaymentDialog
+          kind="order"
+          invoice={{ id, number: meta.number, currency: meta.currency ?? form.currency, balance: meta.balance ?? 0, customer_name: form.customer_name }}
+          accounts={accounts}
+          onClose={() => setPaying(false)}
+          onDone={afterPay}
+        />
       )}
       {!isQuote && meta && (
         <p className="text-[12.5px] text-ink-muted mb-3">Payments against this invoice are recorded in <Link href="/admin/accounting?tab=invoices" className="text-gold-ink hover:underline">Books → Invoices</Link>.</p>

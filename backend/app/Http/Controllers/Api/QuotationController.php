@@ -5,10 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Concerns\ValidatesBrandedDocument;
 use App\Http\Controllers\Controller;
 use App\Mail\QuotationMail;
+use App\Models\FinanceAccount;
+use App\Models\FinanceCategory;
+use App\Models\FinanceTransaction;
 use App\Models\Invoice;
+use App\Models\PaymentReceipt;
 use App\Models\Prospect;
 use App\Models\Quotation;
 use App\Mail\DocumentForReview;
+use App\Services\Payments\PaymentReceipts;
 use App\Support\Audit;
 use App\Support\BrandedDocument;
 use App\Support\DocumentRecipients;
@@ -17,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -30,7 +36,7 @@ class QuotationController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $q = Quotation::with('invoices:id,quotation_id,number,kind,status')->latest('issue_date')->latest('id');
+        $q = Quotation::with('invoices:id,quotation_id,number,kind,status')->withSum(['receipts as paid_sum' => fn ($r) => $r->where('status', 'issued')], 'amount')->latest('issue_date')->latest('id');
         if ($request->filled('status')) {
             $request->query('status') === 'expired'
                 ? $q->where('status', 'sent')->whereDate('valid_until', '<', now())
@@ -216,6 +222,8 @@ class QuotationController extends Controller
                 ]);
             }
             $invoice->recalcTotals();
+            // Deposits already received on the order count as paid on the invoice.
+            app(PaymentReceipts::class)->carryToInvoice($quotation, $invoice);
             if (in_array($quotation->status, ['draft', 'sent'], true)) {
                 $quotation->update(['status' => 'accepted']);
             }
@@ -224,6 +232,71 @@ class QuotationController extends Controller
         });
 
         return response()->json(['data' => ['id' => $invoice->id, 'number' => $invoice->number]], 201);
+    }
+
+    /**
+     * Money received against the order (typically the deposit, before any
+     * invoice). The receipt is issued straight away; the money goes to the
+     * books as a draft income entry for senior approval, and voiding that
+     * entry voids the receipt.
+     */
+    public function recordPayment(Request $request, Quotation $quotation, PaymentReceipts $receipts): JsonResponse
+    {
+        if (in_array($quotation->status, ['declined', 'void'], true)) {
+            return response()->json(['message' => 'A declined or void quotation cannot take a payment.'], 422);
+        }
+
+        $data = $request->validate([
+            'finance_account_id' => ['required', Rule::exists('finance_accounts', 'id')],
+            'amount'             => ['required', 'integer', 'min:1'],
+            'occurred_on'        => ['nullable', 'date', 'before_or_equal:today'],
+            'payment_method'     => ['required', Rule::in(array_keys(PaymentReceipt::METHODS))],
+            'payment_reference'  => ['nullable', 'string', 'max:120'],
+        ]);
+
+        $account = FinanceAccount::findOrFail($data['finance_account_id']);
+        if ($account->currency !== $quotation->currency) {
+            throw ValidationException::withMessages(['finance_account_id' => ["Receive this {$quotation->currency} order into a {$quotation->currency} account."]]);
+        }
+        $owing = $receipts->orderBalance($quotation);
+        if ($data['amount'] > $owing) {
+            throw ValidationException::withMessages(['amount' => ['That is more than the '.BrandedDocument::money($quotation->currency, $owing).' still owed on this order.']]);
+        }
+
+        $receipt = DB::transaction(function () use ($quotation, $data, $account, $request, $receipts) {
+            $tx = FinanceTransaction::create([
+                'type'                => 'income',
+                'finance_account_id'  => $account->id,
+                'finance_category_id' => FinanceCategory::where('kind', 'income')->where('is_active', true)->value('id'),
+                'sector'              => match ($quotation->business) { 'coffee' => 'COFFEE', 'fet' => 'FET', default => null },
+                'currency'            => $quotation->currency,
+                'amount'              => $data['amount'],
+                'occurred_on'         => $data['occurred_on'] ?? now()->toDateString(),
+                'description'         => $quotation->headingLabel().' '.$quotation->number.' — '.$quotation->customer_name,
+                'reference'           => $quotation->number,
+                'payment_method'      => $data['payment_method'],
+                'payment_reference'   => $data['payment_reference'] ?? null,
+                'status'              => 'draft',
+                'source'              => 'quotation',
+                'source_id'           => $quotation->id,
+                'recorded_by'         => $request->user()->id,
+            ]);
+
+            // Paying for it means the customer has taken the order.
+            if (in_array($quotation->status, ['draft', 'sent'], true)) {
+                $quotation->update(['status' => 'accepted']);
+            }
+
+            return $receipts->issueForOrder(
+                $quotation, (int) $data['amount'], $data['payment_method'], $data['payment_reference'] ?? null,
+                $tx->occurred_on, $tx, $request->user()->id,
+            );
+        });
+
+        return response()->json([
+            'message' => "Receipt {$receipt->number} issued. The payment awaits approval in the books.",
+            'data'    => ['receipt_id' => $receipt->id, 'number' => $receipt->number],
+        ], 201);
     }
 
     /* ── helpers ─────────────────────────────────────────────────────────── */
@@ -280,6 +353,8 @@ class QuotationController extends Controller
             'subtotal'      => $x->subtotal,
             'tax_total'     => $x->tax_total,
             'total'         => $x->total,
+            'paid'          => $paid = (int) ($x->paid_sum ?? $x->receipts()->where('status', 'issued')->sum('amount')),
+            'balance'       => max(0, (int) $x->total - $paid),
             'invoices'      => $x->invoices->map(fn (Invoice $i) => ['id' => $i->id, 'number' => $i->number, 'kind' => $i->kind, 'status' => $i->status])->all(),
         ];
         if ($full) {
