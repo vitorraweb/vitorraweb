@@ -495,6 +495,12 @@ function walk(say: Say): ScreenCopy {
 
 /** Where the console keeps unsaved wording for its live preview. */
 export const COPY_DRAFT_KEY = "vitorra-screen-copy-draft";
+/** Unsaved logo changes from the Screen editor, for its preview. */
+export const LOGO_DRAFT_KEY = "vitorra-screen-logo-draft";
+
+/** The logo on the screens: an uploaded replacement (null = /logo.png) and its sizes in % of standard. */
+export type ScreenLogo = { url: string | null; corner: number; opening: number };
+export const DEFAULT_LOGO: ScreenLogo = { url: null, corner: 100, opening: 100 };
 
 /** Every editable line, for the console. */
 export function copyFields(): CopyField[] {

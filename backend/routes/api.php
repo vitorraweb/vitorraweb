@@ -319,6 +319,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/display', [DisplayController::class, 'show']);
         Route::put('/display/welcome', [DisplayController::class, 'updateWelcome'])->middleware('throttle:30,1');
         Route::put('/display/copy', [DisplayController::class, 'updateCopy'])->middleware(['perm:screen_ads', 'throttle:30,1']);
+        Route::put('/display/logo', [DisplayController::class, 'updateLogo'])->middleware(['perm:screen_ads', 'throttle:30,1']);
         // Screen editor: Vitorra's own videos and designs, and the running order.
         Route::middleware('perm:screen_ads')->controller(\App\Http\Controllers\Api\ScreenMediaController::class)->group(function () {
             Route::get('/screen-media', 'index');

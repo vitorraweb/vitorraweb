@@ -56,4 +56,30 @@ class DisplayTest extends TestCase
         $this->flushHeaders();
         $this->putJson('/api/admin/display/copy', ['copy' => []])->assertUnauthorized();
     }
+
+    public function test_screen_logo_can_be_replaced_and_resized(): void
+    {
+        $this->assertSame(['url' => null, 'corner' => 100, 'opening' => 100], $this->getJson('/api/display')->json('data.logo'));
+
+        $url = 'https://abc123.public.blob.vercel-storage.com/screen-media/0b6f-logo-x1Y2.png';
+        $this->withHeaders($this->staff('admin'))->putJson('/api/admin/display/logo', ['url' => $url, 'corner' => 160, 'opening' => 80])->assertOk();
+
+        $this->assertSame(['url' => $url, 'corner' => 160, 'opening' => 80], $this->getJson('/api/display')->json('data.logo'));
+        $this->assertTrue(\App\Models\ActivityLog::where('action', 'display.logo')->exists());
+
+        // Back to the standard logo.
+        $this->putJson('/api/admin/display/logo', ['url' => null, 'corner' => 100, 'opening' => 100])->assertOk();
+        $this->assertNull($this->getJson('/api/display')->json('data.logo.url'));
+    }
+
+    public function test_screen_logo_refuses_outside_images_videos_silly_sizes_and_strangers(): void
+    {
+        $h = $this->staff('admin');
+        $this->withHeaders($h)->putJson('/api/admin/display/logo', ['url' => 'https://evil.example/logo.png', 'corner' => 100, 'opening' => 100])->assertUnprocessable();
+        $this->withHeaders($h)->putJson('/api/admin/display/logo', ['url' => 'https://abc.public.blob.vercel-storage.com/screen-media/a.mp4', 'corner' => 100, 'opening' => 100])->assertUnprocessable();
+        $this->withHeaders($h)->putJson('/api/admin/display/logo', ['corner' => 900, 'opening' => 100])->assertUnprocessable();
+        $this->app['auth']->forgetGuards();
+        $this->flushHeaders();
+        $this->putJson('/api/admin/display/logo', ['corner' => 100, 'opening' => 100])->assertUnauthorized();
+    }
 }

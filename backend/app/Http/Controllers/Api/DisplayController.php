@@ -24,6 +24,7 @@ class DisplayController extends Controller
         return response()->json(['data' => [
             'welcome' => $this->welcome(),
             'copy' => (object) $this->copy(),
+            'logo' => self::logo(),
             'programme' => ScreenMediaController::programme(),
             'media' => \App\Models\ScreenMedia::orderBy('id')->get()->filter->isLive()->map->forScreen()->values(),
         ]])
@@ -57,6 +58,47 @@ class DisplayController extends Controller
         }
 
         return response()->json(['data' => ['copy' => (object) $copy]]);
+    }
+
+    /**
+     * The logo on the screens: an uploaded replacement (null = the standard
+     * Vitorra logo) and its size in the corner of every scene and on the
+     * opening scene, as a percentage of the standard size.
+     *
+     * @return array{url: ?string, corner: int, opening: int}
+     */
+    public static function logo(): array
+    {
+        $saved = Setting::get('display_logo', []);
+        $saved = is_array($saved) ? $saved : [];
+
+        return [
+            'url'     => isset($saved['url']) && is_string($saved['url']) && $saved['url'] !== '' ? $saved['url'] : null,
+            'corner'  => (int) ($saved['corner'] ?? 100),
+            'opening' => (int) ($saved['opening'] ?? 100),
+        ];
+    }
+
+    public function updateLogo(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            // Only images uploaded from the Screen editor (Vitorra's blob store).
+            'url'     => ['nullable', 'string', 'max:500', 'regex:'.ScreenMediaController::URL, 'not_regex:/\.mp4$/i'],
+            'corner'  => ['required', 'integer', 'min:50', 'max:250'],
+            'opening' => ['required', 'integer', 'min:50', 'max:250'],
+        ], ['url.regex' => 'Upload the logo from the Screen editor.', 'url.not_regex' => 'The logo must be an image.']);
+
+        $before = self::logo();
+        Setting::put(['display_logo' => ['url' => $data['url'] ?? null, 'corner' => $data['corner'], 'opening' => $data['opening']]]);
+        $after = self::logo();
+
+        Audit::log('display.logo', 'Changed the screen logo: '.collect([
+            $before['url'] !== $after['url'] ? ($after['url'] ? 'new image uploaded' : 'back to the standard logo') : null,
+            $before['corner'] !== $after['corner'] ? "corner size {$after['corner']}%" : null,
+            $before['opening'] !== $after['opening'] ? "opening size {$after['opening']}%" : null,
+        ])->filter()->implode('; ').'.');
+
+        return response()->json(['data' => ['logo' => $after]]);
     }
 
     /** @return array<string, string> */

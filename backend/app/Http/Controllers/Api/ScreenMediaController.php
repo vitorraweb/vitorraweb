@@ -17,7 +17,7 @@ use Illuminate\Validation\Rule;
  */
 class ScreenMediaController extends Controller
 {
-    private const URL = '#^https://[a-z0-9]+\.public\.blob\.vercel-storage\.com/screen-media/[A-Za-z0-9._\-/%]+\.(mp4|png|jpe?g|webp)$#';
+    public const URL = '#^https://[a-z0-9]+\.public\.blob\.vercel-storage\.com/screen-media/[A-Za-z0-9._\-/%]+\.(mp4|png|jpe?g|webp)$#';
 
     public function index(): JsonResponse
     {

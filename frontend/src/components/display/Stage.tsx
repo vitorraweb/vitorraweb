@@ -6,7 +6,7 @@ import { API_BASE_URL, CONTACT_PHONE } from "@/lib/constants";
 import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
 import { newCycle, next, slice, spent, type Advert, type Carry, type Cycle } from "./programme";
 import type { MediaScene, Programme } from "./scenes";
-import { COPY_DRAFT_KEY, DEFAULT_COPY, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
+import { COPY_DRAFT_KEY, DEFAULT_COPY, DEFAULT_LOGO, LOGO_DRAFT_KEY, type ScreenLogo, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
 
 /* ─── The stage ───────────────────────────────────────────────────────────────
    A full-screen loop for the reception TV and the street-facing screen.
@@ -65,9 +65,20 @@ export function Stage({ mode, pin, at, hold, turn, draft }: { mode: Mode; pin?: 
 }
 
 const CopyContext = createContext(DEFAULT_COPY);
+const LogoContext = createContext<ScreenLogo>(DEFAULT_LOGO);
+
+/** The Vitorra logo at `base` cqmin wide, scaled as set in the Screen editor; an uploaded logo replaces it. */
+function Logo({ base, scale, alt }: { base: number; scale: number; alt: string }) {
+  const { url } = useContext(LogoContext);
+  const width = `${Math.round(base * scale) / 100}cqmin`;
+  return url
+    // eslint-disable-next-line @next/next/no-img-element -- uploaded in the Screen editor, shown as made
+    ? <img src={url} alt={alt} style={{ width, height: "auto", maxHeight: "40cqmin", objectFit: "contain" }} />
+    : <Image src="/logo.png" alt={alt} width={240} height={240} style={{ width, height: "auto" }} priority />;
+}
 
 function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number; draft?: boolean }) {
-  const { welcome, changes, media, programme: order } = useScreenData(mode, draft);
+  const { welcome, changes, media, programme: order, logo } = useScreenData(mode, draft);
   const copy = useMemo(() => applyCopy(changes), [changes]);
   const story = useMemo(() => storyFor(mode, !!welcome, copy, media, order), [mode, welcome, copy, media, order]);
   const [i, setI] = useState(0);
@@ -153,6 +164,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
 
   return (
     <CopyContext.Provider value={copy}>
+    <LogoContext.Provider value={logo}>
     <div className="vx absolute inset-0 overflow-hidden select-none cursor-none" data-mode={mode} data-daypart={daypart}
       style={{ ...theme, "--vx-accent": accent, "--vx-small": street ? "3cqmin" : "2.3cqmin", "--vx-tag": street ? "2.5cqmin" : "2.1cqmin", background: "var(--vx-bg)", color: "var(--vx-fg)", transition: "background-color 1.2s ease, color 1.2s ease" } as unknown as React.CSSProperties}>
       <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} projector={projector} moment={moment} look={look} night={!light && daypart === "night"} grade={light ? LIGHT[light].picture : undefined} />
@@ -181,6 +193,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
       <UtilityBar big={big} inset={projector ? "7.5cqmin" : "5cqmin"} />
       </div>
     </div>
+    </LogoContext.Provider>
     </CopyContext.Provider>
   );
 }
@@ -295,9 +308,10 @@ function Backdrops({ activeSector, kind, seconds, street, projector = false, mom
 /* ── Chrome ─────────────────────────────────────────────────────────────── */
 
 function TopBar({ hidden }: { hidden: boolean }) {
+  const { corner } = useContext(LogoContext);
   return (
     <header className="flex items-center justify-between transition-opacity duration-700" style={{ opacity: hidden ? 0 : 1 }}>
-      <Image src="/logo.png" alt="Vitorra Holdings" width={120} height={120} style={{ width: "5cqmin", height: "auto" }} priority />
+      <Logo base={5} scale={corner} alt="Vitorra Holdings" />
       <p className="font-sans" style={{ fontSize: "1.9cqmin", fontWeight: 600, color: "var(--vx-muted)" }}>vitorra.org</p>
     </header>
   );
@@ -388,10 +402,11 @@ function Progress({ story, index, seconds, loop }: { story: Scene[]; index: numb
 
 function Ident() {
   const { ui } = useContext(CopyContext);
+  const { opening } = useContext(LogoContext);
   return (
     <div className="self-end w-full" style={{ paddingBottom: "3cqmin" }}>
       <div className="vx-rise" style={{ ["--d" as string]: "0.1s" }}>
-        <Image src="/logo.png" alt="" width={160} height={160} style={{ width: "6.4cqmin", height: "auto" }} priority />
+        <Logo base={6.4} scale={opening} alt="" />
       </div>
       <h1 className="vx-mega font-sans vx-rise" style={{ fontSize: scaled(38), fontWeight: 800, lineHeight: 0.92, letterSpacing: "-0.05em", marginTop: "2cqmin", marginLeft: "-0.06em", ["--d" as string]: "0.5s" }}>VITORRA</h1>
       <div className="vx-draw" style={{ width: "26cqmin", height: "0.6cqmin", background: "var(--vx-accent)", margin: "2.4cqmin 0", ["--d" as string]: "1.2s" }} />
@@ -751,14 +766,18 @@ function useDaypart(forced?: Daypart | null): Daypart {
 /** What the screen reads from the server every 30 seconds: reception's welcome (indoors only,
  *  never shown on the street) and any wording changed in the console, so a change reaches the
  *  screens without a reload. `draft` previews unsaved edits from the console's editor. */
-function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes: Record<string, string>; media: MediaScene[]; programme: Programme } {
+function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes: Record<string, string>; media: MediaScene[]; programme: Programme; logo: ScreenLogo } {
   const [welcome, setWelcome] = useState<Welcome>(null);
+  const [logo, setLogo] = useState<ScreenLogo>(DEFAULT_LOGO);
   const [changes, setChanges] = useState<Record<string, string>>({});
   const [media, setMedia] = useState<MediaScene[]>([]);
   const [programme, setProgramme] = useState<Programme>({ order: [], hidden: [] });
   useEffect(() => {
     if (!draft) return;
-    const read = () => { try { setChanges(JSON.parse(localStorage.getItem(COPY_DRAFT_KEY) ?? "{}")); } catch { setChanges({}); } };
+    const read = () => {
+      try { setChanges(JSON.parse(localStorage.getItem(COPY_DRAFT_KEY) ?? "{}")); } catch { setChanges({}); }
+      try { const l = localStorage.getItem(LOGO_DRAFT_KEY); if (l) setLogo({ ...DEFAULT_LOGO, ...JSON.parse(l) }); } catch { /* keep the published logo */ }
+    };
     const first = setTimeout(read, 0);
     window.addEventListener("storage", read);
     return () => { clearTimeout(first); window.removeEventListener("storage", read); };
@@ -771,6 +790,7 @@ function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes:
         if (!live) return;
         if (mode !== "street") setWelcome(j?.data?.welcome ?? null);
         if (!draft) setChanges((old) => same(old, j?.data?.copy ?? {}));
+        if (!draft || !localStorage.getItem(LOGO_DRAFT_KEY)) setLogo((old) => same(old, { ...DEFAULT_LOGO, ...(j?.data?.logo ?? {}) }));
         setProgramme((old) => same(old, { order: j?.data?.programme?.order ?? [], hidden: j?.data?.programme?.hidden ?? [] }));
         setMedia((old) => same(old, (j?.data?.media ?? []).map((m: { id: string; kind: "video" | "image"; url: string; seconds: number; line1?: string; line2?: string; screens: string[] }) => ({
           kind: "media", id: m.id, media: m.kind, url: m.url, seconds: m.seconds, line1: m.line1, line2: m.line2, screens: m.screens,
@@ -780,7 +800,7 @@ function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes:
     const t = setInterval(load, 30_000);
     return () => { live = false; clearInterval(t); };
   }, [mode, draft]);
-  return { welcome, changes, media, programme };
+  return { welcome, changes, media, programme, logo };
 }
 
 /* ── Vitorra's own media, added in the Screen editor ─────────────────────── */

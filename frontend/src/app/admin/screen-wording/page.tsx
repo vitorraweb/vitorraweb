@@ -5,6 +5,7 @@ import { Loader2, RotateCcw, Send } from "lucide-react";
 import { apiAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/admin-ui";
 import { ScreenRunningOrder } from "@/components/admin/ScreenRunningOrder";
+import { ScreenLogoEditor } from "@/components/admin/ScreenLogoEditor";
 import { COPY_DRAFT_KEY, copyFields, type CopyField } from "@/components/display/scenes";
 
 /* ─── Operations → Screen wording ─────────────────────────────────────────────
@@ -121,18 +122,19 @@ function WordingTab({ tabs }: { tabs: React.ReactNode }) {
 }
 
 /* ─── Operations → Screen editor ─────────────────────────────────────────────
-   Two tabs: what plays and in what order (videos, designs, built-in scenes),
-   and the words on the screens.                                              */
+   Three tabs: what plays and in what order (videos, designs, built-in
+   scenes), the words on the screens, and the logo (size and image).         */
 export default function ScreenEditorPage() {
-  const [tab, setTab] = useState<"order" | "words">("order");
+  const [tab, setTab] = useState<"order" | "words" | "logo">("order");
   const tabs = (
     <div role="tablist" aria-label="Screen editor" className="flex gap-5 mb-4" style={{ borderBottom: "1px solid var(--o-line)" }}>
-      {([["order", "Running order"], ["words", "Wording"]] as const).map(([id, label]) => (
+      {([["order", "Running order"], ["words", "Wording"], ["logo", "Logo"]] as const).map(([id, label]) => (
         <button key={id} type="button" role="tab" aria-selected={tab === id} className="c-tab" onClick={() => setTab(id)}>{label}</button>
       ))}
     </div>
   );
   if (tab === "words") return <WordingTab tabs={tabs} />;
+  if (tab === "logo") return <ScreenLogoEditor tabs={tabs} />;
   return (
     <div>
       <PageHeader title="Screen editor" subtitle="What the screens play, in what order. Add videos and 1920 × 1080 designs, switch scenes off, move them up or down." />
