@@ -13,7 +13,7 @@ class FinanceTransaction extends Model
 
     protected $fillable = [
         'type', 'finance_account_id', 'transfer_to_account_id', 'finance_category_id',
-        'sector', 'currency', 'amount', 'vat_rate', 'vat_amount', 'occurred_on', 'description', 'reference',
+        'sector', 'currency', 'amount', 'vat_rate', 'vat_amount', 'occurred_on', 'description', 'reference', 'payment_method', 'payment_reference',
         'status', 'source', 'source_id', 'receipt_path',
         'recorded_by', 'approved_by', 'approved_at',
     ];

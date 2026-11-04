@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\DocumentPreviewController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\QuotationController;
 use App\Http\Controllers\Api\InvoicePaymentController;
+use App\Http\Controllers\Api\PaymentReceiptController;
 use App\Http\Controllers\Api\JobAdminController;
 use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\MediaController;
@@ -639,6 +640,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send']);
             Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment']);
             Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
+            // Payment receipts — issued automatically for each approved payment.
+            Route::get('/invoices/{invoice}/receipts', [PaymentReceiptController::class, 'forInvoice']);
+            Route::get('/payment-receipts', [PaymentReceiptController::class, 'index']);
+            Route::get('/payment-receipts/export', [PaymentReceiptController::class, 'export']);
+            Route::get('/payment-receipts/{receipt}/pdf', [PaymentReceiptController::class, 'pdf']);
+            Route::post('/payment-receipts/{receipt}/send', [PaymentReceiptController::class, 'send'])->middleware('throttle:30,1');
             // FET stock overview — devices in/out per model, rolled up by week.
             Route::get('/stock', [FetStockController::class, 'index']);
             Route::get('/stock/export', [FetStockController::class, 'export']);

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Invoice;
+use App\Models\PaymentReceipt;
 use App\Models\Quotation;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -227,12 +228,91 @@ class BrandedDocument
             'acceptance' => $isQuote
                 ? ($business === 'coffee' ? [['Name', 'Signature'], ['Date', 'Company Stamp']] : [['Name', 'Signature'], ['Date', 'Sales Contact']])
                 : null,
+            'receipt'    => null,
             'footer_tab' => match (true) {
                 $isOrder => 'Order confirmation – Thank you for your order',
                 $isQuote => 'Quotation – Non-binding unless otherwise stated',
                 default  => 'Thank you for your business!',
             },
         ];
+    }
+
+    /**
+     * A payment receipt on the same template as its invoice: who paid, for
+     * what, how, and what is still owed. Invoices made before the branded
+     * templates take the look of their business line (coffee, else FET).
+     */
+    public static function receiptPdf(PaymentReceipt $receipt): DomPdf
+    {
+        File::ensureDirectoryExists(storage_path('fonts'));
+
+        return Pdf::loadView('documents.branded', ['d' => self::receiptData($receipt)])
+            ->setPaper('a4')
+            ->setOption('dpi', 96)
+            ->setOption('defaultFont', 'DejaVu Sans')
+            ->setOption('isFontSubsettingEnabled', true);
+    }
+
+    public static function receiptData(PaymentReceipt $receipt): array
+    {
+        $invoice = clone $receipt->invoice->loadMissing('items');
+        $invoice->business = in_array($invoice->business, ['coffee', 'fet'], true)
+            ? $invoice->business
+            : ($invoice->sector === 'COFFEE' ? 'coffee' : 'fet');
+
+        $d = self::data($invoice);
+        $c = $receipt->currency;
+        $full = $receipt->isFullySettled();
+        $void = $receipt->status === 'void';
+
+        return array_merge($d, [
+            'kind'           => 'receipt',
+            'number'         => $receipt->number,
+            'header'         => resource_path("document-art/head-{$d['business']}-receipt.jpg"),
+            'customer_title' => 'RECEIVED FROM',
+            'info_title'     => 'RECEIPT INFORMATION',
+            'info'           => array_values(array_filter([
+                ['Receipt No.', $receipt->number],
+                ['Receipt Date', self::date($receipt->paid_on)],
+                ['Invoice No.', $invoice->number],
+                ['Invoice Date', self::date($invoice->issue_date)],
+                ['Payment Method', $receipt->methodLabel()],
+                ['Payment Ref.', $receipt->payment_reference],
+                ['Currency', $c],
+                ['Status', $void ? 'VOID' : ($full ? 'PAID IN FULL' : 'PART PAYMENT')],
+            ], fn ($r) => filled($r[1]))),
+            'totals'         => [
+                ['INVOICE TOTAL', self::money($c, (int) $invoice->total)],
+                ['AMOUNT RECEIVED', self::money($c, $receipt->amount)],
+                ['BALANCE DUE', self::money($c, $receipt->balance_after)],
+            ],
+            'terms'          => [],
+            'bank'           => null,
+            'notes'          => [],
+            'conditions'     => [],
+            'acceptance'     => null,
+            'receipt'        => [
+                'void'    => $void,
+                'status'  => $void ? 'VOID' : ($full ? 'PAID IN FULL' : 'PART PAYMENT'),
+                'full'    => $full,
+                'rows'    => [
+                    ['Invoice total', self::money($c, (int) $invoice->total)],
+                    ['Paid before this receipt', self::money($c, $receipt->paid_before)],
+                    ['Received on this receipt', self::money($c, $receipt->amount)],
+                    ['Total paid to date', self::money($c, $receipt->paidToDate())],
+                    ['Balance remaining', self::money($c, $receipt->balance_after)],
+                ],
+                'words'   => 'We acknowledge with thanks receipt of '.self::money($c, $receipt->amount)
+                    .' from '.$invoice->customer_name.' against invoice '.$invoice->number.'.',
+                'next'    => $void
+                    ? 'This receipt has been cancelled because the payment it records was reversed. It is not proof of payment.'
+                    : ($full
+                        ? 'This invoice is now paid in full. Thank you.'
+                        : 'A balance of '.self::money($c, $receipt->balance_after).' remains on this invoice'
+                            .($invoice->due_date ? ', due by '.self::date($invoice->due_date) : '').'. Please quote '.$invoice->number.' with your next payment.'),
+            ],
+            'footer_tab'     => $void ? 'Cancelled receipt – not valid as proof of payment' : 'Payment received – Thank you!',
+        ]);
     }
 
     /* ── formatting ──────────────────────────────────────────────────────── */

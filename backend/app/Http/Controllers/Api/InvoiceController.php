@@ -9,6 +9,7 @@ use App\Models\FinanceAccount;
 use App\Models\FinanceCategory;
 use App\Models\FinanceTransaction;
 use App\Models\Invoice;
+use App\Models\PaymentReceipt;
 use App\Models\Setting;
 use App\Mail\DocumentForReview;
 use App\Support\Audit;
@@ -119,6 +120,8 @@ class InvoiceController extends Controller
             'finance_account_id' => ['required', Rule::exists('finance_accounts', 'id')],
             'amount'             => ['nullable', 'integer', 'min:1'],
             'occurred_on'        => ['nullable', 'date'],
+            'payment_method'     => ['nullable', Rule::in(array_keys(PaymentReceipt::METHODS))],
+            'payment_reference'  => ['nullable', 'string', 'max:120'],
         ]);
 
         $account = FinanceAccount::findOrFail($data['finance_account_id']);
@@ -141,6 +144,8 @@ class InvoiceController extends Controller
             'occurred_on'         => $data['occurred_on'] ?? now()->toDateString(),
             'description'         => 'Invoice '.$invoice->number.' — '.$invoice->customer_name,
             'reference'           => $invoice->number,
+            'payment_method'      => $data['payment_method'] ?? null,
+            'payment_reference'   => $data['payment_reference'] ?? null,
             'status'              => 'draft',
             'source'              => 'invoice',
             'source_id'           => $invoice->id,

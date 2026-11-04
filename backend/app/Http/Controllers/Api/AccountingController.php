@@ -11,6 +11,7 @@ use App\Models\RecurringEntry;
 use App\Models\SupplierBill;
 use App\Services\FinanceReportService;
 use App\Services\ReceiptExtractionService;
+use App\Services\Payments\PaymentReceipts;
 use App\Support\Audit;
 use App\Support\SecureFile;
 use Illuminate\Http\JsonResponse;
@@ -243,6 +244,7 @@ class AccountingController extends Controller
         // An invoice receipt settles the invoice (partial or paid).
         if ($transaction->source === 'invoice' && $transaction->source_id) {
             $this->settleInvoice($transaction->source_id, $transaction->amount);
+            app(PaymentReceipts::class)->issueFor($transaction->fresh());
         }
 
         return response()->json(['data' => $this->shape($transaction->fresh(['account', 'toAccount', 'category']))]);
@@ -258,6 +260,7 @@ class AccountingController extends Controller
         }
         if ($wasApproved && $transaction->source === 'invoice' && $transaction->source_id) {
             $this->settleInvoice($transaction->source_id, -$transaction->amount);
+            app(PaymentReceipts::class)->voidFor($transaction);
         }
         $transaction->update(['status' => 'void']);
 

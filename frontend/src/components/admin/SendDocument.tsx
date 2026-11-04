@@ -69,7 +69,7 @@ export function ClientFinder({ onPick }: { onPick: (c: Client) => void }) {
 }
 
 export function SendDocumentDialog({
-  endpoint, docLabel, docNumber, customer, onClose, onSent,
+  endpoint, docLabel, docNumber, customer, onClose, onSent, finalText,
 }: {
   endpoint: string;            // e.g. /admin/accounting/quotations/12/send
   docLabel: string;            // "Quotation", "Invoice"…
@@ -77,6 +77,7 @@ export function SendDocumentDialog({
   customer: { name: string; email: string };
   onClose: () => void;
   onSent: (data: Record<string, unknown> | undefined, summary: string) => void;
+  finalText?: string;          // the "this is final" tick, when "marked sent" doesn't apply
 }) {
   const me = auth.getUser();
   const customerEmail = customer.email.trim().toLowerCase();
@@ -212,7 +213,7 @@ export function SendDocumentDialog({
           {goesToClient && (
             <label className="flex items-start gap-2.5 p-2.5 rounded-edge border cursor-pointer" style={{ borderColor: "color-mix(in oklab, var(--color-gold) 55%, transparent)", background: "color-mix(in oklab, var(--color-gold) 8%, var(--color-paper))" }}>
               <input type="checkbox" className="mt-0.5" checked={final} onChange={(e) => setFinal(e.target.checked)} />
-              <span className="text-[12.5px] text-ink">I have checked the PDF and this {docLabel.toLowerCase()} is final. The customer receives it now and it is marked <b>sent</b>.</span>
+              <span className="text-[12.5px] text-ink">{finalText ?? <>I have checked the PDF and this {docLabel.toLowerCase()} is final. The customer receives it now and it is marked <b>sent</b>.</>}</span>
             </label>
           )}
 

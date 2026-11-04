@@ -9,19 +9,20 @@ import { GraphView, KpiTile } from "@/components/admin/reporting";
 import { Stock } from "@/components/admin/FetStock";
 import { SendDocumentDialog } from "@/components/admin/SendDocument";
 import { ReceiptInbox } from "@/components/admin/ReceiptInbox";
+import { InvoiceReceipts, PaymentReceiptsRegister, RecordPaymentDialog } from "@/components/admin/PaymentReceipts";
 
 const CURRENCIES = ["UGX", "USD", "EUR"];
 const money = (c: string, a: number) => (c === "UGX" ? `UGX ${a.toLocaleString()}` : `${c === "USD" ? "$" : "€"}${(a / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
 const cls = "w-full text-sm rounded-xl px-3 py-2 border outline-none focus:border-[var(--o-accent)]";
 const st = { borderColor: "rgba(0,0,0,0.12)", background: "var(--o-surface)", color: "var(--o-text)" } as const;
 
-type Tab = "overview" | "receipts" | "invoices" | "transactions" | "accounts" | "bills" | "budgets" | "recurring" | "stock";
+type Tab = "overview" | "receipts" | "invoices" | "payments" | "transactions" | "accounts" | "bills" | "budgets" | "recurring" | "stock";
 
 export default function AccountingPage() {
   // ?tab= deep-links straight to a section (command palette, emails).
   const [tab, setTabState] = useState<Tab>(() => {
     const t = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null;
-    return (t && ["overview", "receipts", "invoices", "transactions", "accounts", "bills", "budgets", "recurring", "stock"].includes(t) ? t : "overview") as Tab;
+    return (t && ["overview", "receipts", "invoices", "payments", "transactions", "accounts", "bills", "budgets", "recurring", "stock"].includes(t) ? t : "overview") as Tab;
   });
   const setTab = (t: Tab) => {
     setTabState(t);
@@ -29,7 +30,7 @@ export default function AccountingPage() {
   };
   const canApprove = canAccess(auth.getUser(), { module: "accounting_approve" });
 
-  const tabs: [Tab, string][] = [["overview", "Overview"], ["receipts", "Receipts"], ["invoices", "Invoices"], ["transactions", "Transactions"], ["accounts", "Accounts"], ["bills", "Bills"], ["budgets", "Budgets"], ["recurring", "Recurring"], ["stock", "Stock"]];
+  const tabs: [Tab, string][] = [["overview", "Overview"], ["receipts", "Receipts"], ["invoices", "Invoices"], ["payments", "Payment receipts"], ["transactions", "Transactions"], ["accounts", "Accounts"], ["bills", "Bills"], ["budgets", "Budgets"], ["recurring", "Recurring"], ["stock", "Stock"]];
 
   return (
     <div className="pb-12">
@@ -42,6 +43,7 @@ export default function AccountingPage() {
       {tab === "overview" && <Overview />}
       {tab === "receipts" && <ReceiptInbox />}
       {tab === "invoices" && <Invoices canApprove={canApprove} />}
+      {tab === "payments" && <PaymentReceiptsRegister />}
       {tab === "transactions" && <Transactions canApprove={canApprove} />}
       {tab === "accounts" && <Accounts canApprove={canApprove} />}
       {tab === "bills" && <Bills canApprove={canApprove} />}
@@ -592,11 +594,14 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
   // "Send" opens the who-gets-it window rather than emailing the customer outright.
   const [sending, setSending] = useState<Inv | null>(null);
   const send = (i: Inv) => { setMsg(""); setSending(i); };
-  const pay = async (i: Inv) => {
-    const acct = accounts.find((a) => a.currency === i.currency);
-    if (!acct) { setMsg(`No ${i.currency} account to receive into — add one under Accounts.`); return; }
-    try { await apiAdmin(`/admin/accounting/invoices/${i.id}/payment`, { method: "POST", body: JSON.stringify({ finance_account_id: acct.id }) }); setMsg("Payment recorded — a senior officer approves it to settle the invoice."); load(); } catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); }
+  // Record payment asks how much, when and how it was paid (part payments
+  // welcome); approval then settles the invoice and issues the receipt.
+  const [paying, setPaying] = useState<Inv | null>(null);
+  const pay = (i: Inv) => {
+    if (!accounts.some((a) => a.currency === i.currency)) { setMsg(`No ${i.currency} account to receive into — add one under Accounts.`); return; }
+    setMsg(""); setPaying(i);
   };
+  const [openReceipts, setOpenReceipts] = useState<number | null>(null);
   const voidInv = async (i: Inv) => { if (!confirm(`Void invoice ${i.number}?`)) return; try { await apiAdmin(`/admin/accounting/invoices/${i.id}/void`, { method: "POST" }); load(); } catch (e) { setMsg(e instanceof Error ? e.message : "Failed."); } };
 
   if (loading) return <div className="flex items-center gap-2 text-sm" style={{ color: "var(--o-muted)" }}><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
@@ -657,6 +662,14 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
           onSent={(_, summary) => { setSending(null); setMsg(summary); load(); }}
         />
       )}
+      {paying && (
+        <RecordPaymentDialog
+          invoice={paying}
+          accounts={accounts}
+          onClose={() => setPaying(null)}
+          onDone={(m) => { setPaying(null); setMsg(m); load(); }}
+        />
+      )}
       {msg && <p className="text-sm mb-3" style={{ color: /sent|emailed|recorded/.test(msg) ? "#16A34A" : "#C0392B" }}>{msg}</p>}
 
       {list.length === 0 ? <Empty label="No invoices in this view." /> : (
@@ -664,7 +677,8 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
           {list.map((i) => {
             const sc = INV_STATUS[i.status] ?? INV_STATUS.draft;
             return (
-              <div key={i.id} className="bg-white rounded-[14px] border border-black/[0.05] p-4 flex items-center gap-3 flex-wrap">
+              <div key={i.id}>
+              <div className="bg-white rounded-[14px] border border-black/[0.05] p-4 flex items-center gap-3 flex-wrap">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     {i.business
@@ -680,8 +694,11 @@ function Invoices({ canApprove }: { canApprove: boolean }) {
                   <button onClick={() => downloadFile(`/admin/accounting/invoices/${i.id}/pdf`, `${i.number}.pdf`)} className="p-1.5 rounded-lg" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }} title="PDF"><Download className="w-4 h-4" /></button>
                   {i.status !== "void" && i.status !== "paid" && <button onClick={() => send(i)} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "rgba(59,130,246,0.12)", color: "var(--o-info)" }}><Send className="w-3.5 h-3.5" />Send…</button>}
                   {(i.status === "sent" || i.status === "partial") && <button onClick={() => pay(i)} className="text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "var(--o-accent)", color: "var(--o-text)" }}>Record payment</button>}
+                  {i.amount_paid > 0 && <button onClick={() => setOpenReceipts(openReceipts === i.id ? null : i.id)} aria-expanded={openReceipts === i.id} className="text-[11px] font-semibold px-2.5 py-1.5 rounded-full" style={{ background: "rgba(22,163,74,0.1)", color: "#16A34A" }}>Receipts</button>}
                   {canApprove && i.status !== "void" && i.status !== "paid" && <button onClick={() => voidInv(i)} className="text-[11px] font-semibold px-2 py-1 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>Void</button>}
                 </div>
+              </div>
+              {openReceipts === i.id && <div className="pl-4 pr-1 pb-2"><InvoiceReceipts invoiceId={i.id} /></div>}
               </div>
             );
           })}

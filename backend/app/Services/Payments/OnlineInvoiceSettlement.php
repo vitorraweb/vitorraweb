@@ -59,6 +59,8 @@ class OnlineInvoiceSettlement
                     'approved_at'         => now(),
                     'source'              => 'invoice',
                     'source_id'           => $invoice->id,
+                    'payment_method'      => 'online',
+                    'payment_reference'   => $invoice->payableTrackingId(),
                 ]);
 
                 Audit::log(
@@ -73,6 +75,11 @@ class OnlineInvoiceSettlement
                     'amount'   => $amount,
                 ]);
             }
+
+            // The customer gets a receipt either way; with no account to post
+            // to, it is issued straight against the invoice.
+            $receipts = app(PaymentReceipts::class);
+            isset($tx) ? $receipts->issueFor($tx) : $receipts->issue($invoice, $amount, 'online', $invoice->payableTrackingId());
 
             $paid = min((int) $invoice->total, (int) $invoice->amount_paid + $amount);
             $invoice->update([

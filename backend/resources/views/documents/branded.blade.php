@@ -75,6 +75,13 @@
     ol.list { margin: 0; padding-left: 18px; }
     ol.list li { font-size: 10.6px; line-height: 13.6px; }
 
+    /* Receipt stamp */
+    .stamp { display: inline-block; border: 3px solid; border-radius: 6px; padding: 6px 14px; font-weight: bold; font-size: 17px; letter-spacing: .06em; }
+    .stamp.full { color: #1f7a3a; border-color: #1f7a3a; }
+    .stamp.part { color: #9c6416; border-color: #9c6416; }
+    .stamp.void { color: #b42318; border-color: #b42318; }
+    .void-mark { position: fixed; top: 470px; left: 150px; font-size: 120px; font-weight: bold; color: rgba(180, 35, 24, .13); transform: rotate(-30deg); }
+
     /* Acceptance */
     .accept p { margin: 0 0 2px; font-size: 10.8px; }
     table.sign { width: 100%; border-collapse: collapse; }
@@ -95,6 +102,8 @@
 </style>
 </head>
 <body>
+
+@if(! empty($d['receipt']['void']))<div class="void-mark">VOID</div>@endif
 
 <div class="footer">
     <img class="fr" src="{{ $a }}/rule-footer.png">
@@ -206,7 +215,29 @@
     @endif
 
     {{-- ══ Invoices: payment instructions (+ FET notes and terms) ══════════ --}}
-    @if(! $d['is_quote'])
+    @if(! empty($d['receipt']))
+        @php($r = $d['receipt'])
+        <div class="section">
+            <table class="sec-title"><tr><td><img src="{{ $a }}/ic-terms.png" style="width:30px; height:30px;"></td><td class="t">Payment Summary</td></tr></table>
+            <div class="rule"><img src="{{ $a }}/rule-gold.png"></div>
+            <div class="panel">
+                <table style="width:100%; border-collapse:collapse;"><tr>
+                    <td style="width:55%; vertical-align:top; padding:0;">
+                        <table class="terms">
+                            @foreach($r['rows'] as [$k, $v])
+                                <tr><td class="k" style="width:170px; font-weight:{{ $loop->index === 2 ? 'bold' : 'normal' }};">{{ $k }}</td><td class="c">:</td><td style="font-weight:{{ $loop->index === 2 ? 'bold' : 'normal' }};">{{ $v }}</td></tr>
+                            @endforeach
+                        </table>
+                    </td>
+                    <td style="vertical-align:middle; text-align:center; padding:0 0 0 14px;">
+                        <div class="stamp {{ $r['void'] ? 'void' : ($r['full'] ? 'full' : 'part') }}">{{ $r['status'] }}</div>
+                    </td>
+                </tr></table>
+                <p style="margin:6px 0 2px; font-size:10.8px;">{{ $r['words'] }}</p>
+                <p style="margin:0 0 3px; font-size:10.8px;">{{ $r['next'] }}</p>
+            </div>
+        </div>
+    @elseif(! $d['is_quote'])
         <div class="section">
             <table class="sec-title"><tr><td><img src="{{ $a }}/ic-terms.png" style="width:30px; height:30px;"></td><td class="t">Payment Instructions</td></tr></table>
             <div class="rule"><img src="{{ $a }}/rule-gold.png"></div>
