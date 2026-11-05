@@ -7,7 +7,7 @@ import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherE
 import { newCycle, next, slice, spent, type Advert, type Carry, type Cycle } from "./programme";
 import { localSrc, releaseVideo, warm } from "./mediaCache";
 import type { MediaScene, Programme } from "./scenes";
-import { COPY_DRAFT_KEY, DEFAULT_COPY, DEFAULT_LOGO, LOGO_DRAFT_KEY, type ScreenLogo, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
+import { COPY_DRAFT_KEY, DAY_FILMS, DEFAULT_COPY, DEFAULT_LOGO, dayVersion, LOGO_DRAFT_KEY, type ScreenLogo, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
 
 /* ─── The stage ───────────────────────────────────────────────────────────────
    A full-screen loop for the reception TV and the street-facing screen.
@@ -194,7 +194,8 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
     <div className="vx absolute inset-0 overflow-hidden select-none cursor-none" data-mode={mode} data-daypart={daypart} data-lite={lite ? "" : undefined}
       style={{ ...theme, "--vx-accent": accent, "--vx-small": street ? "3cqmin" : "2.3cqmin", "--vx-tag": street ? "2.5cqmin" : "2.1cqmin", background: "var(--vx-bg)", color: "var(--vx-fg)", transition: "background-color 1.2s ease, color 1.2s ease" } as unknown as React.CSSProperties}>
       <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} projector={projector} moment={moment} look={look}
-        night={lite ? light === "night" : !light && daypart === "night"} grade={light && !lite ? LIGHT[light].picture : undefined} lite={lite} videoBusy={videoBusy} />
+        night={lite ? light === "night" : !light && daypart === "night"} grade={light && !lite ? LIGHT[light].picture : undefined} lite={lite} videoBusy={videoBusy}
+        day={lite && (light === "sun" || light === "soft")} />
       {!lite && <div className="hero-grain absolute inset-0 pointer-events-none" style={{ opacity: projector ? 0 : street ? 0.025 : 0.035 }} />}
       <ScreenCare />
       {scene.kind === "media" && <MediaLayer key={`${scene.id}-${loop}`} m={scene} lite={lite} />}
@@ -220,7 +221,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
         </div>
         {!solo && <Progress story={story} index={index} seconds={seconds} loop={loop} />}
       </div>
-      {!solo && <UtilityBar big={big} inset={projector ? "7.5cqmin" : "5cqmin"} />}
+      {!solo && <UtilityBar big={big} road={street} inset={projector ? "7.5cqmin" : "5cqmin"} />}
       </div>
     </div>
     </LogoContext.Provider>
@@ -230,7 +231,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
 
 /* ── Backgrounds: films for the businesses, a living gold field for the rest ── */
 
-function Backdrops({ activeSector, kind, seconds, street, projector = false, moment, look, night, grade, lite = false, videoBusy = false }: { activeSector: string | null; kind: Scene["kind"]; seconds: number; street: boolean; projector?: boolean; moment: number; look: Still | null; night: boolean; grade?: string; lite?: boolean; videoBusy?: boolean }) {
+function Backdrops({ activeSector, kind, seconds, street, projector = false, moment, look, night, grade, lite = false, videoBusy = false, day = false }: { activeSector: string | null; kind: Scene["kind"]; seconds: number; street: boolean; projector?: boolean; moment: number; look: Still | null; night: boolean; grade?: string; lite?: boolean; videoBusy?: boolean; day?: boolean }) {
   const sector = SECTORS.find((s) => s.id === activeSector);
   const videos = useRef<Record<string, HTMLVideoElement | null>>({});
 
@@ -263,20 +264,20 @@ function Backdrops({ activeSector, kind, seconds, street, projector = false, mom
       <div className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: kind === "ident" ? 1 : 0, background: "#05070D" }}>
         {MONTAGE.map((src, n) => (
           <div key={`${src}-${kind === "ident"}`} className={kind !== "ident" ? "absolute inset-0 opacity-0" : n === MONTAGE.length - 1 ? "vx-montage vx-montage-last absolute inset-0" : "vx-montage absolute inset-0"} style={{ ["--d" as string]: `${(n * seconds) / MONTAGE.length}s`, ["--dur" as string]: `${seconds / MONTAGE.length + 1.4}s` }}>
-            <Image src={src} alt="" fill sizes="100vw" loading="eager" className="object-cover vx-kenburns" style={{ objectPosition: n === 0 ? "50% 78%" : "50% 50%", filter: "brightness(0.5) contrast(1.24) saturate(0.9)", ["--dur" as string]: "12s" }} />
+            <Image src={dayVersion(src, day)} alt="" fill sizes="100vw" loading="eager" className="object-cover vx-kenburns" style={{ objectPosition: n === 0 ? "50% 78%" : "50% 50%", filter: "brightness(0.5) contrast(1.24) saturate(0.9)", ["--dur" as string]: "12s" }} />
           </div>
         ))}
       </div>
 
       {/* Visit: the building itself */}
       <div className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: kind === "visit" ? 1 : 0 }}>
-        <Image src="/photos/company-A-head-office.jpg" alt="" fill sizes="100vw" priority={false}
+        <Image src={dayVersion("/photos/company-A-head-office.jpg", day)} alt="" fill sizes="100vw" priority={false}
           className={kind === "visit" ? "object-cover vx-kenburns" : "object-cover"} style={{ filter: "brightness(0.66) contrast(1.1) saturate(1.1)", ["--dur" as string]: `${seconds}s` }} />
       </div>
 
       {lite && FILMS.filter((s) => s.id === activeSector && !videoBusy).map((s) => (
         // One film at a time, from the box's disk, with no filter or zoom on the moving picture.
-        <LiteFilm key={s.id} src={s.film} poster={s.poster} loop={!s.reel} />
+        <LiteFilm key={`${s.id}-${day}`} src={dayVersion(s.film, day)} poster={dayVersion(s.poster, day)} loop={!s.reel} />
       ))}
 
       {!lite && FILMS.map((s) => (
@@ -297,7 +298,7 @@ function Backdrops({ activeSector, kind, seconds, street, projector = false, mom
         const on = look?.src === src;
         return (
           <div key={src} className="absolute inset-0 overflow-hidden transition-opacity duration-[1400ms]" style={{ opacity: on ? 1 : 0, background: "#000" }}>
-            <Image src={src} alt="" fill sizes="100vw" loading="eager" className={on ? "object-cover vx-drift" : "object-cover"}
+            <Image src={dayVersion(src, day)} alt="" fill sizes="100vw" loading="eager" className={on ? "object-cover vx-drift" : "object-cover"}
               style={{ objectPosition: on ? look?.position : undefined, filter: on ? look?.filter : undefined, translate: on && look?.shift ? `${look.shift} 0` : undefined, ["--dur" as string]: "14s" }} />
           </div>
         );
@@ -371,7 +372,7 @@ function TopBar({ hidden }: { hidden: boolean }) {
    itself and falls back quietly if it is offline. */
 const BAND = { bg: "#060608", fg: "rgba(255,255,255,0.92)", dim: "rgba(255,255,255,0.68)", gold: "#E9C766" };
 
-function UtilityBar({ big, inset }: { big: boolean; inset: string }) {
+function UtilityBar({ big, inset, road = false }: { big: boolean; inset: string; road?: boolean }) {
   const { ticker, ui } = useContext(CopyContext);
   const { time } = useKioskClock();
   const [today, setToday] = useState("");
@@ -384,8 +385,13 @@ function UtilityBar({ big, inset }: { big: boolean; inset: string }) {
   const headlines = useKioskHeadlines();
   const Now = weatherEntry(weather.code).icon;
 
-  const fs = big ? 1.75 : 1.6;                       // text size, cqmin
-  const gap = "3cqmin";
+  // The street screen is read from across the road in daylight: time, weather and
+  // exchange rates are larger and bolder, labels brighter, and only tomorrow's
+  // forecast is shown so the band stays one slim line under the film.
+  const fs = road ? 2.2 : big ? 1.75 : 1.6;          // text size, cqmin
+  const key = road ? { fontSize: "3cqmin", fontWeight: 800, color: "#fff" } : { color: BAND.fg };
+  const dim = road ? "rgba(255,255,255,0.86)" : BAND.dim;
+  const gap = road ? "3.4cqmin" : "3cqmin";
   const items = useMemo(() => {
     const news = headlines.map((h) => h.title);
     const out: string[] = [];
@@ -399,24 +405,24 @@ function UtilityBar({ big, inset }: { big: boolean; inset: string }) {
   const seconds = Math.max(40, Math.round(items.join("   ").length / 9));
 
   return (
-    <div className="relative shrink-0 flex items-center overflow-hidden tabular-nums" style={{ background: BAND.bg, color: BAND.fg, height: "5cqmin", padding: `0 ${inset}`, gap, fontSize: `${fs}cqmin`, fontWeight: 500, textShadow: "none" }}>
-      <span className="shrink-0" style={{ fontWeight: 700, color: "#fff" }}>{time}</span>
-      <span className="shrink-0" style={{ color: BAND.dim, marginLeft: "-1.6cqmin" }}>{today}</span>
+    <div className="relative shrink-0 flex items-center overflow-hidden tabular-nums" style={{ background: BAND.bg, color: BAND.fg, height: road ? "7.4cqmin" : "5cqmin", padding: `0 ${inset}`, gap, fontSize: `${fs}cqmin`, fontWeight: road ? 600 : 500, textShadow: "none" }}>
+      <span className="shrink-0" style={road ? key : { fontWeight: 700, color: "#fff" }}>{time}</span>
+      <span className="shrink-0" style={{ color: dim, marginLeft: road ? "-2cqmin" : "-1.6cqmin" }}>{today}</span>
       <span className="flex items-center shrink-0" style={{ gap: "0.7cqmin" }}>
-        <Now style={{ width: "1.8cqmin", height: "1.8cqmin", color: BAND.dim }} />
-        {weather.tempNow !== null ? `${weather.tempNow}°` : "—"}
-        <span style={{ color: BAND.dim, marginLeft: "0.3cqmin" }}>Kampala</span>
+        <Now style={{ width: road ? "3cqmin" : "1.8cqmin", height: road ? "3cqmin" : "1.8cqmin", color: road ? BAND.gold : BAND.dim }} />
+        <span style={road ? key : undefined}>{weather.tempNow !== null ? `${weather.tempNow}°` : "—"}</span>
+        <span style={{ color: dim, marginLeft: "0.3cqmin" }}>Kampala</span>
       </span>
-      <span className="shrink-0" style={{ color: BAND.dim }}>
-        {weather.days.slice(1, 4).map((d) => `${d.label} ${d.hi}°`).join("  ·  ")}
+      <span className="shrink-0" style={{ color: dim }}>
+        {weather.days.slice(1, road ? 2 : 4).map((d) => `${road ? "Tomorrow" : d.label} ${d.hi}°`).join("  ·  ")}
       </span>
-      <span className="shrink-0" style={{ color: BAND.dim }}>
-        USD <span style={{ color: BAND.fg }}>{fx.ugxPerUsd ? Math.round(fx.ugxPerUsd).toLocaleString("en-US") : "—"}</span>
-        {"   "}EUR <span style={{ color: BAND.fg }}>{fx.ugxPerEur ? Math.round(fx.ugxPerEur).toLocaleString("en-US") : "—"}</span>
+      <span className="shrink-0 flex items-baseline" style={{ color: dim, gap: "0.6cqmin" }}>
+        USD <span style={key}>{fx.ugxPerUsd ? Math.round(fx.ugxPerUsd).toLocaleString("en-US") : "—"}</span>
+        <span style={{ marginLeft: road ? "1.6cqmin" : "0.6cqmin" }}>EUR</span> <span style={key}>{fx.ugxPerEur ? Math.round(fx.ugxPerEur).toLocaleString("en-US") : "—"}</span>
       </span>
       {/* The one touch of gold on the bar */}
       <span className="shrink-0" style={{ color: BAND.gold, fontWeight: 700 }}>{ui.news}</span>
-      <div className="relative flex-1 min-w-0 overflow-hidden flex items-center" style={{ marginLeft: "-1.6cqmin", color: "rgba(255,255,255,0.72)", maskImage: "linear-gradient(90deg, transparent 0, #000 3%, #000 96%, transparent 100%)" }}>
+      <div className="relative flex-1 min-w-0 overflow-hidden flex items-center" style={{ marginLeft: "-1.6cqmin", color: road ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.72)", maskImage: "linear-gradient(90deg, transparent 0, #000 3%, #000 96%, transparent 100%)" }}>
         <div className="vx-ticker flex items-center w-max" style={{ ["--dur" as string]: `${seconds}s` }}>
           {[0, 1].map((copy) => (
             <div key={copy} className="flex items-center shrink-0" aria-hidden={copy === 1}>
@@ -725,6 +731,7 @@ function useWarmMedia(on: boolean, adverts: Advert[], media: MediaScene[]): void
     ...adverts.map((a) => a.url),
     ...media.filter((m) => m.screens.includes("street")).map((m) => m.url),
     ...FILMS.map((f) => f.film),
+    ...DAY_FILMS,
   ].join("\n"), [adverts, media]);
   useEffect(() => {
     if (!on) return;

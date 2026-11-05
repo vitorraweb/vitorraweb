@@ -515,6 +515,28 @@ export function applyCopy(changes: Record<string, string>): ScreenCopy {
 }
 
 /** The brand frame's montage, faint behind the name. */
+/* Daylight copies for the street screen (public/day/…, made by
+   scripts/grade_street_daylight.sh): films and photos with the shadows and
+   mid-tones lifted, the highlights held and the colour richer, so the picture
+   holds up against the sun. Baked into the files, because a live CSS filter
+   on moving film is more than the street screen's TV box can draw smoothly. */
+const DAY_MEDIA = new Set([
+  "/videos/fet-hero.mp4", "/videos/seal-hero.mp4", "/videos/coffee-hero.mp4", "/videos/logistics-hero.mp4", "/videos/fet-reel.mp4", "/videos/fet-install.mp4",
+  "/videos/fet-hero-poster.jpg", "/videos/seal-hero-poster.jpg", "/videos/coffee-hero-poster.jpg", "/videos/logistics-hero-poster.jpg", "/videos/fet-reel-poster.jpg", "/videos/fet-install-poster.jpg",
+  "/images/stock/ambulance-motion.jpg", "/images/stock/coffee-cherries.jpg", "/images/stock/coffee-roaster.jpg", "/images/stock/highway-sunset.jpg",
+  "/images/stock/hills-road.jpg", "/images/stock/kampala-skyline.jpg", "/images/stock/port-aerial.jpg", "/images/stock/road-mountains.jpg",
+  "/images/stock/ship-aerial.jpg", "/images/stock/warehouse-dark.jpg", "/photos/process-coffee-hands.jpg", "/photos/company-A-head-office.jpg",
+  "/display/fet-device.jpg", "/display/fet-engine.jpg",
+]);
+
+/** The daylight copy of a film or photo when there is one (and `day` is on). */
+export function dayVersion(src: string, day: boolean): string {
+  return day && DAY_MEDIA.has(src) ? `/day${src}` : src;
+}
+
+/** Every daylight film, for downloading to the street screen ahead of time. */
+export const DAY_FILMS = [...DAY_MEDIA].filter((s) => s.endsWith(".mp4")).map((s) => `/day${s}`);
+
 export const MONTAGE = ["/images/stock/kampala-skyline.jpg", "/images/stock/port-aerial.jpg", "/images/stock/coffee-roaster.jpg"];
 
 /** Every film the screen plays, for the backdrop layer. */
