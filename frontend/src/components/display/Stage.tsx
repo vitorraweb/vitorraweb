@@ -5,6 +5,7 @@ import Image from "next/image";
 import { API_BASE_URL, CONTACT_PHONE } from "@/lib/constants";
 import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
 import { newCycle, next, slice, spent, type Advert, type Carry, type Cycle } from "./programme";
+import { localSrc, releaseVideo, warm } from "./mediaCache";
 import type { MediaScene, Programme } from "./scenes";
 import { COPY_DRAFT_KEY, DEFAULT_COPY, DEFAULT_LOGO, LOGO_DRAFT_KEY, type ScreenLogo, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
 
@@ -154,6 +155,15 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
 
   const street = mode === "street";
   const projector = mode === "projector";
+  // The street screen runs on a small Android TV box: the light profile (one
+  // video at a time, played from the box's disk, no per-frame effects).
+  // ?fx=full shows the full effects for comparison.
+  const lite = useLite(street);
+  useWarmMedia(lite, adverts, media);
+  useNightlyReload(lite);
+  // Only one video decodes at a time on the box: the background film steps
+  // aside while an advert or an uploaded video plays.
+  const videoBusy = !!ad || (scene.kind === "media" && scene.media === "video");
   // Bright modes (street, projector) share the big type and brighter films.
   const big = mode !== "reception";
   const activeSector = scene.kind === "sector" || scene.kind === "reel" ? scene.id : null;
@@ -165,18 +175,22 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
   return (
     <CopyContext.Provider value={copy}>
     <LogoContext.Provider value={logo}>
-    <div className="vx absolute inset-0 overflow-hidden select-none cursor-none" data-mode={mode} data-daypart={daypart}
+    <div className="vx absolute inset-0 overflow-hidden select-none cursor-none" data-mode={mode} data-daypart={daypart} data-lite={lite ? "" : undefined}
       style={{ ...theme, "--vx-accent": accent, "--vx-small": street ? "3cqmin" : "2.3cqmin", "--vx-tag": street ? "2.5cqmin" : "2.1cqmin", background: "var(--vx-bg)", color: "var(--vx-fg)", transition: "background-color 1.2s ease, color 1.2s ease" } as unknown as React.CSSProperties}>
-      <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} projector={projector} moment={moment} look={look} night={!light && daypart === "night"} grade={light ? LIGHT[light].picture : undefined} />
-      <div className="hero-grain absolute inset-0 pointer-events-none" style={{ opacity: projector ? 0 : street ? 0.025 : 0.035 }} />
+      <Backdrops activeSector={activeSector} kind={scene.kind} seconds={seconds} street={big} projector={projector} moment={moment} look={look}
+        night={lite ? light === "night" : !light && daypart === "night"} grade={light && !lite ? LIGHT[light].picture : undefined} lite={lite} videoBusy={videoBusy} />
+      {!lite && <div className="hero-grain absolute inset-0 pointer-events-none" style={{ opacity: projector ? 0 : street ? 0.025 : 0.035 }} />}
       <ScreenCare />
-      {scene.kind === "media" && <MediaLayer key={`${scene.id}-${loop}`} m={scene} />}
+      {scene.kind === "media" && <MediaLayer key={`${scene.id}-${loop}`} m={scene} lite={lite} />}
       {ad && <AdvertFilm key={ad.started} ad={ad.advert} onEnd={endAd} />}
 
       {/* The whole overlay — story and information band — drifts together
           against burn-in. Projectors usually crop the edges (overscan), so
           their safe area is wider. */}
-      <div className="relative z-10 h-full flex flex-col" style={{ translate: `${dx}px ${dy}px`, filter: light ? LIGHT[light].words : undefined, transition: "translate 4s ease, filter 8s ease" }}>
+      <div className="relative z-10 h-full flex flex-col" style={lite
+        // Dimming the words at night by opacity costs nothing; a filter is redrawn every frame.
+        ? { translate: `${dx}px ${dy}px`, opacity: light === "night" ? 0.82 : 1, transition: "translate 4s ease, opacity 8s ease" }
+        : { translate: `${dx}px ${dy}px`, filter: light ? LIGHT[light].words : undefined, transition: "translate 4s ease, filter 8s ease" }}>
       <div className="flex-1 min-h-0 flex flex-col" style={{ padding: projector ? "6.5cqmin 7.5cqmin 1.6cqmin" : "3.4cqmin 5cqmin 1.4cqmin", textShadow: light ? LIGHT[light].shadow : undefined }}>
         <TopBar hidden={scene.kind === "ident" || (scene.kind === "media" && !scene.line1 && !scene.line2)} />
         <div key={`${scene.id}-${loop}`} className="relative flex-1 min-h-0 flex" style={{ visibility: ad ? "hidden" : undefined }}>
@@ -200,18 +214,19 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
 
 /* ── Backgrounds: films for the businesses, a living gold field for the rest ── */
 
-function Backdrops({ activeSector, kind, seconds, street, projector = false, moment, look, night, grade }: { activeSector: string | null; kind: Scene["kind"]; seconds: number; street: boolean; projector?: boolean; moment: number; look: Still | null; night: boolean; grade?: string }) {
+function Backdrops({ activeSector, kind, seconds, street, projector = false, moment, look, night, grade, lite = false, videoBusy = false }: { activeSector: string | null; kind: Scene["kind"]; seconds: number; street: boolean; projector?: boolean; moment: number; look: Still | null; night: boolean; grade?: string; lite?: boolean; videoBusy?: boolean }) {
   const sector = SECTORS.find((s) => s.id === activeSector);
   const videos = useRef<Record<string, HTMLVideoElement | null>>({});
 
   useEffect(() => {
+    if (lite) return; // the light profile mounts only the playing film, which starts itself
     for (const s of FILMS) {
       const v = videos.current[s.id];
       if (!v) continue;
       if (s.id === activeSector) { v.currentTime = 0; void v.play().catch(() => {}); }
       else v.pause();
     }
-  }, [activeSector]);
+  }, [activeSector, lite]);
 
   const t = sector?.tint ?? "0,0,0";
   const wash = look?.wash ?? (sector && moment > 0 ? "left" : "none");
@@ -243,7 +258,12 @@ function Backdrops({ activeSector, kind, seconds, street, projector = false, mom
           className={kind === "visit" ? "object-cover vx-kenburns" : "object-cover"} style={{ filter: "brightness(0.66) contrast(1.1) saturate(1.1)", ["--dur" as string]: `${seconds}s` }} />
       </div>
 
-      {FILMS.map((s) => (
+      {lite && FILMS.filter((s) => s.id === activeSector && !videoBusy).map((s) => (
+        // One film at a time, from the box's disk, with no filter or zoom on the moving picture.
+        <LiteFilm key={s.id} src={s.film} poster={s.poster} loop={!s.reel} />
+      ))}
+
+      {!lite && FILMS.map((s) => (
         <div key={s.id} className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: activeSector === s.id ? 1 : 0 }}>
           {/* A feature reel plays once, uncropped and ungraded (it is already
               finished film); the business films loop under a slow push-in. */}
@@ -277,14 +297,14 @@ function Backdrops({ activeSector, kind, seconds, street, projector = false, mom
         <div className="absolute inset-0 overflow-hidden transition-opacity duration-[1200ms]" style={{ opacity: moment === 1 ? 1 : 0, background: `radial-gradient(38% 80% at 76% 44%, ${sector.accent}8C 0%, ${sector.accent}26 46%, rgba(0,0,0,0) 74%), rgb(${t})` }}>
           <div className="vx-float absolute" style={{ right: "11cqw", top: "6cqh", height: "112cqh", aspectRatio: "574 / 1245" }}>
             {/* eslint-disable-next-line @next/next/no-img-element -- a fixed cut-out on an unattended screen */}
-            <img src={sector.product.src} alt={sector.product.alt} className="absolute inset-0 h-full w-full" style={{ filter: `drop-shadow(-0.3cqmin -0.1cqmin 0.12cqmin ${sector.accent}) drop-shadow(0 0 3.6cqmin ${sector.accent}88) drop-shadow(0 3cqmin 7cqmin rgba(0,0,0,0.75))` }} />
-            <div className="vx-sweep absolute inset-0" style={{ maskImage: `url(${sector.product.src})`, WebkitMaskImage: `url(${sector.product.src})`, maskSize: "100% 100%", WebkitMaskSize: "100% 100%" }} />
+            <img src={sector.product.src} alt={sector.product.alt} className="absolute inset-0 h-full w-full" style={{ filter: lite ? `drop-shadow(0 0 2.4cqmin ${sector.accent}88)` : `drop-shadow(-0.3cqmin -0.1cqmin 0.12cqmin ${sector.accent}) drop-shadow(0 0 3.6cqmin ${sector.accent}88) drop-shadow(0 3cqmin 7cqmin rgba(0,0,0,0.75))` }} />
+            {!lite && <div className="vx-sweep absolute inset-0" style={{ maskImage: `url(${sector.product.src})`, WebkitMaskImage: `url(${sector.product.src})`, maskSize: "100% 100%", WebkitMaskSize: "100% 100%" }} />}
           </div>
         </div>
       )}
 
       {/* A light passes over the FET device while the number holds */}
-      {look?.src === "/display/fet-device.jpg" && <div className="vx-sweep vx-sweep-wide absolute inset-0 pointer-events-none" />}
+      {!lite && look?.src === "/display/fet-device.jpg" && <div className="vx-sweep vx-sweep-wide absolute inset-0 pointer-events-none" />}
 
       {/* Scrims stay light, only enough for the name, the address and the words:
           heavy overlays are what make a screen look like a slide. */}
@@ -300,7 +320,18 @@ function Backdrops({ activeSector, kind, seconds, street, projector = false, mom
         : "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 22%), linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 14%)" }} />
 
       {/* After dark the picture settles lower, so a big screen never glares. */}
-      <div className="absolute inset-0 pointer-events-none transition-opacity duration-[4000ms]" style={{ background: "#000", opacity: night ? 0.3 : 0 }} />
+      <div className="absolute inset-0 pointer-events-none transition-opacity duration-[4000ms]" style={{ background: "#000", opacity: night ? (lite ? 0.38 : 0.3) : 0 }} />
+    </div>
+  );
+}
+
+/** A background film on the TV box: mounted only while it plays, its decoder freed when it leaves. */
+function LiteFilm({ src, poster, loop }: { src: string; poster: string; loop: boolean }) {
+  const v = useRef<HTMLVideoElement>(null);
+  useEffect(() => { const el = v.current; return () => releaseVideo(el); }, []);
+  return (
+    <div className="absolute inset-0 vx-fade-in">
+      <video ref={v} src={localSrc(src)} poster={poster} muted loop={loop} autoPlay playsInline preload="auto" disablePictureInPicture className="absolute inset-0 h-full w-full object-cover" />
     </div>
   );
 }
@@ -660,6 +691,51 @@ function useCountUp(target: number, decimals: number, ms: number, delayMs: numbe
   return v.toFixed(decimals);
 }
 
+/* ── The street screen's TV box ─────────────────────────────────────────── */
+
+/** The light profile: on for the street screen unless ?fx=full asks for the full effects. */
+function useLite(street: boolean): boolean {
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setFull(new URLSearchParams(window.location.search).get("fx") === "full"), 0);
+    return () => clearTimeout(t);
+  }, []);
+  return street && !full;
+}
+
+/** Keep everything the street screen will play on the box's disk: adverts first, then uploads, then films. */
+function useWarmMedia(on: boolean, adverts: Advert[], media: MediaScene[]): void {
+  const urls = useMemo(() => [
+    ...adverts.map((a) => a.url),
+    ...media.filter((m) => m.screens.includes("street")).map((m) => m.url),
+    ...FILMS.map((f) => f.film),
+  ].join("\n"), [adverts, media]);
+  useEffect(() => {
+    if (!on) return;
+    const go = () => warm(urls.split("\n"));
+    const first = setTimeout(go, 5_000); // let the first scene start before downloading
+    const t = setInterval(go, 10 * 60_000); // pick up anything a failed download missed
+    return () => { clearTimeout(first); clearInterval(t); };
+  }, [on, urls]);
+}
+
+/** A browser left running for weeks slowly gathers memory. Once a night, at 03:30 (off air),
+ *  the screen starts afresh, but only if the site answers, so it never reloads into a blank page. */
+function useNightlyReload(on: boolean): void {
+  useEffect(() => {
+    if (!on) return;
+    const t = setInterval(() => {
+      const now = new Date();
+      if (now.getHours() !== 3 || now.getMinutes() < 30 || now.getMinutes() > 44) return;
+      if (performance.now() < 2 * 60 * 60_000) return; // already fresh tonight
+      fetch(window.location.pathname, { method: "HEAD", cache: "no-store" })
+        .then((r) => { if (r.ok) window.location.reload(); })
+        .catch(() => {});
+    }, 5 * 60_000);
+    return () => clearInterval(t);
+  }, [on]);
+}
+
 /* ── Paid adverts (street screen only) ───────────────────────────────────── */
 
 /** What the server says may run now. Only approved, paid adverts in their booked dates and hours. */
@@ -707,19 +783,24 @@ function AdvertFilm({ ad, onEnd }: { ad: Advert; onEnd: (seconds: number, comple
   const { ui } = useContext(CopyContext);
   const film = useRef<HTMLVideoElement>(null);
   const done = useRef(false);
+  const src = useMemo(() => localSrc(ad.url), [ad.url]);
+  const [started, setStarted] = useState(ad.kind === "image");
   const finish = useCallback((completed: boolean) => {
     if (done.current) return;
     done.current = true;
     onEnd(ad.kind === "image" ? (completed ? ad.seconds : 0) : (film.current?.currentTime ?? 0), completed);
   }, [onEnd, ad]);
   // If a film stalls on an unattended screen, the loop still moves on, and the play is logged as incomplete.
-  useEffect(() => { const t = setTimeout(() => finish(false), (ad.seconds + 3) * 1000); return () => clearTimeout(t); }, [ad, finish]);
+  // The clock starts when the picture does, so a slow start does not cut a paid advert short;
+  // a film that never starts at all gives up after 10 seconds.
+  useEffect(() => { const t = setTimeout(() => finish(false), started ? (ad.seconds + 3) * 1000 : 10_000); return () => clearTimeout(t); }, [ad, finish, started]);
+  useEffect(() => { const el = film.current; return () => releaseVideo(el); }, []);
   return (
     <div className="absolute inset-0 z-[5] bg-black">
       {ad.kind === "image"
         // eslint-disable-next-line @next/next/no-img-element -- the customer's design, shown exactly as supplied
-        ? <img src={ad.url} alt="" onLoad={() => setTimeout(() => finish(true), ad.seconds * 1000)} onError={() => finish(false)} className="h-full w-full object-contain" />
-        : <video ref={film} src={ad.url} autoPlay muted playsInline onEnded={() => finish(true)} onError={() => finish(false)} className="h-full w-full object-contain" />}
+        ? <img src={src} alt="" onLoad={() => setTimeout(() => finish(true), ad.seconds * 1000)} onError={() => finish(false)} className="h-full w-full object-contain" />
+        : <video ref={film} src={src} autoPlay muted playsInline preload="auto" disablePictureInPicture onPlaying={() => setStarted(true)} onEnded={() => finish(true)} onError={() => finish(false)} className="h-full w-full object-contain" />}
       <span className="absolute font-sans" style={{ right: "5cqmin", bottom: "6.4cqmin", fontSize: "1.5cqmin", fontWeight: 600, letterSpacing: "0.04em", color: "rgba(255,255,255,0.7)" }}>{ui.advert}</span>
     </div>
   );
@@ -806,13 +887,16 @@ function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes:
 /* ── Vitorra's own media, added in the Screen editor ─────────────────────── */
 
 /** A video plays once, a design holds with a slow push-in; either fills the 16:9 frame. */
-function MediaLayer({ m }: { m: MediaScene }) {
+function MediaLayer({ m, lite = false }: { m: MediaScene; lite?: boolean }) {
+  const v = useRef<HTMLVideoElement>(null);
+  const src = useMemo(() => (lite ? localSrc(m.url) : m.url), [lite, m.url]);
+  useEffect(() => { const el = v.current; return () => releaseVideo(el); }, []);
   return (
     <div className="absolute inset-0 z-[4] bg-black overflow-hidden">
       {m.media === "video"
-        ? <video src={m.url} autoPlay muted playsInline className="h-full w-full object-cover" />
+        ? <video ref={v} src={src} autoPlay muted playsInline preload="auto" disablePictureInPicture className="h-full w-full object-cover" />
         // eslint-disable-next-line @next/next/no-img-element -- an uploaded design, shown as it was made
-        : <img src={m.url} alt="" className="h-full w-full object-cover vx-drift" style={{ ["--dur" as string]: `${m.seconds}s` }} />}
+        : <img src={src} alt="" className="h-full w-full object-cover vx-drift" style={{ ["--dur" as string]: `${m.seconds}s` }} />}
       {(m.line1 || m.line2) && <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 45%)" }} />}
     </div>
   );

@@ -1653,3 +1653,10 @@
 /* Information band ticker on the screens — always moving (a TV has no reduced-motion preference). */
 .vx .vx-ticker { animation: vx-ticker var(--dur, 60s) linear infinite; }
 @keyframes vx-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+/* Street screen on its Android TV box (data-lite): nothing redrawn every frame.
+   Words rise without the blur, the gold field holds still, the light sweeps go. */
+.vx[data-lite] .vx-rise { animation-name: vx-rise-crisp; }
+.vx[data-lite] .vx-aurora { animation: none; }
+.vx[data-lite] .vx-sweep { display: none; }
+.vx .vx-fade-in { animation: vx-fade-in 900ms ease-out both; }
+@keyframes vx-fade-in { from { opacity: 0; } to { opacity: 1; } }
