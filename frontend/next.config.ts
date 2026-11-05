@@ -19,6 +19,11 @@ const POSTHOG_INGEST = (process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.po
 const POSTHOG_ASSETS = POSTHOG_INGEST.replace(/^https:\/\/(eu|us)\.i\./, "https://$1-assets.i.");
 
 const nextConfig: NextConfig = {
+  // The Screen editor's video optimiser runs the ffmpeg binary from
+  // ffmpeg-static: keep the package out of the bundle and ship the binary
+  // with that one route.
+  serverExternalPackages: ["ffmpeg-static"],
+  outputFileTracingIncludes: { "/api/screen-media/optimise": ["./node_modules/ffmpeg-static/ffmpeg"] },
   // PostHog's API paths end in a slash (/ingest/e/), so Next's automatic
   // trailing-slash redirect is off; redirects() below restores it for pages.
   skipTrailingSlashRedirect: true,

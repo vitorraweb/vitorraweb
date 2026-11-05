@@ -29,6 +29,22 @@ type Upload = { kind: "video" | "image"; url: string; width: number; height: num
 /** Above this, a video is heavier than the street screen's TV box likes (the built-in films run at 1–5 Mbit/s). */
 const HEAVY_MBPS = 8;
 
+type Optimised = { url: string; optimised: boolean; kbps?: number | null; before_kbps?: number | null; error?: string };
+
+/** Re-encode an uploaded video on the server to the street screen's light format (about 5 Mbit/s). */
+async function optimiseVideo(url: string): Promise<Optimised> {
+  const token = auth.getToken();
+  const res = await fetch("/api/screen-media/optimise", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ url }),
+  });
+  const body = (await res.json().catch(() => ({}))) as Optimised;
+  if (!res.ok) throw new Error(body.error ?? "Could not make the video lighter.");
+  return body;
+}
+const mbps = (kbps?: number | null) => (kbps ? `${(kbps / 1000).toFixed(1)} Mbit/s` : "");
+
 /** Delete an uploaded file from storage once nothing uses it. Best effort: the screens never play it again either way. */
 async function deleteFile(url: string): Promise<void> {
   const token = auth.getToken();
@@ -53,6 +69,7 @@ export function ScreenRunningOrder() {
   const [screen, setScreen] = useState("street");
   const file = useRef<HTMLInputElement>(null);
   const replaceFile = useRef<HTMLInputElement>(null);
+  const lastOptimise = useRef("");
   const [replacing, setReplacing] = useState<Item | null>(null);
 
   const load = useCallback(async () => {
@@ -90,7 +107,7 @@ export function ScreenRunningOrder() {
 
   /** Check a file against what the screens can play, then upload it. Null if refused. */
   const upload = async (f: File): Promise<Upload | null> => {
-    setNote("");
+    setNote(""); lastOptimise.current = "";
     const image = !!IMAGE_TYPES[f.type];
     let width = 0, height = 0, seconds = 10, heavy = false;
     if (image) {
@@ -113,7 +130,20 @@ export function ScreenRunningOrder() {
       headers: auth.getToken() ? { Authorization: `Bearer ${auth.getToken()}` } : {},
       onUploadProgress: (e) => setBusy(`Uploading ${Math.round(e.percentage)}%`),
     });
-    return { kind: image ? "image" : "video", url: blob.url, width, height, seconds, name: f.name.replace(/\.[^.]+$/, "").slice(0, 120), heavy };
+    let url = blob.url;
+    if (!image) {
+      // Every video is made light for the street screen's TV box before it is used.
+      setBusy("Making it light for the street screen…");
+      try {
+        const o = await optimiseVideo(url);
+        url = o.url;
+        heavy = false;
+        if (o.optimised) lastOptimise.current = `Made lighter for the screens: ${mbps(o.before_kbps)} → ${mbps(o.kbps)}.`;
+      } catch (e) {
+        lastOptimise.current = `Couldn't make it lighter (${e instanceof Error ? e.message : "error"}); the original is used.`;
+      }
+    }
+    return { kind: image ? "image" : "video", url, width, height, seconds, name: f.name.replace(/\.[^.]+$/, "").slice(0, 120), heavy };
   };
 
   const add = async (f: File | undefined) => {
@@ -129,6 +159,7 @@ export function ScreenRunningOrder() {
       setNote(u.heavy
         ? `Added at the end of the running order. This video is heavy (over ${HEAVY_MBPS} Mbit/s): the street screen plays it once it has downloaded it, which can take a while. For smoother play, export at 1920 × 1080, 30 fps, ${HEAVY_MBPS} Mbit/s or less, and use Replace.`
         : "Added at the end of the running order. Add a caption or change where it shows below.");
+      if (lastOptimise.current) setNote((n) => `${n} ${lastOptimise.current}`);
     } catch (e) { setNote(e instanceof Error ? e.message : "The upload didn't finish. Please try again."); } finally { setBusy(""); if (file.current) file.current.value = ""; }
   };
 
@@ -147,7 +178,7 @@ export function ScreenRunningOrder() {
         await deleteFile(m.url); // the old file is no longer used
         await load();
         setPreview(it.id);
-        setNote(`Replaced the file for "${m.title}". Screens follow within a minute.`);
+        setNote(`Replaced the file for "${m.title}". Screens follow within a minute. ${lastOptimise.current}`.trim());
       } else {
         // A built-in scene stays in the code: switch it off, and put the new content where it was.
         const r = await apiAdmin<{ data: Media }>("/admin/screen-media", { method: "POST", body: JSON.stringify({
@@ -160,7 +191,7 @@ export function ScreenRunningOrder() {
         await apiAdmin("/admin/display/programme", { method: "PUT", body: JSON.stringify(next) });
         await load();
         setOpen(r.data.id); setPreview(newId);
-        setNote(`"${it.label}" is replaced and switched off (not deleted): switch it back on with the eye button any time.`);
+        setNote(`"${it.label}" is replaced and switched off (not deleted): switch it back on with the eye button any time. ${lastOptimise.current}`.trim());
       }
     } catch (e) { setNote(e instanceof Error ? e.message : "The upload didn't finish. Please try again."); void load(); }
     finally { setBusy(""); setReplacing(null); if (replaceFile.current) replaceFile.current.value = ""; }
@@ -173,6 +204,19 @@ export function ScreenRunningOrder() {
     try { await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ title: next.title, line1: next.line1 || null, line2: next.line2 || null, seconds: next.seconds, screens: next.screens, starts_on: next.starts_on || null, ends_on: next.ends_on || null }) }); setNote("Saved. Screens follow within a minute."); }
     catch (e) { setNote(e instanceof Error ? e.message : "Saving failed."); void load(); }
   };
+  /** Re-encode a video that is already in the running order, keeping everything else about it. */
+  const lighten = async (m: Media) => {
+    setBusy("Making it light for the street screen…"); setNote("");
+    try {
+      const o = await optimiseVideo(m.url);
+      if (!o.optimised) { setNote(`"${m.title}" is already light (${mbps(o.kbps)}): nothing to change.`); return; }
+      await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ url: o.url }) });
+      await load();
+      setNote(`"${m.title}" made lighter: ${mbps(o.before_kbps)} → ${mbps(o.kbps)}. Screens follow within a minute.`);
+    } catch (e) { setNote(e instanceof Error ? e.message : "Could not make the video lighter."); }
+    finally { setBusy(""); }
+  };
+
   /** Delete an uploaded video or design for good: off every screen, out of the order, and its file out of storage. */
   const remove = async (m: Media) => {
     if (!confirm(`Delete "${m.title}" for good? It stops playing on every screen within a minute and its file is deleted. To keep it for later, switch it off instead.`)) return;
@@ -239,6 +283,7 @@ export function ScreenRunningOrder() {
                     <div className="sm:col-span-2 flex items-center justify-between gap-2 flex-wrap">
                       <span>{m.kind === "video" ? `Video, ${m.seconds} seconds` : "Design"}{m.width ? `, ${m.width} × ${m.height}` : ""}</span>
                       <span className="flex gap-2">
+                        {m.kind === "video" && <button type="button" className="c-btn" disabled={!!busy} onClick={() => void lighten(m)} title="Re-encode to about 5 Mbit/s for the street screen">{busy.startsWith("Making") ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Film aria-hidden="true" className="w-4 h-4" />}Make lighter</button>}
                         <button type="button" className="c-btn" disabled={!!busy} onClick={() => pickReplacement(it)}><Replace aria-hidden="true" className="w-4 h-4" />Replace with another video or design</button>
                         <button type="button" className="c-btn" onClick={() => void remove(m)}><Trash2 aria-hidden="true" className="w-4 h-4" />Delete</button>
                       </span>
