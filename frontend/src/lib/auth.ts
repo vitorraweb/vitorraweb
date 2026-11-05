@@ -2,7 +2,7 @@
    token mode (Bearer in localStorage, default) and cookie mode (Sanctum SPA
    HttpOnly session). Switch with NEXT_PUBLIC_AUTH_MODE=cookie. */
 
-import { authFetch } from "./http";
+import { authFetch, isTeamsTab, TEAMS_SIGNED_OUT } from "./http";
 import { API_BASE_URL } from "./constants";
 
 const TOKEN_KEY  = "vitorra_admin_token";
@@ -74,10 +74,17 @@ export const auth = {
   },
 };
 
+/** The session has ended: back to the login page, or inside Teams, tell the tab. */
+function signedOut(): void {
+  auth.clear();
+  if (isTeamsTab()) window.dispatchEvent(new Event(TEAMS_SIGNED_OUT));
+  else window.location.href = "/admin/login?expired=1";
+}
+
 export async function apiAdmin<T>(path: string, options?: RequestInit): Promise<T> {
   const base = API_BASE_URL;
   const res  = await authFetch(base, path, auth.getToken(), options ?? {});
-  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
+  if (res.status === 401) signedOut();
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Request failed" }));
     throw new Error(err.message ?? "Request failed");
@@ -126,7 +133,7 @@ export async function downloadFile(path: string, filename: string): Promise<void
 /** GET a file as a blob (e.g. a PDF to show in the page rather than download). */
 export async function fetchBlob(path: string): Promise<Blob> {
   const res = await authFetch(API_BASE_URL, path, auth.getToken(), {}, false);
-  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
+  if (res.status === 401) signedOut();
   if (!res.ok) throw new Error(res.status === 403 ? "You don't have access to this document." : "Could not load the document.");
   return res.blob();
 }
@@ -136,7 +143,7 @@ export async function fetchPdf(path: string, body: unknown, signal?: AbortSignal
   const res = await authFetch(API_BASE_URL, path, auth.getToken(), {
     method: "POST", body: JSON.stringify(body), headers: { Accept: "application/pdf" }, signal,
   });
-  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
+  if (res.status === 401) signedOut();
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Preview failed" }));
     throw new Error(err.message ?? "Preview failed");
@@ -148,7 +155,7 @@ export async function fetchPdf(path: string, body: unknown, signal?: AbortSignal
 export async function uploadAdmin<T>(path: string, form: FormData): Promise<T> {
   const base = API_BASE_URL;
   const res  = await authFetch(base, path, auth.getToken(), { method: "POST", body: form }, false);
-  if (res.status === 401) { auth.clear(); window.location.href = "/admin/login?expired=1"; }
+  if (res.status === 401) signedOut();
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Upload failed" }));
     throw new Error(err.message ?? "Upload failed");

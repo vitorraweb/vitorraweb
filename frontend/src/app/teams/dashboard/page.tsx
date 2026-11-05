@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Loader2, ExternalLink, ShieldCheck } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/constants";
+import { TEAMS_SIGNED_OUT, enableTeamsTabTransport } from "@/lib/http";
 import { initTeams, looksLikeTeamsHost, openTeamsLink } from "@/lib/teams";
 import AdminOverview from "@/app/admin/overview/page";
 
@@ -18,6 +19,9 @@ import AdminOverview from "@/app/admin/overview/page";
    to the normal console.                                                     */
 
 const BROWSER_URL = "https://vitorra.org/admin/overview";
+
+// Inside Teams the console runs on its Bearer token, never the browser's session cookie.
+enableTeamsTabTransport();
 
 type Phase =
   | { kind: "starting" }
@@ -35,7 +39,8 @@ type SsoResponse = {
 function hasConsoleSession(): boolean {
   const u = auth.getUser();
   const role = u?.role?.toLowerCase();
-  return !!u && !auth.isExpired() && (role === "admin" || role === "ops");
+  // A sign-in left over from the browser console (cookie mode) has no token, so it does not count here.
+  return !!u && !!auth.getToken() && !auth.isExpired() && (role === "admin" || role === "ops");
 }
 
 export default function TeamsDashboard() {
@@ -86,6 +91,13 @@ export default function TeamsDashboard() {
       if (hasConsoleSession()) setPhase({ kind: "ready" }); else await signIn();
     })();
   }, [signIn]);
+
+  // The session ended while the tab was open: offer to sign in again, here.
+  useEffect(() => {
+    const out = () => setPhase({ kind: "error", message: "Your session has ended. Sign in again to keep using the dashboard." });
+    window.addEventListener(TEAMS_SIGNED_OUT, out);
+    return () => window.removeEventListener(TEAMS_SIGNED_OUT, out);
+  }, []);
 
   // Links inside the dashboard point at console screens, which are not shown
   // inside Teams — open them in the browser instead.

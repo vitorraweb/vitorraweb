@@ -14,6 +14,16 @@ export const AUTH_MODE = (process.env.NEXT_PUBLIC_AUTH_MODE === "cookie" ? "cook
   | "cookie";
 export const cookieMode = AUTH_MODE === "cookie";
 
+/* The console as a tab inside Microsoft Teams always uses its Bearer token:
+   Teams shows the page in a frame on another site, where the browser does not
+   send our session cookie, and its sign-in (POST /auth/teams) issues a token. */
+let teamsTab = false;
+export function enableTeamsTabTransport(): void { teamsTab = true; }
+export function isTeamsTab(): boolean { return teamsTab; }
+/** Inside Teams a 401 cannot go to the login page (Teams may not show it): the tab handles it. */
+export const TEAMS_SIGNED_OUT = "vitorra:teams-signed-out";
+const sendsCookies = () => cookieMode && !teamsTab;
+
 /** Read a non-HttpOnly cookie (used for the XSRF-TOKEN Sanctum sets). */
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -47,7 +57,7 @@ export async function authFetch(
   json = true,
 ): Promise<Response> {
   const method = (options.method ?? "GET").toUpperCase();
-  if (cookieMode && method !== "GET") await ensureCsrf(base);
+  if (sendsCookies() && method !== "GET") await ensureCsrf(base);
 
   const headers: Record<string, string> = {
     Accept: "application/json",
@@ -55,7 +65,7 @@ export async function authFetch(
     ...((options.headers as Record<string, string>) ?? {}),
   };
 
-  if (cookieMode) {
+  if (sendsCookies()) {
     const xsrf = readCookie("XSRF-TOKEN");
     if (xsrf) headers["X-XSRF-TOKEN"] = xsrf;
   } else if (token) {
@@ -69,6 +79,6 @@ export async function authFetch(
   return fetch(`${base}${path}`, {
     ...options,
     headers,
-    credentials: cookieMode ? "include" : "omit",
+    credentials: sendsCookies() ? "include" : "omit",
   });
 }
