@@ -312,6 +312,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Dashboard — every staff member sees this.
         Route::get('/stats', [AdminController::class, 'stats']);
         Route::get('/alerts', [AdminController::class, 'alerts']);
+        Route::get('/overview/operations', [\App\Http\Controllers\Api\OverviewController::class, 'operations']);
 
         // Teams meetings (join links from Teams/Outlook). Admin + ops add them;
         // the creator or an admin edits (checked in the controller).
@@ -589,6 +590,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('perm:google_ads')->prefix('web-analytics')->group(function () {
             Route::get('/summary', [WebAnalyticsController::class, 'summary'])->middleware('throttle:60,1');
             Route::get('/live', [WebAnalyticsController::class, 'live'])->middleware('throttle:120,1');
+            Route::get('/clicks', [WebAnalyticsController::class, 'clicks'])->middleware('throttle:60,1');
             Route::get('/insights', [WebAnalyticsController::class, 'insights'])->middleware('throttle:60,1');
         });
         // Google Ads reporting — spend, campaigns, search terms, Ads leads.

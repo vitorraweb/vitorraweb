@@ -404,6 +404,61 @@ function UtilityBar({ big, inset, road = false }: { big: boolean; inset: string;
   // A steady reading speed whatever the number of items: about 9 characters a second.
   const seconds = Math.max(40, Math.round(items.join("   ").length / 9));
 
+  const tickerStrip = (
+    <div className="relative flex-1 min-w-0 overflow-hidden flex items-center" style={{ marginLeft: road ? undefined : "-1.6cqmin", color: road ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.72)", maskImage: "linear-gradient(90deg, transparent 0, #000 3%, #000 96%, transparent 100%)" }}>
+      <div className="vx-ticker flex items-center w-max" style={{ ["--dur" as string]: `${seconds}s` }}>
+        {[0, 1].map((copy) => (
+          <div key={copy} className="flex items-center shrink-0" aria-hidden={copy === 1}>
+            {items.map((t, i) => <span key={`${copy}-${i}`} className="shrink-0" style={{ paddingRight: "5cqmin" }}>{t}</span>)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  /* The street screen: an information board people look up to check, like a
+     station clock. Each reading has a small label above a large figure, all
+     inside the band under the picture, so nothing sits on the film itself. */
+  if (road) {
+    const rate = (n: number | null) => (n ? Math.round(n).toLocaleString("en-US") : "—");
+    const label = { fontSize: "1.75cqmin", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.78)", lineHeight: 1 };
+    const big = { fontSize: "5cqmin", fontWeight: 800, color: "#fff", lineHeight: 1, letterSpacing: "-0.01em" };
+    const cell = "flex flex-col justify-center shrink-0";
+    const rule = <span className="shrink-0 self-stretch" style={{ width: 1, margin: "2cqmin 0", background: "rgba(255,255,255,0.18)" }} />;
+    const tomorrow = weather.days[1];
+    return (
+      <div className="relative shrink-0 flex items-stretch overflow-hidden tabular-nums" style={{ background: BAND.bg, color: BAND.fg, height: "10cqmin", padding: `0 ${inset}`, gap: "3cqmin", textShadow: "none" }}>
+        <div className={cell} style={{ gap: "0.9cqmin" }}>
+          <span style={label}>{today}</span>
+          <span style={big}>{time}</span>
+        </div>
+        {rule}
+        <div className={cell} style={{ gap: "0.9cqmin" }}>
+          <span style={label}>Kampala{tomorrow ? ` · Tomorrow ${tomorrow.hi}°` : ""}</span>
+          <span className="flex items-center" style={{ ...big, gap: "1cqmin" }}>
+            <Now style={{ width: "4.4cqmin", height: "4.4cqmin", color: BAND.gold }} />
+            {weather.tempNow !== null ? `${weather.tempNow}°C` : "—"}
+          </span>
+        </div>
+        {rule}
+        <div className={cell} style={{ gap: "0.9cqmin" }}>
+          <span style={label}>USD → UGX</span>
+          <span style={big}>{rate(fx.ugxPerUsd)}</span>
+        </div>
+        <div className={cell} style={{ gap: "0.9cqmin" }}>
+          <span style={label}>EUR → UGX</span>
+          <span style={big}>{rate(fx.ugxPerEur)}</span>
+        </div>
+        {rule}
+        <div className="flex-1 min-w-0 flex flex-col justify-center" style={{ gap: "0.9cqmin", fontSize: "2.3cqmin", fontWeight: 600 }}>
+          <span style={{ ...label, color: BAND.gold }}>{ui.news}</span>
+          {/* Same height as the big figures, so every label sits on one line. */}
+          <div className="flex items-center min-w-0" style={{ height: "5cqmin" }}>{tickerStrip}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative shrink-0 flex items-center overflow-hidden tabular-nums" style={{ background: BAND.bg, color: BAND.fg, height: road ? "7.4cqmin" : "5cqmin", padding: `0 ${inset}`, gap, fontSize: `${fs}cqmin`, fontWeight: road ? 600 : 500, textShadow: "none" }}>
       <span className="shrink-0" style={road ? key : { fontWeight: 700, color: "#fff" }}>{time}</span>
@@ -422,15 +477,7 @@ function UtilityBar({ big, inset, road = false }: { big: boolean; inset: string;
       </span>
       {/* The one touch of gold on the bar */}
       <span className="shrink-0" style={{ color: BAND.gold, fontWeight: 700 }}>{ui.news}</span>
-      <div className="relative flex-1 min-w-0 overflow-hidden flex items-center" style={{ marginLeft: "-1.6cqmin", color: road ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.72)", maskImage: "linear-gradient(90deg, transparent 0, #000 3%, #000 96%, transparent 100%)" }}>
-        <div className="vx-ticker flex items-center w-max" style={{ ["--dur" as string]: `${seconds}s` }}>
-          {[0, 1].map((copy) => (
-            <div key={copy} className="flex items-center shrink-0" aria-hidden={copy === 1}>
-              {items.map((t, i) => <span key={`${copy}-${i}`} className="shrink-0" style={{ paddingRight: "5cqmin" }}>{t}</span>)}
-            </div>
-          ))}
-        </div>
-      </div>
+      {tickerStrip}
     </div>
   );
 }

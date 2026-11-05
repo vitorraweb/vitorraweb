@@ -121,6 +121,64 @@ class PostHogWebStats
         });
     }
 
+    /**
+     * Clicks on the website for a period, from PostHog's automatic click capture:
+     * every click, taps on phone numbers, WhatsApp and email links, and the
+     * buttons and links clicked most. Compared with the period before.
+     */
+    public function clicks(string $period): array
+    {
+        $days = self::PERIODS[$period] ?? 7;
+
+        return Cache::remember("posthog:clicks:{$period}", 300, function () use ($days) {
+            [$from, $prevFrom, $prevTo] = $days === 0
+                ? ['toStartOfDay(now())', 'toStartOfDay(now()) - INTERVAL 1 DAY', 'now() - INTERVAL 1 DAY']
+                : ["now() - INTERVAL {$days} DAY", 'now() - INTERVAL '.(2 * $days).' DAY', "now() - INTERVAL {$days} DAY"];
+            $click = "event = '\$autocapture' AND properties.\$event_type = 'click'";
+
+            $totals = fn (string $where) => $this->query("
+                SELECT count(),
+                       countIf(elements_chain_href ILIKE 'tel:%'),
+                       countIf(elements_chain_href ILIKE '%wa.me%' OR elements_chain_href ILIKE '%whatsapp%'),
+                       countIf(elements_chain_href ILIKE 'mailto:%')
+                FROM events WHERE {$click} AND {$where}")[0] ?? [0, 0, 0, 0];
+            $now = $totals("timestamp >= {$from}");
+            $prev = $totals("timestamp >= {$prevFrom} AND timestamp < {$prevTo}");
+
+            // The clicked element's own text (first in the chain), else where the link goes.
+            $top = $this->query("
+                SELECT trim(arrayElement(elements_chain_texts, 1)) AS label, elements_chain_href AS href, count() AS n
+                FROM events WHERE {$click} AND timestamp >= {$from}
+                GROUP BY label, href ORDER BY n DESC LIMIT 10");
+
+            $pair = fn (int $i) => ['now' => (int) ($now[$i] ?? 0), 'before' => (int) ($prev[$i] ?? 0)];
+
+            return [
+                'clicks'   => $pair(0),
+                'phone'    => $pair(1),
+                'whatsapp' => $pair(2),
+                'email'    => $pair(3),
+                'top'      => array_map(fn ($r) => [
+                    'label' => mb_substr((string) ($r[0] ?? ''), 0, 80) ?: self::hrefLabel((string) ($r[1] ?? '')),
+                    'href'  => self::hrefLabel((string) ($r[1] ?? '')),
+                    'clicks' => (int) $r[2],
+                ], $top),
+            ];
+        });
+    }
+
+    /** A link as staff would describe it: the page path, or "Phone", "WhatsApp", "Email". Never a full number or address. */
+    private static function hrefLabel(string $href): string
+    {
+        return match (true) {
+            $href === '' => '',
+            (bool) preg_match('/^tel:/i', $href) => 'Phone call',
+            (bool) preg_match('/wa\.me|whatsapp/i', $href) => 'WhatsApp',
+            (bool) preg_match('/^mailto:/i', $href) => 'Email',
+            default => (string) (parse_url($href, PHP_URL_PATH) ?: $href),
+        };
+    }
+
     /** People who viewed each product page in the last 7 days (any language prefix). */
     public function productPageViews(array $paths): array
     {

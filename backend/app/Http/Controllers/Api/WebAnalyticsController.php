@@ -27,6 +27,22 @@ class WebAnalyticsController extends Controller
         }
     }
 
+    /** Clicks, contact taps and the most-clicked buttons and links for a period. */
+    public function clicks(Request $request, PostHogWebStats $stats): JsonResponse
+    {
+        $period = $request->validate(['period' => ['nullable', Rule::in(array_keys(PostHogWebStats::PERIODS))]])['period'] ?? '7d';
+
+        if (! PostHogWebStats::configured()) {
+            return response()->json(['data' => ['configured' => false]]);
+        }
+
+        try {
+            return response()->json(['data' => ['configured' => true, 'period' => $period] + $stats->clicks($period)]);
+        } catch (RuntimeException $e) {
+            return response()->json(['data' => ['configured' => true, 'error' => $e->getMessage()]]);
+        }
+    }
+
     public function insights(\App\Services\Analytics\WebInsights $insights): JsonResponse
     {
         if (! PostHogWebStats::configured()) {

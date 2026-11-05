@@ -6,11 +6,14 @@ import { MessageSquare, Mail, ShoppingCart, Loader2, ArrowRight, AlertTriangle }
 import { apiAdmin } from "@/lib/auth";
 import { LiveDot, PageHeader, formatRelativeTime } from "@/components/admin/admin-ui";
 import { GraphView, KpiTile } from "@/components/admin/reporting";
+import { OperationsGlance, TodayRow, WebsiteGlance, operationsAttention, useOperations } from "@/components/admin/OverviewSections";
 
 /* ─── Insights → Overview ─────────────────────────────────────────────────────
-   The company at a glance, as an Odoo-style dashboard: headline numbers with
-   their comparison, then reporting views (graph ⇄ pivot) for the enquiry
-   funnel, demand, lead sources and outreach. Refreshes itself.           */
+   The company at a glance, as an Odoo-style dashboard: today's numbers, what
+   needs attention, the website (visitors and clicks), enquiries and sales,
+   operations (street screen, finance, stock, installs, tasks, people), then
+   lead sources and outreach. Each block only shows what the person may open.
+   Refreshes itself.                                                       */
 
 type Money = { UGX: number; USD: number };
 
@@ -89,6 +92,7 @@ export default function AdminOverview() {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [now, setNow] = useState<number | null>(null);
+  const ops = useOperations();
 
   const load = useCallback(async () => {
     try {
@@ -123,12 +127,13 @@ export default function AdminOverview() {
     { n: alerts.stale_contacts.count, label: "contacts going cold", href: "/admin/pipeline", items: alerts.stale_contacts.items.map((c) => c.name || c.email) },
     { n: alerts.overdue_tasks.count, label: "overdue tasks", href: "/admin/tasks", items: alerts.overdue_tasks.items.map((t) => t.title) },
   ].filter((a) => a.n > 0) : [];
+  attention.push(...operationsAttention(ops));
 
   return (
     <div>
       <PageHeader
         title="Overview"
-        subtitle="Enquiries, sales and outreach at a glance."
+        subtitle="Today across Vitorra: the website, enquiries and sales, and operations."
         actions={lastUpdated ? (
           <span className="flex items-center gap-2 text-[13px] text-ink-muted">
             <LiveDot />Live · updated {now ? formatRelativeTime(new Date(lastUpdated).toISOString(), now) : "just now"}
@@ -148,15 +153,7 @@ export default function AdminOverview() {
               <span className="ml-auto inline-flex items-center gap-1 text-[13px] font-medium text-gold-ink">Website visitors<ArrowRight className="w-3.5 h-3.5" /></span>
             </Link>
           )}
-          {/* ── Headline numbers ─────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-            <KpiTile label="Enquiries this month" value={num(stats.enquiries.this_month)} now={stats.enquiries.this_month} before={stats.enquiries.last_month} href="/admin/enquiries" />
-            <KpiTile label="Open enquiries" value={num(stats.enquiries.open)} sub="New + in progress" href="/admin/enquiries" />
-            <KpiTile label="Conversion rate" value={`${stats.enquiries.conversion_rate}%`} sub={`${stats.enquiries.converted} of ${num(stats.enquiries.total)} became orders`} />
-            <KpiTile label="First reply" value={stats.enquiries.avg_response_hours != null ? `${stats.enquiries.avg_response_hours} h` : "—"} sub="Average, submission → reply" />
-            <KpiTile label="Orders this month" value={num(stats.orders.this_month)} now={stats.orders.this_month} before={stats.orders.last_month} href="/admin/orders" />
-            <KpiTile label="Revenue received" value={money(stats.orders.revenue)} sub="Paid orders, all time" />
-          </div>
+          <TodayRow ops={ops} />
 
           {/* ── Needs attention ──────────────────────────────────────────── */}
           {attention.length > 0 && (
@@ -176,6 +173,19 @@ export default function AdminOverview() {
               </ul>
             </section>
           )}
+
+          <WebsiteGlance />
+
+          {/* ── Enquiries and sales ──────────────────────────────────────── */}
+          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-ink-muted pt-2">Enquiries &amp; sales</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+            <KpiTile label="Enquiries this month" value={num(stats.enquiries.this_month)} now={stats.enquiries.this_month} before={stats.enquiries.last_month} href="/admin/enquiries" />
+            <KpiTile label="Open enquiries" value={num(stats.enquiries.open)} sub="New + in progress" href="/admin/enquiries" />
+            <KpiTile label="Conversion rate" value={`${stats.enquiries.conversion_rate}%`} sub={`${stats.enquiries.converted} of ${num(stats.enquiries.total)} became orders`} />
+            <KpiTile label="First reply" value={stats.enquiries.avg_response_hours != null ? `${stats.enquiries.avg_response_hours} h` : "—"} sub="Average, submission → reply" />
+            <KpiTile label="Orders this month" value={num(stats.orders.this_month)} now={stats.orders.this_month} before={stats.orders.last_month} href="/admin/orders" />
+            <KpiTile label="Revenue received" value={money(stats.orders.revenue)} sub="Paid orders, all time" />
+          </div>
 
           {/* ── Day by day ───────────────────────────────────────────────── */}
           {stats.trends && (
@@ -203,6 +213,8 @@ export default function AdminOverview() {
               note="Quote-based products (FET, SEAL, Logistics) and coffee wholesale move through these stages."
             />
           </div>
+
+          <OperationsGlance ops={ops} />
 
           {/* ── Where leads come from ────────────────────────────────────── */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">

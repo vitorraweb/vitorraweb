@@ -158,4 +158,47 @@ class WebAnalyticsTest extends TestCase
         config(['services.posthog.project_id' => null]);
         $this->withHeaders($this->headers())->getJson('/api/admin/web-analytics/insights')->assertOk()->assertJsonPath('data.configured', false);
     }
+
+    public function test_clicks_count_taps_and_name_links_without_phone_numbers(): void
+    {
+        $this->configure();
+        Http::fake(['eu.posthog.com/api/projects/12345/query/' => function (Request $r) {
+            $q = $r['query']['query'];
+            $this->assertStringContainsString('$autocapture', $q);
+            $rows = match (true) {
+                str_contains($q, 'GROUP BY label, href') => [['Book a fitting', '/fet/reserve', 40], ['', 'tel:+256786099800', 12], ['', 'https://wa.me/256786099800', 9]],
+                str_contains($q, 'INTERVAL 14 DAY') => [[100, 4, 3, 1]],
+                default => [[150, 12, 9, 2]],
+            };
+
+            return Http::response(['results' => $rows, 'columns' => []]);
+        }]);
+
+        $r = $this->withHeaders($this->headers())->getJson('/api/admin/web-analytics/clicks?period=7d')->assertOk();
+        $r->assertJsonPath('data.clicks', ['now' => 150, 'before' => 100])
+            ->assertJsonPath('data.phone.now', 12)->assertJsonPath('data.whatsapp.now', 9)
+            ->assertJsonPath('data.top.0', ['label' => 'Book a fitting', 'href' => '/fet/reserve', 'clicks' => 40])
+            ->assertJsonPath('data.top.1.label', 'Phone call')
+            ->assertJsonPath('data.top.2.label', 'WhatsApp');
+        // The phone number itself never reaches the console.
+        $this->assertStringNotContainsString('786099800', $r->getContent());
+    }
+
+    public function test_operations_overview_only_shows_blocks_the_person_may_open(): void
+    {
+        \App\Models\Setting::put(['display_last_seen' => now()->subMinute()->toIso8601String(), 'display_last_scene' => 'fet']);
+        \App\Models\Enquiry::create(['name' => 'A', 'email' => 'a@x.test', 'product_category' => 'FET', 'message' => 'Hi', 'status' => 'new']);
+
+        $admin = $this->withHeaders($this->headers())->getJson('/api/admin/overview/operations')->assertOk();
+        $admin->assertJsonPath('data.today.enquiries', 1)
+            ->assertJsonPath('data.screen.online', true)
+            ->assertJsonPath('data.screen.scene', 'fet')
+            ->assertJsonStructure(['data' => ['stock', 'finance' => ['awaiting_approval', 'invoices_overdue'], 'installations', 'tasks', 'people', 'meetings_today']]);
+        $this->app['auth']->forgetGuards();
+
+        // Operations staff with only the enquiries module see no money, screen or stock.
+        $u = User::create(['name' => 'Ops', 'email' => 'o-'.uniqid().'@vitorra.org', 'password' => 'changeme123changeme', 'role' => 'ops', 'permissions' => ['enquiries']]);
+        $ops = $this->withHeaders(['Authorization' => 'Bearer '.$u->createToken('t', ['admin'])->plainTextToken])->getJson('/api/admin/overview/operations')->assertOk();
+        $ops->assertJsonPath('data.today.enquiries', 1)->assertJsonMissingPath('data.finance')->assertJsonMissingPath('data.screen')->assertJsonMissingPath('data.stock');
+    }
 }
