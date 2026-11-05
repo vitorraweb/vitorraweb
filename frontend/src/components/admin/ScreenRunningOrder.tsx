@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Film, Image as ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Film, Image as ImageIcon, Loader2, Plus, Replace, Trash2 } from "lucide-react";
 import { uploadPresigned } from "@vercel/blob/client";
 import { apiAdmin, auth } from "@/lib/auth";
 import { BUILT_IN_SCENES } from "@/components/display/scenes";
@@ -11,9 +11,12 @@ import { IMAGE_TYPES, isH264, readImage, readVideo } from "@/lib/screen-ads";
    Everything Vitorra shows on its screens, in order: the built-in films and
    messages, and videos and 1080 designs added here. Switch any of it off, move
    it up or down, or add new content with an optional caption, the screens it
-   shows on and the dates it runs. Saved straight away; running screens follow
-   within a minute. On the street screen all of this is the house content that
-   fills the time paid adverts do not use.                                    */
+   shows on and the dates it runs. Click an item to preview it on its own, and
+   replace it with another video or design: an added item swaps its file and
+   keeps its settings; a built-in one is switched off (not deleted) and the new
+   content takes its place in the order. Saved straight away; running screens
+   follow within a minute. On the street screen all of this is the house
+   content that fills the time paid adverts do not use.                       */
 
 type Media = {
   id: number; kind: "video" | "image"; url: string; title: string; line1: string | null; line2: string | null;
@@ -21,6 +24,7 @@ type Media = {
 };
 type Programme = { order: string[]; hidden: string[] };
 type Item = { id: string; label: string; media?: Media };
+type Upload = { kind: "video" | "image"; url: string; width: number; height: number; seconds: number; name: string };
 
 const SCREENS = [{ id: "street", label: "Street" }, { id: "reception", label: "Reception TV" }, { id: "projector", label: "Projector" }];
 const day = (d: string | null) => (d ? d.slice(0, 10) : "");
@@ -35,6 +39,8 @@ export function ScreenRunningOrder() {
   const [preview, setPreview] = useState("ident");
   const [screen, setScreen] = useState("street");
   const file = useRef<HTMLInputElement>(null);
+  const replaceFile = useRef<HTMLInputElement>(null);
+  const [replacing, setReplacing] = useState<Item | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -69,38 +75,79 @@ export function ScreenRunningOrder() {
     void save({ order: items.map((i) => i.id), hidden });
   };
 
-  const add = async (f: File | undefined) => {
-    if (!f) return;
+  /** Check a file against what the screens can play, then upload it. Null if refused. */
+  const upload = async (f: File): Promise<Upload | null> => {
     setNote("");
     const image = !!IMAGE_TYPES[f.type];
     let width = 0, height = 0, seconds = 10;
     if (image) {
       const m = await readImage(f);
-      if (!m || f.size > 20 * 1024 * 1024) { setNote("Use a PNG, JPG or WebP design under 20 MB."); return; }
-      if (m.width < 1280 || Math.abs(m.width / m.height - 16 / 9) > 0.03) { setNote(`This design is ${m.width} × ${m.height}. The screens need a landscape 16:9 design, ideally 1920 × 1080.`); return; }
+      if (!m || f.size > 20 * 1024 * 1024) { setNote("Use a PNG, JPG or WebP design under 20 MB."); return null; }
+      if (m.width < 1280 || Math.abs(m.width / m.height - 16 / 9) > 0.03) { setNote(`This design is ${m.width} × ${m.height}. The screens need a landscape 16:9 design, ideally 1920 × 1080.`); return null; }
       ({ width, height } = m);
     } else {
       const m = await readVideo(f);
-      if (!m || !(await isH264(f))) { setNote("Export the video as MP4 (H.264): the screens cannot play this format."); return; }
-      if (m.width <= m.height || m.width < 1280) { setNote("Use a landscape video, ideally 1920 × 1080."); return; }
-      if (m.seconds > 60 || f.size > 200 * 1024 * 1024) { setNote("Keep videos to 60 seconds and 200 MB."); return; }
+      if (!m || !(await isH264(f))) { setNote("Export the video as MP4 (H.264): the screens cannot play this format."); return null; }
+      if (m.width <= m.height || m.width < 1280) { setNote("Use a landscape video, ideally 1920 × 1080."); return null; }
+      if (m.seconds > 60 || f.size > 200 * 1024 * 1024) { setNote("Keep videos to 60 seconds and 200 MB."); return null; }
       ({ width, height } = m); seconds = Math.max(4, Math.round(m.seconds));
     }
     setBusy("Uploading 0%");
+    const blob = await uploadPresigned(`screen-media/${crypto.randomUUID()}.${image ? IMAGE_TYPES[f.type] : "mp4"}`, f, {
+      access: "public", contentType: image ? f.type : "video/mp4", handleUploadUrl: "/api/screen-ads/upload", multipart: !image,
+      headers: { Authorization: `Bearer ${auth.getToken() ?? ""}` },
+      onUploadProgress: (e) => setBusy(`Uploading ${Math.round(e.percentage)}%`),
+    });
+    return { kind: image ? "image" : "video", url: blob.url, width, height, seconds, name: f.name.replace(/\.[^.]+$/, "").slice(0, 120) };
+  };
+
+  const add = async (f: File | undefined) => {
+    if (!f) return;
     try {
-      const blob = await uploadPresigned(`screen-media/${crypto.randomUUID()}.${image ? IMAGE_TYPES[f.type] : "mp4"}`, f, {
-        access: "public", contentType: image ? f.type : "video/mp4", handleUploadUrl: "/api/screen-ads/upload", multipart: !image,
-        headers: { Authorization: `Bearer ${auth.getToken() ?? ""}` },
-        onUploadProgress: (e) => setBusy(`Uploading ${Math.round(e.percentage)}%`),
-      });
+      const u = await upload(f);
+      if (!u) return;
       const r = await apiAdmin<{ data: Media }>("/admin/screen-media", { method: "POST", body: JSON.stringify({
-        kind: image ? "image" : "video", url: blob.url, title: f.name.replace(/\.[^.]+$/, "").slice(0, 120), seconds, screens: ["street", "reception", "projector"], width, height,
+        kind: u.kind, url: u.url, title: u.name, seconds: u.seconds, screens: ["street", "reception", "projector"], width: u.width, height: u.height,
       }) });
       await load();
       setOpen(r.data.id); setPreview(`media-${r.data.id}`);
       setNote("Added at the end of the running order. Add a caption or change where it shows below.");
     } catch (e) { setNote(e instanceof Error ? e.message : "The upload didn't finish. Please try again."); } finally { setBusy(""); if (file.current) file.current.value = ""; }
   };
+
+  /** Swap the selected item for another video or design, in the same place in the order. */
+  const replace = async (it: Item, f: File | undefined) => {
+    if (!f) return;
+    try {
+      const u = await upload(f);
+      if (!u) return;
+      const m = it.media;
+      if (m) {
+        // An added item keeps its name, captions, screens and dates; only the file changes.
+        await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({
+          kind: u.kind, url: u.url, width: u.width, height: u.height, seconds: u.kind === "video" ? u.seconds : m.kind === "image" ? m.seconds : 10,
+        }) });
+        await load();
+        setPreview(it.id);
+        setNote(`Replaced the file for "${m.title}". Screens follow within a minute.`);
+      } else {
+        // A built-in scene stays in the code: switch it off, and put the new content where it was.
+        const r = await apiAdmin<{ data: Media }>("/admin/screen-media", { method: "POST", body: JSON.stringify({
+          kind: u.kind, url: u.url, title: `${it.label} (replacement)`.slice(0, 120), seconds: u.seconds, screens: ["street", "reception", "projector"], width: u.width, height: u.height,
+        }) });
+        const newId = `media-${r.data.id}`;
+        const ids = items.map((x) => x.id).filter((x) => x !== newId);
+        ids.splice(ids.indexOf(it.id) + 1, 0, newId);
+        const next = { order: ids, hidden: [...new Set([...programme.hidden, it.id])] };
+        await apiAdmin("/admin/display/programme", { method: "PUT", body: JSON.stringify(next) });
+        await load();
+        setOpen(r.data.id); setPreview(newId);
+        setNote(`"${it.label}" is replaced and switched off (not deleted): switch it back on with the eye button any time.`);
+      }
+    } catch (e) { setNote(e instanceof Error ? e.message : "The upload didn't finish. Please try again."); void load(); }
+    finally { setBusy(""); setReplacing(null); if (replaceFile.current) replaceFile.current.value = ""; }
+  };
+  const pickReplacement = (it: Item) => { setReplacing(it); replaceFile.current?.click(); };
 
   const update = async (m: Media, patch: Partial<Media>) => {
     const next = { ...m, ...patch };
@@ -125,23 +172,30 @@ export function ScreenRunningOrder() {
             {busy ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Plus aria-hidden="true" className="w-4 h-4" />}{busy || "Add video or design"}
           </button>
           <input ref={file} type="file" accept="video/mp4,.mp4,image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => void add(e.target.files?.[0])} />
+          <input ref={replaceFile} type="file" accept="video/mp4,.mp4,image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => replacing && void replace(replacing, e.target.files?.[0])} />
         </div>
         <ol className="c-panel divide-y" style={{ borderColor: "var(--o-line)" }}>
           {items.map((it, n) => {
             const off = programme.hidden.includes(it.id);
             const m = it.media;
             return (
-              <li key={it.id} className="p-3" style={{ opacity: off ? 0.55 : 1 }}>
+              <li key={it.id} className="p-3" style={{ opacity: off ? 0.55 : 1, background: preview === it.id ? "var(--o-surface-2, rgba(0,0,0,0.04))" : undefined }}>
                 <div className="flex items-center gap-2">
                   <span className="tabular-nums text-[12px] w-6 text-right">{n + 1}</span>
                   {m ? (m.kind === "video" ? <Film aria-hidden="true" className="w-4 h-4 shrink-0" /> : <ImageIcon aria-hidden="true" className="w-4 h-4 shrink-0" />) : <span className="w-4" />}
-                  <button type="button" className="text-left flex-1 min-w-0 text-[14px] truncate" onClick={() => { setPreview(it.id); setOpen(m && open !== m.id ? m.id : null); }}>
+                  <button type="button" aria-pressed={preview === it.id} className="text-left flex-1 min-w-0 text-[14px] truncate" onClick={() => { setPreview(it.id); setOpen(m && open !== m.id ? m.id : null); }}>
                     {it.label}{off ? " (off)" : ""}{m && (m.starts_on || m.ends_on) ? ` · ${day(m.starts_on) || "now"} to ${day(m.ends_on) || "open"}` : ""}
                   </button>
                   <button type="button" className="c-btn c-btn-ghost" aria-label="Move up" disabled={n === 0} onClick={() => move(n, -1)}><ArrowUp aria-hidden="true" className="w-4 h-4" /></button>
                   <button type="button" className="c-btn c-btn-ghost" aria-label="Move down" disabled={n === items.length - 1} onClick={() => move(n, 1)}><ArrowDown aria-hidden="true" className="w-4 h-4" /></button>
                   <button type="button" className="c-btn c-btn-ghost" aria-label={off ? "Switch on" : "Switch off"} onClick={() => toggle(it.id)}>{off ? <EyeOff aria-hidden="true" className="w-4 h-4" /> : <Eye aria-hidden="true" className="w-4 h-4" />}</button>
                 </div>
+                {!m && preview === it.id && (
+                  <div className="flex items-center justify-between gap-2 flex-wrap mt-3 pl-12 text-[13px]">
+                    <span style={{ color: "var(--o-muted)" }}>Built-in scene. Its words are in the Wording tab.</span>
+                    <button type="button" className="c-btn" disabled={!!busy} onClick={() => pickReplacement(it)}><Replace aria-hidden="true" className="w-4 h-4" />Replace with a video or design</button>
+                  </div>
+                )}
                 {m && open === m.id && (
                   <div className="grid sm:grid-cols-2 gap-3 mt-3 pl-12 text-[13px]">
                     <label className="block sm:col-span-2">Name (for staff)<input className="c-input w-full mt-1" defaultValue={m.title} maxLength={120} onBlur={(e) => e.target.value.trim() && e.target.value !== m.title && void update(m, { title: e.target.value.trim() })} /></label>
@@ -158,9 +212,12 @@ export function ScreenRunningOrder() {
                     </fieldset>
                     <label className="block">From (optional)<input type="date" className="c-input w-full mt-1" defaultValue={day(m.starts_on)} onChange={(e) => void update(m, { starts_on: e.target.value || null })} /></label>
                     <label className="block">Until (optional)<input type="date" className="c-input w-full mt-1" defaultValue={day(m.ends_on)} onChange={(e) => void update(m, { ends_on: e.target.value || null })} /></label>
-                    <div className="sm:col-span-2 flex items-center justify-between">
+                    <div className="sm:col-span-2 flex items-center justify-between gap-2 flex-wrap">
                       <span>{m.kind === "video" ? `Video, ${m.seconds} seconds` : "Design"}{m.width ? `, ${m.width} × ${m.height}` : ""}</span>
-                      <button type="button" className="c-btn" onClick={() => void remove(m)}><Trash2 aria-hidden="true" className="w-4 h-4" />Remove</button>
+                      <span className="flex gap-2">
+                        <button type="button" className="c-btn" disabled={!!busy} onClick={() => pickReplacement(it)}><Replace aria-hidden="true" className="w-4 h-4" />Replace with another video or design</button>
+                        <button type="button" className="c-btn" onClick={() => void remove(m)}><Trash2 aria-hidden="true" className="w-4 h-4" />Remove</button>
+                      </span>
                     </div>
                   </div>
                 )}
@@ -173,13 +230,13 @@ export function ScreenRunningOrder() {
 
       <div className="xl:sticky xl:top-20 min-w-0">
         <div className="flex items-center justify-between gap-3 mb-2">
-          <p className="text-[13px]">Preview of the selected scene{programme.hidden.includes(preview) ? " (switched off, so the screen shows its normal loop)" : ""}.</p>
+          <p className="text-[13px] min-w-0 truncate">Preview: <b>{items.find((i) => i.id === preview)?.label ?? "…"}</b>{programme.hidden.includes(preview) ? " (switched off)" : ""}, on its own and repeating.</p>
           <select aria-label="Which screen" value={screen} onChange={(e) => setScreen(e.target.value)} className="c-select">
             <option value="street">Street screen</option><option value="tv">Reception TV</option><option value="projector">Projector</option>
           </select>
         </div>
         <div className="relative w-full overflow-hidden bg-black" style={{ aspectRatio: "16 / 9" }}>
-          <iframe key={`${screen}-${preview}-${media.length}`} src={`/display?mode=${screen}&scene=${preview}`} title="Screen preview" className="absolute inset-0 w-full h-full border-0" />
+          <iframe key={`${screen}-${preview}-${items.find((i) => i.id === preview)?.media?.url ?? ""}`} src={`/display?mode=${screen}&scene=${preview}&solo=1`} title="Screen preview" className="absolute inset-0 w-full h-full border-0" />
         </div>
       </div>
     </div>

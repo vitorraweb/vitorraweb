@@ -21,6 +21,9 @@ import { DAYPARTS, type Daypart } from "@/components/display/scenes";
    &at=morning|day|rush|night → preview a time of day and its street brightness; otherwise Kampala's clock.
    &turn=1                 → preview a business's next headline in rotation.
    &draft=1                → preview unsaved wording from Operations → Screen wording.
+   &solo=1                 → with scene=: only that item, looping, even if switched off —
+                              no adverts, no other scenes, no information band (the
+                              Screen editor's preview).
 
    Composed for 1920×1080: any other shape of screen shows it centred in 16:9.
 
@@ -36,7 +39,7 @@ function Screen() {
   const at = DAYPARTS.find((d) => d === q.get("at")) ?? null;
   const moment = Number(q.get("moment"));
   const hold = q.has("moment") && [0, 1, 2, 3].includes(moment) ? moment : null;
-  return <Stage mode={mode} pin={q.get("scene")} at={at as Daypart | null} hold={hold} turn={Number(q.get("turn")) || 0} draft={q.has("draft")} />;
+  return <Stage mode={mode} pin={q.get("scene")} at={at as Daypart | null} hold={hold} turn={Number(q.get("turn")) || 0} draft={q.has("draft")} solo={q.has("solo")} />;
 }
 
 export default function DisplayPage() {

@@ -236,4 +236,28 @@ class ScreenProgrammeTest extends TestCase
         $this->assertSame([60, 60, 120, 240], array_column($d['packages'], 'minutes_per_day'));
         $this->assertSame(['morning', 'lunchtime', 'evening'], array_column($d['slots'], 'id'));
     }
+
+    public function test_replacing_an_items_file_keeps_its_settings_and_a_built_in_can_be_swapped_in_place(): void
+    {
+        $h = $this->admin();
+        $id = $this->postJson('/api/admin/screen-media', [
+            'kind' => 'video', 'url' => 'https://abc.public.blob.vercel-storage.com/screen-media/old.mp4', 'title' => 'Promo',
+            'line1' => 'Caption', 'seconds' => 20, 'screens' => ['street'], 'width' => 1920, 'height' => 1080,
+        ], $h)->assertCreated()->json('data.id');
+
+        // Swap the file for a design: name, caption and screens stay.
+        $this->patchJson("/api/admin/screen-media/{$id}", [
+            'kind' => 'image', 'url' => 'https://abc.public.blob.vercel-storage.com/screen-media/new.png', 'width' => 1920, 'height' => 1080, 'seconds' => 10,
+        ], $h)->assertOk();
+        $m = \App\Models\ScreenMedia::findOrFail($id);
+        $this->assertSame(['image', 'Promo', 'Caption', ['street']], [$m->kind, $m->title, $m->line1, $m->screens]);
+        $this->assertStringEndsWith('/new.png', $m->url);
+
+        // A file from anywhere else is refused.
+        $this->patchJson("/api/admin/screen-media/{$id}", ['url' => 'https://evil.example/x.mp4'], $h)->assertUnprocessable();
+
+        // A built-in scene replaced in place: switched off, the new item right after it.
+        $this->putJson('/api/admin/display/programme', ['order' => ['ident', 'logistics', "media-{$id}", 'proof'], 'hidden' => ['logistics']], $h)->assertOk();
+        $this->assertSame(['order' => ['ident', 'logistics', "media-{$id}", 'proof'], 'hidden' => ['logistics']], $this->getJson('/api/display')->json('data.programme'));
+    }
 }

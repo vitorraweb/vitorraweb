@@ -54,12 +54,12 @@ const LIGHT: Record<Light, { picture: string; words: string; shadow: string }> =
   night: { picture: "brightness(0.6) contrast(1.04) saturate(0.92)", words: "brightness(0.78)", shadow: "0 0.2cqmin 1.2cqmin rgba(0,0,0,0.5)" },
 };
 
-export function Stage({ mode, pin, at, hold, turn, draft }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number; draft?: boolean }) {
+export function Stage({ mode, pin, at, hold, turn, draft, solo }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number; draft?: boolean; solo?: boolean }) {
   return (
     <div className="fixed inset-0 grid place-items-center" style={{ background: "#000" }}>
       {/* The 1920×1080 frame: everything inside measures itself against this box. */}
       <div className="relative overflow-hidden" style={{ width: "min(100vw, 177.778vh)", height: "min(100vh, 56.25vw)", containerType: "size" }}>
-        {pin === "check" ? <ProjectorCheck /> : <Loop mode={mode} pin={pin} at={at} hold={hold} turn={turn} draft={draft} />}
+        {pin === "check" ? <ProjectorCheck /> : <Loop mode={mode} pin={pin} at={at} hold={hold} turn={turn} draft={draft} solo={solo && !!pin} />}
       </div>
     </div>
   );
@@ -78,10 +78,14 @@ function Logo({ base, scale, alt }: { base: number; scale: number; alt: string }
     : <Image src="/logo.png" alt={alt} width={240} height={240} style={{ width, height: "auto" }} priority />;
 }
 
-function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number; draft?: boolean }) {
+function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { mode: Mode; pin?: string | null; at?: Daypart | null; hold?: number | null; turn?: number; draft?: boolean; solo?: boolean }) {
   const { welcome, changes, media, programme: order, logo } = useScreenData(mode, draft);
   const copy = useMemo(() => applyCopy(changes), [changes]);
-  const story = useMemo(() => storyFor(mode, !!welcome, copy, media, order), [mode, welcome, copy, media, order]);
+  // Solo (the Screen editor's preview): just the pinned item, even if it is switched
+  // off or set for another screen, with no adverts and no information band.
+  const story = useMemo(() => solo
+    ? storyFor(mode, false, copy, media.map((m) => ({ ...m, screens: [...m.screens, mode] })), { order: [], hidden: [] })
+    : storyFor(mode, !!welcome, copy, media, order), [solo, mode, welcome, copy, media, order]);
   const [i, setI] = useState(0);
   const [loop, setLoop] = useState(0);
   const pinned = pin ? story.findIndex((s) => s.id === pin) : -1;
@@ -117,6 +121,13 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
     if (c && next(c, Date.now()) === "advert") setAd({ advert: c.queue[0], started: new Date().toISOString() });
     else nextScene();
   }, [nextScene]);
+
+  // Solo: play the one item over and over.
+  useEffect(() => {
+    if (!solo || pinned < 0) return;
+    const t = setTimeout(() => setLoop((l) => l + 1), seconds * 1000);
+    return () => clearTimeout(t);
+  }, [solo, pinned, seconds, loop]);
 
   useEffect(() => {
     if (pinned >= 0 || ad) return;
@@ -159,8 +170,8 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
   // video at a time, played from the box's disk, no per-frame effects).
   // ?fx=full shows the full effects for comparison.
   const lite = useLite(street);
-  useWarmMedia(lite, adverts, media);
-  useNightlyReload(lite);
+  useWarmMedia(lite && !solo, adverts, media);
+  useNightlyReload(lite && !solo);
   // Only one video decodes at a time on the box: the background film steps
   // aside while an advert or an uploaded video plays.
   const videoBusy = !!ad || (scene.kind === "media" && scene.media === "video");
@@ -171,6 +182,11 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
   const accent = scene.kind === "sector" || scene.kind === "reel" ? scene.accent : theme["--vx-gold"];
   // What this moment puts behind the words: the film, or its own photograph.
   const look = scene.kind === "sector" ? lookOf(scene, moment, daypart, loop + turn) : null;
+
+  // Solo before the item has loaded (or one that is not live yet): never fall back to the whole loop.
+  if (solo && pinned < 0) {
+    return <div className="absolute inset-0 grid place-items-center bg-black font-sans" style={{ color: "rgba(255,255,255,0.6)", fontSize: "2.4cqmin" }}>{pin?.startsWith("media-") && media.length ? "This item is not showing yet: check its From and Until dates." : "Loading preview…"}</div>;
+  }
 
   return (
     <CopyContext.Provider value={copy}>
@@ -202,9 +218,9 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false }: { mode: Mode; pi
           {scene.kind === "visit" && <Visit panel={projector} road={street} />}
           {scene.kind === "media" && (scene.line1 || scene.line2) && <MediaCaption m={scene} street={big} panel={projector} />}
         </div>
-        <Progress story={story} index={index} seconds={seconds} loop={loop} />
+        {!solo && <Progress story={story} index={index} seconds={seconds} loop={loop} />}
       </div>
-      <UtilityBar big={big} inset={projector ? "7.5cqmin" : "5cqmin"} />
+      {!solo && <UtilityBar big={big} inset={projector ? "7.5cqmin" : "5cqmin"} />}
       </div>
     </div>
     </LogoContext.Provider>
