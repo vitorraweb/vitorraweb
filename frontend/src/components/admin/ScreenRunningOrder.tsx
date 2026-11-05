@@ -24,7 +24,20 @@ type Media = {
 };
 type Programme = { order: string[]; hidden: string[] };
 type Item = { id: string; label: string; media?: Media };
-type Upload = { kind: "video" | "image"; url: string; width: number; height: number; seconds: number; name: string };
+type Upload = { kind: "video" | "image"; url: string; width: number; height: number; seconds: number; name: string; heavy: boolean };
+
+/** Above this, a video is heavier than the street screen's TV box likes (the built-in films run at 1–5 Mbit/s). */
+const HEAVY_MBPS = 8;
+
+/** Delete an uploaded file from storage once nothing uses it. Best effort: the screens never play it again either way. */
+async function deleteFile(url: string): Promise<void> {
+  const token = auth.getToken();
+  await fetch("/api/screen-media/file", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ url }),
+  }).catch(() => {});
+}
 
 const SCREENS = [{ id: "street", label: "Street" }, { id: "reception", label: "Reception TV" }, { id: "projector", label: "Projector" }];
 const day = (d: string | null) => (d ? d.slice(0, 10) : "");
@@ -79,7 +92,7 @@ export function ScreenRunningOrder() {
   const upload = async (f: File): Promise<Upload | null> => {
     setNote("");
     const image = !!IMAGE_TYPES[f.type];
-    let width = 0, height = 0, seconds = 10;
+    let width = 0, height = 0, seconds = 10, heavy = false;
     if (image) {
       const m = await readImage(f);
       if (!m || f.size > 20 * 1024 * 1024) { setNote("Use a PNG, JPG or WebP design under 20 MB."); return null; }
@@ -91,6 +104,7 @@ export function ScreenRunningOrder() {
       if (m.width <= m.height || m.width < 1280) { setNote("Use a landscape video, ideally 1920 × 1080."); return null; }
       if (m.seconds > 60 || f.size > 200 * 1024 * 1024) { setNote("Keep videos to 60 seconds and 200 MB."); return null; }
       ({ width, height } = m); seconds = Math.max(4, Math.round(m.seconds));
+      heavy = (f.size * 8) / Math.max(1, m.seconds) / 1_000_000 > HEAVY_MBPS;
     }
     setBusy("Uploading 0%");
     const blob = await uploadPresigned(`screen-media/${crypto.randomUUID()}.${image ? IMAGE_TYPES[f.type] : "mp4"}`, f, {
@@ -99,7 +113,7 @@ export function ScreenRunningOrder() {
       headers: auth.getToken() ? { Authorization: `Bearer ${auth.getToken()}` } : {},
       onUploadProgress: (e) => setBusy(`Uploading ${Math.round(e.percentage)}%`),
     });
-    return { kind: image ? "image" : "video", url: blob.url, width, height, seconds, name: f.name.replace(/\.[^.]+$/, "").slice(0, 120) };
+    return { kind: image ? "image" : "video", url: blob.url, width, height, seconds, name: f.name.replace(/\.[^.]+$/, "").slice(0, 120), heavy };
   };
 
   const add = async (f: File | undefined) => {
@@ -112,7 +126,9 @@ export function ScreenRunningOrder() {
       }) });
       await load();
       setOpen(r.data.id); setPreview(`media-${r.data.id}`);
-      setNote("Added at the end of the running order. Add a caption or change where it shows below.");
+      setNote(u.heavy
+        ? `Added at the end of the running order. This video is heavy (over ${HEAVY_MBPS} Mbit/s): the street screen plays it once it has downloaded it, which can take a while. For smoother play, export at 1920 × 1080, 30 fps, ${HEAVY_MBPS} Mbit/s or less, and use Replace.`
+        : "Added at the end of the running order. Add a caption or change where it shows below.");
     } catch (e) { setNote(e instanceof Error ? e.message : "The upload didn't finish. Please try again."); } finally { setBusy(""); if (file.current) file.current.value = ""; }
   };
 
@@ -128,6 +144,7 @@ export function ScreenRunningOrder() {
         await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({
           kind: u.kind, url: u.url, width: u.width, height: u.height, seconds: u.kind === "video" ? u.seconds : m.kind === "image" ? m.seconds : 10,
         }) });
+        await deleteFile(m.url); // the old file is no longer used
         await load();
         setPreview(it.id);
         setNote(`Replaced the file for "${m.title}". Screens follow within a minute.`);
@@ -156,10 +173,15 @@ export function ScreenRunningOrder() {
     try { await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ title: next.title, line1: next.line1 || null, line2: next.line2 || null, seconds: next.seconds, screens: next.screens, starts_on: next.starts_on || null, ends_on: next.ends_on || null }) }); setNote("Saved. Screens follow within a minute."); }
     catch (e) { setNote(e instanceof Error ? e.message : "Saving failed."); void load(); }
   };
+  /** Delete an uploaded video or design for good: off every screen, out of the order, and its file out of storage. */
   const remove = async (m: Media) => {
-    if (!confirm(`Remove "${m.title}" from the screens?`)) return;
-    try { await apiAdmin(`/admin/screen-media/${m.id}`, { method: "DELETE" }); setOpen(null); await load(); setNote("Removed."); }
-    catch (e) { setNote(e instanceof Error ? e.message : "Removing failed."); }
+    if (!confirm(`Delete "${m.title}" for good? It stops playing on every screen within a minute and its file is deleted. To keep it for later, switch it off instead.`)) return;
+    try {
+      await apiAdmin(`/admin/screen-media/${m.id}`, { method: "DELETE" });
+      await deleteFile(m.url);
+      setOpen(null); if (preview === `media-${m.id}`) setPreview("ident");
+      await load(); setNote(`Deleted "${m.title}".`);
+    } catch (e) { setNote(e instanceof Error ? e.message : "Deleting failed."); }
   };
 
   if (loading) return <Loader2 aria-label="Loading" className="w-5 h-5 animate-spin" />;
@@ -189,7 +211,8 @@ export function ScreenRunningOrder() {
                   </button>
                   <button type="button" className="c-btn c-btn-ghost" aria-label="Move up" disabled={n === 0} onClick={() => move(n, -1)}><ArrowUp aria-hidden="true" className="w-4 h-4" /></button>
                   <button type="button" className="c-btn c-btn-ghost" aria-label="Move down" disabled={n === items.length - 1} onClick={() => move(n, 1)}><ArrowDown aria-hidden="true" className="w-4 h-4" /></button>
-                  <button type="button" className="c-btn c-btn-ghost" aria-label={off ? "Switch on" : "Switch off"} onClick={() => toggle(it.id)}>{off ? <EyeOff aria-hidden="true" className="w-4 h-4" /> : <Eye aria-hidden="true" className="w-4 h-4" />}</button>
+                  <button type="button" className="c-btn c-btn-ghost" aria-label={off ? "Switch on" : "Switch off"} title={off ? "Switch on" : "Switch off (keeps it for later)"} onClick={() => toggle(it.id)}>{off ? <EyeOff aria-hidden="true" className="w-4 h-4" /> : <Eye aria-hidden="true" className="w-4 h-4" />}</button>
+                  {m && <button type="button" className="c-btn c-btn-ghost" aria-label={`Delete ${m.title}`} title="Delete for good" onClick={() => void remove(m)}><Trash2 aria-hidden="true" className="w-4 h-4" style={{ color: "var(--o-danger)" }} /></button>}
                 </div>
                 {!m && preview === it.id && (
                   <div className="flex items-center justify-between gap-2 flex-wrap mt-3 pl-12 text-[13px]">
@@ -217,7 +240,7 @@ export function ScreenRunningOrder() {
                       <span>{m.kind === "video" ? `Video, ${m.seconds} seconds` : "Design"}{m.width ? `, ${m.width} × ${m.height}` : ""}</span>
                       <span className="flex gap-2">
                         <button type="button" className="c-btn" disabled={!!busy} onClick={() => pickReplacement(it)}><Replace aria-hidden="true" className="w-4 h-4" />Replace with another video or design</button>
-                        <button type="button" className="c-btn" onClick={() => void remove(m)}><Trash2 aria-hidden="true" className="w-4 h-4" />Remove</button>
+                        <button type="button" className="c-btn" onClick={() => void remove(m)}><Trash2 aria-hidden="true" className="w-4 h-4" />Delete</button>
                       </span>
                     </div>
                   </div>

@@ -4,8 +4,9 @@
    starts, and stalls whenever the connection dips. So the screen downloads
    every file it will play — adverts first, they are paid for — into the
    browser's own storage (the Cache API, on the box's disk), one at a time in
-   the background, and plays from there. Anything not cached yet simply
-   streams as before, so nothing waits on the cache.                         */
+   the background, and plays from there. Adverts and films not cached yet
+   stream as before; the screen's own uploaded videos wait until they are on
+   the box (see isLocal), because a heavy video streamed live is what freezes. */
 
 const STORE = "vitorra-screen-media-v1";
 
@@ -13,6 +14,19 @@ const STORE = "vitorra-screen-media-v1";
 const ready = new Map<string, string>();
 let warming: Promise<void> | null = null;
 let wanted: string[] = [];
+
+const listeners = new Set<() => void>();
+
+/** Called whenever another file finishes downloading to the box. Returns an unsubscribe. */
+export function onMediaReady(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => { listeners.delete(fn); };
+}
+
+/** Whether this file is already on the box's disk. */
+export function isLocal(url: string): boolean {
+  return ready.has(url);
+}
 
 /** The local copy if there is one, otherwise the original address. Never waits. */
 export function localSrc(url: string): string {
@@ -50,12 +64,17 @@ async function run(): Promise<void> {
           const fresh = await fetch(url, { mode: "cors", credentials: "omit" });
           // Only whole files: a partial or opaque answer would play as nothing.
           if (!fresh.ok || fresh.status !== 200 || fresh.type === "opaque") continue;
-          await cache.put(url, fresh.clone());
-          res = fresh;
+          await cache.put(url, fresh);
+          // Read it back from disk, so a large video is not also held in memory.
+          res = await cache.match(url);
+          if (!res) continue;
         } catch { continue; } // offline or refused: it keeps streaming
       }
       const blob = await res.blob();
-      if (blob.size > 0) ready.set(url, URL.createObjectURL(blob));
+      if (blob.size > 0) {
+        ready.set(url, URL.createObjectURL(blob));
+        listeners.forEach((fn) => fn());
+      }
     }
   } catch { /* storage unavailable: everything streams as before */ }
 }

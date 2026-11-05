@@ -5,7 +5,7 @@ import Image from "next/image";
 import { API_BASE_URL, CONTACT_PHONE } from "@/lib/constants";
 import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
 import { newCycle, next, slice, spent, type Advert, type Carry, type Cycle } from "./programme";
-import { localSrc, releaseVideo, warm } from "./mediaCache";
+import { isLocal, localSrc, onMediaReady, releaseVideo, warm } from "./mediaCache";
 import type { MediaScene, Programme } from "./scenes";
 import { COPY_DRAFT_KEY, DAY_FILMS, DEFAULT_COPY, DEFAULT_LOGO, dayVersion, LOGO_DRAFT_KEY, type ScreenLogo, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
 
@@ -83,9 +83,19 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
   const copy = useMemo(() => applyCopy(changes), [changes]);
   // Solo (the Screen editor's preview): just the pinned item, even if it is switched
   // off or set for another screen, with no adverts and no information band.
+  // The street screen runs on a small Android TV box: the light profile (one
+  // video at a time, played from the box's disk, no per-frame effects).
+  // ?fx=full shows the full effects for comparison.
+  const lite = useLite(mode === "street");
+  // On the box, an uploaded video joins the loop once it is on the box's disk:
+  // streamed live, a large video stalls. Designs (images) are light and join at once.
+  const [, setDownloaded] = useState(0);
+  useEffect(() => onMediaReady(() => setDownloaded((n) => n + 1)), []);
+  const playable = lite && !solo ? media.filter((m) => m.media !== "video" || isLocal(m.url)) : media;
+  const playableKey = playable.map((m) => m.id).join(",");
   const story = useMemo(() => solo
     ? storyFor(mode, false, copy, media.map((m) => ({ ...m, screens: [...m.screens, mode] })), { order: [], hidden: [] })
-    : storyFor(mode, !!welcome, copy, media, order), [solo, mode, welcome, copy, media, order]);
+    : storyFor(mode, !!welcome, copy, media.filter((m) => playableKey.split(",").includes(m.id)), order), [solo, mode, welcome, copy, media, order, playableKey]);
   const [i, setI] = useState(0);
   const [loop, setLoop] = useState(0);
   const pinned = pin ? story.findIndex((s) => s.id === pin) : -1;
@@ -166,11 +176,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
 
   const street = mode === "street";
   const projector = mode === "projector";
-  // The street screen runs on a small Android TV box: the light profile (one
-  // video at a time, played from the box's disk, no per-frame effects).
-  // ?fx=full shows the full effects for comparison.
-  const lite = useLite(street);
-  useWarmMedia(lite && !solo, adverts, media);
+  useWarmMedia(lite && !solo, adverts, media, order.hidden);
   useNightlyReload(lite && !solo);
   // Only one video decodes at a time on the box: the background film steps
   // aside while an advert or an uploaded video plays.
@@ -209,7 +215,8 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
         ? { translate: `${dx}px ${dy}px`, opacity: light === "night" ? 0.82 : 1, transition: "translate 4s ease, opacity 8s ease" }
         : { translate: `${dx}px ${dy}px`, filter: light ? LIGHT[light].words : undefined, transition: "translate 4s ease, filter 8s ease" }}>
       <div className="flex-1 min-h-0 flex flex-col" style={{ padding: projector ? "6.5cqmin 7.5cqmin 1.6cqmin" : "3.4cqmin 5cqmin 1.4cqmin", textShadow: light ? LIGHT[light].shadow : undefined }}>
-        <TopBar hidden={scene.kind === "ident" || (scene.kind === "media" && !scene.line1 && !scene.line2)} />
+        {/* Uploaded videos and designs wear the same frame as the built-in scenes. */}
+        <TopBar hidden={scene.kind === "ident"} />
         <div key={`${scene.id}-${loop}`} className="relative flex-1 min-h-0 flex" style={{ visibility: ad ? "hidden" : undefined }}>
           {scene.kind === "ident" && <Ident />}
           {scene.kind === "welcome" && welcome && <WelcomeScene welcome={welcome} />}
@@ -421,13 +428,13 @@ function UtilityBar({ big, inset, road = false }: { big: boolean; inset: string;
      inside the band under the picture, so nothing sits on the film itself. */
   if (road) {
     const rate = (n: number | null) => (n ? Math.round(n).toLocaleString("en-US") : "—");
-    const label = { fontSize: "1.75cqmin", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.78)", lineHeight: 1 };
-    const big = { fontSize: "5cqmin", fontWeight: 800, color: "#fff", lineHeight: 1, letterSpacing: "-0.01em" };
+    const label = { fontSize: "2.1cqmin", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.78)", lineHeight: 1 };
+    const big = { fontSize: "6.8cqmin", fontWeight: 800, color: "#fff", lineHeight: 1, letterSpacing: "-0.01em" };
     const cell = "flex flex-col justify-center shrink-0";
     const rule = <span className="shrink-0 self-stretch" style={{ width: 1, margin: "2cqmin 0", background: "rgba(255,255,255,0.18)" }} />;
     const tomorrow = weather.days[1];
     return (
-      <div className="relative shrink-0 flex items-stretch overflow-hidden tabular-nums" style={{ background: BAND.bg, color: BAND.fg, height: "10cqmin", padding: `0 ${inset}`, gap: "3cqmin", textShadow: "none" }}>
+      <div className="relative shrink-0 flex items-stretch overflow-hidden tabular-nums" style={{ background: BAND.bg, color: BAND.fg, height: "12.6cqmin", padding: `0 ${inset}`, gap: "3cqmin", textShadow: "none" }}>
         <div className={cell} style={{ gap: "0.9cqmin" }}>
           <span style={label}>{today}</span>
           <span style={big}>{time}</span>
@@ -436,7 +443,7 @@ function UtilityBar({ big, inset, road = false }: { big: boolean; inset: string;
         <div className={cell} style={{ gap: "0.9cqmin" }}>
           <span style={label}>Kampala{tomorrow ? ` · Tomorrow ${tomorrow.hi}°` : ""}</span>
           <span className="flex items-center" style={{ ...big, gap: "1cqmin" }}>
-            <Now style={{ width: "4.4cqmin", height: "4.4cqmin", color: BAND.gold }} />
+            <Now style={{ width: "6cqmin", height: "6cqmin", color: BAND.gold }} />
             {weather.tempNow !== null ? `${weather.tempNow}°C` : "—"}
           </span>
         </div>
@@ -450,10 +457,10 @@ function UtilityBar({ big, inset, road = false }: { big: boolean; inset: string;
           <span style={big}>{rate(fx.ugxPerEur)}</span>
         </div>
         {rule}
-        <div className="flex-1 min-w-0 flex flex-col justify-center" style={{ gap: "0.9cqmin", fontSize: "2.3cqmin", fontWeight: 600 }}>
+        <div className="flex-1 min-w-0 flex flex-col justify-center" style={{ gap: "0.9cqmin", fontSize: "2.7cqmin", fontWeight: 600 }}>
           <span style={{ ...label, color: BAND.gold }}>{ui.news}</span>
           {/* Same height as the big figures, so every label sits on one line. */}
-          <div className="flex items-center min-w-0" style={{ height: "5cqmin" }}>{tickerStrip}</div>
+          <div className="flex items-center min-w-0" style={{ height: "6.8cqmin" }}>{tickerStrip}</div>
         </div>
       </div>
     );
@@ -773,13 +780,14 @@ function useLite(street: boolean): boolean {
 }
 
 /** Keep everything the street screen will play on the box's disk: adverts first, then uploads, then films. */
-function useWarmMedia(on: boolean, adverts: Advert[], media: MediaScene[]): void {
+function useWarmMedia(on: boolean, adverts: Advert[], media: MediaScene[], hidden: string[]): void {
   const urls = useMemo(() => [
     ...adverts.map((a) => a.url),
-    ...media.filter((m) => m.screens.includes("street")).map((m) => m.url),
+    // Only what is switched on: a switched-off upload is not downloaded to the box.
+    ...media.filter((m) => m.screens.includes("street") && !hidden.includes(m.id)).map((m) => m.url),
     ...FILMS.map((f) => f.film),
     ...DAY_FILMS,
-  ].join("\n"), [adverts, media]);
+  ].join("\n"), [adverts, media, hidden]);
   useEffect(() => {
     if (!on) return;
     const go = () => warm(urls.split("\n"));
@@ -962,12 +970,16 @@ function MediaLayer({ m, lite = false }: { m: MediaScene; lite?: boolean }) {
   const src = useMemo(() => (lite ? localSrc(m.url) : m.url), [lite, m.url]);
   useEffect(() => { const el = v.current; return () => releaseVideo(el); }, []);
   return (
-    <div className="absolute inset-0 z-[4] bg-black overflow-hidden">
+    <div className="absolute inset-0 z-[4] bg-black overflow-hidden vx-fade-in">
       {m.media === "video"
         ? <video ref={v} src={src} autoPlay muted playsInline preload="auto" disablePictureInPicture className="h-full w-full object-cover" />
         // eslint-disable-next-line @next/next/no-img-element -- an uploaded design, shown as it was made
         : <img src={src} alt="" className="h-full w-full object-cover vx-drift" style={{ ["--dur" as string]: `${m.seconds}s` }} />}
-      {(m.line1 || m.line2) && <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 45%)" }} />}
+      {/* The house shading every scene has: the logo stays legible at the top, the
+          band and any caption at the bottom; a caption gets a deeper fall-off. */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: (m.line1 || m.line2)
+        ? "linear-gradient(0deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0) 46%), linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 16%)"
+        : "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 22%), linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 16%)" }} />
     </div>
   );
 }
