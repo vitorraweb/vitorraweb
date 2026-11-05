@@ -95,7 +95,8 @@ export function ScreenRunningOrder() {
     setBusy("Uploading 0%");
     const blob = await uploadPresigned(`screen-media/${crypto.randomUUID()}.${image ? IMAGE_TYPES[f.type] : "mp4"}`, f, {
       access: "public", contentType: image ? f.type : "video/mp4", handleUploadUrl: "/api/screen-ads/upload", multipart: !image,
-      headers: { Authorization: `Bearer ${auth.getToken() ?? ""}` },
+      // Cookie mode has no token: the sign-in cookie goes with the request instead.
+      headers: auth.getToken() ? { Authorization: `Bearer ${auth.getToken()}` } : {},
       onUploadProgress: (e) => setBusy(`Uploading ${Math.round(e.percentage)}%`),
     });
     return { kind: image ? "image" : "video", url: blob.url, width, height, seconds, name: f.name.replace(/\.[^.]+$/, "").slice(0, 120) };

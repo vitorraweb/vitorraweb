@@ -19,10 +19,25 @@ import { screenAdsOpen } from "@/lib/screen-ads-gate";
 const TYPES: Record<string, string> = { mp4: "video/mp4", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp" };
 const MAX_BYTES = { video: 200 * 1024 * 1024, image: 20 * 1024 * 1024 };
 
+/* Asks the API whether the uploader is signed-in staff with the screen
+   permission, the same way the console itself is signed in: a Bearer token
+   (token mode, the Teams tab) or the console's session cookie (cookie mode,
+   the live site). An empty "Bearer " is never forwarded: the API would take it
+   as the sign-in and ignore the cookie. */
 async function isScreenStaff(request: Request): Promise<boolean> {
-  const auth = request.headers.get("authorization");
-  if (!auth) return false;
-  const r = await fetch(`${API_ORIGIN}/admin/screen-media`, { headers: { Accept: "application/json", Authorization: auth }, cache: "no-store" });
+  const headers: Record<string, string> = { Accept: "application/json" };
+  const auth = request.headers.get("authorization") ?? "";
+  if (/^Bearer\s+\S+/i.test(auth)) headers.Authorization = auth;
+  const cookie = request.headers.get("cookie");
+  if (cookie) {
+    headers.Cookie = cookie;
+    // The API only reads the session cookie for requests from the site itself.
+    const origin = request.headers.get("origin") ?? new URL(request.url).origin;
+    headers.Origin = origin;
+    headers.Referer = `${origin}/`;
+  }
+  if (!headers.Authorization && !headers.Cookie) return false;
+  const r = await fetch(`${API_ORIGIN}/admin/screen-media`, { headers, cache: "no-store" });
   return r.ok;
 }
 

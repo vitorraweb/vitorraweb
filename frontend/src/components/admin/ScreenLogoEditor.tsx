@@ -73,7 +73,8 @@ export function ScreenLogoEditor({ tabs }: { tabs: React.ReactNode }) {
     try {
       const blob = await uploadPresigned(`screen-media/${crypto.randomUUID()}.${IMAGE_TYPES[f.type]}`, f, {
         access: "public", contentType: f.type, handleUploadUrl: "/api/screen-ads/upload",
-        headers: { Authorization: `Bearer ${auth.getToken() ?? ""}` },
+        // Cookie mode has no token: the sign-in cookie goes with the request instead.
+      headers: auth.getToken() ? { Authorization: `Bearer ${auth.getToken()}` } : {},
       });
       set({ url: blob.url });
       setNote(f.type === "image/jpeg" ? "Uploaded. A JPG has no transparent background, so it shows as a box: a PNG usually looks better." : "Uploaded. Check the preview, then Publish.");
