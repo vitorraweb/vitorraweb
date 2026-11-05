@@ -1,19 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, Download, Loader2, MonitorCheck, MonitorX, Plus, RotateCcw, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { uploadPresigned } from "@vercel/blob/client";
+import { Check, Copy, Download, Film, Loader2, MonitorCheck, MonitorX, Plus, Replace, RotateCcw, X } from "lucide-react";
 import { apiAdmin, auth, canAccess, downloadCsv, downloadFile } from "@/lib/auth";
 import { Empty, PageHeader, StatusBadge } from "@/components/admin/admin-ui";
+import { IMAGE_TYPES, isH264, readImage, readVideo } from "@/lib/screen-ads";
+import { deleteFile, mbps, optimiseVideo } from "@/lib/screen-files";
 
 /* ─── Operations → Street screen bookings ─────────────────────────────────────
    Paid first, reviewed second. Finance confirms the money, the screen's owners
    watch the video and approve or refuse it, and a refused advert stays on this
-   list until Finance records the refund. Only approved adverts reach the screen. */
+   list until Finance records the refund. Only approved adverts reach the screen.
+   Every advert video is made light for the street screen's TV box (about
+   5 Mbit/s) before it runs; staff can also replace an advert's file. */
 
 type Booking = {
   id: number; reference: string; status: string; company: string; contact_name: string; email: string; phone: string | null; notes: string | null;
   package: string; plays_per_hour: number; slots: string[] | null; start_date: string; end_date: string;
-  price_ugx: number; video_url: string; video_seconds: number; video_width: number | null; video_height: number | null; proof_name: string | null; review_note: string | null; created_at: string;
+  price_ugx: number; video_url: string; media_type: "video" | "image" | null; video_optimised: boolean; video_seconds: number; video_width: number | null; video_height: number | null; proof_name: string | null; review_note: string | null; created_at: string;
 };
 
 type Downtime = { id: number; started_at: string; ended_at: string | null; minutes: number; reason: string | null; source: string };
@@ -100,6 +105,71 @@ export default function ScreenAdsPage() {
     try { await apiAdmin(`/admin/screen-ads/${b.id}/${action}`, { method: "POST", body: JSON.stringify(body ?? {}) }); await load(); }
     catch (e) { setMsg(e instanceof Error ? e.message : "That didn't work."); }
   };
+  // ── The advert's file: make it light, or replace it ─────────────────────────
+  const [working, setWorking] = useState<number | null>(null);
+  const isVideo = (b: Booking) => b.media_type !== "image";
+
+  const lighten = async (b: Booking, quiet = false) => {
+    setWorking(b.id); if (!quiet) setMsg("");
+    try {
+      const o = await optimiseVideo(b.video_url);
+      await apiAdmin(`/admin/screen-ads/${b.id}/video`, { method: "PATCH", body: JSON.stringify({ url: o.url, optimised: true }) });
+      if (!quiet) setMsg(o.optimised ? `${b.reference} made light: ${mbps(o.before_kbps)} → ${mbps(o.kbps)}.` : `${b.reference} is already light (${mbps(o.kbps)}).`);
+      await load();
+    } catch (e) { setMsg(`${b.reference}: ${e instanceof Error ? e.message : "could not make it lighter."}`); }
+    finally { setWorking(null); }
+  };
+
+  const replaceInput = useRef<HTMLInputElement>(null);
+  const [replacing, setReplacing] = useState<Booking | null>(null);
+  const replaceFile = async (b: Booking, f: File | undefined) => {
+    if (!f) return;
+    setMsg("");
+    const image = !!IMAGE_TYPES[f.type];
+    if (image !== !isVideo(b)) { setMsg(isVideo(b) ? "This advert is a video: choose an MP4 video." : "This advert is a design: choose a PNG, JPG or WebP image."); return; }
+    let width = 0, height = 0, seconds: number | undefined;
+    if (image) {
+      const m = await readImage(f);
+      if (!m || m.width < 1280 || Math.abs(m.width / m.height - 16 / 9) > 0.03) { setMsg("Use a landscape 16:9 design, ideally 1920 × 1080."); return; }
+      ({ width, height } = m);
+    } else {
+      const m = await readVideo(f);
+      if (!m || !(await isH264(f))) { setMsg("Use an MP4 (H.264) video."); return; }
+      if (m.width <= m.height || m.width < 1280) { setMsg("Use a landscape video, ideally 1920 × 1080."); return; }
+      ({ width, height } = m); seconds = Math.round(m.seconds * 10) / 10;
+    }
+    setWorking(b.id);
+    try {
+      const token = auth.getToken();
+      const blob = await uploadPresigned(`screen-ads/${crypto.randomUUID()}.${image ? IMAGE_TYPES[f.type] : "mp4"}`, f, {
+        access: "public", contentType: image ? f.type : "video/mp4", handleUploadUrl: "/api/screen-ads/upload", multipart: !image,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      let url = blob.url, optimised = false;
+      if (!image) { try { const o = await optimiseVideo(url); url = o.url; optimised = true; } catch { /* the original is used */ } }
+      await apiAdmin(`/admin/screen-ads/${b.id}/video`, { method: "PATCH", body: JSON.stringify({ url, optimised, width, height, seconds }) });
+      await deleteFile(b.video_url); // the old file is no longer used
+      setMsg(`Replaced the file for ${b.reference}.${optimised ? " Made light for the street screen." : ""}`);
+      await load();
+    } catch (e) { setMsg(e instanceof Error ? e.message : "The upload didn't finish."); }
+    finally { setWorking(null); setReplacing(null); if (replaceInput.current) replaceInput.current.value = ""; }
+  };
+
+  // Advert videos that will play (paid and approved, or about to be) are made light
+  // once, one after another, the first time a screen owner opens this page.
+  const autoLight = useRef(false);
+  useEffect(() => {
+    if (!owner || autoLight.current || loading) return;
+    const todo = list.filter((b) => isVideo(b) && !b.video_optimised && ["payment_confirmed", "approved"].includes(b.status));
+    if (!todo.length) return;
+    autoLight.current = true;
+    void (async () => {
+      for (const b of todo) await lighten(b, true);
+      setMsg(`Made ${todo.length} advert video${todo.length === 1 ? "" : "s"} light for the street screen.`);
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once, when the list first arrives
+  }, [list, loading, owner]);
+
   const refuse = (b: Booking) => {
     const reason = prompt("Why can't we run this advert? The customer sees this.");
     if (reason?.trim()) void act(b, "reject", { reason: reason.trim() });
@@ -107,6 +177,7 @@ export default function ScreenAdsPage() {
 
   return (
     <div>
+      <input ref={replaceInput} type="file" accept="video/mp4,.mp4,image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => replacing && void replaceFile(replacing, e.target.files?.[0])} />
       <PageHeader title="Street screen bookings" subtitle="Paid adverts: confirm payment, review the video, approve or refuse" actions={
         <select aria-label="Filter by status" value={status} onChange={(e) => setStatus(e.target.value)} className="c-select">
           <option value="">All bookings</option>
@@ -200,7 +271,9 @@ export default function ScreenAdsPage() {
                           {b.proof_name && <button type="button" className="c-btn" onClick={() => void downloadFile(`/admin/screen-ads/${b.id}/proof`, b.proof_name!)}><Download aria-hidden="true" className="w-4 h-4" />Payment proof</button>}
                           {finance && b.status === "payment_submitted" && <button type="button" className="c-btn c-btn-primary" onClick={() => void act(b, "confirm-payment")}><Check aria-hidden="true" className="w-4 h-4" />Money received</button>}
                           {owner && b.status === "payment_confirmed" && <button type="button" className="c-btn c-btn-primary" onClick={() => void act(b, "approve")}><Check aria-hidden="true" className="w-4 h-4" />Approve advert</button>}
-                          {owner && (b.status === "payment_confirmed" || b.status === "approved") && <button type="button" className="c-btn" onClick={() => refuse(b)}><X aria-hidden="true" className="w-4 h-4" />Refuse advert</button>}
+                          {owner && ["awaiting_payment", "payment_submitted", "payment_confirmed", "approved"].includes(b.status) && <button type="button" className="c-btn" disabled={working === b.id} onClick={() => { setReplacing(b); replaceInput.current?.click(); }}><Replace aria-hidden="true" className="w-4 h-4" />Replace file</button>}
+                          {owner && isVideo(b) && ["payment_confirmed", "approved"].includes(b.status) && <button type="button" className="c-btn" disabled={working === b.id} onClick={() => void lighten(b)} title="Re-encode to about 5 Mbit/s for the street screen">{working === b.id ? <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" /> : <Film aria-hidden="true" className="w-4 h-4" />}{b.video_optimised ? "Light ✓" : "Make lighter"}</button>}
+                          {owner && (b.status === "payment_confirmed" || b.status === "approved") && <button type="button" className="c-btn" onClick={() => refuse(b)}><X aria-hidden="true" className="w-4 h-4" />{b.status === "approved" ? "Take off air (refund)" : "Refuse advert"}</button>}
                           {finance && b.status === "rejected" && <button type="button" className="c-btn c-btn-primary" onClick={() => void act(b, "refunded")}><RotateCcw aria-hidden="true" className="w-4 h-4" />Refund sent</button>}
                           {delivery[b.id] && <button type="button" className="c-btn" onClick={() => void downloadCsv(`/admin/screen-ads/${b.id}/report.csv`, `${b.reference}-delivery.csv`)}><Download aria-hidden="true" className="w-4 h-4" />Delivery report</button>}
                           {owner && b.status === "approved" && <button type="button" className="c-btn" onClick={() => void extend(b)}><Plus aria-hidden="true" className="w-4 h-4" />Extend for missed airtime</button>}

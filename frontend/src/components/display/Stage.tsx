@@ -7,7 +7,7 @@ import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherE
 import { newCycle, next, slice, spent, type Advert, type Carry, type Cycle } from "./programme";
 import { isLocal, localSrc, onMediaReady, releaseVideo, warm } from "./mediaCache";
 import type { MediaScene, Programme } from "./scenes";
-import { COPY_DRAFT_KEY, DAY_FILMS, DEFAULT_COPY, DEFAULT_LOGO, dayVersion, LOGO_DRAFT_KEY, type ScreenLogo, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
+import { COPY_DRAFT_KEY, DAY_FILMS, mediaBrand, DEFAULT_COPY, DEFAULT_LOGO, dayVersion, LOGO_DRAFT_KEY, type ScreenLogo, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
 
 /* ─── The stage ───────────────────────────────────────────────────────────────
    A full-screen loop for the reception TV and the street-facing screen.
@@ -185,7 +185,8 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
   const big = mode !== "reception";
   const activeSector = scene.kind === "sector" || scene.kind === "reel" ? scene.id : null;
   const theme = projector ? THEMES.projector : street ? THEMES.street : THEMES.reception;
-  const accent = scene.kind === "sector" || scene.kind === "reel" ? scene.accent : theme["--vx-gold"];
+  const accent = scene.kind === "sector" || scene.kind === "reel" ? scene.accent
+    : scene.kind === "media" ? mediaBrand(scene.business)?.accent ?? theme["--vx-gold"] : theme["--vx-gold"];
   // What this moment puts behind the words: the film, or its own photograph.
   const look = scene.kind === "sector" ? lookOf(scene, moment, daypart, loop + turn) : null;
 
@@ -224,7 +225,7 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
           {scene.kind === "sector" && <SectorView s={scene} moment={moment} daypart={daypart} turn={loop + turn} road={street} />}
           {scene.kind === "proof" && <Proof seconds={seconds} />}
           {scene.kind === "visit" && <Visit panel={projector} road={street} />}
-          {scene.kind === "media" && (scene.line1 || scene.line2) && <MediaCaption m={scene} street={big} panel={projector} />}
+          {scene.kind === "media" && (scene.line1 || scene.line2 || scene.business) && <MediaCaption m={scene} street={big} panel={projector} />}
         </div>
         {!solo && <Progress story={story} index={index} seconds={seconds} loop={loop} />}
       </div>
@@ -951,8 +952,8 @@ function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes:
         if (!draft) setChanges((old) => same(old, j?.data?.copy ?? {}));
         if (!draft || !localStorage.getItem(LOGO_DRAFT_KEY)) setLogo((old) => same(old, { ...DEFAULT_LOGO, ...(j?.data?.logo ?? {}) }));
         setProgramme((old) => same(old, { order: j?.data?.programme?.order ?? [], hidden: j?.data?.programme?.hidden ?? [] }));
-        setMedia((old) => same(old, (j?.data?.media ?? []).map((m: { id: string; kind: "video" | "image"; url: string; seconds: number; line1?: string; line2?: string; screens: string[] }) => ({
-          kind: "media", id: m.id, media: m.kind, url: m.url, seconds: m.seconds, line1: m.line1, line2: m.line2, screens: m.screens,
+        setMedia((old) => same(old, (j?.data?.media ?? []).map((m: { id: string; kind: "video" | "image"; url: string; seconds: number; line1?: string; line2?: string; small?: string; business?: MediaScene["business"]; screens: string[] }) => ({
+          kind: "media", id: m.id, media: m.kind, url: m.url, seconds: m.seconds, line1: m.line1, line2: m.line2, small: m.small, business: m.business, screens: m.screens,
         }))));
       }).catch(() => {});
     void load();
@@ -977,21 +978,32 @@ function MediaLayer({ m, lite = false }: { m: MediaScene; lite?: boolean }) {
         : <img src={src} alt="" className="h-full w-full object-cover vx-drift" style={{ ["--dur" as string]: `${m.seconds}s` }} />}
       {/* The house shading every scene has: the logo stays legible at the top, the
           band and any caption at the bottom; a caption gets a deeper fall-off. */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: (m.line1 || m.line2)
+      <div className="absolute inset-0 pointer-events-none" style={{ background: (m.line1 || m.line2 || m.small || m.business)
         ? "linear-gradient(0deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0) 46%), linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 16%)"
         : "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 22%), linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 16%)" }} />
     </div>
   );
 }
 
+/** Words on an uploaded video or design, laid out exactly as the built-in scenes:
+ *  the business tag with its colour bar, a two-tone headline in capitals that
+ *  rises in line by line, and the small line under it. */
 function MediaCaption({ m, street, panel = false }: { m: MediaScene; street: boolean; panel?: boolean }) {
+  const brand = mediaBrand(m.business);
+  const lines = [m.line1, m.line2].filter((l): l is string => !!l && !!l.trim());
+  const size = lines.length ? fitSize(lines.map((l) => l.toUpperCase()), street ? 150 : 118, 13) : 0;
   return (
     <div className="w-full self-end" style={{ paddingBottom: "1cqmin" }}>
-      <div className="vx-rise" style={{ maxWidth: "150cqmin", width: "fit-content", ...(panel ? PANEL : {}) }}>
-        <h2 className="vx-mega font-sans" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.04, fontSize: scaled(street ? 8 : 7.4) }}>
-          {m.line1 && <span className="block">{m.line1}</span>}
-          {m.line2 && <span className="block" style={{ color: "var(--vx-accent)" }}>{m.line2}</span>}
-        </h2>
+      <div style={{ maxWidth: "150cqmin", width: "fit-content", ...(panel ? PANEL : {}) }}>
+        {brand && <div className="vx-rise" style={{ ["--d" as string]: "0.1s" }}><SectorTag>{brand.tag}</SectorTag></div>}
+        {lines.length > 0 && (
+          <h2 className="vx-mega font-sans" style={{ fontSize: scaled(size), fontWeight: 800, lineHeight: 1, letterSpacing: "-0.035em", marginTop: brand ? "2cqmin" : 0, textTransform: "uppercase" }}>
+            {lines.map((l, i) => (
+              <span key={i} className="vx-rise block" style={{ color: i === lines.length - 1 && lines.length > 1 ? "var(--vx-accent)" : undefined, ["--d" as string]: `${0.3 + i * 0.3}s` }}>{l}</span>
+            ))}
+          </h2>
+        )}
+        {m.small && <div className="font-sans vx-rise" style={{ fontSize: "var(--vx-small)", fontWeight: 700, marginTop: "1.8cqmin", ["--d" as string]: `${0.4 + lines.length * 0.3}s` }}>{m.small}</div>}
       </div>
     </div>
   );

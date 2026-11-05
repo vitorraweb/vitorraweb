@@ -17,7 +17,8 @@ import { isScreenStaff, SCREEN_MEDIA_URL } from "@/lib/screen-staff";
    1080p at most, 30 frames a second at most, H.264 High 4.0, about 5 Mbit/s,
    no sound, ready to start playing at once — puts the new file in storage,
    deletes the heavy one and returns the new address. A video that is already
-   light is left as it is. Staff with the screen permission only.            */
+   light is left as it is. Works for the Screen editor's uploads and for paid
+   adverts alike. Staff with the screen permission only.                     */
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -86,7 +87,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (code !== 0) throw new Error(`The video could not be re-encoded (${stderr.split("\n").filter(Boolean).pop()?.slice(0, 160) ?? "ffmpeg failed"}).`);
 
     const bytes = (await stat(output)).size;
-    const blob = await put(`screen-media/${crypto.randomUUID()}.mp4`, createReadStream(output), {
+    // An advert stays among the adverts, Vitorra's own content among its own.
+    const folder = SCREEN_MEDIA_URL.exec(url)?.[1] ?? "screen-media";
+    const blob = await put(`${folder}/${crypto.randomUUID()}.mp4`, createReadStream(output), {
       access: "public", contentType: "video/mp4", addRandomSuffix: true, multipart: true,
     });
     await del(url).catch(() => {}); // the heavy original is no longer needed

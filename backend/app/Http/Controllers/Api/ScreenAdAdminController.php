@@ -196,6 +196,34 @@ class ScreenAdAdminController extends Controller
         return response()->json(['data' => $booking->fresh()]);
     }
 
+    /**
+     * Swap an advert's file: the customer sent a corrected one, or the same video
+     * made light for the street screen. Images stay images and videos videos.
+     */
+    public function video(Request $request, Booking $booking): JsonResponse
+    {
+        $data = $request->validate([
+            'url'       => ['required', 'string', 'max:500', 'regex:#^https://[a-z0-9]+\.public\.blob\.vercel-storage\.com/screen-ads/[A-Za-z0-9._\-/%]+\.(mp4|png|jpe?g|webp)$#'],
+            'optimised' => ['sometimes', 'boolean'],
+            'seconds'   => ['nullable', 'numeric', 'min:1', 'max:120'],
+            'width'     => ['nullable', 'integer', 'min:1'],
+            'height'    => ['nullable', 'integer', 'min:1'],
+        ]);
+        $image = (bool) preg_match('/\.(png|jpe?g|webp)$/i', $data['url']);
+        abort_unless($image === ($booking->media_type === 'image'), 422, $booking->media_type === 'image' ? 'This advert is a design: replace it with an image.' : 'This advert is a video: replace it with a video.');
+
+        $booking->update(array_filter([
+            'video_url' => $data['url'],
+            'video_optimised' => (bool) ($data['optimised'] ?? false),
+            'video_seconds' => $data['seconds'] ?? null,
+            'video_width' => $data['width'] ?? null,
+            'video_height' => $data['height'] ?? null,
+        ], fn ($v) => $v !== null));
+        Audit::log('screen_ad.video', ($data['optimised'] ?? false) ? "Made the video for {$booking->reference} light for the screen" : "Replaced the file for {$booking->reference}");
+
+        return response()->json(['data' => $booking->fresh()]);
+    }
+
     /** For a booking nobody paid for. Paid bookings go through refusal and refund. */
     public function cancel(Booking $booking): JsonResponse
     {

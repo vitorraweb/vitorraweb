@@ -139,8 +139,22 @@ export type MediaScene = {
   seconds: number;
   line1?: string | null;
   line2?: string | null;
+  /** The small line under the headline, as on the built-in scenes. */
+  small?: string | null;
+  /** The business it belongs to: its tag and colour, as the built-in scenes. */
+  business?: MediaBusiness | null;
   screens: string[];
 };
+
+export type MediaBusiness = "fet" | "seal" | "coffee" | "logistics" | "vitorra";
+
+/** Tag and colour for an upload, taken from the business it belongs to. */
+export function mediaBrand(b?: MediaBusiness | null): { tag: string; accent: string } | null {
+  if (!b) return null;
+  if (b === "vitorra") return { tag: "Vitorra Holdings", accent: "#E9C766" };
+  const s = SECTORS.find((x) => x.id === b);
+  return s ? { tag: s.tag, accent: s.accent } : null;
+}
 
 /** The running order from the Screen editor: scene ids in order, and those switched off. */
 export type Programme = { order: string[]; hidden: string[] };

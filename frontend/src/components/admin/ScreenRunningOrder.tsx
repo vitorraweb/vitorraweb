@@ -6,6 +6,7 @@ import { uploadPresigned } from "@vercel/blob/client";
 import { apiAdmin, auth } from "@/lib/auth";
 import { BUILT_IN_SCENES } from "@/components/display/scenes";
 import { IMAGE_TYPES, isH264, readImage, readVideo } from "@/lib/screen-ads";
+import { deleteFile, mbps, optimiseVideo } from "@/lib/screen-files";
 
 /* ─── Screen editor: running order ───────────────────────────────────────────
    Everything Vitorra shows on its screens, in order: the built-in films and
@@ -19,41 +20,20 @@ import { IMAGE_TYPES, isH264, readImage, readVideo } from "@/lib/screen-ads";
    content that fills the time paid adverts do not use.                       */
 
 type Media = {
-  id: number; kind: "video" | "image"; url: string; title: string; line1: string | null; line2: string | null;
+  id: number; kind: "video" | "image"; url: string; title: string; line1: string | null; line2: string | null; small: string | null;
+  business: string | null; optimised: boolean;
   seconds: number; screens: string[]; starts_on: string | null; ends_on: string | null; width: number | null; height: number | null;
 };
 type Programme = { order: string[]; hidden: string[] };
 type Item = { id: string; label: string; media?: Media };
-type Upload = { kind: "video" | "image"; url: string; width: number; height: number; seconds: number; name: string; heavy: boolean };
+type Upload = { kind: "video" | "image"; url: string; width: number; height: number; seconds: number; name: string; heavy: boolean; optimised: boolean };
 
 /** Above this, a video is heavier than the street screen's TV box likes (the built-in films run at 1–5 Mbit/s). */
 const HEAVY_MBPS = 8;
 
-type Optimised = { url: string; optimised: boolean; kbps?: number | null; before_kbps?: number | null; error?: string };
 
-/** Re-encode an uploaded video on the server to the street screen's light format (about 5 Mbit/s). */
-async function optimiseVideo(url: string): Promise<Optimised> {
-  const token = auth.getToken();
-  const res = await fetch("/api/screen-media/optimise", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    body: JSON.stringify({ url }),
-  });
-  const body = (await res.json().catch(() => ({}))) as Optimised;
-  if (!res.ok) throw new Error(body.error ?? "Could not make the video lighter.");
-  return body;
-}
-const mbps = (kbps?: number | null) => (kbps ? `${(kbps / 1000).toFixed(1)} Mbit/s` : "");
-
-/** Delete an uploaded file from storage once nothing uses it. Best effort: the screens never play it again either way. */
-async function deleteFile(url: string): Promise<void> {
-  const token = auth.getToken();
-  await fetch("/api/screen-media/file", {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    body: JSON.stringify({ url }),
-  }).catch(() => {});
-}
+/** What an upload belongs to: on screen it takes that business's tag and colour, like the built-in scenes. */
+const BUSINESSES: [string, string][] = [["", "Choose…"], ["fet", "Fuel Eco Tech"], ["seal", "SEAL Wound Spray"], ["coffee", "Vitorra Coffee"], ["logistics", "Logistics"], ["vitorra", "Vitorra Holdings"]];
 
 const SCREENS = [{ id: "street", label: "Street" }, { id: "reception", label: "Reception TV" }, { id: "projector", label: "Projector" }];
 const day = (d: string | null) => (d ? d.slice(0, 10) : "");
@@ -131,6 +111,7 @@ export function ScreenRunningOrder() {
       onUploadProgress: (e) => setBusy(`Uploading ${Math.round(e.percentage)}%`),
     });
     let url = blob.url;
+    let optimised = false;
     if (!image) {
       // Every video is made light for the street screen's TV box before it is used.
       setBusy("Making it light for the street screen…");
@@ -138,12 +119,13 @@ export function ScreenRunningOrder() {
         const o = await optimiseVideo(url);
         url = o.url;
         heavy = false;
+        optimised = true;
         if (o.optimised) lastOptimise.current = `Made lighter for the screens: ${mbps(o.before_kbps)} → ${mbps(o.kbps)}.`;
       } catch (e) {
         lastOptimise.current = `Couldn't make it lighter (${e instanceof Error ? e.message : "error"}); the original is used.`;
       }
     }
-    return { kind: image ? "image" : "video", url, width, height, seconds, name: f.name.replace(/\.[^.]+$/, "").slice(0, 120), heavy };
+    return { kind: image ? "image" : "video", url, width, height, seconds, name: f.name.replace(/\.[^.]+$/, "").slice(0, 120), heavy, optimised };
   };
 
   const add = async (f: File | undefined) => {
@@ -152,7 +134,7 @@ export function ScreenRunningOrder() {
       const u = await upload(f);
       if (!u) return;
       const r = await apiAdmin<{ data: Media }>("/admin/screen-media", { method: "POST", body: JSON.stringify({
-        kind: u.kind, url: u.url, title: u.name, seconds: u.seconds, screens: ["street", "reception", "projector"], width: u.width, height: u.height,
+        kind: u.kind, url: u.url, title: u.name, seconds: u.seconds, screens: ["street", "reception", "projector"], width: u.width, height: u.height, optimised: u.optimised,
       }) });
       await load();
       setOpen(r.data.id); setPreview(`media-${r.data.id}`);
@@ -173,7 +155,7 @@ export function ScreenRunningOrder() {
       if (m) {
         // An added item keeps its name, captions, screens and dates; only the file changes.
         await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({
-          kind: u.kind, url: u.url, width: u.width, height: u.height, seconds: u.kind === "video" ? u.seconds : m.kind === "image" ? m.seconds : 10,
+          kind: u.kind, url: u.url, width: u.width, height: u.height, seconds: u.kind === "video" ? u.seconds : m.kind === "image" ? m.seconds : 10, optimised: u.optimised,
         }) });
         await deleteFile(m.url); // the old file is no longer used
         await load();
@@ -182,7 +164,7 @@ export function ScreenRunningOrder() {
       } else {
         // A built-in scene stays in the code: switch it off, and put the new content where it was.
         const r = await apiAdmin<{ data: Media }>("/admin/screen-media", { method: "POST", body: JSON.stringify({
-          kind: u.kind, url: u.url, title: `${it.label} (replacement)`.slice(0, 120), seconds: u.seconds, screens: ["street", "reception", "projector"], width: u.width, height: u.height,
+          kind: u.kind, url: u.url, title: `${it.label} (replacement)`.slice(0, 120), seconds: u.seconds, screens: ["street", "reception", "projector"], width: u.width, height: u.height, optimised: u.optimised,
         }) });
         const newId = `media-${r.data.id}`;
         const ids = items.map((x) => x.id).filter((x) => x !== newId);
@@ -201,7 +183,7 @@ export function ScreenRunningOrder() {
   const update = async (m: Media, patch: Partial<Media>) => {
     const next = { ...m, ...patch };
     setMedia((list) => list.map((x) => (x.id === m.id ? next : x)));
-    try { await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ title: next.title, line1: next.line1 || null, line2: next.line2 || null, seconds: next.seconds, screens: next.screens, starts_on: next.starts_on || null, ends_on: next.ends_on || null }) }); setNote("Saved. Screens follow within a minute."); }
+    try { await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ title: next.title, line1: next.line1 || null, line2: next.line2 || null, small: next.small || null, business: next.business || null, seconds: next.seconds, screens: next.screens, starts_on: next.starts_on || null, ends_on: next.ends_on || null }) }); setNote("Saved. Screens follow within a minute."); }
     catch (e) { setNote(e instanceof Error ? e.message : "Saving failed."); void load(); }
   };
   /** Re-encode a video that is already in the running order, keeping everything else about it. */
@@ -209,13 +191,33 @@ export function ScreenRunningOrder() {
     setBusy("Making it light for the street screen…"); setNote("");
     try {
       const o = await optimiseVideo(m.url);
-      if (!o.optimised) { setNote(`"${m.title}" is already light (${mbps(o.kbps)}): nothing to change.`); return; }
-      await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ url: o.url }) });
+      if (!o.optimised) {
+        await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ optimised: true }) });
+        await load();
+        setNote(`"${m.title}" is already light (${mbps(o.kbps)}): nothing to change.`);
+        return;
+      }
+      await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ url: o.url, optimised: true }) });
       await load();
       setNote(`"${m.title}" made lighter: ${mbps(o.before_kbps)} → ${mbps(o.kbps)}. Screens follow within a minute.`);
     } catch (e) { setNote(e instanceof Error ? e.message : "Could not make the video lighter."); }
     finally { setBusy(""); }
   };
+
+  // Videos uploaded before automatic shrinking: make each one light once, the
+  // first time the editor is opened, one after another, so none can lag the box.
+  const autoLight = useRef(false);
+  useEffect(() => {
+    if (autoLight.current || loading) return;
+    const todo = media.filter((m) => m.kind === "video" && !m.optimised);
+    if (!todo.length) return;
+    autoLight.current = true;
+    void (async () => {
+      for (const m of todo) await lighten(m);
+      setNote(`Checked ${todo.length} video${todo.length === 1 ? "" : "s"}: all are now light for the street screen.`);
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once, when the list first arrives
+  }, [media, loading]);
 
   /** Delete an uploaded video or design for good: off every screen, out of the order, and its file out of storage. */
   const remove = async (m: Media) => {
@@ -267,8 +269,15 @@ export function ScreenRunningOrder() {
                 {m && open === m.id && (
                   <div className="grid sm:grid-cols-2 gap-3 mt-3 pl-12 text-[13px]">
                     <label className="block sm:col-span-2">Name (for staff)<input className="c-input w-full mt-1" defaultValue={m.title} maxLength={120} onBlur={(e) => e.target.value.trim() && e.target.value !== m.title && void update(m, { title: e.target.value.trim() })} /></label>
-                    <label className="block">Caption, line 1 (optional)<input className="c-input w-full mt-1" defaultValue={m.line1 ?? ""} maxLength={200} onBlur={(e) => e.target.value !== (m.line1 ?? "") && void update(m, { line1: e.target.value })} /></label>
-                    <label className="block">Caption, line 2 (optional)<input className="c-input w-full mt-1" defaultValue={m.line2 ?? ""} maxLength={200} onBlur={(e) => e.target.value !== (m.line2 ?? "") && void update(m, { line2: e.target.value })} /></label>
+                    <label className="block sm:col-span-2">Belongs to <span className="opacity-70">(its tag and colour on screen, like the built-in scenes)</span>
+                      <select className="c-input w-full mt-1" value={m.business ?? ""} onChange={(e) => void update(m, { business: e.target.value || null })}>
+                        {BUSINESSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                      </select>
+                    </label>
+                    <label className="block">Headline, line 1 <span className="opacity-70">(white)</span><input className="c-input w-full mt-1" defaultValue={m.line1 ?? ""} maxLength={60} placeholder="e.g. Fleet fuel bills" onBlur={(e) => e.target.value !== (m.line1 ?? "") && void update(m, { line1: e.target.value })} /></label>
+                    <label className="block">Headline, line 2 <span className="opacity-70">(in the business colour)</span><input className="c-input w-full mt-1" defaultValue={m.line2 ?? ""} maxLength={60} placeholder="e.g. Down, month after month" onBlur={(e) => e.target.value !== (m.line2 ?? "") && void update(m, { line2: e.target.value })} /></label>
+                    <label className="block sm:col-span-2">Small line <span className="opacity-70">(under the headline, optional)</span><input className="c-input w-full mt-1" defaultValue={m.small ?? ""} maxLength={120} placeholder="e.g. Book a fitting: vitorra.org/fet" onBlur={(e) => e.target.value !== (m.small ?? "") && void update(m, { small: e.target.value })} /></label>
+                    <p className="sm:col-span-2 text-[12px]" style={{ color: "var(--o-muted)" }}>Write it the way the other scenes speak: 3 to 7 words a line, a plain promise, no exclamation marks. It shows in capitals.</p>
                     {m.kind === "image" && <label className="block">Seconds on screen<input type="number" min={4} max={60} className="c-input w-full mt-1" defaultValue={m.seconds} onBlur={(e) => { const v = Math.min(60, Math.max(4, Number(e.target.value) || m.seconds)); if (v !== m.seconds) void update(m, { seconds: v }); }} /></label>}
                     <fieldset className="block"><legend>Shows on</legend>
                       <div className="flex gap-3 mt-1">{SCREENS.map((s) => (

@@ -260,4 +260,34 @@ class ScreenProgrammeTest extends TestCase
         $this->putJson('/api/admin/display/programme', ['order' => ['ident', 'logistics', "media-{$id}", 'proof'], 'hidden' => ['logistics']], $h)->assertOk();
         $this->assertSame(['order' => ['ident', 'logistics', "media-{$id}", 'proof'], 'hidden' => ['logistics']], $this->getJson('/api/display')->json('data.programme'));
     }
+
+    public function test_an_adverts_file_can_be_replaced_or_made_light_but_not_swapped_between_video_and_design(): void
+    {
+        $h = $this->admin();
+        $b = $this->booking(['media_type' => 'video']);
+
+        $this->patchJson("/api/admin/screen-ads/{$b->id}/video", ['url' => 'https://abc.public.blob.vercel-storage.com/screen-ads/light.mp4', 'optimised' => true], $h)->assertOk();
+        $b->refresh();
+        $this->assertStringEndsWith('/light.mp4', $b->video_url);
+        $this->assertTrue((bool) $b->video_optimised);
+
+        $this->patchJson("/api/admin/screen-ads/{$b->id}/video", ['url' => 'https://abc.public.blob.vercel-storage.com/screen-ads/design.png'], $h)->assertUnprocessable();
+        $this->patchJson("/api/admin/screen-ads/{$b->id}/video", ['url' => 'https://evil.example/x.mp4'], $h)->assertUnprocessable();
+    }
+
+    public function test_uploads_carry_their_business_and_small_line_to_the_screen(): void
+    {
+        $h = $this->admin();
+        $id = $this->postJson('/api/admin/screen-media', [
+            'kind' => 'video', 'url' => 'https://abc.public.blob.vercel-storage.com/screen-media/v.mp4', 'title' => 'Tyres',
+            'line1' => 'Fleet fuel bills', 'line2' => 'Down, month after month', 'small' => 'vitorra.org/fet', 'business' => 'fet',
+            'seconds' => 20, 'screens' => ['street'], 'optimised' => true,
+        ], $h)->assertCreated()->json('data.id');
+
+        $m = collect($this->getJson('/api/display')->json('data.media'))->firstWhere('id', "media-{$id}");
+        $this->assertSame(['fet', 'vitorra.org/fet'], [$m['business'], $m['small']]);
+        $this->assertTrue(\App\Models\ScreenMedia::findOrFail($id)->optimised);
+
+        $this->patchJson("/api/admin/screen-media/{$id}", ['business' => 'banana'], $h)->assertUnprocessable();
+    }
 }

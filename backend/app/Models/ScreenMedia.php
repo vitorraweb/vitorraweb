@@ -9,13 +9,16 @@ class ScreenMedia extends Model
 {
     public const SCREENS = ['street', 'reception', 'projector'];
 
+    /** Which business an upload belongs to: its tag and colour on screen, as the built-in scenes. */
+    public const BUSINESSES = ['fet', 'seal', 'coffee', 'logistics', 'vitorra'];
+
     protected $table = 'screen_media';
 
     protected $guarded = ['id'];
 
     protected function casts(): array
     {
-        return ['screens' => 'array', 'starts_on' => 'date', 'ends_on' => 'date'];
+        return ['screens' => 'array', 'starts_on' => 'date', 'ends_on' => 'date', 'optimised' => 'boolean'];
     }
 
     /** In its dates today, by Kampala's calendar. */
@@ -31,7 +34,8 @@ class ScreenMedia extends Model
     {
         return [
             'id' => "media-{$this->id}", 'kind' => $this->kind, 'url' => $this->url, 'seconds' => $this->seconds,
-            'line1' => $this->line1, 'line2' => $this->line2, 'screens' => $this->screens,
+            'line1' => $this->line1, 'line2' => $this->line2, 'small' => $this->small, 'business' => $this->business,
+            'screens' => $this->screens,
         ];
     }
 }

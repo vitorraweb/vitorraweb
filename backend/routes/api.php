@@ -352,6 +352,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/{booking}/reject', 'reject');
                 Route::post('/{booking}/cancel', 'cancel');
                 Route::post('/{booking}/extend', 'extend');
+                Route::patch('/{booking}/video', 'video');
                 Route::post('/screen-key', 'screenKey');
                 Route::post('/downtime', 'downtimeAdd');
                 Route::patch('/downtime/{downtime}', 'downtimeNote');

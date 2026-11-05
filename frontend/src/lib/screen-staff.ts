@@ -22,5 +22,6 @@ export async function isScreenStaff(request: Request): Promise<boolean> {
   return r.ok;
 }
 
-/** Only files the Screen editor itself uploaded may be touched from the console. */
-export const SCREEN_MEDIA_URL = /^https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\/screen-media\/[A-Za-z0-9._\-/%]+\.(mp4|png|jpe?g|webp)$/;
+/** Only screen files may be touched from the console: the Screen editor's own uploads
+    (screen-media/) and customers' advert files (screen-ads/). Group 1 is the folder. */
+export const SCREEN_MEDIA_URL = /^https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\/(screen-media|screen-ads)\/[A-Za-z0-9._\-/%]+\.(mp4|png|jpe?g|webp)$/;

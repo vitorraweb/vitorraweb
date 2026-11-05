@@ -28,7 +28,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       getSignedToken: async (pathname, clientPayload) => {
         const m = /^(screen-ads|screen-media)\/[a-z0-9-]+\.(mp4|png|jpe?g|webp)$/.exec(pathname);
         if (!m) throw new Error("Unexpected file name.");
-        if (m[1] === "screen-ads" && !screenAdsOpen(clientPayload)) throw new Error("Not available.");
+        // A customer uploads while booking; staff may also upload a corrected advert file.
+        if (m[1] === "screen-ads" && !screenAdsOpen(clientPayload) && !(await isScreenStaff(request))) throw new Error("Not available.");
         if (m[1] === "screen-media" && !(await isScreenStaff(request))) throw new Error("Sign in to the console to add screen content.");
         const type = TYPES[m[2]];
         const max = type.startsWith("video") ? MAX_BYTES.video : MAX_BYTES.image;
