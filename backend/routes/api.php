@@ -644,6 +644,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send']);
             Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment']);
             Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
+            // Petty cash vouchers: filled in here, numbered, printed and signed.
+            Route::get('/petty-cash', [\App\Http\Controllers\Api\PettyCashController::class, 'index']);
+            Route::post('/petty-cash', [\App\Http\Controllers\Api\PettyCashController::class, 'store']);
+            Route::match(['put', 'patch'], '/petty-cash/{voucher}', [\App\Http\Controllers\Api\PettyCashController::class, 'update']);
+            Route::post('/petty-cash/{voucher}/void', [\App\Http\Controllers\Api\PettyCashController::class, 'void']);
+            Route::get('/petty-cash/{voucher}/pdf', [\App\Http\Controllers\Api\PettyCashController::class, 'pdf']);
             // Receipts issued for one invoice's payments.
             Route::get('/invoices/{invoice}/receipts', [PaymentReceiptController::class, 'forInvoice']);
             // FET stock overview — devices in/out per model, rolled up by week.

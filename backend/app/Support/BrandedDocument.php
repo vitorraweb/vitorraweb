@@ -246,7 +246,7 @@ class BrandedDocument
     {
         File::ensureDirectoryExists(storage_path('fonts'));
 
-        return Pdf::loadView('documents.branded', ['d' => self::receiptData($receipt)])
+        return Pdf::loadView('documents.receipt', ['d' => self::receiptData($receipt)])
             ->setPaper('a4')
             ->setOption('dpi', 96)
             ->setOption('defaultFont', 'DejaVu Sans')
@@ -278,7 +278,25 @@ class BrandedDocument
                 .'. Please quote '.$doc->number.' with your next payment.',
         };
 
+        $items = collect($doc->items)->map(fn ($it) => (string) ($it->name ?? $it->description ?? ''))->filter()->values();
+        $what = $items->take(2)->implode(', ').($items->count() > 2 ? ' and '.($items->count() - 2).' more' : '');
+        $kindOfPayment = $void ? 'Payment' : ($full ? ($receipt->paid_before > 0 ? 'Final payment' : 'Payment in full') : ($order && $receipt->paid_before === 0 ? 'Deposit' : 'Part payment'));
+        $address = trim(preg_replace('/\s*\R\s*/', ', ', (string) $doc->customer_address));
+
         return array_merge($d, [
+            // The formal receipt (documents.receipt).
+            'brand'           => match ($d['business']) { 'coffee' => 'Vitorra Coffee', 'fet' => 'Fuel Eco Tech', default => 'Vitorra Holdings' },
+            'date'            => self::date($receipt->paid_on),
+            'doc_label'       => $order ? ($doc->isOrderConfirmation() ? 'Order No.' : 'Quotation No.') : 'Invoice No.',
+            'doc_number'      => $doc->number,
+            'customer_name'   => $doc->customer_name,
+            'customer_detail' => implode(' · ', array_filter([$address, $doc->customer_email])),
+            'amount'          => self::money($c, $receipt->amount),
+            'amount_words'    => AmountInWords::format((int) $receipt->amount, $c),
+            'for'             => $kindOfPayment.' on '.mb_strtolower($label).' '.$doc->number.($what !== '' ? ' ('.$what.')' : ''),
+            'method'          => $receipt->methodLabel(),
+            'reference'       => $receipt->payment_reference,
+            'issued_by'       => $receipt->issuer?->name,
             'kind'           => 'receipt',
             'is_quote'       => false,
             'number'         => $receipt->number,
