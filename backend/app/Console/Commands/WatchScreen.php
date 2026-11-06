@@ -27,7 +27,7 @@ class WatchScreen extends Command
         if (! $last) return self::SUCCESS; // No screen connected yet.
 
         $now = now('Africa/Kampala');
-        $onAir = $now->hour >= config('screen_ads.on_air.from') && $now->hour < config('screen_ads.on_air.to');
+        $onAir = \App\Support\ScreenClock::onAir($now);
         $seen = Carbon::parse($last);
         $open = ScreenDowntime::whereNull('ended_at')->latest('started_at')->first();
 

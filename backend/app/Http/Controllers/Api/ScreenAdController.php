@@ -33,9 +33,12 @@ class ScreenAdController extends Controller
         $c = config('screen_ads');
 
         return response()->json(['data' => [
-            // Airtime a day: one unit is a 15-second play every 4 minutes for the on-air day.
-            'packages'  => collect($c['packages'])->map(fn ($p, $id) => ['id' => $id] + $p + ['minutes_per_day' => (int) round($p['units'] * ($c['on_air']['to'] - $c['on_air']['from']) * 3600 / $c['programme']['cycle_seconds'] * $c['programme']['unit_seconds'] / 60)])->values(),
-            'slots'     => collect($c['slots'])->map(fn ($s, $id) => ['id' => $id, 'label' => $s['label'], 'hours' => $s['hours'], 'length' => $s['to'] - $s['from']])->values(),
+            // What each package buys, as Finance's airtime sheet sets it out:
+            // a 15-second play, so many times an hour, across the on-air day, for its days.
+            'packages'  => collect($c['packages'])->map(fn ($p, $id) => ['id' => $id] + $p + self::airtime($p, $c))->values(),
+            'slots'     => collect($c['slots'])->map(fn ($s, $id) => ['id' => $id, 'label' => $s['label'], 'hours' => $s['hours'], 'length' => (float) $s['to'] - (float) $s['from']])->values(),
+            'location'  => $c['location'] ?? null,
+            'hours_a_day' => \App\Support\ScreenClock::dayHours(),
             'lead_days' => $c['lead_days'],
             'programme' => $c['programme'],
             'on_air'    => $c['on_air']['label'],
@@ -188,6 +191,30 @@ class ScreenAdController extends Controller
             ->values();
 
         return response()->json(['data' => $ads])->header('Cache-Control', 'public, max-age=60');
+    }
+
+    /**
+     * A package's airtime: plays an hour x on-air hours x days, each play a
+     * 15-second unit. Trial: 15 x 13 x 7 = 1,365 plays = 20,475 s = 5.69 h,
+     * UGX 26,374 an hour of airtime.
+     */
+    public static function airtime(array $p, array $c): array
+    {
+        $day = \App\Support\ScreenClock::dayHours();
+        $playsPerDay = (int) round($p['plays_per_hour'] * $day);
+        $plays = $playsPerDay * $p['days'];
+        $seconds = $plays * $c['programme']['unit_seconds'];
+        $hours = $seconds / 3600;
+
+        return [
+            'plays_per_day'      => $playsPerDay,
+            'total_plays'        => $plays,
+            'minutes_per_day'    => round($playsPerDay * $c['programme']['unit_seconds'] / 60, 2),
+            'airtime_seconds'    => $seconds,
+            'airtime_minutes'    => round($seconds / 60, 2),
+            'airtime_hours'      => round($hours, 2),
+            'price_per_hour_ugx' => $hours > 0 ? (int) round($p['price_ugx'] / $hours) : null,
+        ];
     }
 
     private function guard(Request $request): void

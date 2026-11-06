@@ -83,7 +83,8 @@ class Inventory
             $campaign += (int) round($perHour * $hours(24));
             if ($d->toDateString() > $now->toDateString()) continue;
             $elapsed = $d->toDateString() < $now->toDateString() ? $hours(24) : $hours($now->hour + $now->minute / 60);
-            $rows[] = ['date' => $d->toDateString(), 'expected' => (int) floor($perHour * $elapsed), 'delivered' => (int) ($plays[$d->toDateString()] ?? 0)];
+            // + 1e-6: with fractional hours (6:30am), floating point must not lose a play.
+            $rows[] = ['date' => $d->toDateString(), 'expected' => (int) floor($perHour * $elapsed + 1e-6), 'delivered' => (int) ($plays[$d->toDateString()] ?? 0)];
         }
 
         $expected = array_sum(array_column($rows, 'expected'));

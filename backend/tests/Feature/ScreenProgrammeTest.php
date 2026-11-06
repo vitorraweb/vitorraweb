@@ -131,17 +131,17 @@ class ScreenProgrammeTest extends TestCase
 
     public function test_the_delivery_report_counts_booked_against_delivered(): void
     {
-        $this->travelTo(CarbonImmutable::parse('2026-11-06 18:00:00', 'UTC')); // 9pm Kampala, after 6am to 10pm? 21:00, so 15 hours in
+        $this->travelTo(CarbonImmutable::parse('2026-11-06 18:00:00', 'UTC')); // 9pm Kampala: the 6:30am-7:30pm day is over
         $b = $this->booking(['start_date' => '2026-11-05', 'end_date' => '2026-12-04', 'units' => 2]);
         foreach (range(1, 400) as $i) ScreenPlay::create(['screen_ad_booking_id' => $b->id, 'played_at' => CarbonImmutable::parse('2026-11-05 08:00:00', 'UTC'), 'seconds' => 15, 'completed' => true]);
         ScreenPlay::create(['screen_ad_booking_id' => $b->id, 'played_at' => CarbonImmutable::parse('2026-11-05 08:00:00', 'UTC'), 'seconds' => 3, 'completed' => false]);
 
         $r = app(Inventory::class)->delivery($b);
-        $this->assertSame(480, $r['days'][0]['expected']);  // 2 units × 15 an hour × 16 hours
+        $this->assertSame(390, $r['days'][0]['expected']);  // 2 units × 15 an hour × 13 hours
         $this->assertSame(400, $r['days'][0]['delivered']); // the half-played one does not count
-        $this->assertSame(450, $r['days'][1]['expected']);  // today, 15 hours so far
+        $this->assertSame(390, $r['days'][1]['expected']);  // today, the whole 13-hour day
         $this->assertTrue($r['owed']);
-        $this->assertSame(14400, $r['campaign_expected']);
+        $this->assertSame(11700, $r['campaign_expected']);  // 30 days × 390
 
         $this->getJson("/api/admin/screen-ads/{$b->id}/report.csv", $this->admin())->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
     }
@@ -202,8 +202,8 @@ class ScreenProgrammeTest extends TestCase
     public function test_a_campaign_in_chosen_slots_gets_the_same_airtime_packed_into_them(): void
     {
         $b = $this->booking(['units' => 1, 'slots' => ['morning']]);
-        $this->assertSame(4.0, $b->unitsInSlot());       // 16 on-air hours ÷ 4 morning hours
-        $this->assertSame(60, $b->playsPerHourOnAir());  // a Standard unit, four times as often
+        $this->assertEqualsWithDelta(13 / 3.5, $b->unitsInSlot(), 1e-9); // 13 on-air hours ÷ 3.5 morning hours
+        $this->assertSame(56, $b->playsPerHourOnAir());  // a Standard unit, 3.7 times as often
 
         $this->travelTo(CarbonImmutable::parse('2026-11-04 05:00:00', 'UTC')); // 8am Kampala
         $b->update(['start_date' => '2026-11-01', 'end_date' => '2026-11-30']);
@@ -212,7 +212,20 @@ class ScreenProgrammeTest extends TestCase
         $this->assertFalse($b->fresh()->isOnAirAt(now()));
         // Delivery: the day's total matches an all-day Standard booking.
         $this->travelTo(CarbonImmutable::parse('2026-11-05 20:00:00', 'UTC'));
-        $this->assertSame(240, app(Inventory::class)->delivery($b->fresh())['days'][0]['expected']);
+        $this->assertSame(195, app(Inventory::class)->delivery($b->fresh())['days'][0]['expected']); // 15 × 13
+    }
+
+    public function test_the_on_air_day_runs_from_half_past_six_to_half_past_seven(): void
+    {
+        $b = $this->booking(['units' => 1, 'start_date' => '2026-11-01', 'end_date' => '2026-11-30']);
+        $at = fn (string $kampala) => CarbonImmutable::parse("2026-11-10 {$kampala}", 'Africa/Kampala');
+        $this->assertFalse($b->isOnAirAt($at('06:15')));
+        $this->assertTrue($b->isOnAirAt($at('06:30')));
+        $this->assertTrue($b->isOnAirAt($at('19:15')));
+        $this->assertFalse($b->isOnAirAt($at('19:30')));
+        $this->assertFalse($b->isOnAirAt($at('21:00')));
+        $this->assertTrue(\App\Support\ScreenClock::onAir($at('07:00')));
+        $this->assertFalse(\App\Support\ScreenClock::onAir($at('19:45')));
     }
 
     public function test_each_slot_has_its_own_twelve_units(): void
@@ -233,7 +246,13 @@ class ScreenProgrammeTest extends TestCase
     public function test_the_booking_page_shows_each_packages_airtime_and_the_slots(): void
     {
         $d = $this->getJson('/api/screen-ads/pricing')->assertOk()->json('data');
-        $this->assertSame([60, 60, 120, 240], array_column($d['packages'], 'minutes_per_day'));
+        // Finance's airtime sheet, 6 November 2026: 15 s × plays an hour × 13 h × days.
+        $this->assertEquals([48.75, 48.75, 97.5, 195], array_column($d['packages'], 'minutes_per_day'));
+        $this->assertSame([20475, 87750, 175500, 351000], array_column($d['packages'], 'airtime_seconds'));
+        $this->assertEquals([5.69, 24.38, 48.75, 97.5], array_column($d['packages'], 'airtime_hours'));
+        $this->assertSame([26374, 18462, 17436, 16410], array_column($d['packages'], 'price_per_hour_ugx'));
+        $this->assertEquals(13, $d['hours_a_day']);
+        $this->assertStringContainsString('Padre Pio', $d['location']);
         $this->assertSame(['morning', 'lunchtime', 'evening'], array_column($d['slots'], 'id'));
     }
 

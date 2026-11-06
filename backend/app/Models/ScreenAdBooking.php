@@ -65,10 +65,10 @@ class ScreenAdBooking extends Model
         return $this->slots ?: array_keys(config('screen_ads.slots'));
     }
 
-    /** On-air hours a day across its slots. */
-    public function hours(): int
+    /** On-air hours a day across its slots (may be fractional: 6:30am to 10am is 3.5). */
+    public function hours(): float
     {
-        return (int) collect($this->slotKeys())->sum(fn ($k) => config("screen_ads.slots.$k.to") - config("screen_ads.slots.$k.from"));
+        return (float) collect($this->slotKeys())->sum(fn ($k) => (float) config("screen_ads.slots.$k.to") - (float) config("screen_ads.slots.$k.from"));
     }
 
     /**
@@ -78,9 +78,7 @@ class ScreenAdBooking extends Model
      */
     public function unitsInSlot(): float
     {
-        $day = config('screen_ads.on_air.to') - config('screen_ads.on_air.from');
-
-        return $this->units * $day / max(1, $this->hours());
+        return $this->units * \App\Support\ScreenClock::dayHours() / max(0.5, $this->hours());
     }
 
     /** Plays an hour while it is on air. */
@@ -96,8 +94,9 @@ class ScreenAdBooking extends Model
         if ($this->status !== self::APPROVED) return false;
         if ($now->toDateString() < $this->start_date->toDateString() || $now->toDateString() > $this->end_date->toDateString()) return false;
 
+        $hour = \App\Support\ScreenClock::hourOf($now);
         foreach ($this->slotKeys() as $k) {
-            if ($now->hour >= config("screen_ads.slots.$k.from") && $now->hour < config("screen_ads.slots.$k.to")) return true;
+            if ($hour >= (float) config("screen_ads.slots.$k.from") && $hour < (float) config("screen_ads.slots.$k.to")) return true;
         }
 
         return false;

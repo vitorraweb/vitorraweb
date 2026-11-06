@@ -107,8 +107,7 @@ class OverviewController extends Controller
         $seen = (string) Setting::get('display_last_seen', '');
         $lastSeen = $seen !== '' ? Carbon::parse($seen) : null;
         $now = now();
-        $hour = now(self::TZ)->hour;
-        $onAirHours = $hour >= (int) config('screen_ads.on_air.from', 6) && $hour < (int) config('screen_ads.on_air.to', 22);
+        $onAirHours = \App\Support\ScreenClock::onAir();
 
         $running = ScreenAdBooking::where('status', ScreenAdBooking::APPROVED)
             ->whereDate('start_date', '<=', now(self::TZ)->toDateString())->whereDate('end_date', '>=', now(self::TZ)->toDateString())->get();

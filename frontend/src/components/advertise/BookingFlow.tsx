@@ -14,7 +14,16 @@ import { IMAGE_TYPES, isH264, readImage, readVideo, type Pricing } from "@/lib/s
 
 const cls = "w-full min-h-12 rounded-edge px-3.5 t-body border border-line-strong bg-white text-ink outline-none focus:border-ink transition-colors";
 const choice = (on: boolean) => `text-left rounded-edge border px-4 py-3 transition-colors ${on ? "border-ink bg-ink text-paper" : "border-line-strong hover:border-ink"}`;
-const airtime = (m: number) => (m >= 60 && m % 60 === 0 ? `${m / 60} hour${m === 60 ? "" : "s"}` : `${m} minutes`);
+/** 48.75 → "48¾ minutes", 97.5 → "1 hour 37½ minutes". */
+const airtime = (m: number) => {
+  const frac = (x: number) => { const w = Math.floor(x + 1e-9); const r = x - w; return `${w || (r ? "" : "0")}${r >= 0.74 ? "¾" : r >= 0.49 ? "½" : r >= 0.24 ? "¼" : ""}`; };
+  if (m < 60) return `${frac(m)} minutes`;
+  const h = Math.floor(m / 60), rest = m - h * 60;
+  return `${h} hour${h === 1 ? "" : "s"}${rest > 0.01 ? ` ${frac(rest)} min` : ""}`;
+};
+/** Exactly as Finance's airtime sheet: 5.69, 24.38, 48.75, 97.5 hours. */
+const totalHours = (h: number) => `${Number(h.toFixed(2)).toLocaleString("en-US")} hours`;
+const ugxShort = (n: number) => `UGX ${n.toLocaleString("en-US")}`;
 const TITLES = ["Choose your package", "Choose your times and start date", "Upload your advert", "Your details"];
 
 type Video = { url: string; seconds: number | null; width: number; height: number; size: number; name: string; kind: "video" | "image" };
@@ -133,15 +142,27 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
         {step === 0 && (
           <section>
             <div className="grid sm:grid-cols-2 gap-3">
-              {p.packages.map((x) => (
-                <button key={x.id} type="button" aria-pressed={packageId === x.id} onClick={() => setPackageId(x.id)} className={choice(packageId === x.id)}>
-                  <span className="block font-semibold">{x.label}</span>
-                  <span className="block font-display text-[1.75rem] leading-tight mt-2 tabular-nums">UGX {x.price_ugx.toLocaleString("en-US")}</span>
-                  <span className="block t-small opacity-80 mt-2">{x.days} days · {airtime(x.minutes_per_day)} of airtime a day</span>
-                </button>
-              ))}
+              {p.packages.map((x) => {
+                const best = Math.min(...p.packages.map((y) => y.price_per_hour_ugx ?? Infinity)) === x.price_per_hour_ugx;
+                return (
+                  <button key={x.id} type="button" aria-pressed={packageId === x.id} onClick={() => setPackageId(x.id)} className={choice(packageId === x.id)}>
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="font-semibold">{x.label}</span>
+                      {best && <span className="t-label text-[10px] px-2 py-0.5 rounded-full border border-current opacity-80">Best value</span>}
+                    </span>
+                    <span className="block font-display text-[1.75rem] leading-tight mt-2 tabular-nums">UGX {x.price_ugx.toLocaleString("en-US")}</span>
+                    <span className="block t-small opacity-80 mt-2">{x.plays_per_hour} plays an hour · {p.hours_a_day} hours a day · {x.days} days</span>
+                    <span className="block t-small mt-1"><b>{totalHours(x.airtime_hours)}</b> of airtime in total · {x.total_plays.toLocaleString("en-US")} plays</span>
+                    {x.price_per_hour_ugx && <span className="block t-small opacity-80 mt-1 tabular-nums">{ugxShort(x.price_per_hour_ugx)} per hour of airtime</span>}
+                  </button>
+                );
+              })}
             </div>
-            <p className="t-small text-ink-muted mt-4">The price shown is the full amount you pay. Every package is for a {seconds}-second video or a 1920 × 1080 design, on screen every day, {p.on_air}. Need a longer video? <Link className="q-link" href="/enquire?message=I%20would%20like%20a%20quote%20for%20a%20longer%20advert%20on%20the%20street%20screen.">Ask us for a quote</Link>.</p>
+            <p className="t-small text-ink-muted mt-4">
+              The price shown is the full amount you pay. Every package is for a {seconds}-second video or a 1920 × 1080 design, on screen every day, {p.on_air}{p.location ? `, at the ${p.location}` : ""}.
+              A larger package plays your advert more often and costs less per hour of airtime.
+              Need a longer video? <Link className="q-link" href="/enquire?message=I%20would%20like%20a%20quote%20for%20a%20longer%20advert%20on%20the%20street%20screen.">Ask us for a quote</Link>.
+            </p>
           </section>
         )}
 
@@ -214,9 +235,11 @@ export function BookingFlow({ preview, draft }: { preview: string; draft: boolea
         <ul className="t-small mt-5 space-y-1.5">
           <li>{chosen.label} package</li>
           <li>{chosen.days} days, every day, {slots.length ? p.slots.filter((x) => slots.includes(x.id)).map((x) => x.label.toLowerCase()).join(" and ") : `all day, ${p.on_air}`}</li>
-          <li>{airtime(chosen.minutes_per_day)} of airtime a day</li>
+          <li>{airtime(chosen.minutes_per_day)} of airtime a day ({chosen.plays_per_day} plays)</li>
+          <li><b>{totalHours(chosen.airtime_hours)} of airtime in total</b> ({chosen.total_plays.toLocaleString("en-US")} plays)</li>
           <li>{seconds}-second video</li>
           <li>About {playsPerHour} appearances an hour while on</li>
+          {p.location && <li>{p.location}</li>}
         </ul>
       </aside>
     </div>

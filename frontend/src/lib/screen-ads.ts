@@ -1,7 +1,12 @@
 /* Advertising on the street screen. Packages come from the API
    (config/screen_ads.php in the backend), Finance's rate card. */
 
-export type Package = { id: string; label: string; price_ugx: number; days: number; plays_per_hour: number; minutes_per_day: number };
+/** A package and what it buys, as Finance's airtime sheet sets it out:
+ *  15-second plays, so many an hour, across the on-air day, for its days. */
+export type Package = {
+  id: string; label: string; price_ugx: number; days: number; plays_per_hour: number; minutes_per_day: number;
+  plays_per_day: number; total_plays: number; airtime_seconds: number; airtime_minutes: number; airtime_hours: number; price_per_hour_ugx: number | null;
+};
 
 export type Slot = { id: string; label: string; hours: string; length: number };
 
@@ -9,6 +14,10 @@ export type Pricing = {
   packages: Package[];
   lead_days: number;
   on_air: string;
+  /** Length of the on-air day in hours (13 for 6:30am to 7:30pm). */
+  hours_a_day: number;
+  /** Where the screen is. */
+  location: string | null;
   slots: Slot[];
   video: { seconds: number; max_mb: number; min_width: number; tolerance_seconds: number };
 };
