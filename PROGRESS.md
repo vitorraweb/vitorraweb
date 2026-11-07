@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 2 November 2026
+**Last updated:** 7 November 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -60,6 +60,10 @@
 | **Staff test records removed from enquiries / orders / messages** (`leads:purge-test`) | ⏳ Run on the server: list first, then `--force` |
 | **Marketing app** — email template designer, markets, campaigns that must be tested to support before sending, open/click scorer, one-click unsubscribe, lead-priority decision engine; CEO report renamed Executive report | 🔨 **Built** (29 October) — server update needed |
 | **Everyone sorted into markets and ranked**; contacts from outside the website added by hand or imported; Sales screens tidied; **Finance receipt scanner** (phone QR, AI-read, kept encrypted) | 🔨 **Built** (30 October) — server update + `markets:build` |
+| **Street screen box runs smoothly**: light profile, cached media, automatic video shrinking, daylight versions, large info board; screen editor can resize the logo and replace, delete or lighten any item | ✅ **Live** (4–6 November) |
+| **Street screen adverts on Finance's airtime sheet** (6:30am to 7:30pm, airtime hours and price per hour on each package) | 🔨 **Built** (7 November). Server update needed |
+| **Official receipts** (invoices, orders, deposits) and **petty cash vouchers** | 🔨 **Built** (5–6 November). Server update and migrations needed; address to confirm with Finance |
+| **Overview dashboard** (today, website visitors and clicks, operations) and **Teams switched on** | ✅ **Live** (5 November). PostHog keys are still needed on the server |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -2125,7 +2129,95 @@ Numbers (13.9%, 36), prices, web addresses, QR codes and pictures are deliberate
 
 ---
 
+## ⏳ Server update owed for 4–7 November
+
+The website parts below are live on Vercel. The server side needs one full update, which also runs the four new migrations (`2026_11_04_000002` and `000003` for receipts, `2026_11_05_000001` for screen media, `2026_11_05_000002` for petty cash):
+
+```
+git pull && /opt/alt/php83/usr/bin/php /opt/alt/php83/usr/bin/composer.phar install --no-dev --optimize-autoloader && /opt/alt/php83/usr/bin/php artisan migrate --force && /opt/alt/php83/usr/bin/php artisan config:cache
+```
+
+Always include `composer install`. Leaving it out once broke Teams sign-in with `Class "Firebase\JWT\JWT" not found`.
+
+---
+
+## Street screen adverts follow Finance's airtime sheet (7 November 2026) — website live; server update needed
+
+These changes come from Finance's sheet of 6 November (the two images in the project root).
+
+- **On air 6:30am to 7:30pm, 13 hours a day**, at Padre Pio House entrance, Lumumba Avenue. It used to be 6am to 10pm.
+- **Times of day:** morning 6:30am to 10am, lunchtime 10am to 4pm, evening 4pm to 7:30pm.
+- Packages and prices are unchanged. Each package card now shows:
+  - plays per hour, 13 hours a day and the number of days
+  - total airtime in hours and total plays
+  - the price per hour of airtime
+  - a "Best value" badge
+- The figures match Finance's sheet:
+
+  | Package | Airtime | Price per hour |
+  |---|---|---|
+  | Trial | 5.69 hours | UGX 26,374 |
+  | Standard | 24.38 hours | UGX 18,462 |
+  | Growth | 48.75 hours | UGX 17,436 |
+  | High Visibility | 97.5 hours | UGX 16,410 |
+
+- Behind it, one clock (`ScreenClock`) that handles half hours decides on-air time for the screen, the inventory, the Overview and the off-air watch.
+
+**Server:** `git pull` and `config:cache`. No migration.
+
+---
+
+## Finance: professional receipts and petty cash vouchers (5–6 November 2026) — website live; server update needed
+
+- **Receipts:**
+  - An "Official Receipt" is issued when an invoice, order or deposit is paid.
+  - It is on the letterhead and gives the amount in words (UGX, USD, EUR).
+  - In Sales it can be downloaded as a PDF, emailed or exported to CSV.
+  - A deposit receipt carries over to the invoice, and a receipt can be voided.
+- **Petty cash vouchers:**
+  - A new tab in Accounting, following Finance's sample (`INVOICE NO.docx`).
+  - Vouchers are numbered and give the amount in words.
+  - Each can be edited, voided or printed as a PDF.
+- ⚠ **Open with Finance:** the sample gives the address as "Plot 21, Lumumba Avenue". The system uses "Padre Pio House, Plot 32 Lumumba Avenue, 1st Floor". Which is right?
+
+---
+
+## Screen editor and the street screen box (4–6 November 2026) — website live; server update needed
+
+**Screen editor (Operations)**
+- **Logo:** resize the corner logo and the opening logo (50% to 250%), or upload a different one. A preview shows the change before you publish.
+- **Items:** clicking an item previews it alone. Every item and advert can be **replaced**, **deleted for good** or **made lighter**.
+- **Automatic video shrinking:** every video is reduced to a size the street box plays smoothly (1080p, 30 fps, about 5 Mbps, no sound). This covers new uploads and the videos already up. It runs on Vercel with ffmpeg.
+- **Wording:** uploads use the house wording style ("Belongs to" business, two-tone headline, small line).
+- **Upload fix:** fixed the "failed to retrieve the presigned URL" error under the console's cookie sign-in.
+
+**Street screen (X96 Android TV box at `/display/street`)**
+- **Light profile:**
+  - only one video is loaded at a time
+  - media is cached on the box
+  - an uploaded video is only played once it has fully downloaded, never streamed
+- **Daylight:** brighter, higher-contrast versions of the media play in strong sun.
+- **Information board:** the time, weather and FX board is much bigger and does not cover the videos.
+
+---
+
+## Overview dashboard and Teams switched on (5 November 2026) — live
+
+- **Overview:**
+  - today at a glance
+  - website visitors and the most-clicked links (PostHog)
+  - operations, including whether the street screen is on air
+  - ⏳ The website block needs the PostHog keys in the server's `.env`.
+- **Microsoft Teams:**
+  - The Entra app, the Teams app package, the dashboard tab and the channel alerts (a Workflows webhook) are all set up and tested.
+  - The tab always uses the Bearer token and handles sign-out inside Teams.
+- **Email bounce from Bakhresa:** the Sophos `XGEMAIL_0011` bounce means the address does not exist at their end. Our SPF, DKIM and DMARC all passed. There is nothing to fix on our side; get a correct address.
+
+---
+
 ## Street screen: times of day and airtime in minutes (4 November 2026) — website live; server update needed
+
+> Hours superseded on 7 November: the screen is now on air 6:30am to 7:30pm (see above).
 
 From Finance's comment. A customer chooses **all day** or any of **morning (6am to 10am), lunchtime (10am to 4pm), evening (4pm to 10pm)**. Prices stay as approved and so does the airtime each package buys: Trial and Standard 1 hour a day, Growth 2 hours, High Visibility 4 hours (shown on the booking page). Choosing fewer hours plays the advert more often in them: a Standard advert in the mornings only plays about 60 times an hour there, instead of 15 all day. Each time of day has its own 12 units, so one can sell out while the others have room. Delivery reports count against the chosen hours; the screen spreads fractional units across cycles (checked: 60, 24 and 15 plays in a simulated hour for mornings-only, morning-and-evening and all-day bookings). Terms updated.
 
