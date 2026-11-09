@@ -29,6 +29,9 @@ class PeopleController extends Controller
 {
     public const EMPLOYMENT_TYPES = ['permanent' => 'Permanent', 'contract' => 'Fixed-term contract', 'intern' => 'Intern', 'casual' => 'Casual'];
 
+    /** @var array<int, int>|null person colours, worked out once per request */
+    private ?array $colours = null;
+
     public function __construct(private readonly LeaveService $leave) {}
 
     /** Active staff (admin, ops, employee) who have not left. */
@@ -136,6 +139,121 @@ class PeopleController extends Controller
         return response()->json(['data' => $this->employee($user, $this->daysTaken(collect([$user->id]), (int) now()->year)[$user->id] ?? [])]);
     }
 
+    /* ── Leave tracker ────────────────────────────────────────────────────── */
+
+    /**
+     * Operations' leave tracker: one row per current employee for a year —
+     * entitlement, approved days taken by type, days still awaiting signatures,
+     * what is left, and whether they are away now or next. Every number is
+     * worked out from the leave requests themselves, never typed in.
+     */
+    public function tracker(Request $request): JsonResponse
+    {
+        $year = $this->year($request);
+
+        return response()->json(['data' => [
+            'year'        => $year,
+            'rows'        => $this->trackerRows($year),
+            'departments' => config('admin_modules.department_labels'),
+            'types'       => LeaveRequest::TYPES,
+        ]]);
+    }
+
+    /** The same table as a spreadsheet, for the file or the accountant. */
+    public function trackerExport(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $year = $this->year($request);
+        $rows = $this->trackerRows($year);
+        $depts = config('admin_modules.department_labels');
+
+        return response()->streamDownload(function () use ($rows, $depts) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Employee', 'Job title', 'Department', 'Supervisor', 'Annual entitlement', 'Annual taken', 'Awaiting signatures', 'Annual left',
+                'Sick', 'Unpaid', 'Compassionate', 'Maternity', 'On leave now', 'Next leave']);
+            foreach ($rows as $r) {
+                fputcsv($out, [
+                    $r['name'], $r['job_title'], $depts[$r['department']] ?? $r['department'], $r['supervisor'],
+                    $r['entitlement'], $r['taken']['annual'], $r['pending_days'], $r['annual_left'],
+                    $r['taken']['sick'], $r['taken']['unpaid'], $r['taken']['compassionate'], $r['taken']['maternity'],
+                    $r['current'] ? 'Until '.$r['current']['end_date'] : '',
+                    $r['next'] ? $r['next']['start_date'].' to '.$r['next']['end_date'] : '',
+                ]);
+            }
+            fclose($out);
+        }, "leave-tracker-{$year}.csv", ['Content-Type' => 'text/csv']);
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function trackerRows(int $year): array
+    {
+        $today = now()->startOfDay();
+        $staff = self::activeStaff()->with('supervisor:id,name')->orderBy('name')->get();
+        $ids = $staff->pluck('id');
+        $colours = self::colours();
+
+        $requests = LeaveRequest::whereIn('user_id', $ids)
+            ->whereIn('status', ['approved', 'pending'])
+            ->whereYear('start_date', $year)
+            ->get()->groupBy('user_id');
+
+        // Away now, or next, regardless of the year being viewed.
+        $live = LeaveRequest::whereIn('user_id', $ids)->where('status', 'approved')
+            ->whereDate('end_date', '>=', $today)->orderBy('start_date')->get()->groupBy('user_id');
+
+        return $staff->map(function (User $u) use ($requests, $live, $today, $colours) {
+            $mine = $requests->get($u->id, collect());
+            $approved = $mine->where('status', 'approved');
+            $taken = array_fill_keys(LeaveRequest::TYPES, 0);
+            foreach ($approved as $l) {
+                $taken[$l->type] = ($taken[$l->type] ?? 0) + $l->working_days;
+            }
+            $pendingAnnual = (int) $mine->where('status', 'pending')->where('type', 'annual')->sum('working_days');
+            $entitlement = (int) ($u->leave_entitlement_days ?? 21);
+            $upcoming = $live->get($u->id, collect());
+            $current = $upcoming->first(fn ($l) => $l->start_date->lte($today));
+            $next = $upcoming->first(fn ($l) => $l->start_date->gt($today));
+            $span = fn (?LeaveRequest $l) => $l ? ['start_date' => $l->start_date->toDateString(), 'end_date' => $l->end_date->toDateString(), 'type' => $l->type, 'working_days' => $l->working_days] : null;
+
+            return [
+                'id'            => $u->id,
+                'name'          => $u->name,
+                'job_title'     => $u->job_title,
+                'department'    => $u->department,
+                'supervisor'    => $u->supervisor?->name,
+                'colour'        => $colours[$u->id] ?? 0,
+                'entitlement'   => $entitlement,
+                'taken'         => $taken,
+                'total_taken'   => array_sum($taken),
+                'pending_days'  => (int) $mine->where('status', 'pending')->sum('working_days'),
+                'pending_count' => $mine->where('status', 'pending')->count(),
+                'annual_left'   => max(0, $entitlement - $taken['annual'] - $pendingAnnual),
+                'current'       => $span($current),
+                'next'          => $span($next),
+            ];
+        })->values()->all();
+    }
+
+    private function year(Request $request): int
+    {
+        return (int) ($request->validate(['year' => ['nullable', 'integer', 'min:2020', 'max:2100']])['year'] ?? now()->year);
+    }
+
+    /** Number of distinct colours the console defines for people (--o-person-0 … 11). */
+    public const PERSON_COLOURS = 12;
+
+    /**
+     * A colour per person, the same on every screen: current staff in the order
+     * they joined the system, each taking the next colour. Unique while the
+     * team is no bigger than the palette; past that the palette repeats.
+     *
+     * @return array<int, int> user id => colour number
+     */
+    public static function colours(): array
+    {
+        return self::activeStaff()->orderBy('id')->pluck('id')->values()
+            ->mapWithKeys(fn ($id, $i) => [$id => $i % self::PERSON_COLOURS])->all();
+    }
+
     /* ── Leave calendar ───────────────────────────────────────────────────── */
 
     public function calendar(Request $request): JsonResponse
@@ -177,8 +295,40 @@ class PeopleController extends Controller
     public function storeAnnouncement(Request $request): JsonResponse
     {
         $a = Announcement::create($this->validateAnnouncement($request) + ['created_by' => $request->user()->id]);
+        $a->load('creator:id,name');
 
-        return response()->json(['data' => $this->announcement($a->load('creator:id,name'))], 201);
+        $emailed = null;
+        if ($request->boolean('email_staff')) {
+            $emailed = self::emailAnnouncement($a);
+            Audit::log('announcement.emailed', "Emailed \"{$a->title}\" to {$emailed} staff", $a);
+        }
+
+        return response()->json(['data' => $this->announcement($a) + ['emailed' => $emailed]], 201);
+    }
+
+    /** Email a notice to everyone who should see it; returns how many were sent. */
+    public static function emailAnnouncement(Announcement $a, ?array $only = null): int
+    {
+        $a->loadMissing('creator:id,name');
+        $people = $only !== null
+            ? collect($only)->map(fn ($email) => (object) ['email' => $email, 'name' => strstr($email, '@', true) ?: $email, 'role' => 'ops'])
+            : self::activeStaff()->when($a->department, fn ($q) => $q->where('department', $a->department))
+                ->whereNotNull('email')->get(['id', 'name', 'email', 'role']);
+
+        $base = rtrim((string) config('services.frontend.url', 'https://vitorra.org'), '/');
+        $sent = 0;
+        foreach ($people as $p) {
+            // Employees use the staff portal; Leadership/Ops/Finance work in the console.
+            $url = $p->role === 'employee' ? $base.'/staff' : $base.'/admin/me';
+            try {
+                \Illuminate\Support\Facades\Mail::to($p->email)->send(new \App\Mail\StaffAnnouncement($a, (string) $p->name, $url));
+                $sent++;
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return $sent;
     }
 
     public function updateAnnouncement(Request $request, Announcement $announcement): JsonResponse
@@ -250,7 +400,10 @@ class PeopleController extends Controller
 
     private function leaveRow(LeaveRequest $l): array
     {
+        $this->colours ??= self::colours();
+
         return [
+            'colour'      => $this->colours[$l->user_id] ?? 0,
             'id'          => $l->id,
             'user_id'     => $l->user_id,
             'name'        => $l->user?->name,

@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 7 November 2026
+**Last updated:** 9 November 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -64,6 +64,7 @@
 | **Street screen adverts on Finance's airtime sheet** (6:30am to 7:30pm, airtime hours and price per hour on each package) | 🔨 **Built** (7 November). Server update needed |
 | **Official receipts** (invoices, orders, deposits) and **petty cash vouchers** | 🔨 **Built** (5–6 November). Server update and migrations needed; address to confirm with Finance |
 | **Overview dashboard** (today, website visitors and clicks, operations) and **Teams switched on** | ✅ **Live** (5 November). PostHog keys are still needed on the server |
+| **Leave tracker, printable leave form, colour per person on the leave calendar** (Operations' request) | 🔨 **Built** (9 November). Server update needed |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -2126,6 +2127,35 @@ Numbers (13.9%, 36), prices, web addresses, QR codes and pictures are deliberate
 **Server:** pull, `route:cache` (new route). No migration.
 
 > Technical detail (engineering): `walk()` in `scenes.ts` both lists the fields (`copyFields`) and applies changes (`applyCopy`); changes live in the `display_copy` setting, returned by `GET /display`; `PUT /admin/display/copy`; `CopyContext` and `useScreenData` in `Stage.tsx`; `?draft=1` reads unsaved edits from localStorage. To add a new line, add it to the story and it appears in the console.
+
+---
+
+## Leave tracker, printable leave form, a colour per person (9 November 2026) — website live; server update needed
+
+Operations asked for three things. All three are built.
+
+- **Leave tracker** (People → Leave tracker, also in the Operations menu; `/admin/people/leave-tracker`, `people` module):
+  - one row per current employee for the chosen year: entitled, annual taken, days awaiting signatures, annual left (with a bar), sick and other leave, and whether they are away now or when they are next off;
+  - quick counts: staff tracked, away today, requests awaiting signatures, days taken;
+  - filters for department, away today, awaiting signatures and "3 or fewer days left"; search; a CSV export;
+  - open a row to see that person's requests for the year and where each one stands.
+  - Every number comes from the leave requests themselves. "Annual left" subtracts days still awaiting signatures, so it matches what the employee sees when they apply.
+- **Leave application form (PDF, one A4 page, on the letterhead):**
+  - Sections: employee details, leave requested (type, dates, working days, back-at-work date, reason), handover, signatures for the **employee** and the **immediate supervisor** (recommended / not recommended), and an office-use block for the Operations and Finance approvals and the leave balance.
+  - Staff download it from **My leave**, either with their details filled in or blank. Each of their requests has a **Form** button that prints that request filled in, including any approvals already given in the console.
+  - HR prints it from the tracker (per employee, or blank) and from the Leave screen (per request).
+  - The paper form doesn't replace applying in the system: leave is still granted only once Operations and Finance sign in the console. The form says so.
+- **A colour per person on the leave calendar** (People → Leave calendar, and the staff Team calendar):
+  - Each employee keeps the same colour on the calendar and the tracker.
+  - A new **Month** view (a wall calendar, with each day listing who is away as coloured name chips) sits beside the existing **Timeline** view. The browser remembers which view you last used.
+  - A legend of names: click one to pick that person out.
+  - Requests still awaiting signatures are shown dashed or striped. HR also sees the leave type as a letter.
+  - There are 12 colours. Up to 12 current staff each get their own; past that, colours repeat.
+- **Announcements can be emailed:** People → Announcements has a new tick box, "Also email it to all staff" (or to the chosen department), with a link to each person's portal. The console asks for confirmation before sending. `php artisan announcements:email {id} [--to=address]` sends an existing one, and `--to` is for a test.
+
+**Server:** `git pull`, `config:cache`, `route:cache`. No migration.
+
+> Technical detail (engineering): `PeopleController::tracker`/`trackerExport`/`colours()` (index among active staff by id, mod 12; `colour` on calendar rows), `LeaveFormController` + `documents/leave-form.blade.php`, `LeaveController::all` takes `user_id`/`year`, `StaffAnnouncement` mail + `announcements:email`; frontend `app/admin/people/leave-tracker`, `components/people/LeaveCalendar.tsx` (`personColour`, `MonthGrid`), `--o-person-0…11` tokens (light + dark). Tests: `LeaveTrackerTest` (6). **645 backend tests passing.**
 
 ---
 

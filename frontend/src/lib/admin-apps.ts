@@ -2,7 +2,7 @@ import {
   Handshake, ShoppingCart, Gauge, Wallet, LineChart, Users, ListChecks, Globe, Settings,
   MessageSquare, Workflow, Contact, Target, LayoutTemplate, CreditCard, FlaskConical,
   TrendingUp, LayoutDashboard, CalendarCheck, Hourglass, Briefcase, CalendarDays,
-  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame, Sparkles, Video, UserCircle, ClipboardCheck, CalendarRange, CalendarClock, MonitorPlay, Type,
+  CheckSquare, Truck, Package, FileText, Images, Send, Mail, UserCog, ShieldCheck, FileSignature, FolderLock, FileCheck, Megaphone, Mails, Layers, Palette, Flame, Sparkles, Video, UserCircle, ClipboardCheck, CalendarRange, CalendarClock, MonitorPlay, Type, ClipboardList,
 } from "lucide-react";
 import { canAccess, type AdminUser } from "@/lib/auth";
 
@@ -102,6 +102,8 @@ export const ADMIN_APPS: AdminApp[] = [
       { label: "Tasks",     href: "/admin/tasks",     icon: CheckSquare, module: "tasks", keywords: "todo assignments" },
       { label: "Suppliers", href: "/admin/suppliers", icon: Truck,       module: "suppliers", keywords: "vendors onboarding" },
       { label: "Meetings",  href: "/admin/meetings",  icon: Video,       keywords: "teams microsoft join call" },
+      { label: "Leave tracker", href: "/admin/people/leave-tracker", icon: ClipboardList, module: "people", keywords: "staff leave balance who is away" },
+      { label: "Leave calendar", href: "/admin/people/calendar", icon: CalendarRange, module: "people", keywords: "who is away absence schedule colours" },
       { label: "Reception screen", href: "/admin/reception-screen", icon: MonitorPlay, keywords: "display tv lobby welcome visitor street screen" },
       { label: "Screen editor", href: "/admin/screen-wording", icon: Type, module: "screen_ads", keywords: "display reception street screen editor running order video design image upload wording text copy headline ticker change words" },
       { label: "Screen bookings", href: "/admin/screen-ads", icon: Megaphone, module: ["screen_ads", "accounting"], keywords: "street screen advert advertising paid booking" },
@@ -122,7 +124,8 @@ export const ADMIN_APPS: AdminApp[] = [
     items: [
       { label: "Overview",  href: "/admin/people",    icon: LayoutDashboard, module: "people", keywords: "hr dashboard headcount birthdays contracts" },
       { label: "Employees", href: "/admin/people/employees", icon: Contact, module: "people", keywords: "staff records hr emergency contact contract" },
-      { label: "Leave",     href: "/admin/leave",     icon: CalendarCheck, module: "people", keywords: "time off absence" },
+      { label: "Leave tracker", href: "/admin/people/leave-tracker", icon: ClipboardList, module: "people", keywords: "leave balance days taken left remaining entitlement every employee form print" },
+      { label: "Leave",     href: "/admin/leave",     icon: CalendarCheck, module: "people", keywords: "time off absence requests approve sign" },
       { label: "Leave calendar", href: "/admin/people/calendar", icon: CalendarRange, module: "people", keywords: "who is away absence schedule" },
       { label: "Announcements",  href: "/admin/people/announcements", icon: Megaphone, module: "people", keywords: "notices news staff" },
       { label: "Probation", href: "/admin/probation", icon: Hourglass,     module: "people", keywords: "new staff reports" },

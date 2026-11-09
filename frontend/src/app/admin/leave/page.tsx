@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Check, X, Download } from "lucide-react";
+import { Loader2, Check, X, Download, FileText } from "lucide-react";
+import Link from "next/link";
 import { apiAdmin, auth, downloadFile } from "@/lib/auth";
 import { PageHeader, Empty } from "@/components/admin/admin-ui";
 
@@ -62,7 +63,8 @@ export default function AdminLeavePage() {
 
   return (
     <div className="pb-12">
-      <PageHeader title="Leave" subtitle="Review and track staff leave across the company." />
+      <PageHeader title="Leave" subtitle="Review and track staff leave across the company."
+        actions={<><Link href="/admin/people/leave-tracker" className="c-btn">Leave tracker</Link><Link href="/admin/people/calendar" className="c-btn">Calendar</Link></>} />
 
       <div className="flex flex-wrap gap-2 mb-5">
         {[["", "All"], ...(statuses.length ? statuses : ["pending", "approved", "declined", "cancelled"]).map((s) => [s, s[0].toUpperCase() + s.slice(1)])].map(([v, label]) => (
@@ -97,6 +99,7 @@ export default function AdminLeavePage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => downloadFile(`/admin/leave/${l.id}/form`, `leave-form-${l.id}.pdf`).catch(() => {})} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}><FileText className="w-3.5 h-3.5" />Form</button>
                     {l.has_document && <button onClick={() => note(l)} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}><Download className="w-3.5 h-3.5" />Note</button>}
                     {l.status === "pending" && l.can_decide && (
                       <>

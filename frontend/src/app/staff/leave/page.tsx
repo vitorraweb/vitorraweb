@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, CalendarDays, AlertTriangle, Check, X, Plus, Upload } from "lucide-react";
-import { apiStaff, uploadStaff, staffAuth } from "@/lib/staff-auth";
+import { Loader2, CalendarDays, AlertTriangle, Check, X, Plus, Upload, FileText } from "lucide-react";
+import { apiStaff, uploadStaff, staffAuth, downloadStaffFile } from "@/lib/staff-auth";
 
 type Leave = {
   id: number; type: string; start_date: string; end_date: string; working_days: number;
@@ -119,6 +119,17 @@ export default function StaffLeavePage() {
         </div>
       )}
 
+      {/* Paper form — for the employee and their immediate supervisor to sign */}
+      <div className="bg-white rounded-[20px] border border-black/[0.06] p-5 mb-6 flex flex-wrap items-center gap-3">
+        <FileText className="w-5 h-5 shrink-0" style={{ color: "var(--o-accent-text)" }} />
+        <div className="flex-1 min-w-[14rem]">
+          <p className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>Leave application form</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--o-faint)" }}>Print it, sign it, and have your immediate supervisor sign it. Apply here as well: the request is only granted once Operations and Finance sign in the system.</p>
+        </div>
+        <button type="button" onClick={() => downloadStaffFile("/staff/leave/form", "leave-application-form.pdf").catch(() => {})} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full" style={{ background: "var(--o-brand)", color: "var(--o-on-brand)" }}>Download with my details</button>
+        <button type="button" onClick={() => downloadStaffFile("/staff/leave/form?blank=1", "leave-application-form-blank.pdf").catch(() => {})} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}>Blank form</button>
+      </div>
+
       {/* Apply */}
       <form onSubmit={submit} className="bg-white rounded-[20px] border border-black/[0.06] p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
@@ -226,6 +237,9 @@ export default function StaffLeavePage() {
                     </p>
                   )}
                 </div>
+                {l.status !== "cancelled" && (
+                  <button onClick={() => downloadStaffFile(`/staff/leave/${l.id}/form`, `leave-form-${l.id}.pdf`).catch(() => {})} title="This request on the printable leave form" className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full shrink-0" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}><FileText className="w-3.5 h-3.5" />Form</button>
+                )}
                 {(l.status === "pending" || l.status === "approved") && (
                   <button onClick={() => cancel(l.id)} className="text-xs font-semibold px-3 py-1.5 rounded-full shrink-0" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>Cancel</button>
                 )}

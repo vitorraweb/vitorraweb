@@ -12,7 +12,7 @@ import { PageHeader, Empty } from "@/components/admin/admin-ui";
 
 type A = { id: number; title: string; body: string; department: string | null; pinned: boolean; expires_at: string | null; created_at: string; author: string | null; expired: boolean };
 const DEPTS: Record<string, string> = { leadership: "Leadership", operations: "Operations", finance: "Finance", marketing: "Marketing", sales: "Sales", it: "IT" };
-const blank = { title: "", body: "", department: "", pinned: false, expires_at: "" };
+const blank = { title: "", body: "", department: "", pinned: false, expires_at: "", email_staff: false };
 
 export default function AnnouncementsPage() {
   const [list, setList] = useState<A[] | null>(null);
@@ -20,13 +20,14 @@ export default function AnnouncementsPage() {
   const [editing, setEditing] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   const load = useCallback(async () => { setList((await apiAdmin<{ data: A[] }>("/admin/announcements")).data); }, []);
   useEffect(() => { load().catch(() => setList([])); }, [load]);
 
   const open = (a?: A) => {
     setError(""); setEditing(a?.id ?? null);
-    setForm(a ? { title: a.title, body: a.body, department: a.department ?? "", pinned: a.pinned, expires_at: a.expires_at ? a.expires_at.slice(0, 10) : "" } : { ...blank });
+    setForm(a ? { title: a.title, body: a.body, department: a.department ?? "", pinned: a.pinned, expires_at: a.expires_at ? a.expires_at.slice(0, 10) : "", email_staff: false } : { ...blank });
   };
 
   const save = async () => {
@@ -34,8 +35,10 @@ export default function AnnouncementsPage() {
     setBusy(true); setError("");
     const body = { ...form, department: form.department || null, expires_at: form.expires_at ? `${form.expires_at}T23:59:59` : null };
     try {
-      await apiAdmin(editing ? `/admin/announcements/${editing}` : "/admin/announcements", { method: editing ? "PATCH" : "POST", body: JSON.stringify(body) });
+      if (!editing && form.email_staff && !window.confirm(`Email "${form.title}" to ${form.department ? "everyone in " + (DEPTS[form.department] ?? form.department) : "every member of staff"} now? This cannot be unsent.`)) { setBusy(false); return; }
+      const res = await apiAdmin<{ data: { emailed?: number | null } }>(editing ? `/admin/announcements/${editing}` : "/admin/announcements", { method: editing ? "PATCH" : "POST", body: JSON.stringify(body) });
       setForm(null); await load();
+      if (res.data?.emailed != null) setNotice(`Published and emailed to ${res.data.emailed} staff.`);
     } catch (e) { setError(e instanceof Error ? e.message : "Could not save"); }
     finally { setBusy(false); }
   };
@@ -54,6 +57,7 @@ export default function AnnouncementsPage() {
       />
 
       <div className="space-y-4 mt-5">
+        {notice && <p className="c-panel px-4 py-2.5 text-[13.5px] text-ink">{notice}</p>}
         {form && (
           <section className="c-panel p-5 space-y-3">
             <div className="flex items-center justify-between">
@@ -71,6 +75,7 @@ export default function AnnouncementsPage() {
               <label className="block"><span className="block text-[13px] text-ink-muted mb-1">Take down after (optional)</span><input type="date" className="c-input w-full" value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} /></label>
               <label className="flex items-center gap-2 text-[14px] text-ink-soft h-9"><input type="checkbox" checked={form.pinned} onChange={(e) => setForm({ ...form, pinned: e.target.checked })} />Pin to the top</label>
             </div>
+            {!editing && <label className="flex items-center gap-2 text-[14px] text-ink-soft"><input type="checkbox" checked={form.email_staff} onChange={(e) => setForm({ ...form, email_staff: e.target.checked })} />Also email it to {form.department ? "that department" : "all staff"} (from the website&rsquo;s address, with a link to their portal)</label>}
             {error && <p className="text-[13px] text-alert-ink">{error}</p>}
             <button className="c-btn c-btn-primary" onClick={save} disabled={busy || !form.title.trim() || !form.body.trim()}>{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}{editing ? "Save" : "Publish"}</button>
           </section>

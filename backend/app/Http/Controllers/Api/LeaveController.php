@@ -147,6 +147,12 @@ class LeaveController extends Controller
         if ($request->filled('type')) {
             $query->where('type', $request->query('type'));
         }
+        if ($request->filled('user_id')) {
+            $query->where('user_id', (int) $request->query('user_id'));
+        }
+        if ($request->filled('year')) {
+            $query->whereYear('start_date', (int) $request->query('year'));
+        }
 
         return response()->json([
             'data'     => $query->limit(500)->get()->map(fn ($l) => $this->shape($l, withUser: true, viewer: $request->user())),

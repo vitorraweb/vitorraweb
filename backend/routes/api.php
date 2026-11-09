@@ -42,6 +42,7 @@ use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\PaymentReceiptController;
 use App\Http\Controllers\Api\JobAdminController;
 use App\Http\Controllers\Api\LeaveController;
+use App\Http\Controllers\Api\LeaveFormController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\MonthlyReportController;
 use App\Http\Controllers\Api\NewsletterController;
@@ -289,6 +290,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Leave — apply, track, and (for supervisors/HR) review.
         Route::get('/leave', [LeaveController::class, 'index']);
         Route::get('/leave/preview', [LeaveController::class, 'preview']);
+        Route::get('/leave/form', [LeaveFormController::class, 'mine']);
+        Route::get('/leave/{leave}/form', [LeaveFormController::class, 'mineForRequest']);
         Route::get('/leave/pending', [LeaveController::class, 'pending']);
         Route::post('/leave', [LeaveController::class, 'store']);
         Route::post('/leave/{leave}/cancel', [LeaveController::class, 'cancel']);
@@ -561,6 +564,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/people/employees', [PeopleController::class, 'employees']);
             Route::patch('/people/employees/{user}', [PeopleController::class, 'updateEmployee']);
             Route::get('/people/calendar', [PeopleController::class, 'calendar']);
+            Route::get('/people/leave-tracker', [PeopleController::class, 'tracker']);
+            Route::get('/people/leave-tracker/export', [PeopleController::class, 'trackerExport']);
+            Route::get('/people/employees/{user}/leave-form', [LeaveFormController::class, 'forEmployee']);
+            Route::get('/leave/{leave}/form', [LeaveFormController::class, 'forRequest']);
             Route::get('/announcements', [PeopleController::class, 'announcements']);
             Route::post('/announcements', [PeopleController::class, 'storeAnnouncement']);
             Route::patch('/announcements/{announcement}', [PeopleController::class, 'updateAnnouncement']);

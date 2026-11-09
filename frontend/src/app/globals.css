@@ -1319,6 +1319,11 @@
   /* Chart series — the validated categorical order (dataviz reference). */
   --o-series-1: #2a78d6; --o-series-2: #eb6834; --o-series-3: #1baf7a; --o-series-4: #eda100;
   --o-series-5: #e87ba4; --o-series-6: #008300; --o-series-7: #6250d6; --o-series-8: #e34948;
+  /* People — one colour per employee on the leave calendar and tracker
+     (PeopleController::colours()). Twelve, ordered so neighbours differ. */
+  --o-person-0: #2a78d6; --o-person-1: #eb6834; --o-person-2: #1baf7a; --o-person-3: #8a4fd0;
+  --o-person-4: #d9a000; --o-person-5: #e05a8c; --o-person-6: #0e8f9a; --o-person-7: #c43c3c;
+  --o-person-8: #5f7a1e; --o-person-9: #4a5fc1; --o-person-10: #9a6a3a; --o-person-11: #5b6b82;
   --o-grid:         #E8EAED;
   --o-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
@@ -1357,6 +1362,9 @@
   --o-shadow-pop:   0 12px 32px rgba(0,0,0,0.55);
   --o-series-1: #3987e5; --o-series-2: #d95926; --o-series-3: #199e70; --o-series-4: #c98500;
   --o-series-5: #d55181; --o-series-6: #008300; --o-series-7: #9085e9; --o-series-8: #e66767;
+  --o-person-0: #4b93ea; --o-person-1: #f07f50; --o-person-2: #2cc28c; --o-person-3: #a97ae6;
+  --o-person-4: #e6b42a; --o-person-5: #ec7aa5; --o-person-6: #2bb0bb; --o-person-7: #e46a6a;
+  --o-person-8: #8db33a; --o-person-9: #7487e6; --o-person-10: #c49260; --o-person-11: #8d9bb0;
   --o-grid:         #2C2E33;
 }
 
