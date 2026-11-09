@@ -53,7 +53,7 @@
     <tr>
         <td style="vertical-align:top;">
             <p class="title" style="font-size:22px;">LEAVE APPLICATION FORM</p>
-            <div class="sub">People &amp; Operations</div>
+            <div class="sub">Operations</div>
         </td>
         <td style="vertical-align:top; text-align:right;">
             <table class="meta" style="margin-left:auto;">

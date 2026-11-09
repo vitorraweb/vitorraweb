@@ -568,6 +568,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/people/leave-tracker/export', [PeopleController::class, 'trackerExport']);
             Route::get('/people/employees/{user}/leave-form', [LeaveFormController::class, 'forEmployee']);
             Route::get('/leave/{leave}/form', [LeaveFormController::class, 'forRequest']);
+            Route::post('/people/leave-record', [LeaveController::class, 'record']);
+            Route::delete('/people/leave-record/{leave}', [LeaveController::class, 'unrecord']);
             Route::get('/announcements', [PeopleController::class, 'announcements']);
             Route::post('/announcements', [PeopleController::class, 'storeAnnouncement']);
             Route::patch('/announcements/{announcement}', [PeopleController::class, 'updateAnnouncement']);

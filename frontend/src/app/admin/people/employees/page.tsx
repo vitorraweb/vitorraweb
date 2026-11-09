@@ -51,7 +51,7 @@ export default function EmployeesPage() {
     <div className="pb-12">
       <PageHeader
         title="Employees"
-        subtitle="Everyone's HR record: role, dates, emergency contact and leave taken this year."
+        subtitle="Everyone's staff record: role, dates, emergency contact and leave taken this year."
         actions={isAdmin ? <Link href="/admin/staff" className="c-btn">Sign-in & access</Link> : undefined}
       />
 
@@ -141,7 +141,7 @@ function Editor({ e, types, depts, people, onSaved, onClose }: { e: Employee; ty
         <Mini label="Annual leave used" value={`${e.leave.annual_used} of ${e.leave.entitlement} days`} />
         <Mini label="Sick days this year" value={String(e.leave.sick_used)} />
         <Mini label="Other leave" value={`${e.leave.other_used} days`} />
-        <Mini label="HR documents" value={String(e.documents)} />
+        <Mini label="Staff documents" value={String(e.documents)} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">

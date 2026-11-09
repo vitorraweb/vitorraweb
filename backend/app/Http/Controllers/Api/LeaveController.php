@@ -131,6 +131,9 @@ class LeaveController extends Controller
         if (! in_array($leave->status, ['pending', 'approved'], true)) {
             return response()->json(['message' => 'This request can no longer be cancelled.'], 422);
         }
+        if ($leave->recorded_by) {
+            return response()->json(['message' => 'Operations recorded this leave. Ask them to correct it if it is wrong.'], 422);
+        }
 
         $leave->update(['status' => 'cancelled']);
 
@@ -159,6 +162,76 @@ class LeaveController extends Controller
             'statuses' => LeaveRequest::STATUSES,
             'types'    => LeaveRequest::TYPES,
         ]);
+    }
+
+    /**
+     * Operations enters leave an employee has already taken (agreed on paper,
+     * before the system), so their balance is right. It counts as approved
+     * straight away, so it is limited to leave that has started: anything
+     * still to come is applied for and signed in the normal way. Nobody
+     * records their own leave.
+     */
+    public function record(Request $request): JsonResponse
+    {
+        $actor = $request->user();
+        $data = $request->validate([
+            'user_id'      => ['required', 'integer', Rule::exists('users', 'id')],
+            'type'         => ['required', Rule::in(LeaveRequest::TYPES)],
+            'start_date'   => ['required', 'date', 'before_or_equal:today'],
+            'end_date'     => ['required', 'date', 'after_or_equal:start_date'],
+            'working_days' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'note'         => ['nullable', 'string', 'max:2000'],
+        ], ['start_date.before_or_equal' => 'Only leave that has already started can be recorded here. Leave still to come is applied for in the system.']);
+
+        $employee = User::findOrFail($data['user_id']);
+        abort_unless(in_array($employee->role, ['admin', 'ops', 'employee'], true), 422, 'That person is not on staff.');
+        if ($employee->id === $actor->id) {
+            throw ValidationException::withMessages(['user_id' => ['Someone else in Operations must record your own leave.']]);
+        }
+
+        $start = Carbon::parse($data['start_date']);
+        $end = Carbon::parse($data['end_date']);
+        $days = $data['working_days'] ?? $this->leave->workingDays($start, $end);
+        if ($days < 1) {
+            throw ValidationException::withMessages(['start_date' => ['Those dates have no working days. Enter the number of days taken if it is different.']]);
+        }
+
+        $overlap = LeaveRequest::where('user_id', $employee->id)->whereIn('status', ['pending', 'approved'])
+            ->whereDate('start_date', '<=', $end)->whereDate('end_date', '>=', $start)->first();
+        if ($overlap) {
+            throw ValidationException::withMessages(['start_date' => ["{$employee->name} already has leave from {$overlap->start_date->format('j M')} to {$overlap->end_date->format('j M Y')}."]]);
+        }
+
+        $leave = LeaveRequest::create([
+            'user_id'        => $employee->id,
+            'type'           => $data['type'],
+            'start_date'     => $start,
+            'end_date'       => $end,
+            'working_days'   => $days,
+            'reason'         => $data['note'] ?? null,
+            'status'         => 'approved',
+            'reviewed_by'    => $actor->id,
+            'reviewed_at'    => now(),
+            'review_comment' => 'Recorded by Operations: taken before the leave system.',
+            'recorded_by'    => $actor->id,
+        ]);
+
+        Audit::log('leave.recorded', "Recorded {$days} day(s) of {$data['type']} leave taken by {$employee->name} ({$start->toDateString()} to {$end->toDateString()})", $leave);
+
+        return response()->json(['data' => $this->shape($leave->load('user:id,name,department'), withUser: true, viewer: $actor)], 201);
+    }
+
+    /** Remove leave Operations recorded by mistake. Applied-for leave is cancelled by the employee instead. */
+    public function unrecord(LeaveRequest $leave): JsonResponse
+    {
+        if (! $leave->recorded_by) {
+            return response()->json(['message' => 'Only leave recorded by Operations can be removed here. The employee cancels leave they applied for.'], 422);
+        }
+        $leave->loadMissing('user:id,name');
+        Audit::log('leave.record_removed', "Removed recorded leave of {$leave->user?->name} ({$leave->start_date->toDateString()} to {$leave->end_date->toDateString()}, {$leave->working_days} day(s))", $leave);
+        $leave->delete();
+
+        return response()->json(['data' => ['deleted' => true]]);
     }
 
     /** Requests still waiting on this person's signature (Operations or Finance). */
@@ -379,7 +452,7 @@ class LeaveController extends Controller
         // The shared HR inbox too, so nothing goes unseen while someone is away.
         $hr = Setting::get('notify_email');
         if ($hr && ! in_array($hr, $sent, true)) {
-            Mail::to($hr)->send(new LeaveSubmitted($leave, 'HR team'));
+            Mail::to($hr)->send(new LeaveSubmitted($leave, 'Operations team'));
         }
     }
 
@@ -432,6 +505,8 @@ class LeaveController extends Controller
             'review_comment' => $l->review_comment,
             'reviewed_at'    => optional($l->reviewed_at)->toIso8601String(),
             'created_at'     => $l->created_at->toIso8601String(),
+            // Entered by Operations for leave already taken (on paper), not applied for here.
+            'recorded_by'    => $l->recorded_by ? ($l->loadMissing('recorder:id,name')->recorder?->name ?? 'Operations') : null,
         ];
         if ($withUser && $l->relationLoaded('user') && $l->user) {
             $out['user'] = ['id' => $l->user->id, 'name' => $l->user->name, 'department' => $l->user->department];

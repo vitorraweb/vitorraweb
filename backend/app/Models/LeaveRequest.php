@@ -26,6 +26,7 @@ class LeaveRequest extends Model
         'reviewed_by',
         'reviewed_at',
         'review_comment',
+        'recorded_by',
     ];
 
     protected $casts = [
@@ -38,11 +39,18 @@ class LeaveRequest extends Model
         // driver, silently failing the comparison.
         'user_id'      => 'integer',
         'reviewed_by'  => 'integer',
+        'recorded_by'  => 'integer',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** Operations, when the leave was entered for the employee (taken on paper). */
+    public function recorder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recorded_by');
     }
 
     public function reviewer(): BelongsTo

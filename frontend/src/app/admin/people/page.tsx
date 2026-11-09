@@ -35,7 +35,7 @@ export default function PeopleOverview() {
 
   return (
     <div className="pb-12">
-      <PageHeader title="Overview" subtitle="Who is away, what is waiting on HR, and what is coming up." />
+      <PageHeader title="Overview" subtitle="Who is away, what is waiting on Operations, and what is coming up." />
 
       {error && <p className="c-panel px-4 py-3 text-[14px] text-alert-ink">{error}</p>}
       {!d && !error && <p className="flex items-center gap-2 text-[14px] text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</p>}
@@ -65,7 +65,7 @@ export default function PeopleOverview() {
               )}
             </Panel>
 
-            <Panel title="Needs HR" icon={ClipboardX}>
+            <Panel title="Needs Operations" icon={ClipboardX}>
               <ul className="divide-y divide-line text-[14px]">
                 <Row icon={Hourglass} label="Probation ending in the next 30 days" people={d.probation_ending.map((p) => `${p.name} (${day(p.date)})`)} href="/admin/probation" />
                 <Row icon={FileClock} label="Contracts ending in the next 60 days" people={d.contracts_ending.map((p) => `${p.name} (${day(p.date)})`)} href="/admin/people/employees" />

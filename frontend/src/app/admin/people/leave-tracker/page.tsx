@@ -2,8 +2,8 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Loader2, Search, Download, FileText, ChevronDown, ChevronRight, CalendarRange } from "lucide-react";
-import { apiAdmin, downloadCsv, downloadFile } from "@/lib/auth";
+import { Loader2, Search, Download, FileText, ChevronDown, ChevronRight, CalendarRange, Plus, X, Save, Trash2 } from "lucide-react";
+import { apiAdmin, auth, downloadCsv, downloadFile } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/admin-ui";
 import { personColour } from "@/components/people/LeaveCalendar";
 
@@ -21,7 +21,7 @@ type Row = {
   annual_left: number; current: Span; next: Span;
 };
 type Data = { year: number; rows: Row[]; departments: Record<string, string>; types: string[] };
-type Req = { id: number; type: string; start_date: string; end_date: string; working_days: number; status: string; reason: string | null; awaiting: string[]; approvals: { label: string; by: string | null; decision: string }[] };
+type Req = { id: number; type: string; start_date: string; end_date: string; working_days: number; status: string; reason: string | null; awaiting: string[]; approvals: { label: string; by: string | null; decision: string }[]; recorded_by: string | null };
 
 const TYPE_LABEL: Record<string, string> = { annual: "Annual", sick: "Sick", unpaid: "Unpaid", compassionate: "Compassionate", maternity: "Maternity" };
 const STATUS_TONE: Record<string, string> = { approved: "ok", pending: "gold", declined: "red", cancelled: "muted" };
@@ -37,6 +37,8 @@ export default function LeaveTrackerPage() {
   const [dept, setDept] = useState("");
   const [only, setOnly] = useState<"" | "away" | "pending" | "low">("");
   const [open, setOpen] = useState<number | null>(null);
+  const [recording, setRecording] = useState<number | "pick" | null>(null);
+  const [version, setVersion] = useState(0); // bumps to reload an open history after a change
 
   const load = useCallback(async () => {
     setError(""); setData(null);
@@ -72,9 +74,15 @@ export default function LeaveTrackerPage() {
         actions={<>
           <Link href="/admin/people/calendar" className="c-btn"><CalendarRange className="w-4 h-4" />Calendar</Link>
           <button className="c-btn" onClick={blankForm}><FileText className="w-4 h-4" />Blank leave form</button>
-          <button className="c-btn c-btn-primary" onClick={() => downloadCsv(`/admin/people/leave-tracker/export?year=${year}`, `leave-tracker-${year}.csv`)}><Download className="w-4 h-4" />Export</button>
+          <button className="c-btn" onClick={() => downloadCsv(`/admin/people/leave-tracker/export?year=${year}`, `leave-tracker-${year}.csv`)}><Download className="w-4 h-4" />Export</button>
+          <button className="c-btn c-btn-primary" onClick={() => setRecording("pick")}><Plus className="w-4 h-4" />Record leave already taken</button>
         </>}
       />
+
+      {recording !== null && data && (
+        <RecordForm people={data.rows} initial={recording === "pick" ? null : recording} onClose={() => setRecording(null)}
+          onSaved={(userId) => { setRecording(null); setOpen(userId); setVersion((v) => v + 1); load(); }} />
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
         <Tile label="Staff tracked" value={totals.staff} />
@@ -162,7 +170,10 @@ export default function LeaveTrackerPage() {
                           </button>
                         </td>
                       </tr>
-                      {isOpen && <tr><td colSpan={10} style={{ background: "var(--o-surface-2)" }}><History userId={r.id} year={year} /></td></tr>}
+                      {isOpen && <tr><td colSpan={10} style={{ background: "var(--o-surface-2)" }}>
+                        <History key={version} userId={r.id} year={year} onChanged={() => { setVersion((v) => v + 1); load(); }} />
+                        <button className="c-btn mt-2" onClick={() => setRecording(r.id)}><Plus className="w-4 h-4" />Record leave {r.name.split(" ")[0]} already took</button>
+                      </td></tr>}
                     </Fragment>
                   );
                 })}
@@ -172,6 +183,7 @@ export default function LeaveTrackerPage() {
         )}
       <p className="mt-3 text-[12.5px] text-ink-muted">
         &ldquo;Annual left&rdquo; counts approved days and days still awaiting signatures, so it matches what the person sees when they apply. Weekends and Uganda public holidays are never counted.
+        Leave taken before the system (on paper) is entered with <b>Record leave already taken</b>, so each person&rsquo;s balance is right; they see it in My leave, marked &ldquo;Recorded by Operations&rdquo;.
       </p>
     </div>
   );
@@ -193,7 +205,7 @@ function Tile({ label, value, onClick, active }: { label: string; value: number;
 }
 
 /* One person's requests that year, with where each one has got to. */
-function History({ userId, year }: { userId: number; year: number }) {
+function History({ userId, year, onChanged }: { userId: number; year: number; onChanged: () => void }) {
   const [list, setList] = useState<Req[] | null>(null);
   useEffect(() => {
     apiAdmin<{ data: Req[] }>(`/admin/leave?user_id=${userId}&year=${year}`).then((r) => setList(r.data)).catch(() => setList([]));
@@ -210,17 +222,97 @@ function History({ userId, year }: { userId: number; year: number }) {
             <td className="py-2 pr-3 whitespace-nowrap font-medium text-ink">{short(l.start_date)} – {short(l.end_date)}</td>
             <td className="py-2 pr-3">{TYPE_LABEL[l.type] ?? l.type}</td>
             <td className="py-2 pr-3 tabular-nums">{l.working_days} day{l.working_days === 1 ? "" : "s"}</td>
-            <td className="py-2 pr-3"><span className="c-chip" data-tone={STATUS_TONE[l.status] ?? "muted"}>{l.status}</span></td>
+            <td className="py-2 pr-3 whitespace-nowrap"><span className="c-chip" data-tone={STATUS_TONE[l.status] ?? "muted"}>{l.status}</span>{l.recorded_by && <span className="c-chip ml-1.5" data-tone="muted" title={`Entered by ${l.recorded_by}`}>Recorded</span>}</td>
             <td className="py-2 pr-3 text-ink-muted">
-              {l.status === "pending" && l.awaiting.length ? `Awaiting ${l.awaiting.join(" + ")}` : l.approvals.map((a) => `${a.label}: ${a.by ?? "—"}`).join(" · ")}
+              {l.recorded_by ? `Taken before the system, recorded by ${l.recorded_by}` : l.status === "pending" && l.awaiting.length ? `Awaiting ${l.awaiting.join(" + ")}` : l.approvals.map((a) => `${a.label}: ${a.by ?? "—"}`).join(" · ")}
               {l.reason ? <span className="block truncate max-w-[22rem]">{l.reason}</span> : null}
             </td>
             <td className="py-2 text-right">
-              <button className="c-btn c-btn-ghost" onClick={() => downloadFile(`/admin/leave/${l.id}/form`, `leave-form-${l.id}.pdf`).catch(() => {})}><FileText className="w-4 h-4" />Form</button>
+              <span className="inline-flex gap-1">
+                <button className="c-btn c-btn-ghost" onClick={() => downloadFile(`/admin/leave/${l.id}/form`, `leave-form-${l.id}.pdf`).catch(() => {})}><FileText className="w-4 h-4" />Form</button>
+                {l.recorded_by && (
+                  <button className="c-btn c-btn-ghost" title="Remove this entry (entered by mistake)" onClick={async () => {
+                    if (!window.confirm(`Remove the recorded leave ${short(l.start_date)} – ${short(l.end_date)}? The days go back on the balance.`)) return;
+                    try { await apiAdmin(`/admin/people/leave-record/${l.id}`, { method: "DELETE" }); onChanged(); } catch { /* */ }
+                  }}><Trash2 className="w-4 h-4" />Remove</button>
+                )}
+              </span>
             </td>
           </tr>
         ))}
       </tbody>
     </table>
+  );
+}
+
+/* Operations enters leave someone already took on paper, before the system.
+   It counts as approved at once, so only leave that has started can be
+   entered; leave still to come is applied for and signed in the normal way. */
+function RecordForm({ people, initial, onClose, onSaved }: { people: Row[]; initial: number | null; onClose: () => void; onSaved: (userId: number) => void }) {
+  const meId = auth.getUser()?.id;
+  const today = new Date().toISOString().slice(0, 10);
+  const [f, setF] = useState({ user_id: initial ? String(initial) : "", type: "annual", start_date: "", end_date: "", working_days: "", note: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState("");
+
+  const save = async (another: boolean) => {
+    setBusy(true); setError(""); setDone("");
+    try {
+      const res = await apiAdmin<{ data: { working_days: number } }>("/admin/people/leave-record", { method: "POST", body: JSON.stringify({
+        user_id: Number(f.user_id), type: f.type, start_date: f.start_date, end_date: f.end_date || f.start_date,
+        working_days: f.working_days ? Number(f.working_days) : null, note: f.note || null,
+      }) });
+      const who = people.find((p) => String(p.id) === f.user_id)?.name ?? "";
+      if (another) {
+        setDone(`Recorded ${res.data.working_days} day${res.data.working_days === 1 ? "" : "s"} for ${who}.`);
+        setF({ ...f, start_date: "", end_date: "", working_days: "", note: "" });
+      } else onSaved(Number(f.user_id));
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not record"); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <section className="c-panel p-5 mt-5 space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-[15px] font-semibold text-ink">Record leave already taken</h3>
+          <p className="text-[13px] text-ink-muted">For leave agreed on paper before the system, so the balance is right. It counts as approved straight away.</p>
+        </div>
+        <button className="c-btn c-btn-ghost" onClick={onClose} aria-label="Close"><X className="w-4 h-4" /></button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label className="block"><span className="block text-[13px] text-ink-muted mb-1">Employee</span>
+          <select className="c-select w-full" value={f.user_id} onChange={(e) => setF({ ...f, user_id: e.target.value })}>
+            <option value="">Choose…</option>
+            {people.filter((p) => p.id !== meId).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </label>
+        <label className="block"><span className="block text-[13px] text-ink-muted mb-1">Type</span>
+          <select className="c-select w-full" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>
+            {Object.entries(TYPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        </label>
+        <label className="block"><span className="block text-[13px] text-ink-muted mb-1">Working days (optional)</span>
+          <input type="number" min={1} max={120} className="c-input w-full" placeholder="Counted from the dates" value={f.working_days} onChange={(e) => setF({ ...f, working_days: e.target.value })} />
+        </label>
+        <label className="block"><span className="block text-[13px] text-ink-muted mb-1">First day</span>
+          <input type="date" max={today} className="c-input w-full" value={f.start_date} onChange={(e) => setF({ ...f, start_date: e.target.value })} />
+        </label>
+        <label className="block"><span className="block text-[13px] text-ink-muted mb-1">Last day</span>
+          <input type="date" min={f.start_date || undefined} className="c-input w-full" value={f.end_date} onChange={(e) => setF({ ...f, end_date: e.target.value })} />
+        </label>
+        <label className="block"><span className="block text-[13px] text-ink-muted mb-1">Note (optional)</span>
+          <input className="c-input w-full" maxLength={2000} placeholder="e.g. paper form signed 3 March" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
+        </label>
+      </div>
+      <p className="text-[12.5px] text-ink-muted">Working days are counted without weekends and Uganda public holidays. Type the number only if the days actually taken were different. You cannot record your own leave: a colleague in Operations does that.</p>
+      {error && <p className="text-[13px] text-alert-ink">{error}</p>}
+      {done && <p className="text-[13px]" style={{ color: "var(--o-success)" }}>{done}</p>}
+      <div className="flex flex-wrap gap-2">
+        <button className="c-btn c-btn-primary" disabled={busy || !f.user_id || !f.start_date} onClick={() => save(false)}>{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Record</button>
+        <button className="c-btn" disabled={busy || !f.user_id || !f.start_date} onClick={() => save(true)}>Record and add another</button>
+      </div>
+    </section>
   );
 }

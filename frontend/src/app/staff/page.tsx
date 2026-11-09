@@ -57,7 +57,7 @@ export default function StaffDashboard() {
             <TeamsChatButton email={me.supervisor.teams_email} name={me.supervisor.name} />
           </div>
         ) : (
-          <p className="text-sm" style={{ color: "var(--o-faint)" }}>No supervisor assigned yet. HR will set this up.</p>
+          <p className="text-sm" style={{ color: "var(--o-faint)" }}>No supervisor assigned yet. Operations will set this up.</p>
         )}
       </Card>
 
@@ -68,13 +68,13 @@ export default function StaffDashboard() {
       <Card title="Your role & responsibilities">
         {me.job_description
           ? <p className="text-sm whitespace-pre-line" style={{ color: "var(--o-text-2)", lineHeight: 1.7 }}>{me.job_description}</p>
-          : <p className="text-sm" style={{ color: "var(--o-faint)" }}>Your job description will appear here once HR adds it.</p>}
+          : <p className="text-sm" style={{ color: "var(--o-faint)" }}>Your job description will appear here once Operations adds it.</p>}
       </Card>
 
       {/* Quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
         <QuickLink href={staffPath("/staff/calendar")} icon={CalendarDays} label="Team calendar" sub="Who is away, and when" />
-        <QuickLink href={staffPath("/staff/documents")} icon={FileText} label="My documents" sub="Contract & HR files" />
+        <QuickLink href={staffPath("/staff/documents")} icon={FileText} label="My documents" sub="Contract & staff files" />
         {me.is_supervisor && <QuickLink href={staffPath("/staff/team")} icon={Users} label="My team" sub="Your direct reports" />}
         <QuickLink href={staffPath("/staff/profile")} icon={ShieldCheck} label="Profile & security" sub="Contact details, password" />
       </div>

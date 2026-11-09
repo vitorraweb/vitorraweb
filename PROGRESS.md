@@ -2151,11 +2151,13 @@ Operations asked for three things. All three are built.
   - A legend of names: click one to pick that person out.
   - Requests still awaiting signatures are shown dashed or striped. HR also sees the leave type as a letter.
   - There are 12 colours. Up to 12 current staff each get their own; past that, colours repeat.
+- **Leave already taken on paper** (added the same day, Operations' request): **Record leave already taken** on the tracker (or under a person's history) lets Operations enter it: employee, type, dates, and the days if they differ from the count (weekends and holidays excluded). It counts as approved straight away and comes off the balance; the employee sees it in My leave marked "Recorded by Operations" and cannot cancel it. Only leave that has started can be recorded (future leave is applied for and signed as normal), overlaps are refused, nobody records their own, a mistaken entry can be removed, and every entry and removal is in the activity log. "Record and add another" makes entering a backlog quick. ⚠ **Operations should enter this year's paper leave for everyone before staff are told**, or balances will show too many days left.
+- **No HR department:** Operations manages staff, so the screens staff read now say Operations where they said HR (people overview, staff home, documents, profile, emergency contact, the leave form).
 - **Announcements can be emailed:** People → Announcements has a new tick box, "Also email it to all staff" (or to the chosen department), with a link to each person's portal. The console asks for confirmation before sending. `php artisan announcements:email {id} [--to=address]` sends an existing one, and `--to` is for a test.
 
-**Server:** `git pull`, `config:cache`, `route:cache`. No migration.
+**Server:** `git pull`, `migrate --force` (`2026_11_09_000001`, `recorded_by` on leave), `config:cache`, `route:cache`.
 
-> Technical detail (engineering): `PeopleController::tracker`/`trackerExport`/`colours()` (index among active staff by id, mod 12; `colour` on calendar rows), `LeaveFormController` + `documents/leave-form.blade.php`, `LeaveController::all` takes `user_id`/`year`, `StaffAnnouncement` mail + `announcements:email`; frontend `app/admin/people/leave-tracker`, `components/people/LeaveCalendar.tsx` (`personColour`, `MonthGrid`), `--o-person-0…11` tokens (light + dark). Tests: `LeaveTrackerTest` (6). **645 backend tests passing.**
+> Technical detail (engineering): `LeaveController::record`/`unrecord` (`POST`/`DELETE /admin/people/leave-record`), `PeopleController::tracker`/`trackerExport`/`colours()` (index among active staff by id, mod 12; `colour` on calendar rows), `LeaveFormController` + `documents/leave-form.blade.php`, `LeaveController::all` takes `user_id`/`year`, `StaffAnnouncement` mail + `announcements:email`; frontend `app/admin/people/leave-tracker`, `components/people/LeaveCalendar.tsx` (`personColour`, `MonthGrid`), `--o-person-0…11` tokens (light + dark). Tests: `LeaveTrackerTest` (8). **647 backend tests passing.**
 
 ---
 

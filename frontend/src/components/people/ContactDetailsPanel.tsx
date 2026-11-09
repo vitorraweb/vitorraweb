@@ -45,7 +45,7 @@ export function ContactDetailsPanel() {
         <PhoneCall className="w-4 h-4" style={{ color: "#C5B27A" }} />
         <h3 className="text-sm font-bold uppercase tracking-[0.08em]" style={{ color: "var(--o-text)" }}>Contact details</h3>
       </div>
-      <p className="text-xs mb-5" style={{ color: "var(--o-faint)" }}>Who we should call if something happens to you at work. Only HR can see this.</p>
+      <p className="text-xs mb-5" style={{ color: "var(--o-faint)" }}>Who we should call if something happens to you at work. Only Operations can see this.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <label className="block sm:col-span-2">{label("Your phone")}<input className={input} style={style} value={form.phone} onChange={set("phone")} inputMode="tel" autoComplete="tel" /></label>
         <label className="block">{label("Emergency contact")}<input className={input} style={style} value={form.emergency_contact_name} onChange={set("emergency_contact_name")} placeholder="Full name" /></label>

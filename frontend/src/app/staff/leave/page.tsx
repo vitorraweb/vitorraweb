@@ -14,6 +14,7 @@ type Leave = {
   approvals: { stage: string; label: string; by: string | null; decision: string; at: string | null }[];
   awaiting: string[];
   can_decide: boolean;
+  recorded_by?: string | null;
 };
 type Balance = { entitlement: number; used: number; remaining: number; year: number };
 
@@ -225,6 +226,7 @@ export default function StaffLeavePage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-semibold" style={{ color: "var(--o-text)" }}>{TYPE_LABEL[l.type] ?? l.type}</span>
                     <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: sc.bg, color: sc.fg }}>{l.status}</span>
+                    {l.recorded_by && <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>Recorded by Operations</span>}
                   </div>
                   <p className="text-xs mt-0.5" style={{ color: "var(--o-faint)" }}>{fmt(l.start_date)} → {fmt(l.end_date)} · {l.working_days} day{l.working_days === 1 ? "" : "s"}</p>
                   {l.review_comment && <p className="text-xs mt-1" style={{ color: "var(--o-muted)" }}>Note: {l.review_comment}</p>}
@@ -240,7 +242,7 @@ export default function StaffLeavePage() {
                 {l.status !== "cancelled" && (
                   <button onClick={() => downloadStaffFile(`/staff/leave/${l.id}/form`, `leave-form-${l.id}.pdf`).catch(() => {})} title="This request on the printable leave form" className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full shrink-0" style={{ background: "var(--o-surface-2)", color: "var(--o-text-2)" }}><FileText className="w-3.5 h-3.5" />Form</button>
                 )}
-                {(l.status === "pending" || l.status === "approved") && (
+                {(l.status === "pending" || (l.status === "approved" && !l.recorded_by)) && (
                   <button onClick={() => cancel(l.id)} className="text-xs font-semibold px-3 py-1.5 rounded-full shrink-0" style={{ background: "var(--o-surface-2)", color: "var(--o-muted)" }}>Cancel</button>
                 )}
               </div>

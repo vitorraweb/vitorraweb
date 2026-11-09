@@ -69,7 +69,7 @@ export default function StaffProfilePage() {
               {user.role}
             </span>
           </div>
-          <p className="text-xs mt-4" style={{ color: "var(--o-faint)" }}>To change your name, role, or department, contact HR.</p>
+          <p className="text-xs mt-4" style={{ color: "var(--o-faint)" }}>To change your name, role, or department, contact Operations.</p>
         </div>
       )}
 

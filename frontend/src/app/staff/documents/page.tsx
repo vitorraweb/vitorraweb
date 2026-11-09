@@ -30,12 +30,12 @@ export default function StaffDocuments() {
   return (
     <div className="max-w-2xl pb-12">
       <h2 className="mb-1" style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: "24px", fontWeight: 700, color: "var(--o-text)" }}>My documents</h2>
-      <p className="text-sm mb-6" style={{ color: "var(--o-faint)" }}>Your employment contract and HR files. These are private to you, your supervisor, and HR.</p>
+      <p className="text-sm mb-6" style={{ color: "var(--o-faint)" }}>Your employment contract and staff files. These are private to you, your supervisor, and Operations.</p>
 
       {docs.length === 0 ? (
         <div className="bg-white rounded-[20px] border border-black/[0.06] p-8 text-center">
           <FileText className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--o-line-strong)" }} />
-          <p className="text-sm" style={{ color: "var(--o-faint)" }}>No documents yet. HR will upload your contract and any HR files here.</p>
+          <p className="text-sm" style={{ color: "var(--o-faint)" }}>No documents yet. Operations will upload your contract and any staff files here.</p>
         </div>
       ) : (
         <div className="space-y-2.5">
