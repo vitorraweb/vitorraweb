@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -30,7 +30,9 @@ const telAlt = `tel:${CONTACT_PHONE_ALT.replace(/\s+/g, "")}`;
 const wa = `https://wa.me/${CONTACT_PHONE.replace(/[^0-9]/g, "")}`;
 const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(CONTACT_ADDRESS.join(", "))}&output=embed`;
 
-export default async function ContactPage() {
+export default async function ContactPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the page is built ahead and cached.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("contact");
   const alt = await getTranslations("imageAlt");
 

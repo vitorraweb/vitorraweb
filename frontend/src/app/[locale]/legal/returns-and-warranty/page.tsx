@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import { LegalPage, Section, P, Ul } from "@/components/ui/legal-page";
 import { CONTACT_EMAIL } from "@/lib/constants";
@@ -18,7 +18,9 @@ const mailLink = () => (
   <a href={`mailto:${CONTACT_EMAIL}`} className="q-inline-link">{CONTACT_EMAIL}</a>
 );
 
-export default async function ReturnsPage() {
+export default async function ReturnsPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the page is built ahead and cached.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("legal.returns");
   return (
     <LegalPage title={t("title")} updated={t("updated")}>

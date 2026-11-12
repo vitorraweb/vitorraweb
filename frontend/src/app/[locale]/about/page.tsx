@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -32,7 +32,9 @@ export async function generateMetadata({
   return { title: t("title"), description: t("description"), alternates: localeAlternates(locale, "/about") };
 }
 
-export default async function AboutPage() {
+export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the page is built ahead and cached.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("aboutQA");
   const home = await getTranslations("homeQA");
   const alt = await getTranslations("imageAlt");

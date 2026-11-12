@@ -45,6 +45,8 @@ const nextConfig: NextConfig = {
   // React <ViewTransition>: page-to-page and shared-element transitions.
   experimental: {
     viewTransition: true,
+    // app/global-not-found.tsx: the site has two root layouts (public, internal).
+    globalNotFound: true,
   },
   turbopack: {
     root: path.resolve(__dirname),

@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/constants";
 import { TEAMS_SIGNED_OUT, enableTeamsTabTransport } from "@/lib/http";
 import { initTeams, looksLikeTeamsHost, openTeamsLink } from "@/lib/teams";
-import AdminOverview from "@/app/admin/overview/page";
+import AdminOverview from "@/app/(internal)/admin/overview/page";
 
 /* ─── The Vitorra dashboard as a personal tab in Microsoft Teams ──────────────
    Sign-in: Teams hands us a Microsoft Entra token for the signed-in person

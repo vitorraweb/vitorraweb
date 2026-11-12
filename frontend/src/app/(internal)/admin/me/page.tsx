@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/admin/admin-ui";
-import StaffDashboard from "@/app/staff/page";
+import StaffDashboard from "@/app/(internal)/staff/page";
 
 /* My work — the staff portal's self-service, inside the console, on the
    console session. Leadership, Operations and Finance never need the

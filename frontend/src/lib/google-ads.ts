@@ -19,8 +19,16 @@ import { capture } from "@/lib/posthog";
    ─────────────────────────────────────────────────────────────────────────── */
 
 /** The site's Google tag id. Empty disables the tag entirely (e.g. local dev). */
+/* Only a real tag ID (AW-…) is accepted. In November 2026 production had the
+   Ads *account number* (461-144-6086) in NEXT_PUBLIC_GOOGLE_ADS_ID: Google
+   answers that with an empty tag, so no visit or conversion reached Ads.
+   Anything that isn't AW-digits now falls back to Vitorra's tag. */
+const DEFAULT_ADS_ID = "AW-18227983736";
+const configuredAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID?.trim();
 export const GOOGLE_ADS_ID =
-  process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? (process.env.NODE_ENV === "production" ? "AW-18227983736" : "");
+  configuredAdsId && /^AW-\d+$/.test(configuredAdsId)
+    ? configuredAdsId
+    : process.env.NODE_ENV === "production" ? DEFAULT_ADS_ID : "";
 
 export type ConversionKind = "enquiry" | "contact" | "reserve" | "newsletter" | "call" | "pack";
 

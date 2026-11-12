@@ -1,11 +1,15 @@
+import { use } from "react";
 import { useTranslations } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { LegalNav } from "@/components/ui/legal-nav";
 
 /* Legal pages — Quiet Authority. A side menu of the four documents and a calm
    reading column. */
-export default function LegalLayout({ children }: { children: React.ReactNode }) {
+export default function LegalLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the legal pages are built ahead and cached.
+  setRequestLocale(use(params).locale);
   const t = useTranslations("footer");
   const links = [
     { label: t("privacy"), href: "/legal/privacy-policy" },

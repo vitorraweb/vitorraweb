@@ -43,7 +43,8 @@ export function startPostHog(): Promise<PostHog | null> {
       defaults: "2025-05-24",               // page views on every App Router navigation, page-leave events
       persistence: accepted ? "localStorage+cookie" : "memory",
       disable_session_recording: !accepted,
-      person_profiles: "identified_only",   // we never identify visitors, so no person profiles are created
+      person_profiles: "identified_only",
+      disable_surveys: true,                // no surveys are run; saves a 33 KB script on every page   // we never identify visitors, so no person profiles are created
       session_recording: { maskAllInputs: true, maskTextSelector: "[data-ph-mask]" },
       // Belt and braces: drop anything captured while on a staff screen.
       before_send: (event) => (onPublicPage() ? event : null),

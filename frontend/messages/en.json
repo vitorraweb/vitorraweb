@@ -81,16 +81,16 @@
       "description": "Vitorra is a diversified company providing Fuel Eco Tech, logistics, SEAL Wound Spray, and premium Ugandan coffee across Uganda and East Africa."
     },
     "about": {
-      "title": "About | Vitorra Holdings Limited",
-      "description": "Vitorra Holdings Limited is a diversified holdings company built in Uganda, operating across fuel technology, healthcare, premium coffee, and logistics. Meet our leadership team and learn what drives us."
+      "title": "About",
+      "description": "Vitorra Holdings Limited is a diversified holdings company built in Uganda, operating across fuel technology, healthcare, premium coffee and logistics. Registered in Uganda and run from Kampala."
     },
     "contact": {
-      "title": "Contact Us | Vitorra Holdings Limited",
+      "title": "Contact Us",
       "description": "Get in touch with Vitorra Holdings Limited in Kampala, Uganda. Email support@vitorra.org, call +256 740 026 294, or send us a message. We reply within 24 hours."
     },
     "fet": {
       "title": "Fuel Eco Tech | Proven Fuel Savings for Fleets",
-      "description": "Fuel Eco Tech is validated fuel-saving technology for commercial fleets across East Africa: lower fuel costs, extended engine life, and reduced emissions. Request a fuel savings assessment."
+      "description": "Fuel Eco Tech cuts fuel costs for commercial fleets across East Africa: 13.9% less fuel in an independent field test, prices from UGX 1,891,000 installed. Book a free fuel assessment."
     },
     "seal": {
       "title": "SEAL Wound Spray | FDA-Cleared Hemostatic Bleeding Control",
@@ -98,18 +98,18 @@
     },
     "coffee": {
       "title": "Vitorra Coffee | Premium Single-Origin Ugandan Coffee",
-      "description": "Vitorra Coffee: traceable, single-origin 100% Arabica from Mount Elgon, Uganda. Shop retail, stock your business wholesale, or source at export volumes."
+      "description": "Vitorra Coffee: traceable, single-origin 100% Arabica from Mount Elgon, Uganda. Stock your business wholesale, or source at export volumes from one metric tonne. Request a quote."
     },
     "logistics": {
       "title": "Logistics Services | Freight, Warehousing & Supply Chain",
       "description": "Vitorra Logistics: end-to-end freight, shipping & freight forwarding, warehousing, customs clearance, and supply chain management across Uganda and East Africa. Request a logistics quote."
     },
     "enquire": {
-      "title": "Request a Quote | Vitorra Holdings Limited",
+      "title": "Request a Quote",
       "description": "Request a quote or enquiry from Vitorra Holdings: Fuel Eco Tech, SEAL wound spray, premium Ugandan coffee, or logistics. Our team replies within 24 hours."
     },
     "trust": {
-      "title": "Certifications & Trust | Vitorra Holdings Limited",
+      "title": "Certifications & Trust",
       "description": "Vitorra Holdings is a registered Ugandan company (URSB). Every product line is backed by certification, validation, or documentation, available on request."
     },
     "shop": {
@@ -121,30 +121,30 @@
       "description": "Our single-origin GOLD retail store is launching soon. Wholesale and export buyers can order today, enquire for pricing and volumes."
     },
     "legalPrivacy": {
-      "title": "Privacy Policy | Vitorra Holdings Limited",
+      "title": "Privacy Policy",
       "description": "How Vitorra Holdings Limited collects, uses, and protects your personal information."
     },
     "legalTerms": {
-      "title": "Terms & Conditions | Vitorra Holdings Limited",
+      "title": "Terms & Conditions",
       "description": "The terms governing use of the Vitorra Holdings website and purchase of Vitorra products."
     },
     "legalReturns": {
-      "title": "Returns & Warranty | Vitorra Holdings Limited",
+      "title": "Returns & Warranty",
       "description": "Vitorra Holdings returns, refund, and warranty policy for Coffee Shop orders and B2B products."
     },
     "legalCookies": {
-      "title": "Cookie Policy | Vitorra Holdings Limited",
+      "title": "Cookie Policy",
       "description": "How Vitorra Holdings uses cookies and how to manage your preferences."
     },
     "blog": {
-      "title": "Blog & Insights | Vitorra Holdings Limited",
+      "title": "Blog & Insights",
       "description": "Insights, updates, and stories from Vitorra Holdings: fuel technology, healthcare, premium Ugandan coffee, and logistics across East Africa."
     },
     "article": {
-      "title": "Article | Vitorra Holdings"
+      "title": "Article"
     },
     "careers": {
-      "title": "Careers | Vitorra Holdings Limited",
+      "title": "Careers",
       "description": "Join Vitorra Holdings: careers across fuel technology, healthcare, premium coffee, and logistics in Kampala, Uganda. Send a general application or ask about open roles."
     },
     "fetCatalogue": {
@@ -188,7 +188,7 @@
     "step3Title": "Measured results",
     "step3Body": "We establish your baseline consumption, then track the difference after fitting, giving you a clear, data-backed return on investment.",
     "finding1": "No further limp-mode incidents across the entire test period",
-    "finding2": "EGR and DPF blockages eliminated completely after installation",
+    "finding2": "No further EGR or DPF blockages after installation",
     "finding3": "Smoother, more stable engine behaviour throughout",
     "noMod1Title": "No engine changes",
     "noMod1Body": "FET works exclusively on fuel preparation and swirling. It does not intervene in the combustion engine, control electronics, or exhaust aftertreatment system.",
@@ -374,7 +374,7 @@
     "v1Spec4": "36-month shelf life",
     "v1Spec5": "Room-temperature storage",
     "v2Tagline": "Professional & tactical",
-    "v2Body": "A patented, higher-velocity formula for first responders and tactical teams, rapid control of moderate to severe external hemorrhage.",
+    "v2Body": "A higher-velocity formula for first responders and tactical teams, rapid control of moderate to severe external hemorrhage.",
     "v2Spec1": "2.5oz aerosol can",
     "v2Spec2": "~80 PSI professional grade",
     "v2Spec3": "Single-use",
@@ -450,7 +450,7 @@
     "spec4Key": "Process",
     "spec4Value": "Washed & Sun Dried",
     "spec5Key": "Format",
-    "spec5Value": "Roasted whole beans · bulk or 250g retail",
+    "spec5Value": "Roasted whole beans · bulk",
     "ftcStep1Title": "Grown",
     "ftcStep1Body": "Hand-tended on highland farms around Mount Elgon, Uganda.",
     "ftcStep2Title": "Processed",
@@ -911,6 +911,11 @@
     "sending": "Sending…",
     "successTitle": "Enquiry received.",
     "successBody": "Thank you, {name}. Our team will reply to {email} within 24 hours.",
+    "errPhoneRequired": "Add a phone number so we can call or WhatsApp you.",
+    "errPhoneInvalid": "Check the phone number, with the country code, e.g. +256 7XX XXX XXX.",
+    "phonePlaceholder": "+256 7XX XXX XXX",
+    "successBodyWhatsApp": "Thank you, {name}. Our team will message you on WhatsApp at {phone} within 24 hours.",
+    "successBodyCall": "Thank you, {name}. Our team will call you on {phone} within 24 hours.",
     "successTrack": "Want to follow its progress? Create an account to track this enquiry's status and access your documents in one place.",
     "backHome": "Back to home",
     "createAccount": "Create an account",
@@ -1471,7 +1476,7 @@
     "rangeLabel": "The range",
     "trustLabel": "What stands behind it",
     "regTitle": "Regulatory status",
-    "regBody": "SEAL is cleared by the US Food and Drug Administration through the 510(k) process. Registration with Uganda's National Drug Authority, and with regulators in other markets, is confirmed case by case during procurement. We don't claim a local approval we haven't been given.",
+    "regBody": "SEAL is cleared by the US Food and Drug Administration through the 510(k) process. Registration with Uganda's National Drug Authority is in progress and has not yet been granted; registration in other markets is handled market by market. We don't claim a local approval we haven't been given.",
     "specsLabel": "Specifications",
     "procLabel": "For procurement teams",
     "procTitle": "What we send with every enquiry.",
@@ -1695,7 +1700,7 @@
         "kind": "Medical device clearance",
         "issuer": "US Food and Drug Administration",
         "covers": "SEAL hemostatic wound spray, cleared as substantially equivalent to an established device.",
-        "limits": "A United States clearance. It is not registration with Uganda's National Drug Authority, which is confirmed case by case during procurement."
+        "limits": "A United States clearance. It is not registration with Uganda's National Drug Authority, which is in progress."
       },
       "milstd": {
         "name": "MIL-STD-810H",
@@ -1768,7 +1773,7 @@
     "fet1Q": "What is Fuel Eco Tech?",
     "fet1A": "A device fitted to a vehicle's fuel line, between the pump and the filter, that improves how fuel and air mix before combustion. No engine modification is needed.",
     "fet2Q": "How much fuel does Fuel Eco Tech save?",
-    "fet2A": "In an independent CTI GmbH field test in Germany (November 2025), a VW T5 went from 11.52 to 9.92 litres per 100 km: 13.9% less fuel. Results vary by vehicle, so Vitorra measures your own vehicles before and after fitting.",
+    "fet2A": "In an independent CTI GmbH field test in Germany (report signed November 2025), a VW T5 went from 11.52 to 9.92 litres per 100 km: 13.9% less fuel. Results vary by vehicle, so Vitorra measures your own vehicles before and after fitting.",
     "fet3Q": "How much does Fuel Eco Tech cost in Uganda?",
     "fet3A": "From UGX 1,891,000 for cars and mini-buses to UGX 10,015,000 for heavy trucks, installation included. SUVs and large vans are UGX 3,245,000; light and medium trucks UGX 5,276,000.",
     "fet4Q": "Which vehicles can use Fuel Eco Tech?",
@@ -1778,7 +1783,7 @@
     "seal2Q": "What SEAL formats are there?",
     "seal2A": "SEAL OTC (1.5 oz) for everyday first-aid kits, SEAL PRO (2.5 oz, about 80 PSI) for first responders and tactical teams, and HemoSEAL Pet (2.8 oz) for animal first aid.",
     "seal3Q": "Is SEAL approved in Uganda?",
-    "seal3A": "SEAL's clearance is from the US FDA. Registration with Uganda's National Drug Authority is confirmed case by case during procurement, and Vitorra shares the regulatory documents on enquiry.",
+    "seal3A": "SEAL's clearance is from the US FDA. Registration with Uganda's National Drug Authority is in progress and has not yet been granted. Vitorra shares the full regulatory documents on enquiry.",
     "seal4Q": "Does SEAL replace a tourniquet?",
     "seal4A": "No. It is not a tourniquet replacement, but it helps where a tourniquet can't be applied, such as the neck, groin or underarm. Each can is single use, keeps 36 months and needs no refrigeration.",
     "coffee1Q": "What coffee does Vitorra supply?",

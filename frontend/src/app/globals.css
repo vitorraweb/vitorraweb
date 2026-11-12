@@ -1668,3 +1668,7 @@
 .vx[data-lite] .vx-sweep { display: none; }
 .vx .vx-fade-in { animation: vx-fade-in 900ms ease-out both; }
 @keyframes vx-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Cookie banner: server-rendered, hidden before first paint once a choice is
+   stored (CONSENT_HEAD_SCRIPT), unless the visitor reopened it from the footer. */
+html[data-consent] [data-cookie-banner]:not([data-open]) { display: none; }

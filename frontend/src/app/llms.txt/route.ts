@@ -37,7 +37,7 @@ ${FET_TIERS.map((t) => `  - ${t.model}: ${t.fits} (${t.segment}) — ${ugx(t.pri
 - Formats: SEAL OTC 1.5 oz (everyday kits), SEAL PRO 2.5 oz, about 80 PSI (first responders, tactical), HemoSEAL Pet 2.8 oz (animal first aid).
 - Single use per patient, 36-month shelf life, room-temperature storage, tested to MIL-STD-810H. Made in the USA.
 - Not a tourniquet replacement.
-- Uganda: registration with the National Drug Authority is confirmed case by case during procurement; Vitorra does not claim a local approval it has not been given. Supplied to organisations on enquiry.
+- Uganda: registration with the National Drug Authority is in progress and has not yet been granted; Vitorra does not claim a local approval it has not been given. Supplied to organisations on enquiry.
 - Details: ${SITE_URL}/products/seal-wound-spray
 
 ## Vitorra Coffee

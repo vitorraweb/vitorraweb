@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/admin/admin-ui";
-import StaffLeave from "@/app/staff/leave/page";
+import StaffLeave from "@/app/(internal)/staff/leave/page";
 
 export default function Page() {
   return (

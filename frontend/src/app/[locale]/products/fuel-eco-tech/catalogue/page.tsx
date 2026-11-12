@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Download } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -42,7 +42,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 const ENQUIRE = "/enquire?sector=FET";
 
-export default async function FetCataloguePage() {
+export default async function FetCataloguePage({ params }: { params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the page is built ahead and cached.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("fetCatalogue");
   const tt = await getTranslations("fetTiers");
   const tr = await getTranslations("fetPricing");

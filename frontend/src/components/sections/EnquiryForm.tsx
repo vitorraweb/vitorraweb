@@ -7,7 +7,7 @@ import { Fuel, HeartPulse, Coffee, Truck, MessageCircle, Check, ArrowRight, Arro
 import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
 import { cn } from "@/lib/utils";
 import type { EnquiryFormData, ProductCategory } from "@/types";
 import { submitEnquiry } from "@/lib/api";
@@ -91,6 +91,9 @@ export default function EnquiryForm({
   const fields = visibleFields(categoryFields, answers);
   const hasSchema = fields.length > 0;
 
+  const contactPref = String(answers.contact_pref ?? "");
+  const wantsPhone = contactPref === "whatsapp" || contactPref === "call";
+
   const validate = (s: number): boolean => {
     const e: Record<string, string> = {};
     if (s === 0 && !category) e.category = t("errChoose");
@@ -103,6 +106,10 @@ export default function EnquiryForm({
     }
     if (s === 2) {
       if (!form.name.trim()) e.name = t("errName");
+      // Asked to be called or sent a WhatsApp: we need a number to do it.
+      const digits = form.phone.replace(/\D/g, "");
+      if (wantsPhone && !digits) e.phone = t("errPhoneRequired");
+      else if (digits && digits.length < 9) e.phone = t("errPhoneInvalid");
       if (!form.email.trim()) e.email = t("errEmailRequired");
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("errEmailInvalid");
     }
@@ -144,7 +151,9 @@ export default function EnquiryForm({
           {t("successTitle")}
         </h2>
         <p className="max-w-sm mx-auto mb-6 t-body text-ink-soft">
-          {t("successBody", { name: form.name.split(" ")[0] || t("fallbackName"), email: form.email })}
+          {wantsPhone && form.phone.trim()
+            ? t(contactPref === "whatsapp" ? "successBodyWhatsApp" : "successBodyCall", { name: form.name.split(" ")[0] || t("fallbackName"), phone: form.phone.trim() })
+            : t("successBody", { name: form.name.split(" ")[0] || t("fallbackName"), email: form.email })}
         </p>
         <p className="max-w-sm mx-auto mb-7 t-small text-ink-muted">
           {t("successTrack")}
@@ -242,15 +251,15 @@ export default function EnquiryForm({
             ))}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label={t("companyLabel")}>
+              <FormField label={t("companyLabel")}>
                 <Input value={form.company} onChange={(e) => set("company", e.target.value)} placeholder={t("optional")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" />
-              </Field>
-              <Field label={t("countryLabel")} required error={errors.country}>
+              </FormField>
+              <FormField label={t("countryLabel")} required error={errors.country}>
                 <Input value={form.country} onChange={(e) => set("country", e.target.value)} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.country} />
-              </Field>
+              </FormField>
             </div>
 
-            <Field
+            <FormField
               label={hasSchema ? t("anythingElse") : t("whatNeed")}
               required={!hasSchema}
               error={errors.message}
@@ -262,7 +271,7 @@ export default function EnquiryForm({
                 className="min-h-28 rounded-edge px-3.5 py-3 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0"
                 aria-invalid={!!errors.message}
               />
-            </Field>
+            </FormField>
           </div>
         )}
 
@@ -271,16 +280,16 @@ export default function EnquiryForm({
             <h3 className="t-h3 text-ink mb-1">
               {t("step2Heading")}
             </h3>
-            <Field label={t("fullName")} required error={errors.name}>
+            <FormField label={t("fullName")} required error={errors.name}>
               <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("namePlaceholder")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.name} />
-            </Field>
+            </FormField>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label={t("email")} required error={errors.email}>
+              <FormField label={t("email")} required error={errors.email}>
                 <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder={t("emailPlaceholder")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.email} />
-              </Field>
-              <Field label={t("phone")}>
-                <Input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder={t("optional")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" />
-              </Field>
+              </FormField>
+              <FormField label={t("phone")} required={wantsPhone} error={errors.phone}>
+                <Input type="tel" autoComplete="tel" inputMode="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder={wantsPhone ? t("phonePlaceholder") : t("optional")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.phone} />
+              </FormField>
             </div>
             <Turnstile ref={turnstileRef} action="enquiry" onVerify={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
             {status === "error" && (
@@ -312,19 +321,6 @@ export default function EnquiryForm({
 
 /* ─── Field wrapper ───────────────────────────────────────────────────────── */
 
-function Field({ label, required, error, help, children }: { label: string; required?: boolean; error?: string; help?: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <Label className="mb-2 t-label text-ink-muted">
-        {label}
-        {required && <span className="text-gold-ink"> *</span>}
-      </Label>
-      {children}
-      {help && !error && <p className="mt-2 t-small text-gold-ink">{help}</p>}
-      {error && <p role="alert" className="mt-2 t-small text-alert-ink">{error}</p>}
-    </div>
-  );
-}
 
 /* ─── Schema-driven field renderer ─────────────────────────────────────────────
    Renders one field from the enquiry schema by type. Single/multi are pill
@@ -345,7 +341,7 @@ function DynamicField({
   onChange: (v: string | string[]) => void;
 }) {
   return (
-    <Field label={field.label} required={field.required} error={error} help={help ?? undefined}>
+    <FormField label={field.label} required={field.required} error={error} help={help ?? undefined}>
       {(field.type === "single" || field.type === "multi") && field.options && (
         <div className="flex flex-wrap gap-2">
           {field.options.map((opt) => {
@@ -406,6 +402,6 @@ function DynamicField({
           aria-invalid={!!error}
         />
       )}
-    </Field>
+    </FormField>
   );
 }

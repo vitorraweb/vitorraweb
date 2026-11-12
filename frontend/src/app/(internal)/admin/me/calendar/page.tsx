@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/admin/admin-ui";
-import StaffCalendar from "@/app/staff/calendar/page";
+import StaffCalendar from "@/app/(internal)/staff/calendar/page";
 
 export default function Page() {
   return (

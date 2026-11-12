@@ -81,16 +81,16 @@
       "description": "Vitorra ni kampuni yenye sekta mbalimbali inayotoa Fuel Eco Tech, usafirishaji, SEAL Wound Spray, na kahawa bora ya Uganda kote Uganda na Afrika Mashariki."
     },
     "about": {
-      "title": "Kuhusu | Vitorra Holdings Limited",
-      "description": "Vitorra Holdings Limited ni kampuni yenye sekta mbalimbali iliyojengwa nchini Uganda, ikifanya kazi katika teknolojia ya mafuta, afya, kahawa bora, na usafirishaji. Kutana na timu yetu ya uongozi na ujue kinachotuendesha."
+      "title": "Kuhusu",
+      "description": "Vitorra Holdings Limited ni kampuni yenye sekta mbalimbali iliyojengwa nchini Uganda, ikifanya kazi katika teknolojia ya mafuta, afya, kahawa bora, na usafirishaji. Imesajiliwa Uganda na inaendeshwa kutoka Kampala."
     },
     "contact": {
-      "title": "Wasiliana Nasi | Vitorra Holdings Limited",
+      "title": "Wasiliana Nasi",
       "description": "Wasiliana na Vitorra Holdings Limited mjini Kampala, Uganda, barua pepe support@vitorra.org, piga simu +256 740 026 294, au tutumie ujumbe. Tunajibu ndani ya saa 24."
     },
     "fet": {
       "title": "Fuel Eco Tech | Uokoaji wa Mafuta Uliothibitishwa kwa Magari",
-      "description": "Fuel Eco Tech ni teknolojia ya kuokoa mafuta iliyothibitishwa kwa magari ya kibiashara kote Afrika Mashariki, gharama ndogo za mafuta, maisha marefu ya injini, na utoaji mdogo wa hewa chafu. Omba tathmini ya uokoaji wa mafuta."
+      "description": "Fuel Eco Tech inapunguza gharama za mafuta kwa magari ya kibiashara kote Afrika Mashariki: mafuta pungufu kwa 13.9% katika jaribio huru, bei kuanzia UGX 1,891,000 pamoja na ufungaji. Weka tathmini ya bure ya mafuta."
     },
     "seal": {
       "title": "SEAL Wound Spray | Udhibiti wa Damu Uliyoidhinishwa na FDA",
@@ -98,18 +98,18 @@
     },
     "coffee": {
       "title": "Vitorra Coffee | Kahawa Bora ya Asili Moja ya Uganda",
-      "description": "Vitorra Coffee, kahawa ya Arabica 100% ya asili moja, inayofuatilika, kutoka Mlima Elgon, Uganda. Nunua rejareja, weka biashara yako kwa jumla, au pata kwa idadi za usafirishaji nje."
+      "description": "Vitorra Coffee, kahawa ya Arabica 100% ya asili moja, inayofuatilika, kutoka Mlima Elgon, Uganda. Weka biashara yako kwa jumla, au pata kwa idadi za usafirishaji nje kuanzia tani moja. Omba nukuu."
     },
     "logistics": {
       "title": "Huduma za Usafirishaji | Mizigo, Uhifadhi Ghalani na Ugavi",
       "description": "Vitorra Logistics, usafirishaji kamili, usafirishaji na uendelezaji wa mizigo, uhifadhi ghalani, uondoshaji forodha, na usimamizi wa ugavi kote Uganda na Afrika Mashariki. Omba nukuu ya usafirishaji."
     },
     "enquire": {
-      "title": "Omba Nukuu | Vitorra Holdings Limited",
+      "title": "Omba Nukuu",
       "description": "Omba nukuu au ombi kutoka Vitorra Holdings, Fuel Eco Tech, SEAL wound spray, kahawa bora ya Uganda, au usafirishaji. Timu yetu hujibu ndani ya saa 24."
     },
     "trust": {
-      "title": "Vyeti na Uaminifu | Vitorra Holdings Limited",
+      "title": "Vyeti na Uaminifu",
       "description": "Vitorra Holdings ni kampuni iliyosajiliwa nchini Uganda (URSB). Kila aina ya bidhaa inaungwa mkono na cheti, uthibitisho, au nyaraka, zinazopatikana unapoomba."
     },
     "shop": {
@@ -121,30 +121,30 @@
       "description": "Duka letu la rejareja la GOLD la asili moja linakuja hivi karibuni. Wanunuzi wa jumla na usafirishaji nje wanaweza kuagiza leo, uliza kuhusu bei na idadi."
     },
     "legalPrivacy": {
-      "title": "Sera ya Faragha | Vitorra Holdings Limited",
+      "title": "Sera ya Faragha",
       "description": "Jinsi Vitorra Holdings Limited inavyokusanya, kutumia, na kulinda taarifa zako binafsi."
     },
     "legalTerms": {
-      "title": "Sheria na Masharti | Vitorra Holdings Limited",
+      "title": "Sheria na Masharti",
       "description": "Sheria zinazoongoza matumizi ya tovuti ya Vitorra Holdings na ununuzi wa bidhaa za Vitorra."
     },
     "legalReturns": {
-      "title": "Marejesho na Dhamana | Vitorra Holdings Limited",
+      "title": "Marejesho na Dhamana",
       "description": "Sera ya marejesho, urejeshaji wa fedha, na dhamana ya Vitorra Holdings kwa maagizo ya Duka la Kahawa na bidhaa za B2B."
     },
     "legalCookies": {
-      "title": "Sera ya Vidakuzi | Vitorra Holdings Limited",
+      "title": "Sera ya Vidakuzi",
       "description": "Jinsi Vitorra Holdings inavyotumia vidakuzi na jinsi ya kusimamia mapendeleo yako."
     },
     "blog": {
-      "title": "Blogu na Maarifa | Vitorra Holdings Limited",
+      "title": "Blogu na Maarifa",
       "description": "Maarifa, masasisho, na hadithi kutoka Vitorra Holdings, teknolojia ya mafuta, afya, kahawa bora ya Uganda, na usafirishaji kote Afrika Mashariki."
     },
     "article": {
-      "title": "Makala | Vitorra Holdings"
+      "title": "Makala"
     },
     "careers": {
-      "title": "Kazi | Vitorra Holdings Limited",
+      "title": "Kazi",
       "description": "Jiunge na Vitorra Holdings: kazi katika teknolojia ya mafuta, afya, kahawa bora, na usafirishaji mjini Kampala, Uganda. Tuma ombi la jumla au uliza kuhusu nafasi zilizopo."
     },
     "fetCatalogue": {
@@ -188,7 +188,7 @@
     "step3Title": "Matokeo yaliyopimwa",
     "step3Body": "Tunaweka kiwango chako cha msingi cha matumizi, kisha tunafuatilia tofauti baada ya kuweka, tukikupa faida ya uwekezaji iliyo wazi na inayoungwa mkono na data.",
     "finding1": "Hakuna matukio zaidi ya hali-ya-kunusurika katika kipindi chote cha majaribio",
-    "finding2": "Vizuizi vya EGR na DPF viliondolewa kabisa baada ya usakinishaji",
+    "finding2": "Hakuna vizuizi vipya vya EGR au DPF baada ya usakinishaji",
     "finding3": "Mwenendo wa injini ulaini na thabiti zaidi katika kipindi chote",
     "noMod1Title": "Hakuna mabadiliko ya injini",
     "noMod1Body": "FET hufanya kazi pekee kwenye uandaaji wa mafuta na kuzungusha. Haiingilii injini ya mwako, elektroniki za udhibiti, au mfumo wa kusafisha moshi.",
@@ -374,7 +374,7 @@
     "v1Spec4": "Maisha ya rafu ya miezi 36",
     "v1Spec5": "Uhifadhi wa joto la kawaida",
     "v2Tagline": "Kitaalamu na mbinu",
-    "v2Body": "Fomula yenye hati miliki, ya kasi ya juu kwa wahudumu wa dharura na timu za mbinu, udhibiti wa haraka wa damu ya wastani hadi nzito ya nje.",
+    "v2Body": "Fomula ya kasi ya juu kwa wahudumu wa dharura na timu za mbinu, udhibiti wa haraka wa damu ya wastani hadi nzito ya nje.",
     "v2Spec1": "Kopo la erosoli la 2.5oz",
     "v2Spec2": "Daraja la kitaalamu ~80 PSI",
     "v2Spec3": "Matumizi ya mara moja",
@@ -450,7 +450,7 @@
     "spec4Key": "Mchakato",
     "spec4Value": "Imeoshwa na Kukaushwa Juani",
     "spec5Key": "Muundo",
-    "spec5Value": "Nafaka nzima zilizokaangwa · kwa wingi au rejareja 250g",
+    "spec5Value": "Nafaka nzima zilizokaangwa · kwa wingi",
     "ftcStep1Title": "Imekuzwa",
     "ftcStep1Body": "Imehudumiwa kwa mkono kwenye mashamba ya nyanda za juu karibu na Mlima Elgon, Uganda.",
     "ftcStep2Title": "Imechakatwa",
@@ -911,6 +911,11 @@
     "sending": "Inatuma…",
     "successTitle": "Ombi limepokelewa.",
     "successBody": "Asante, {name}. Timu yetu itajibu kwa {email} ndani ya saa 24.",
+    "errPhoneRequired": "Weka namba ya simu ili tukupigie au tukutumie WhatsApp.",
+    "errPhoneInvalid": "Hakiki namba ya simu, pamoja na msimbo wa nchi, mf. +256 7XX XXX XXX.",
+    "phonePlaceholder": "+256 7XX XXX XXX",
+    "successBodyWhatsApp": "Asante, {name}. Timu yetu itakutumia ujumbe wa WhatsApp kwa {phone} ndani ya saa 24.",
+    "successBodyCall": "Asante, {name}. Timu yetu itakupigia kwa {phone} ndani ya saa 24.",
     "successTrack": "Unataka kufuatilia maendeleo yake? Fungua akaunti kufuatilia hali ya ombi hili na kupata nyaraka zako mahali pamoja.",
     "backHome": "Rudi nyumbani",
     "createAccount": "Fungua akaunti",
@@ -1471,7 +1476,7 @@
     "rangeLabel": "Aina",
     "trustLabel": "Kinachoiunga mkono",
     "regTitle": "Hali ya udhibiti",
-    "regBody": "SEAL imeidhinishwa na Mamlaka ya Chakula na Dawa ya Marekani kupitia mchakato wa 510(k). Usajili na Mamlaka ya Taifa ya Dawa ya Uganda, na wadhibiti wa masoko mengine, huthibitishwa kwa kila hali wakati wa ununuzi. Hatudai idhini ya ndani ambayo hatujapewa.",
+    "regBody": "SEAL imeidhinishwa na Mamlaka ya Chakula na Dawa ya Marekani kupitia mchakato wa 510(k). Usajili na Mamlaka ya Taifa ya Dawa ya Uganda unaendelea na bado haujatolewa; usajili katika masoko mengine hushughulikiwa soko kwa soko. Hatudai idhini ya ndani ambayo hatujapewa.",
     "specsLabel": "Maelezo",
     "procLabel": "Kwa timu za ununuzi",
     "procTitle": "Tunachotuma kwa kila ombi.",
@@ -1695,7 +1700,7 @@
         "kind": "Idhini ya kifaa cha matibabu",
         "issuer": "Mamlaka ya Chakula na Dawa ya Marekani",
         "covers": "Dawa ya kunyunyiza ya SEAL, iliyoidhinishwa kuwa sawa kimsingi na kifaa kilichopo.",
-        "limits": "Ni idhini ya Marekani. Si usajili na Mamlaka ya Taifa ya Dawa ya Uganda, unaothibitishwa kwa kila hali wakati wa ununuzi."
+        "limits": "Ni idhini ya Marekani. Si usajili na Mamlaka ya Taifa ya Dawa ya Uganda, ambao unaendelea."
       },
       "milstd": {
         "name": "MIL-STD-810H",
@@ -1768,7 +1773,7 @@
     "fet1Q": "Fuel Eco Tech ni nini?",
     "fet1A": "Kifaa kinachofungwa kwenye bomba la mafuta, kati ya pampu na chujio, kinachoboresha mchanganyiko wa mafuta na hewa kabla ya kuungua. Hakuna mabadiliko ya injini yanayohitajika.",
     "fet2Q": "Fuel Eco Tech inaokoa mafuta kiasi gani?",
-    "fet2A": "Katika jaribio huru la CTI GmbH nchini Ujerumani (Novemba 2025), VW T5 ilitoka lita 11.52 hadi 9.92 kwa kilomita 100: mafuta pungufu kwa 13.9%. Matokeo hutofautiana kwa gari, hivyo Vitorra hupima magari yako kabla na baada ya kufunga.",
+    "fet2A": "Katika jaribio huru la CTI GmbH nchini Ujerumani (ripoti ilisainiwa Novemba 2025), VW T5 ilitoka lita 11.52 hadi 9.92 kwa kilomita 100: mafuta pungufu kwa 13.9%. Matokeo hutofautiana kwa gari, hivyo Vitorra hupima magari yako kabla na baada ya kufunga.",
     "fet3Q": "Fuel Eco Tech inagharimu kiasi gani Uganda?",
     "fet3A": "Kuanzia UGX 1,891,000 kwa magari madogo na mini-basi hadi UGX 10,015,000 kwa malori makubwa, pamoja na ufungaji. SUV na vani kubwa ni UGX 3,245,000; malori mepesi na ya kati UGX 5,276,000.",
     "fet4Q": "Magari gani yanaweza kutumia Fuel Eco Tech?",
@@ -1778,7 +1783,7 @@
     "seal2Q": "SEAL inakuja kwa aina gani?",
     "seal2A": "SEAL OTC (oz 1.5) kwa mikoba ya huduma ya kwanza, SEAL PRO (oz 2.5, takriban PSI 80) kwa watoa huduma za dharura, na HemoSEAL Pet (oz 2.8) kwa huduma ya kwanza ya wanyama.",
     "seal3Q": "Je, SEAL imeidhinishwa Uganda?",
-    "seal3A": "Idhini ya SEAL ni kutoka FDA ya Marekani. Usajili na Mamlaka ya Taifa ya Dawa ya Uganda huthibitishwa kwa kila ununuzi, na Vitorra hutoa nyaraka za udhibiti unapoomba.",
+    "seal3A": "Idhini ya SEAL ni kutoka FDA ya Marekani. Usajili na Mamlaka ya Taifa ya Dawa ya Uganda unaendelea na bado haujatolewa. Vitorra hutoa nyaraka kamili za udhibiti unapoomba.",
     "seal4Q": "Je, SEAL inachukua nafasi ya tourniquet?",
     "seal4A": "Hapana. Haichukui nafasi ya tourniquet, lakini husaidia pale tourniquet haiwezi kufungwa, kama shingoni, kinena au kwapani. Kila chupa ni ya matumizi moja, hudumu miezi 36 na haihitaji jokofu.",
     "coffee1Q": "Vitorra inauza kahawa gani?",

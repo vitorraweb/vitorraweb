@@ -116,7 +116,37 @@ export const Turnstile = forwardRef<TurnstileHandle, TurnstileProps>(
     useEffect(() => {
       if (!TURNSTILE_ENABLED) return;
       let cancelled = false;
+      const el = containerRef.current;
+      if (!el) return;
 
+      /* Cloudflare's challenge weighs about 2 MB. Every page carries the footer
+         newsletter form, so loading it on page open made the whole site slow
+         on a phone. Start it only when the form is close to the screen, or
+         the moment someone starts filling it in, whichever comes first. The
+         challenge solves in the background in a second or two, well before
+         anyone can finish typing. */
+      let started = false;
+      const form = el.closest("form") ?? el.parentElement;
+      const start = () => {
+        if (started || cancelled) return;
+        started = true;
+        observer?.disconnect();
+        form?.removeEventListener("focusin", start);
+        form?.removeEventListener("pointerdown", start);
+        mount();
+      };
+      const observer =
+        typeof IntersectionObserver === "undefined"
+          ? null
+          : new IntersectionObserver((entries) => {
+              if (entries.some((e) => e.isIntersecting)) start();
+            }, { rootMargin: "300px 0px" });
+      if (observer) observer.observe(el);
+      else start();
+      form?.addEventListener("focusin", start);
+      form?.addEventListener("pointerdown", start);
+
+      function mount() {
       loadTurnstile()
         .then(() => {
           if (cancelled || !containerRef.current || !window.turnstile) return;
@@ -134,9 +164,13 @@ export const Turnstile = forwardRef<TurnstileHandle, TurnstileProps>(
         .catch(() => {
           /* Script blocked/unreachable — backend fails open, so do nothing. */
         });
+      }
 
       return () => {
         cancelled = true;
+        observer?.disconnect();
+        form?.removeEventListener("focusin", start);
+        form?.removeEventListener("pointerdown", start);
         if (window.turnstile && widgetIdRef.current) {
           try {
             window.turnstile.remove(widgetIdRef.current);

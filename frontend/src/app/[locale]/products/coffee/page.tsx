@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { QuickAnswers, quickAnswers } from "@/components/sections/QuickAnswers";
 import { localeAlternates, products, faqPage, breadcrumbs, ldJson } from "@/lib/seo";
 import Header from "@/components/layout/Header";
@@ -40,7 +40,9 @@ export async function generateMetadata({
 
 const ENQUIRE_EXPORT = "/enquire?sector=COFFEE&channel=export";
 
-export default async function CoffeePage() {
+export default async function CoffeePage({ params }: { params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the page is built ahead and cached.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("coffeeQA");
   const old = await getTranslations("coffeePage");
   const home = await getTranslations("homeQA");

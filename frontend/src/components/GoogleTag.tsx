@@ -78,7 +78,10 @@ export function GoogleTag() {
           gtag('event', 'page_view', { send_to: ${JSON.stringify(GOOGLE_ADS_ID)} });
         `}
       </Script>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`} strategy="afterInteractive" />
+      {/* gtag.js (about 90 KB) after the page has finished loading: the
+          bootstrap above queues the consent, config and page view in
+          dataLayer, and the library sends them when it arrives. */}
+      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`} strategy="lazyOnload" />
     </>
   );
 }

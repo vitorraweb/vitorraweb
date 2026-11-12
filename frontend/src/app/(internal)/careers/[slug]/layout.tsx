@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { API_BASE_URL as API, SITE_URL } from "@/lib/constants";
 import { ldJson } from "@/lib/seo";
 
@@ -22,6 +23,36 @@ async function getOpening(slug: string): Promise<Opening | null> {
   }
 }
 
+/* A one-line summary for search results and link previews (WhatsApp,
+   LinkedIn, email): the first real sentence of the description, after any
+   "Job Summary" heading, cut at a word near 155 characters. */
+function summary(o: Opening): string {
+  const text = (o.description ?? "")
+    .split("\n")
+    .map((l) => l.replace(/^[\s•\-*]+/, "").trim())
+    .filter((l) => l && !/^(job summary|summary|about the role)\s*:?$/i.test(l))
+    .join(" ");
+  const fallback = `${o.title} at Vitorra Holdings, ${o.location ? "Kampala" : "Uganda"}. Apply online with your CV.`;
+  if (!text) return fallback;
+  return text.length <= 155 ? text : `${text.slice(0, 155).replace(/\s+\S*$/, "")}…`;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const o = await getOpening(slug);
+  if (!o) return { title: "Careers", robots: { index: false } };
+  const title = `${o.title}: job opening`;
+  const description = summary(o);
+  const url = `${SITE_URL}/careers/${o.slug}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: "website", url, title: `${o.title} | Vitorra Holdings`, description, siteName: "Vitorra Holdings Limited" },
+    twitter: { card: "summary_large_image", title: `${o.title} | Vitorra Holdings`, description },
+  };
+}
+
 export default async function RoleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const o = await getOpening(slug);
@@ -38,7 +69,12 @@ export default async function RoleLayout({ children, params }: { children: React
         hiringOrganization: { "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: "Vitorra Holdings Limited", sameAs: SITE_URL, logo: `${SITE_URL}/logo.png` },
         jobLocation: {
           "@type": "Place",
-          address: { "@type": "PostalAddress", addressLocality: o.location || "Kampala", addressCountry: "UG" },
+          address: {
+            "@type": "PostalAddress",
+            ...(o.location ? { streetAddress: o.location.replace(/\s+,/g, ",").replace(/,?\s*Kampala\s*$/i, "") } : {}),
+            addressLocality: "Kampala",
+            addressCountry: "UG",
+          },
         },
         url: `${SITE_URL}/careers/${o.slug}`,
       }

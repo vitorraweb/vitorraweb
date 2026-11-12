@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { publicAuthor } from "@/lib/byline";
 import Image from "next/image";
-import { getTranslations, getLocale } from "next-intl/server";
+import { getTranslations, getLocale, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import Header from "@/components/layout/Header";
@@ -47,12 +48,14 @@ function Meta({ post, date }: { post: BlogPost; date: string }) {
   return (
     <p className="t-label text-ink-muted flex flex-wrap gap-x-3">
       {date && <time dateTime={post.published_at} className="font-numeric">{date}</time>}
-      {post.author && <span>· {post.author}</span>}
+      {publicAuthor(post.author) && <span>· {publicAuthor(post.author)}</span>}
     </p>
   );
 }
 
-export default async function BlogPage() {
+export default async function BlogPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the page is built ahead and cached.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("blogPage");
   const home = await getTranslations("homeQA");
   const locale = await getLocale();

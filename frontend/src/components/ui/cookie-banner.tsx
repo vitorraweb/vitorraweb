@@ -10,7 +10,14 @@ import { COOKIE_SETTINGS_EVENT, readConsent, writeConsent, type CookieConsent } 
 export function CookieBanner() {
   const t = useTranslations("cookieBanner");
   const pathname = usePathname();
-  const [visible, setVisible] = useState(false);
+  /* Rendered with the page rather than after the scripts load: on a phone the
+     banner used to appear about four seconds in and was the page's largest
+     late paint, which Google scores as a slow site. Visitors who have already
+     chosen never see it: a tiny script in <head> (CONSENT_HEAD_SCRIPT) marks
+     <html data-consent> before the first paint and CSS keeps it hidden, then
+     the effect below removes it. */
+  const [visible, setVisible] = useState(true);
+  const [reopened, setReopened] = useState(false);
   /* The choice already on record, so a returning visitor sees what they picked
      rather than a banner that looks like a first-time prompt. */
   const [current, setCurrent] = useState<CookieConsent | null>(null);
@@ -18,12 +25,13 @@ export function CookieBanner() {
   useEffect(() => {
     const choice = readConsent();
     setCurrent(choice);
-    if (!choice) setVisible(true);
+    if (choice) setVisible(false);
 
     /* "Cookie settings" in the footer reopens this — the policy promises the
        preference can be changed at any time. */
     const reopen = () => {
       setCurrent(readConsent());
+      setReopened(true);
       setVisible(true);
     };
     window.addEventListener(COOKIE_SETTINGS_EVENT, reopen);
@@ -50,6 +58,8 @@ export function CookieBanner() {
   return (
     <div
       role="dialog"
+      data-cookie-banner=""
+      data-open={reopened ? "" : undefined}
       aria-label={t("ariaLabel")}
       aria-live="polite"
       className="q-scope fixed z-50 inset-x-0 bottom-0 border-t border-line bg-paper shadow-[0_-8px_24px_rgba(30,30,30,0.06)]"

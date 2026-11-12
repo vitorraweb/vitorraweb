@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { publicAuthor } from "@/lib/byline";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getTranslations, getLocale } from "next-intl/server";
+import { getTranslations, getLocale, setRequestLocale } from "next-intl/server";
 import { breadcrumbs, faqFromHtml, faqPage, ldJson } from "@/lib/seo";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -18,6 +19,12 @@ import { SITE_URL } from "@/lib/constants";
    authored in the CMS as Markdown and sanitised server-side.               */
 
 interface Props { params: Promise<{ slug: string; locale: string }> }
+
+/* No posts are built ahead; each is built on its first visit and then served
+   from the cache (refreshed with the blog feed). */
+export function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params;
@@ -50,7 +57,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BlogPostPage({ params }: Props) {
-  const { slug } = await params;
+  const { slug, locale: urlLocale } = await params;
+  setRequestLocale(urlLocale);
   const locale = await getLocale();
   const t = await getTranslations("blogPage");
   const home = await getTranslations("homeQA");
@@ -98,7 +106,7 @@ export default async function BlogPostPage({ params }: Props) {
             <header className="mt-10 sm:mt-12 max-w-[52rem]">
               <p className="t-label text-ink-muted flex flex-wrap gap-x-3 q-rise">
                 {post.published_at && <time dateTime={post.published_at} className="font-numeric">{fmt.format(new Date(post.published_at))}</time>}
-                {post.author && <span>· {post.author}</span>}
+                {publicAuthor(post.author) && <span>· {publicAuthor(post.author)}</span>}
               </p>
               <h1 className="t-display text-ink mt-6 q-rise" style={{ "--d": "120ms" } as React.CSSProperties}>{post.title}</h1>
               {post.excerpt && <p className="t-lead text-ink-soft mt-8 max-w-[40rem] q-rise" style={{ "--d": "240ms" } as React.CSSProperties}>{post.excerpt}</p>}

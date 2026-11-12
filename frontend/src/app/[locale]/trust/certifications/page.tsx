@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import { Download } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -39,7 +39,9 @@ function Row({ k, v }: { k: string; v?: React.ReactNode }) {
   );
 }
 
-export default async function CertificationsPage() {
+export default async function CertificationsPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the page is built ahead and cached.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("evidence");
   const home = await getTranslations("homeQA");
 

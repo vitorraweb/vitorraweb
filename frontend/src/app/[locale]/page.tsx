@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { QuickAnswers, quickAnswers } from "@/components/sections/QuickAnswers";
 import { localeAlternates, faqPage, ldJson } from "@/lib/seo";
 import { ArrowUpRight } from "lucide-react";
@@ -50,7 +50,9 @@ export async function generateMetadata({
   return { title: { absolute: t("title") }, description: t("description"), alternates: localeAlternates(locale, "") };
 }
 
-export default async function HomePage() {
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the page is built ahead and cached.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("homeQA");
   const alt = await getTranslations("imageAlt");
   const bn = await getTranslations("banners");

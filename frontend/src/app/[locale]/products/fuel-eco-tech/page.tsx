@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { QuickAnswers, quickAnswers } from "@/components/sections/QuickAnswers";
 import { localeAlternates, products, faqPage, breadcrumbs, ldJson } from "@/lib/seo";
 import Header from "@/components/layout/Header";
@@ -50,7 +50,9 @@ export async function generateMetadata({
 const ENQUIRE = "/enquire?sector=FET";
 const DEVICE_LABEL: Record<string, string> = { FI: "FET-PRO-FI", FII: "FET-PRO-FII", FIII: "FET-PRO-FIII", FIV: "FET-PRO-FIV" };
 
-export default async function FuelEcoTechPage() {
+export default async function FuelEcoTechPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the page is built ahead and cached.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("fetQA");
   const old = await getTranslations("fetPage");
   const home = await getTranslations("homeQA");

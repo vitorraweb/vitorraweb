@@ -7,7 +7,7 @@ import { Check, Loader2, ArrowRight } from "lucide-react";
 import { submitContact } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
 import { Turnstile, type TurnstileHandle } from "@/components/ui/turnstile";
 
 type Form = { name: string; email: string; subject: string; message: string };
@@ -75,20 +75,20 @@ export default function ContactForm() {
       <p className="t-small text-ink-muted mb-8">{t("subheading")}</p>
 
       <div className="space-y-5">
-        <Field label={t("fullName")} required error={errors.name}>
+        <FormField label={t("fullName")} required error={errors.name}>
           <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("fullNamePlaceholder")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.name} />
-        </Field>
+        </FormField>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <Field label={t("email")} required error={errors.email}>
+          <FormField label={t("email")} required error={errors.email}>
             <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder={t("emailPlaceholder")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.email} />
-          </Field>
-          <Field label={t("subject")}>
+          </FormField>
+          <FormField label={t("subject")}>
             <Input value={form.subject} onChange={(e) => set("subject", e.target.value)} placeholder={t("subjectPlaceholder")} className="h-12 rounded-edge px-3.5 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" />
-          </Field>
+          </FormField>
         </div>
-        <Field label={t("message")} required error={errors.message}>
+        <FormField label={t("message")} required error={errors.message}>
           <Textarea value={form.message} onChange={(e) => set("message", e.target.value)} placeholder={t("messagePlaceholder")} className="min-h-36 rounded-edge px-3.5 py-3 border-line-strong bg-white focus-visible:border-ink focus-visible:ring-0" aria-invalid={!!errors.message} />
-        </Field>
+        </FormField>
 
         {status === "error" && (
           <p role="alert" className="t-small text-alert-ink">
@@ -107,15 +107,3 @@ export default function ContactForm() {
   );
 }
 
-function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <Label className="mb-2 t-label text-ink-muted">
-        {label}
-        {required && <span className="text-gold-ink"> *</span>}
-      </Label>
-      {children}
-      {error && <p role="alert" className="mt-2 t-small text-alert-ink">{error}</p>}
-    </div>
-  );
-}

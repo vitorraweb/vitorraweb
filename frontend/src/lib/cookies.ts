@@ -38,3 +38,8 @@ export function writeConsent(value: CookieConsent): void {
   }
   window.dispatchEvent(new CustomEvent<CookieConsent>(COOKIE_CONSENT_EVENT, { detail: value }));
 }
+
+/** Runs in <head> before the first paint: marks <html data-consent> when a
+ *  choice is already stored, so the server-rendered banner stays hidden for
+ *  returning visitors (see globals.css, [data-cookie-banner]). */
+export const CONSENT_HEAD_SCRIPT = `try{var v=localStorage.getItem("${COOKIE_CONSENT_KEY}");if(v==="accepted"||v==="declined")document.documentElement.setAttribute("data-consent",v)}catch(e){}`;

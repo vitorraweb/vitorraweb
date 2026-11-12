@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/admin/admin-ui";
-import StaffDocuments from "@/app/staff/documents/page";
+import StaffDocuments from "@/app/(internal)/staff/documents/page";
 
 export default function Page() {
   return (

@@ -33,6 +33,7 @@ export default function Footer() {
         { label: t("footer.blogInsights"), href: "/blog" },
         { label: t("footer.certifications"), href: "/trust/certifications" },
         { label: t("footer.careers"), href: "/careers" },
+        { label: t("footer.contactUs"), href: "/contact" },
         { label: t("common.myAccount"), href: "/account/dashboard" },
       ],
     },

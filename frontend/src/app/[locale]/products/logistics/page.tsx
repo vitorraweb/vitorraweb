@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { QuickAnswers, quickAnswers } from "@/components/sections/QuickAnswers";
 import { localeAlternates, products, faqPage, breadcrumbs, ldJson } from "@/lib/seo";
 import Header from "@/components/layout/Header";
@@ -39,7 +39,9 @@ export async function generateMetadata({
 
 const ENQUIRE = "/enquire?sector=LOGISTICS";
 
-export default async function LogisticsPage() {
+export default async function LogisticsPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Language from the URL, so the page is built ahead and cached.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("logisticsQA");
   const old = await getTranslations("logisticsPage");
   const home = await getTranslations("homeQA");
