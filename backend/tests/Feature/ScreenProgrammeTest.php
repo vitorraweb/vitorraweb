@@ -309,4 +309,31 @@ class ScreenProgrammeTest extends TestCase
 
         $this->patchJson("/api/admin/screen-media/{$id}", ['business' => 'banana'], $h)->assertUnprocessable();
     }
+
+    public function test_further_headlines_play_in_order_at_their_seconds(): void
+    {
+        $h = $this->admin();
+        $id = $this->postJson('/api/admin/screen-media', [
+            'kind' => 'video', 'url' => 'https://abc.public.blob.vercel-storage.com/screen-media/v.mp4', 'title' => 'Fleet',
+            'line1' => 'Fleet fuel bills', 'line2' => 'Down, month after month', 'seconds' => 30, 'screens' => ['street'],
+            'captions' => [
+                ['small' => 'Book: vitorra.org/fet'],          // no second: an even gap (30 / 3 = 10)
+                ['line2' => 'Measured on your own trucks', 'at' => 20],
+                ['line1' => '  ', 'line2' => '', 'small' => null], // no words: dropped
+            ],
+        ], $h)->assertCreated()->json('data.id');
+
+        $m = collect($this->getJson('/api/display')->json('data.media'))->firstWhere('id', "media-{$id}");
+        $this->assertSame([10, 20], array_column($m['captions'], 'at'));
+        $this->assertSame('Book: vitorra.org/fet', $m['captions'][0]['small']);
+        $this->assertNull($m['captions'][0]['line1']); // blank keeps the earlier wording on screen
+        $this->assertSame('Measured on your own trucks', $m['captions'][1]['line2']);
+
+        // A second past the end of the item has no room: it doesn't play. More than five sets, or markup, is refused.
+        $this->patchJson("/api/admin/screen-media/{$id}", ['seconds' => 12, 'captions' => [['line1' => 'Late', 'at' => 60]]], $h)->assertUnprocessable();
+        $this->patchJson("/api/admin/screen-media/{$id}", ['seconds' => 12, 'captions' => [['line1' => 'Late', 'at' => 30]]], $h)->assertOk();
+        $this->assertSame([], collect($this->getJson('/api/display')->json('data.media'))->firstWhere('id', "media-{$id}")['captions']);
+        $this->patchJson("/api/admin/screen-media/{$id}", ['captions' => array_fill(0, 6, ['line1' => 'x'])], $h)->assertUnprocessable();
+        $this->patchJson("/api/admin/screen-media/{$id}", ['captions' => [['line1' => '<b>x</b>']]], $h)->assertUnprocessable();
+    }
 }

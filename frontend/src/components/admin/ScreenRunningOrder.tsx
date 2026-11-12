@@ -7,6 +7,7 @@ import { apiAdmin, auth } from "@/lib/auth";
 import { BUILT_IN_SCENES } from "@/components/display/scenes";
 import { IMAGE_TYPES, isH264, readImage, readVideo } from "@/lib/screen-ads";
 import { deleteFile, mbps, optimiseVideo } from "@/lib/screen-files";
+import { ScreenCaptionSets, type CaptionSet } from "@/components/admin/ScreenCaptionSets";
 
 /* ─── Screen editor: running order ───────────────────────────────────────────
    Everything Vitorra shows on its screens, in order: the built-in films and
@@ -21,7 +22,7 @@ import { deleteFile, mbps, optimiseVideo } from "@/lib/screen-files";
 
 type Media = {
   id: number; kind: "video" | "image"; url: string; title: string; line1: string | null; line2: string | null; small: string | null;
-  business: string | null; optimised: boolean;
+  captions: CaptionSet[] | null; business: string | null; optimised: boolean;
   seconds: number; screens: string[]; starts_on: string | null; ends_on: string | null; width: number | null; height: number | null;
 };
 type Programme = { order: string[]; hidden: string[] };
@@ -183,7 +184,7 @@ export function ScreenRunningOrder() {
   const update = async (m: Media, patch: Partial<Media>) => {
     const next = { ...m, ...patch };
     setMedia((list) => list.map((x) => (x.id === m.id ? next : x)));
-    try { await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ title: next.title, line1: next.line1 || null, line2: next.line2 || null, small: next.small || null, business: next.business || null, seconds: next.seconds, screens: next.screens, starts_on: next.starts_on || null, ends_on: next.ends_on || null }) }); setNote("Saved. Screens follow within a minute."); }
+    try { await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ title: next.title, line1: next.line1 || null, line2: next.line2 || null, small: next.small || null, captions: next.captions ?? [], business: next.business || null, seconds: next.seconds, screens: next.screens, starts_on: next.starts_on || null, ends_on: next.ends_on || null }) }); setNote("Saved. Screens follow within a minute."); }
     catch (e) { setNote(e instanceof Error ? e.message : "Saving failed."); void load(); }
   };
   /** Re-encode a video that is already in the running order, keeping everything else about it. */
@@ -277,6 +278,7 @@ export function ScreenRunningOrder() {
                     <label className="block">Headline, line 1 <span className="opacity-70">(white)</span><input className="c-input w-full mt-1" defaultValue={m.line1 ?? ""} maxLength={60} placeholder="e.g. Fleet fuel bills" onBlur={(e) => e.target.value !== (m.line1 ?? "") && void update(m, { line1: e.target.value })} /></label>
                     <label className="block">Headline, line 2 <span className="opacity-70">(in the business colour)</span><input className="c-input w-full mt-1" defaultValue={m.line2 ?? ""} maxLength={60} placeholder="e.g. Down, month after month" onBlur={(e) => e.target.value !== (m.line2 ?? "") && void update(m, { line2: e.target.value })} /></label>
                     <label className="block sm:col-span-2">Small line <span className="opacity-70">(under the headline, optional)</span><input className="c-input w-full mt-1" defaultValue={m.small ?? ""} maxLength={120} placeholder="e.g. Book a fitting: vitorra.org/fet" onBlur={(e) => e.target.value !== (m.small ?? "") && void update(m, { small: e.target.value })} /></label>
+                    <ScreenCaptionSets key={`${m.id}-${m.seconds}`} initial={m.captions ?? []} seconds={m.seconds} onSave={(captions) => void update(m, { captions })} />
                     <p className="sm:col-span-2 text-[12px]" style={{ color: "var(--o-muted)" }}>Write it the way the other scenes speak: 3 to 7 words a line, a plain promise, no exclamation marks. It shows in capitals.</p>
                     {m.kind === "image" && <label className="block">Seconds on screen<input type="number" min={4} max={60} className="c-input w-full mt-1" defaultValue={m.seconds} onBlur={(e) => { const v = Math.min(60, Math.max(4, Number(e.target.value) || m.seconds)); if (v !== m.seconds) void update(m, { seconds: v }); }} /></label>}
                     <fieldset className="block"><legend>Shows on</legend>

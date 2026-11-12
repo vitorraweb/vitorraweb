@@ -87,13 +87,18 @@ class ScreenMediaController extends Controller
     {
         $req = $creating ? 'required' : 'sometimes';
 
-        return $request->validate([
+        $data = $request->validate([
             'kind'      => [$req, Rule::in(['video', 'image'])],
             'url'       => [$req, 'string', 'max:500', 'regex:'.self::URL],
             'title'     => [$req, 'string', 'max:120'],
             'line1'     => ['nullable', 'string', 'max:200', 'regex:/^[^<>{}]*$/'],
             'line2'     => ['nullable', 'string', 'max:200', 'regex:/^[^<>{}]*$/'],
             'small'     => ['nullable', 'string', 'max:200', 'regex:/^[^<>{}]*$/'],
+            'captions'         => ['nullable', 'array', 'max:'.ScreenMedia::MAX_CAPTIONS],
+            'captions.*.line1' => ['nullable', 'string', 'max:200', 'regex:/^[^<>{}]*$/'],
+            'captions.*.line2' => ['nullable', 'string', 'max:200', 'regex:/^[^<>{}]*$/'],
+            'captions.*.small' => ['nullable', 'string', 'max:200', 'regex:/^[^<>{}]*$/'],
+            'captions.*.at'    => ['nullable', 'integer', 'min:1', 'max:59'],
             'business'  => ['nullable', Rule::in(ScreenMedia::BUSINESSES)],
             'optimised' => ['sometimes', 'boolean'],
             'seconds'   => [$req, 'integer', 'min:4', 'max:60'],
@@ -104,5 +109,13 @@ class ScreenMediaController extends Controller
             'width'     => ['nullable', 'integer', 'min:1'],
             'height'    => ['nullable', 'integer', 'min:1'],
         ]);
+
+        // validate() rebuilds nested arrays out of order; keep the order the editor listed them.
+        if (isset($data['captions'])) {
+            ksort($data['captions'], SORT_NUMERIC);
+            $data['captions'] = array_values($data['captions']);
+        }
+
+        return $data;
     }
 }

@@ -141,10 +141,28 @@ export type MediaScene = {
   line2?: string | null;
   /** The small line under the headline, as on the built-in scenes. */
   small?: string | null;
+  /** Further headlines, each taking over at its second (`at`) of the same
+   *  video or design. A blank field keeps the wording before it. */
+  captions?: MediaCaptionSet[];
   /** The business it belongs to: its tag and colour, as the built-in scenes. */
   business?: MediaBusiness | null;
   screens: string[];
 };
+
+export type MediaCaptionSet = { at: number; line1?: string | null; line2?: string | null; small?: string | null };
+
+/** Every headline an upload shows, in order, each from its second: the first
+ *  from 0, then each further set with any blank field carried over. */
+export function mediaBeats(m: Pick<MediaScene, "line1" | "line2" | "small" | "captions">): { at: number; line1: string; line2: string; small: string }[] {
+  const clean = (v?: string | null) => (v ?? "").trim();
+  const beats = [{ at: 0, line1: clean(m.line1), line2: clean(m.line2), small: clean(m.small) }];
+  for (const c of m.captions ?? []) {
+    const prev = beats[beats.length - 1];
+    if (!(c.at > prev.at)) continue;
+    beats.push({ at: c.at, line1: clean(c.line1) || prev.line1, line2: clean(c.line2) || prev.line2, small: clean(c.small) || prev.small });
+  }
+  return beats;
+}
 
 export type MediaBusiness = "fet" | "seal" | "coffee" | "logistics" | "vitorra";
 
