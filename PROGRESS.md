@@ -65,6 +65,7 @@
 | **Official receipts** (invoices, orders, deposits) and **petty cash vouchers** | 🔨 **Built** (5–6 November). Server update and migrations needed; address to confirm with Finance |
 | **Overview dashboard** (today, website visitors and clicks, operations) and **Teams switched on** | ✅ **Live** (5 November). PostHog keys are still needed on the server |
 | **Leave tracker, printable leave form, colour per person on the leave calendar** (Operations' request) | 🔨 **Built** (9 November). Server update needed |
+| **Website speed, accuracy and forms** (12 November) | 🔨 **Built**, on branch `perf/site-speed`; not yet live |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -2697,3 +2698,16 @@ Finance's "Quote & Invoice Manager" design (`Vitorra_Quote_Invoice_Manager_DESIG
 - **Dormant, switched off:** `blog:draft` (`App\Services\BlogAutopilot`, `config/blog_autopilot.php`) can research the week's news and write drafts with Claude. It is unscheduled and `BLOG_AUTOPILOT_ENABLED` defaults to false. To use it later: set `ANTHROPIC_API_KEY`, `BLOG_AUTOPILOT_ENABLED=true`, and add `Schedule::command('blog:draft')->days([1, 4])->at('06:30')` to `routes/console.php`.
 - Deploy: pull, `migrate --force` (`2026_10_27_000001` adds `origin`/`topic`), `config:cache`, `route:cache`.
 - Tests: `BlogAutopilotTest` (10).
+
+## Website speed, accuracy and forms (12 November 2026) — on branch `perf/site-speed`, not yet live
+
+**Measured before (Lighthouse, mobile, live site):** performance 64–74; largest paint 4.4–7.7 s; 3–5.4 MB per page, of which 2–4 MB was Cloudflare's anti-spam check; every public page rendered on every visit (`cache-control: no-store`, 0.6–1.7 s before the first byte).
+
+- **Two root layouts.** `app/[locale]/layout.tsx` is the public site's root (language from the URL, so pages pre-build); `app/(internal)/layout.tsx` holds the console, staff portal, careers, suppliers, adverts, screens, trial/contract links, scanner and Teams tab. Shared shell: `components/layout/RootDocument.tsx`, `lib/site-metadata.ts`. `app/global-not-found.tsx` (+ `experimental.globalNotFound`) for unmatched URLs. Every cacheable public page calls `setRequestLocale` from its `params`; a new public page must do the same or it goes back to per-visit rendering. `/enquire` stays dynamic (its headline follows `?sector=`).
+- **Turnstile** (`components/ui/turnstile.tsx`) mounts when its form is within 300px of the screen or is focused/tapped.
+- **Cookie banner** server-rendered; `CONSENT_HEAD_SCRIPT` (lib/cookies.ts) sets `html[data-consent]` before paint and CSS hides it for returning visitors.
+- **Google Ads:** `NEXT_PUBLIC_GOOGLE_ADS_ID` on Vercel production held the account number `461-144-6086`, which loads an empty tag. Code now accepts only `AW-…` and falls back to `AW-18227983736`. Correct the Vercel variable too.
+- **Copy:** SEAL NDA "in progress", no "patented"; FET no "extended engine life", EGR/DPF line matches the CTI report; coffee no retail; titles no longer doubled; blog bylines hide assistant/shared-account names (`lib/byline.ts`); job pages have their own metadata.
+- **Forms:** `components/ui/form-field.tsx` ties labels to inputs; enquiry needs a phone number for WhatsApp/call replies.
+
+Open for the business (not changed): FET reservation terms and refunds; FET terms line saying prices are "agreed individually"; Hiace listed under FET-PRO-FI; calculator default fuel price UGX 5,000; coffee "EXW, loading at Mombasa"; Saturday hours vs Monday–Friday reply promise; coffee "verified exporter"; job location text in Admin → Careers.
