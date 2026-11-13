@@ -128,15 +128,29 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
   const totalUnits = models.reduce((a, m) => a + m.on_hand, 0);
   const totalValue = models.reduce((a, m) => a + (m.value_ugx ?? 0), 0);
   const isAdjust = form.type === "adjustment";
+  const focused = models.find((m) => m.code === focus) ?? null;
+  const shownModels = focused ? [focused] : models;
+  const shownHolders = focused ? holders.filter((h) => (h.models[focused.code] ?? 0) !== 0) : holders;
+  const shownMovements = movements.filter((m) => !focus || m.model === focus);
+  /** Totals for the chosen model over the weeks shown. */
+  const focusSums = focused
+    ? weeks.reduce((a, w) => {
+        const r = w.models[focused.code];
+        if (!r) return a;
+        return { received: a.received + r.received, sold: a.sold + r.sold, returned: a.returned + r.returned, adjusted: a.adjusted + r.adjusted };
+      }, { received: 0, sold: 0, returned: 0, adjusted: 0 })
+    : null;
+  const onTrial = focused ? holders.filter((h) => h.holder.startsWith("On trial:")).reduce((a, h) => a + Math.max(h.models[focused.code] ?? 0, 0), 0) : 0;
 
   if (loading && models.length === 0) return <div className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 className="w-4 h-4 animate-spin" />Loading…</div>;
 
   return (
     <div>
       {/* On hand now, per model */}
+      <p className="text-xs text-ink-muted mb-2">{focused ? <>Showing only <b>{focused.label}</b>. Click it again, or <button onClick={() => setFocus("")} className="underline">show all models</button>.</> : "Click a model to see only its details."}</p>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
         {models.map((m) => (
-          <button key={m.code} onClick={() => setFocus(focus === m.code ? "" : m.code)} className="c-panel p-4 text-left transition-colors" style={focus === m.code ? { borderColor: "var(--o-accent)" } : undefined}>
+          <button key={m.code} onClick={() => setFocus(focus === m.code ? "" : m.code)} aria-pressed={focus === m.code} title={focus === m.code ? "Show all models" : `Show only ${m.label}`} className="c-panel p-4 text-left transition-colors" style={focus === m.code ? { borderColor: "var(--o-accent)", boxShadow: "0 0 0 1px var(--o-accent)" } : focus ? { opacity: 0.6 } : undefined}>
             <p className="c-panel-title mb-2">{m.label}</p>
             <p className="text-2xl tabular-nums text-ink" style={{ color: m.on_hand < 0 ? "var(--o-danger)" : undefined }}>{m.on_hand}<span className="text-xs text-ink-muted ml-1">in stock</span></p>
             {m.value_ugx !== null && <p className="text-xs text-ink-muted mt-1 tabular-nums">{ugx(m.value_ugx)} at catalogue price</p>}
@@ -149,23 +163,51 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
         </div>
       </div>
 
+      {/* The chosen model at a glance */}
+      {focused && focusSums && (
+        <div className="c-panel mb-5">
+          <div className="c-panel-head">
+            <span className="c-panel-title">{focused.label} · details</span>
+            <button onClick={() => setFocus("")} className="c-btn c-btn-ghost !h-7 !px-2"><X className="w-3.5 h-3.5" />Show all models</button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 p-4">
+            {[
+              ["In stock now", String(focused.on_hand)],
+              ["Value at catalogue price", focused.value_ugx !== null ? ugx(focused.value_ugx) : "–"],
+              ["Catalogue price, each", focused.price_ugx !== null ? ugx(focused.price_ugx) : "–"],
+              ["Kept at", `${shownHolders.length} ${shownHolders.length === 1 ? "place" : "places"}`],
+              ["On trial with clients", String(onTrial)],
+              [`Received, last ${span} weeks`, String(focusSums.received)],
+              [`Sold, last ${span} weeks`, String(focusSums.sold)],
+              [`Returned / corrected`, `${focusSums.returned}${focusSums.adjusted ? ` / ${signed(focusSums.adjusted)}` : ""}`],
+            ].map(([k, v]) => (
+              <div key={k}>
+                <p className="text-[11px] text-ink-muted">{k}</p>
+                <p className="text-base tabular-nums text-ink font-semibold mt-0.5">{v}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Where the devices are kept */}
       <div className="c-panel mb-5 overflow-x-auto">
-        <div className="c-panel-head"><span className="c-panel-title">Where the devices are kept</span><HoldersPdf /></div>
+        <div className="c-panel-head"><span className="c-panel-title">Where the devices are kept{focused ? ` · ${focused.label}` : ""}</span><HoldersPdf /></div>
         <table className="c-table">
-          <thead><tr><th>Kept by / at</th>{models.map((m) => <th key={m.code} className="text-right">{m.label}</th>)}<th className="text-right">Total</th><th>Last movement</th></tr></thead>
+          <thead><tr><th>Kept by / at</th>{shownModels.map((m) => <th key={m.code} className="text-right">{m.label}</th>)}{!focused && <th className="text-right">Total</th>}<th>Last movement</th></tr></thead>
           <tbody>
-            {holders.map((h) => (
+            {focused && shownHolders.length === 0 && <tr><td colSpan={3} className="text-ink-muted">No {focused.label} devices held anywhere right now.</td></tr>}
+            {shownHolders.map((h) => (
               <tr key={h.holder}>
                 <td className="whitespace-nowrap">
                   <span className={h.main ? "font-semibold text-ink" : undefined}>{h.holder}</span>
                   {h.main && <span className="c-chip ml-2" data-tone="gold">Main store</span>}
                 </td>
-                {models.map((m) => {
+                {shownModels.map((m) => {
                   const n = h.models[m.code] ?? 0;
-                  return <td key={m.code} className="text-right tabular-nums" style={n < 0 ? { color: "var(--o-danger)" } : undefined}>{n || "–"}</td>;
+                  return <td key={m.code} className={`text-right tabular-nums${focused ? " font-semibold text-ink" : ""}`} style={n < 0 ? { color: "var(--o-danger)" } : undefined}>{n || "–"}</td>;
                 })}
-                <td className="text-right tabular-nums font-semibold text-ink">{h.total}</td>
+                {!focused && <td className="text-right tabular-nums font-semibold text-ink">{h.total}</td>}
                 <td className="whitespace-nowrap">{h.last_moved_on ? new Date(`${h.last_moved_on}T00:00:00`).toLocaleDateString("en-GB") : "–"}</td>
               </tr>
             ))}
@@ -288,12 +330,12 @@ export function Stock({ canApprove }: { canApprove: boolean }) {
 
       {/* The entries behind it */}
       <div className="c-panel overflow-x-auto">
-        <div className="c-panel-head"><span className="c-panel-title">Movements</span><span className="text-xs text-ink-muted">Latest 100</span></div>
-        {movements.filter((m) => !focus || m.model === focus).length === 0 ? <div className="p-4"><Empty label="No stock movements recorded yet. Start with the devices currently on the shelf, as Received." /></div> : (
+        <div className="c-panel-head"><span className="c-panel-title">Movements{focused ? ` · ${focused.label}` : ""}</span><span className="text-xs text-ink-muted">{focused ? `${shownMovements.length} of the latest 100` : "Latest 100"}</span></div>
+        {shownMovements.length === 0 ? <div className="p-4"><Empty label="No stock movements recorded yet. Start with the devices currently on the shelf, as Received." /></div> : (
           <table className="c-table">
             <thead><tr><th>Date</th><th>Model</th><th>Movement</th><th className="text-right">Qty</th><th>Kept by / taken from</th><th>Picked up by</th><th>Reference</th><th>Note</th><th>Recorded by</th><th /></tr></thead>
             <tbody>
-              {movements.filter((m) => !focus || m.model === focus).map((m) => (
+              {shownMovements.map((m) => (
                 <tr key={m.id}>
                   <td className="whitespace-nowrap">{new Date(`${m.moved_on}T00:00:00`).toLocaleDateString("en-GB")}</td>
                   <td className="whitespace-nowrap">{label(m.model)}</td>
