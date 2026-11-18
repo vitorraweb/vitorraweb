@@ -6,13 +6,13 @@
 
 export type Business = "coffee" | "fet";
 export type DocType = "quotation" | "invoice";
-export type InvoiceKind = "standard" | "commercial" | "final";
+export type InvoiceKind = "standard" | "proforma" | "commercial" | "final";
 /** The title a quotation prints under. An accepted quotation goes back to the customer as an order confirmation. */
 export type QuoteHeading = "quotation" | "order_confirmation";
 export const HEADING_LABEL: Record<QuoteHeading, string> = { quotation: "Quotation", order_confirmation: "Order confirmation" };
 
 export const BUSINESS_LABEL: Record<Business, string> = { coffee: "Vitorra Coffee", fet: "Fuel Eco Tech" };
-export const KIND_LABEL: Record<InvoiceKind, string> = { standard: "Invoice", commercial: "Commercial invoice", final: "Final invoice" };
+export const KIND_LABEL: Record<InvoiceKind, string> = { standard: "Invoice", proforma: "Proforma invoice", commercial: "Commercial invoice", final: "Final invoice" };
 export const CURRENCIES = ["UGX", "USD", "EUR"] as const;
 
 export type DocLine = { name: string; details: string; quantity: number; unit: string; price: string };

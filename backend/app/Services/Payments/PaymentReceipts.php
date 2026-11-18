@@ -106,7 +106,7 @@ class PaymentReceipts
 
             // If the order has already been invoiced, the money lands on that
             // invoice as well, so the invoice never asks for it again.
-            $invoice = $order->invoices()->whereNotIn('status', ['void'])->orderBy('id')->first();
+            $invoice = $order->invoices()->ledger()->whereNotIn('status', ['void'])->orderBy('id')->first();
 
             $receipt = PaymentReceipt::create([
                 'number'                 => PaymentReceipt::nextNumber(),
@@ -139,6 +139,10 @@ class PaymentReceipts
      */
     public function carryToInvoice(Quotation $order, Invoice $invoice): int
     {
+        // A proforma is not a sale: deposits wait for the real invoice.
+        if ($invoice->isProforma()) {
+            return 0;
+        }
         $receipts = PaymentReceipt::where('quotation_id', $order->id)->whereNull('invoice_id')->where('status', 'issued')->get();
         if ($receipts->isEmpty()) {
             return 0;

@@ -188,6 +188,7 @@ HEADERS = {
 TITLES = {
     "quotation": "QUOTATION",
     "invoice": "INVOICE",
+    "proforma": "PROFORMA INVOICE",
     "commercial": "COMMERCIAL INVOICE",
     "final": "FINAL INVOICE",
     "order": "ORDER CONFIRMATION",

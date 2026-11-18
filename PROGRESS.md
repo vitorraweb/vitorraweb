@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 9 November 2026
+**Last updated:** 12 November 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -65,7 +65,8 @@
 | **Official receipts** (invoices, orders, deposits) and **petty cash vouchers** | 🔨 **Built** (5–6 November). Server update and migrations needed; address to confirm with Finance |
 | **Overview dashboard** (today, website visitors and clicks, operations) and **Teams switched on** | ✅ **Live** (5 November). PostHog keys are still needed on the server |
 | **Leave tracker, printable leave form, colour per person on the leave calendar** (Operations' request) | 🔨 **Built** (9 November). Server update needed |
-| **Website speed, accuracy and forms** (12 November) | 🔨 **Built**, on branch `perf/site-speed`; not yet live |
+| **Website speed, accuracy and forms** (12 November): main pages score 93–96 on a phone (were 64–74), show in about 2.5 s, half the data; Google Ads tag fixed | ✅ **Live** (12 November). Correct `NEXT_PUBLIC_GOOGLE_ADS_ID` on Vercel; send a test enquiry from a phone |
+| **Screen editor: several headlines on one video or design**, each at its own second (up to 5 more) | 🔨 **Built** (12 November). Website live; server update + migration needed |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -2699,9 +2700,21 @@ Finance's "Quote & Invoice Manager" design (`Vitorra_Quote_Invoice_Manager_DESIG
 - Deploy: pull, `migrate --force` (`2026_10_27_000001` adds `origin`/`topic`), `config:cache`, `route:cache`.
 - Tests: `BlogAutopilotTest` (10).
 
-## Website speed, accuracy and forms (12 November 2026) — on branch `perf/site-speed`, not yet live
+## Website speed, accuracy and forms (12 November 2026) — live
 
 **Measured before (Lighthouse, mobile, live site):** performance 64–74; largest paint 4.4–7.7 s; 3–5.4 MB per page, of which 2–4 MB was Cloudflare's anti-spam check; every public page rendered on every visit (`cache-control: no-store`, 0.6–1.7 s before the first byte).
+
+**Measured after (live, same test):**
+
+| Page | Score | Largest paint | Weight |
+|------|-------|---------------|--------|
+| Home | 71 → 93 | 5.1 → 2.6 s | 3.1 → 1.5 MB |
+| Fuel Eco Tech | 74 → 93 | 4.4 → 2.6 s | 5.0 → 1.3 MB |
+| About | 72 → 96 | 5.3 → 2.5 s | 3.0 → 1.4 MB |
+| Enquire | 71 → 96 | 5.3 → 2.3 s | 3.0 → 1.3 MB |
+| Contact | 64 → 94 | 7.7 → 2.7 s | 5.4 → 1.8 MB |
+
+28 public routes now pre-build and are served from cache (`x-vercel-cache: HIT`); the live site loads `AW-18227983736`. Commits 8973419, 930c36c.
 
 - **Two root layouts.** `app/[locale]/layout.tsx` is the public site's root (language from the URL, so pages pre-build); `app/(internal)/layout.tsx` holds the console, staff portal, careers, suppliers, adverts, screens, trial/contract links, scanner and Teams tab. Shared shell: `components/layout/RootDocument.tsx`, `lib/site-metadata.ts`. `app/global-not-found.tsx` (+ `experimental.globalNotFound`) for unmatched URLs. Every cacheable public page calls `setRequestLocale` from its `params`; a new public page must do the same or it goes back to per-visit rendering. `/enquire` stays dynamic (its headline follows `?sector=`).
 - **Turnstile** (`components/ui/turnstile.tsx`) mounts when its form is within 300px of the screen or is focused/tapped.
@@ -2711,3 +2724,31 @@ Finance's "Quote & Invoice Manager" design (`Vitorra_Quote_Invoice_Manager_DESIG
 - **Forms:** `components/ui/form-field.tsx` ties labels to inputs; enquiry needs a phone number for WhatsApp/call replies.
 
 Open for the business (not changed): FET reservation terms and refunds; FET terms line saying prices are "agreed individually"; Hiace listed under FET-PRO-FI; calculator default fuel price UGX 5,000; coffee "EXW, loading at Mombasa"; Saturday hours vs Monday–Friday reply promise; coffee "verified exporter"; job location text in Admin → Careers.
+
+Still to do: correct `NEXT_PUBLIC_GOOGLE_ADS_ID` on Vercel to `AW-18227983736`; set the job location in Admin → Careers to "Padre Pio House, Plot 32, Lumumba Avenue, Kampala"; send one test enquiry from a phone (Turnstile token could not be checked in headless Chrome).
+
+## Screen editor: several headlines on one video or design (12 November 2026) — website live; server update needed
+
+Operations asked to show more than one headline during the same video. In **Screen editor → Running order**, each of Vitorra's own videos and designs now has **Add another headline** (up to 5): Line 1, Line 2, Small line and "Appears at … s". Applies to every current and future item.
+
+- **Storage:** `screen_media.captions` (JSON, nullable), migration `2026_11_12_000001_add_captions_to_screen_media`. Each set is `{line1, line2, small, at}`; `ScreenMedia::MAX_CAPTIONS = 5`.
+- **Rules (`ScreenMedia::captionsFor()`):** sets play in the listed order; a blank field keeps the wording before it, so changing only the small line works; a set with no second comes an even gap after the one above; none may start before the one above; a set past the end of the item is dropped. Sent to screens in `forScreen()` as `captions`.
+- **Validation (`ScreenMediaController::validated()`):** each field max 200, no `<>{}`; `at` 1–59; order kept with `ksort` (the validator reverses nested keys otherwise).
+- **Screen:** `scenes.ts` `mediaBeats()` merges each set onto the previous; `Stage.tsx` `MediaCaption` steps through them on timers, keeps one type size for every set, and only the lines that change rise in again.
+- **Console:** `components/admin/ScreenCaptionSets.tsx` (shows the planned second for each set, Remove), used in `ScreenRunningOrder.tsx`.
+- Tests: `ScreenProgrammeTest::test_further_headlines_play_in_order_at_their_seconds`; full suite 648 passing. Checked in a browser locally: line 2 changed at 4 s, small line at 8 s. Commit 844a307.
+
+**Server update (until it runs, the new headlines cannot be saved; screens keep working as before):**
+
+```
+ssh namecheap 'cd vitorraweb && git pull origin master && cd backend && /opt/alt/php83/usr/bin/php artisan migrate --force && /opt/alt/php83/usr/bin/php artisan config:cache && /opt/alt/php83/usr/bin/php artisan route:cache'
+```
+
+## Proforma invoices (18 November 2026) — built; not yet deployed
+
+Finance asked for a **Proforma invoice** in the document sequence: Quotation → **Proforma** → Commercial → Final. On a quotation, "Make an invoice" now offers Proforma first; Books → Invoices and the editor's type list include it.
+
+- Numbered `VHL-CF-PF-2026-0001` / `VHL-FET-PF-…`; own title band ("PROFORMA INVOICE", `head-{coffee,fet}-proforma.jpg`, from `scripts/generate_document_art.py`).
+- **A proforma is a request for payment, not a sale.** It is kept out of the VAT report, overdue chasers, the Overview's overdue count and the Overdue filter (`Invoice::ledger()` scope); it cannot take a payment or be paid online; deposits received on the order wait for the commercial/final invoice rather than attaching to it.
+- No database change (`invoices.kind` already holds it). Tests: `QuotationTest::test_proforma_invoice_is_a_document_not_a_sale`; full suite 649 passing.
+- Server update: `git pull` + `config:cache` only (no migration).

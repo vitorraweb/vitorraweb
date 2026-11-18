@@ -64,7 +64,7 @@ class OverviewController extends Controller
                 'receipts_this_month' => PaymentReceipt::where('status', 'issued')->where('paid_on', '>=', now(self::TZ)->startOfMonth()->toDateString())->count(),
                 'received_this_month' => PaymentReceipt::where('status', 'issued')->where('paid_on', '>=', now(self::TZ)->startOfMonth()->toDateString())
                     ->get(['currency', 'amount'])->groupBy('currency')->map->sum('amount'),
-                'invoices_overdue' => Invoice::whereIn('status', ['sent', 'partial'])->whereDate('due_date', '<', now(self::TZ)->toDateString())->count(),
+                'invoices_overdue' => Invoice::ledger()->whereIn('status', ['sent', 'partial'])->whereDate('due_date', '<', now(self::TZ)->toDateString())->count(),
             ];
         }
 

@@ -180,6 +180,30 @@ class QuotationTest extends TestCase
         $this->assertSame('commercial', BrandedDocument::data($invoice)['kind']);
     }
 
+    public function test_proforma_invoice_is_a_document_not_a_sale(): void
+    {
+        $h = $this->h();
+        $id = $this->withHeaders($h)->postJson('/api/admin/accounting/quotations', $this->coffeeQuote())->json('data.id');
+
+        $res = $this->withHeaders($h)->postJson("/api/admin/accounting/quotations/{$id}/convert", ['kind' => 'proforma'])->assertCreated();
+        $res->assertJsonPath('data.number', 'VHL-CF-PF-'.now()->year.'-0001');
+        $invoice = Invoice::find($res->json('data.id'));
+        $this->assertSame('proforma', $invoice->kind);
+        $this->assertSame('proforma', BrandedDocument::data($invoice)['kind']);
+        $this->withHeaders($h)->get("/api/admin/accounting/invoices/{$invoice->id}/pdf")->assertOk();
+
+        // Sent to the customer, yet never chased, never in VAT, never payable here.
+        $invoice->update(['status' => 'sent', 'due_date' => now()->subDays(10), 'vat_total' => 5000]);
+        $this->assertFalse($invoice->isOnlinePayable());
+        $this->assertSame(0, Invoice::ledger()->count());
+        $this->withHeaders($h)->postJson("/api/admin/accounting/invoices/{$invoice->id}/payment", ['finance_account_id' => 1])->assertStatus(422);
+        $this->assertSame(0, app(\App\Services\FinanceReportService::class)->vatReport('this_month')['rows'][0]['output'] ?? 0);
+
+        // The real invoice that follows is numbered on its own.
+        $this->withHeaders($h)->postJson("/api/admin/accounting/quotations/{$id}/convert", ['kind' => 'commercial'])
+            ->assertCreated()->assertJsonPath('data.number', 'VHL-CF-CI-'.now()->year.'-0001');
+    }
+
     public function test_declined_quotation_cannot_be_invoiced_or_edited(): void
     {
         $h = $this->h();

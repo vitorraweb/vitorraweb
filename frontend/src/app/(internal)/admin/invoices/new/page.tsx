@@ -6,7 +6,7 @@ export default async function NewInvoicePage({ searchParams }: { searchParams: P
     <DocumentEditor
       type="invoice"
       initialBusiness={business === "fet" ? "fet" : "coffee"}
-      initialKind={kind === "commercial" || kind === "final" ? kind : "standard"}
+      initialKind={kind === "proforma" || kind === "commercial" || kind === "final" ? kind : "standard"}
     />
   );
 }

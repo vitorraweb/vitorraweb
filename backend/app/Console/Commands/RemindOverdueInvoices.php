@@ -17,7 +17,7 @@ class RemindOverdueInvoices extends Command
     {
         $cooloff = now()->subDays(max(1, (int) $this->option('days')));
 
-        $invoices = Invoice::whereIn('status', ['sent', 'partial'])
+        $invoices = Invoice::ledger()->whereIn('status', ['sent', 'partial'])
             ->whereNotNull('customer_email')
             ->whereDate('due_date', '<', now())
             ->where(fn ($q) => $q->whereNull('last_reminded_at')->orWhere('last_reminded_at', '<', $cooloff))

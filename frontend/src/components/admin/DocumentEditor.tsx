@@ -226,6 +226,7 @@ export default function DocumentEditor({
           {meta.status !== "declined" && canInvoice && <>
             <span className="w-px h-5 bg-line mx-1" />
             <span className="text-[12.5px] text-ink-muted px-1">Make an invoice:</span>
+            <button onClick={() => convert("proforma")} disabled={!!busy} className="c-btn">{busy === "convert-proforma" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}Proforma invoice</button>
             <button onClick={() => convert("commercial")} disabled={!!busy} className="c-btn">{busy === "convert-commercial" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}Commercial invoice</button>
             <button onClick={() => convert("final")} disabled={!!busy} className="c-btn">{busy === "convert-final" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}Final invoice</button>
           </>}
@@ -308,7 +309,7 @@ export default function DocumentEditor({
               {!isQuote && (
                 <Field label="Invoice type">
                   <select className="c-select w-full" value={form.kind} disabled={!!id} onChange={(e) => set("kind", e.target.value as InvoiceKind)}>
-                    {(["standard", "commercial", "final"] as InvoiceKind[]).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
+                    {(["standard", "proforma", "commercial", "final"] as InvoiceKind[]).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
                   </select>
                 </Field>
               )}

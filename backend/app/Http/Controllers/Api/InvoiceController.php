@@ -31,7 +31,7 @@ class InvoiceController extends Controller
         $q = Invoice::latest('issue_date')->latest('id');
         if ($request->filled('status')) {
             $request->query('status') === 'overdue'
-                ? $q->whereIn('status', ['sent', 'partial'])->whereDate('due_date', '<', now())
+                ? $q->ledger()->whereIn('status', ['sent', 'partial'])->whereDate('due_date', '<', now())
                 : $q->where('status', $request->query('status'));
         }
 
@@ -114,6 +114,9 @@ class InvoiceController extends Controller
     /** Record a customer payment — a DRAFT income transaction; approval settles the invoice. */
     public function recordPayment(Request $request, Invoice $invoice): JsonResponse
     {
+        if ($invoice->isProforma()) {
+            return response()->json(['message' => 'A proforma invoice is not a sale. Record the payment on the commercial or final invoice that follows it.'], 422);
+        }
         if (! in_array($invoice->status, ['sent', 'partial'], true)) {
             return response()->json(['message' => 'Only a sent invoice can take a payment.'], 422);
         }

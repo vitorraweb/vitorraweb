@@ -56,7 +56,7 @@ class BrandedDocument
         // layout, its own title, no validity date or "non-binding" wording.
         $isOrder = $isQuote && $doc->isOrderConfirmation();
         $business = $doc->business === 'coffee' ? 'coffee' : 'fet';
-        $kind = $isOrder ? 'order' : ($isQuote ? 'quotation' : ($doc->kind === 'commercial' ? 'commercial' : ($doc->kind === 'final' ? 'final' : 'invoice')));
+        $kind = $isOrder ? 'order' : ($isQuote ? 'quotation' : (in_array($doc->kind, ['proforma', 'commercial', 'final'], true) ? $doc->kind : 'invoice'));
         $c = $doc->currency ?: 'UGX';
 
         $rows = collect($items ?? $doc->items)->values()->map(function ($it, $i) use ($c, $business) {

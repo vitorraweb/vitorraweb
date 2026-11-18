@@ -14,8 +14,12 @@ class Invoice extends Model implements Payable
 {
     use HasBrandedFields;
 
-    /** standard = plain invoice; commercial / final are the export documents on the branded templates. */
-    public const KINDS = ['standard', 'commercial', 'final'];
+    /**
+     * standard = plain invoice; proforma / commercial / final are the export documents on the branded
+     * templates, in the order a deal moves. A proforma asks for payment but is not a sale: it never
+     * reaches the books, the VAT report, overdue chasers or money-owed figures.
+     */
+    public const KINDS = ['standard', 'proforma', 'commercial', 'final'];
 
     public const STATUSES = ['draft', 'sent', 'partial', 'paid', 'void'];
 
@@ -53,6 +57,17 @@ class Invoice extends Model implements Payable
         'tax_rate'         => 'integer',
         'deposit_percent'  => 'integer',
     ];
+
+    public function isProforma(): bool
+    {
+        return $this->kind === 'proforma';
+    }
+
+    /** Invoices that count as sales: everything except proformas. */
+    public function scopeLedger($query)
+    {
+        return $query->where('kind', '!=', 'proforma');
+    }
 
     public function items(): HasMany
     {
@@ -114,7 +129,7 @@ class Invoice extends Model implements Payable
             return static::nextNumber();
         }
         $year = now()->year;
-        $prefix = ($business === 'coffee' ? 'VHL-CF' : 'VHL-FET').'-'.($kind === 'commercial' ? 'CI' : 'INV')."-{$year}-";
+        $prefix = ($business === 'coffee' ? 'VHL-CF' : 'VHL-FET').'-'.(match ($kind) { 'commercial' => 'CI', 'proforma' => 'PF', default => 'INV' })."-{$year}-";
         $last = static::where('number', 'like', $prefix.'%')->orderByDesc('number')->value('number');
         $seq = $last ? ((int) substr($last, strlen($prefix))) + 1 : 1;
 
@@ -134,7 +149,8 @@ class Invoice extends Model implements Payable
     /** Whether this invoice can be paid online (right currency + still owing). */
     public function isOnlinePayable(): bool
     {
-        return in_array($this->currency, self::ONLINE_PAYABLE_CURRENCIES, true)
+        return ! $this->isProforma()
+            && in_array($this->currency, self::ONLINE_PAYABLE_CURRENCIES, true)
             && in_array($this->status, ['sent', 'partial'], true)
             && $this->balance() > 0;
     }

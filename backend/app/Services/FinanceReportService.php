@@ -45,7 +45,7 @@ class FinanceReportService
     {
         [$start, $end, $label] = $this->window($period);
 
-        $output = Invoice::whereNotIn('status', ['draft', 'void'])
+        $output = Invoice::ledger()->whereNotIn('status', ['draft', 'void'])
             ->whereDate('issue_date', '>=', $start)->whereDate('issue_date', '<=', $end)
             ->selectRaw('currency, SUM(vat_total) s')->groupBy('currency')->pluck('s', 'currency');
 
