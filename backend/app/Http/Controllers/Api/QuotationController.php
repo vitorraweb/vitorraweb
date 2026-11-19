@@ -81,8 +81,8 @@ class QuotationController extends Controller
 
     public function update(Request $request, Quotation $quotation): JsonResponse
     {
-        if (! in_array($quotation->status, ['draft', 'sent'], true)) {
-            return response()->json(['message' => 'Only a draft or sent quotation can be edited.'], 422);
+        if (! in_array($quotation->status, ['draft', 'sent', 'accepted'], true)) {
+            return response()->json(['message' => 'A declined, expired or void quotation cannot be edited.'], 422);
         }
         $data = $this->validated($request);
 

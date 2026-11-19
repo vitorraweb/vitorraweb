@@ -60,7 +60,8 @@ export default function DocumentEditor({
       .catch((e) => setLoadError(e instanceof Error ? e.message : "Could not load."));
   }, [id, type]);
 
-  const editable = !meta || ["draft", "sent"].includes(meta.status);
+  // An accepted quotation / order confirmation stays editable: Finance corrects lines after the customer agrees.
+  const editable = !meta || (type === "quotation" ? ["draft", "sent", "accepted"] : ["draft", "sent"]).includes(meta.status);
   // Quoting is open to the named sales staff; invoicing touches the books.
   const canInvoice = canAccess(auth.getUser(), { module: "accounting" });
   const set = <K extends keyof DocForm>(k: K, v: DocForm[K]) => { setForm((f) => (f ? { ...f, [k]: v } : f)); setDirty(true); };
