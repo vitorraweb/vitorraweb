@@ -9,7 +9,7 @@ class FinanceTransaction extends Model
 {
     public const TYPES    = ['income', 'expense', 'transfer'];
     public const STATUSES = ['draft', 'approved', 'void'];
-    public const SECTORS  = ['FET', 'SEAL', 'COFFEE', 'LOGISTICS', 'GENERAL'];
+    public const SECTORS  = ['FET', 'SEAL', 'COFFEE', 'LOGISTICS', 'WEB', 'GENERAL'];
 
     protected $fillable = [
         'type', 'finance_account_id', 'transfer_to_account_id', 'finance_category_id',

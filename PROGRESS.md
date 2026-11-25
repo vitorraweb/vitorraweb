@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 12 November 2026
+**Last updated:** 18 November 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -67,6 +67,9 @@
 | **Leave tracker, printable leave form, colour per person on the leave calendar** (Operations' request) | 🔨 **Built** (9 November). Server update needed |
 | **Website speed, accuracy and forms** (12 November): main pages score 93–96 on a phone (were 64–74), show in about 2.5 s, half the data; Google Ads tag fixed | ✅ **Live** (12 November). Correct `NEXT_PUBLIC_GOOGLE_ADS_ID` on Vercel; send a test enquiry from a phone |
 | **Screen editor: several headlines on one video or design**, each at its own second (up to 5 more) | 🔨 **Built** (12 November). Website live; server update + migration needed |
+| **Proforma invoices** — a step between quotation and commercial invoice; kept out of the books, VAT and overdue chasers | ✅ **Live** (18 November). Finance to send one test to their own inbox first |
+| **Server update for 4–12 November** (receipts, petty cash, screen editor, leave) | ✅ **Done** (18 November) — all migrations run |
+| **Vitorra Digital — starter websites for small businesses** (`/websites`): UGX 500,000 first year, free preview, sample sites, leads in Enquiries as Websites | 🔨 **Built** (25 November). Not deployed; Solomon to approve the price list first |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -2744,11 +2747,50 @@ Operations asked to show more than one headline during the same video. In **Scre
 ssh namecheap 'cd vitorraweb && git pull origin master && cd backend && /opt/alt/php83/usr/bin/php artisan migrate --force && /opt/alt/php83/usr/bin/php artisan config:cache && /opt/alt/php83/usr/bin/php artisan route:cache'
 ```
 
-## Proforma invoices (18 November 2026) — built; not yet deployed
+## Proforma invoices (18 November 2026) — live
 
 Finance asked for a **Proforma invoice** in the document sequence: Quotation → **Proforma** → Commercial → Final. On a quotation, "Make an invoice" now offers Proforma first; Books → Invoices and the editor's type list include it.
 
 - Numbered `VHL-CF-PF-2026-0001` / `VHL-FET-PF-…`; own title band ("PROFORMA INVOICE", `head-{coffee,fet}-proforma.jpg`, from `scripts/generate_document_art.py`).
 - **A proforma is a request for payment, not a sale.** It is kept out of the VAT report, overdue chasers, the Overview's overdue count and the Overdue filter (`Invoice::ledger()` scope); it cannot take a payment or be paid online; deposits received on the order wait for the commercial/final invoice rather than attaching to it.
 - No database change (`invoices.kind` already holds it). Tests: `QuotationTest::test_proforma_invoice_is_a_document_not_a_sale`; full suite 649 passing.
-- Server update: `git pull` + `config:cache` only (no migration).
+- Deployed 18 November (commit 356e13a): website, and the server with `git pull`, `composer install`, `config:cache`, `route:cache`. Every migration up to `2026_11_12_000001` (screen-editor headlines) shows as run, so the "Server update owed" notes above are cleared.
+- **To do:** Joseph or Daniel make a test proforma from a quotation, email it to themselves and check the title band and layout before a customer sees one. Open for Finance: whether a proforma should ever show as "expected income".
+
+## Vitorra Digital: starter websites (25 November 2026) — built, not deployed
+
+A new line of business from `Vitorra-Website-Pilot.docx`, changed by John on 25 November:
+- **UGX 500,000 for the first year**, all in: website, .com web address (in the client's name) and hosting. The pilot document had UGX 420,000 including the domain.
+- Paid **250,000 to book** after a free preview, and **250,000 at launch**.
+- **Renewal UGX 300,000 a year** from year two, covering care, web address and hosting.
+- **Ads set up for the client:** UGX 70,000 (the client pays Facebook/Google directly).
+- **Street screen for website clients:** 7 days at UGX 100,000 (normally 150,000), booked within 60 days of launch. It appears on the page only while `SCREEN_ADS_ENABLED` is on, so we never offer what we can't sell.
+
+**The page** (`app/[locale]/websites`, EN + SW; short address `/web` for the street screen):
+- an offer hero with a working phone mock-up of three sample sites (salon, hardware, restaurant): tap an item and see the WhatsApp order;
+- four promises: see it before you pay, 5 working days, a year of care, an office you can visit;
+- how it works, the price with what's included and what isn't, the after-launch add-ons;
+- "six questions to ask any web designer", FAQ, and the free-preview form.
+
+The sample sites open full screen at `/websites/demo/{salon,hardware,restaurant}` (noindex) for sales visits. They are made-up businesses, labelled as samples, with no real phone number.
+
+**Leads:**
+- `POST /websites/preview` (`WebsitePreviewController`, turnstile + throttle). WhatsApp number required.
+- Creates an Enquiry with `product_category = WEB`, routed to the **Vitorra Digital** team (`MAIL_WEB_ADDRESS`, falls back to the team inbox).
+- `WEB` is also accepted by the general enquiry form and CRM deals, and appears in the Enquiries filter, Overview, Executive report and the customer portal.
+- **Finance:** `WEB` is a new accounting sector, so website income shows in the per-sector profit.
+
+**Tracking:**
+- PostHog event `website_preview_requested` (counted as a website lead).
+- Google Ads conversion kind `website`, label `NEXT_PUBLIC_GOOGLE_ADS_LABEL_WEBSITE`, falling back to the enquiry label.
+
+**Campaign:** `marketing/websites/launch-campaign.md`. It covers the offer, the three Meta Click-to-WhatsApp creatives, the Google Search ad, tracking links, the stop/scale rules (judged on cost per paid booking), the street-screen house slide and the sales script.
+
+Tests: `WebsitePreviewTest` (3); full suite 652 passing. Production build OK; the pages are built ahead and cached.
+
+**Before switching on:**
+1. Solomon approves the price list.
+2. Deploy: the website on push; on the server, `git pull`, `config:cache`, `route:cache` (no migration).
+3. Decide who answers the WhatsApp leads, and keep the promised times: same-day reply, preview within 48 hours.
+4. Have a Ugandan colleague check the Luganda ad line.
+5. Add a link from the main site (footer) once the first sites are live.

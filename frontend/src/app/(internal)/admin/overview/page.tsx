@@ -65,7 +65,7 @@ const ADS_POLL_MS = 5 * 60_000;
 const ACTIVITY_ICON: Record<ActivityItem["type"], typeof Mail> = { enquiry: MessageSquare, order: ShoppingCart, message: Mail };
 
 const PRODUCTS: [string, string][] = [
-  ["FET", "Fuel Eco Tech"], ["SEAL", "SEAL Wound Spray"], ["COFFEE", "Coffee"], ["LOGISTICS", "Logistics"], ["GENERAL", "General"],
+  ["FET", "Fuel Eco Tech"], ["SEAL", "SEAL Wound Spray"], ["COFFEE", "Coffee"], ["LOGISTICS", "Logistics"], ["WEB", "Websites"], ["GENERAL", "General"],
 ];
 const PIPELINE: [string, string][] = [
   ["new", "New"], ["in_progress", "In progress"], ["quoted", "Quoted"], ["converted", "Converted"], ["closed", "Closed"],

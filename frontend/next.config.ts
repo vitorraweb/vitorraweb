@@ -34,6 +34,7 @@ const nextConfig: NextConfig = {
       { source: "/fet", destination: "/enquire?sector=FET&utm_source=display&utm_medium=street&utm_campaign=fet", permanent: false },
       { source: "/seal", destination: "/products/seal-wound-spray?utm_source=display&utm_medium=street&utm_campaign=seal", permanent: false },
       { source: "/coffee", destination: "/products/coffee?utm_source=display&utm_medium=street&utm_campaign=coffee", permanent: false },
+      { source: "/web", destination: "/websites?utm_source=display&utm_medium=street&utm_campaign=websites", permanent: false },
       { source: "/freight", destination: "/enquire?sector=LOGISTICS&utm_source=display&utm_medium=street&utm_campaign=freight", permanent: false },
     ];
   },

@@ -43,7 +43,7 @@ class CrmController extends Controller
             'email'          => ['required', 'email'],
             'deal_value'     => ['nullable', 'integer', 'min:0', 'max:100000000000'],
             'deal_currency'  => ['nullable', Rule::in(['UGX', 'USD', 'EUR'])],
-            'deal_product'   => ['nullable', Rule::in(['FET', 'SEAL', 'COFFEE', 'LOGISTICS'])],
+            'deal_product'   => ['nullable', Rule::in(['FET', 'SEAL', 'COFFEE', 'LOGISTICS', 'WEB'])],
             'expected_close' => ['nullable', 'date'],
             'lost_reason'    => ['nullable', Rule::in(array_keys(CustomerNote::LOST_REASONS))],
             'next_action'    => ['nullable', 'string', 'max:255'],

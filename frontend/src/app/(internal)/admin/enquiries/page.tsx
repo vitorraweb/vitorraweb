@@ -23,7 +23,7 @@ type Enquiry = {
 type AssignableUser = { id: number; name: string };
 
 const STATUSES = ["new", "in_progress", "quoted", "converted", "closed"];
-const CATEGORIES = ["FET", "SEAL", "COFFEE", "LOGISTICS"];
+const CATEGORIES = ["FET", "SEAL", "COFFEE", "LOGISTICS", "WEB"];
 
 /* Convert to Order — "Reserve Online, Pay Cash on Installation" for fleet
    enquiries staff have quoted. Tier picked explicitly (Enquiry.requirements

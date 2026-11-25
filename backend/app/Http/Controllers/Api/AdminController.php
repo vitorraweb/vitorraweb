@@ -37,7 +37,7 @@ class AdminController extends Controller
             "CASE WHEN product_category IS NULL OR product_category = '' THEN 'GENERAL' ELSE product_category END AS p, COUNT(*) c"
         )->groupBy('p')->pluck('c', 'p');
         $byProduct = [];
-        foreach (['FET', 'SEAL', 'COFFEE', 'LOGISTICS', 'GENERAL'] as $k) {
+        foreach (['FET', 'SEAL', 'COFFEE', 'LOGISTICS', 'WEB', 'GENERAL'] as $k) {
             $byProduct[$k] = (int) ($enqProductRaw[$k] ?? 0);
         }
 

@@ -20,6 +20,8 @@ return [
         'SEAL'      => ['team' => 'Medical Sales',       'email' => env('MAIL_SEAL_ADDRESS')],
         'COFFEE'    => ['team' => 'Marketing',           'email' => env('MAIL_COFFEE_ADDRESS')],
         'LOGISTICS' => ['team' => 'Operations',          'email' => env('MAIL_LOGISTICS_ADDRESS')],
+        // Vitorra Digital: starter websites for small businesses (/websites).
+        'WEB'       => ['team' => 'Vitorra Digital',     'email' => env('MAIL_WEB_ADDRESS')],
     ],
 
     // Used when no product category is chosen (general enquiry).

@@ -18,7 +18,7 @@ class EnquiryController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'product_category'     => ['nullable', Rule::in(['FET', 'SEAL', 'COFFEE', 'LOGISTICS', ''])],
+            'product_category'     => ['nullable', Rule::in(['FET', 'SEAL', 'COFFEE', 'LOGISTICS', 'WEB', ''])],
             'name'                 => ['required', 'string', 'max:255'],
             'email'                => ['required', 'email', 'max:255'],
             'company'              => ['nullable', 'string', 'max:255'],

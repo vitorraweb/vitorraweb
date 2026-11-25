@@ -150,6 +150,10 @@
     "fetCatalogue": {
       "title": "Katalogi ya Fuel Eco Tech | Vifaa Vinne, Bei na Stoo",
       "description": "Aina zote za Fuel Eco Tech: vifaa vinne kwa kila injini kuanzia lita 1.0 hadi 16, bei kwa UGX pamoja na ufungaji, na stoo iliyopo Kampala."
+    },
+    "websites": {
+      "title": "Tovuti za Biashara Uganda kuanzia UGX 500,000 | Vitorra Digital",
+      "description": "Tovuti ya simu kwa biashara yako, oda zikifika WhatsApp, tayari ndani ya siku 5 za kazi. UGX 500,000 inajumuisha tovuti, anwani ya mtandao na hosting kwa mwaka mmoja. Ona onyesho la bure kabla ya kulipa."
     }
   },
   "finalCta": {
@@ -871,7 +875,8 @@
     "quickLabel": "Njia za mkato",
     "quickEnquiry": "Anza ombi jipya",
     "quickCalc": "Kadiria akiba ya mafuta",
-    "quickContact": "Ongea na timu"
+    "quickContact": "Ongea na timu",
+    "labelWeb": "Tovuti"
   },
   "enquiryForm": {
     "catFetLabel": "Fuel Eco Tech",
@@ -1883,5 +1888,273 @@
     "dlCatalogue": "Katalogi ya FET na stoo ya leo",
     "nextStep": "Ukiwa tayari, tathmini ya mafuta ya bure ndiyo hatua inayofuata. Haina gharama wala haikulazimishi chochote.",
     "nextCta": "Omba tathmini ya mafuta bila malipo"
+  },
+  "websites": {
+    "crumb": "Tovuti za biashara",
+    "schemaName": "Tovuti ya kuanzia ya biashara ya Vitorra Digital",
+    "hero": {
+      "label": "Vitorra Digital",
+      "title1": "Biashara yako mtandaoni.",
+      "title2": "Oda kupitia WhatsApp.",
+      "lead": "Tovuti ambayo wateja wako wanaweza kuipata, kuiamini na kuagiza kupitia. Bidhaa na bei zako kwenye ukurasa mmoja, na kila oda inafika kwenye WhatsApp yako. Tayari ndani ya siku tano za kazi.",
+      "priceNote": "Tovuti, anwani ya mtandao na hosting kwa mwaka wa kwanza. Hakuna malipo mengine.",
+      "primary": "Ongea nasi kwenye WhatsApp",
+      "secondary": "Pata onyesho la bure",
+      "assure": "Ona tovuti yako kabla ya kulipa chochote. Lipa nusu kuanza, iliyobaki ikiwa hewani.",
+      "waText": "Habari Vitorra, ningependa onyesho la bure la tovuti ya biashara yangu. Biashara yangu inaitwa: "
+    },
+    "showcase": {
+      "tabsLabel": "Mifano ya tovuti",
+      "tab": {
+        "salon": "Saluni",
+        "hardware": "Vifaa vya ujenzi",
+        "restaurant": "Mgahawa"
+      },
+      "hint": "Hii ni mifano. Gusa bidhaa yoyote kuona oda ya WhatsApp ambayo mteja wako angekutumia.",
+      "openOnPhone": "Fungua mfano huu skrini nzima"
+    },
+    "demo": {
+      "chat": "Ongea",
+      "orderWhatsapp": "Agiza kwa WhatsApp",
+      "call": "Piga simu",
+      "tapHint": "Gusa bidhaa kuagiza kwa WhatsApp",
+      "hours": "Saa za kazi",
+      "findUs": "Tupate",
+      "sampleNote": "Mfano wa tovuti uliotengenezwa na Vitorra Digital. Biashara hii si ya kweli.",
+      "sheetTitle": "WhatsApp ya mteja wako",
+      "sheetBody": "Kwenye tovuti halisi hii inafungua WhatsApp ujumbe ukiwa tayari umeandikwa. Mteja anabonyeza tuma, nawe unathibitisha bei, malipo na usafirishaji kwenye mazungumzo.",
+      "close": "Funga",
+      "metaSample": "Mfano wa tovuti wa Vitorra Digital",
+      "barBack": "Mfano wa Vitorra Digital",
+      "barCta": "Pata yako: UGX 500,000"
+    },
+    "promise": {
+      "title": "Kwa nini wamiliki wanakubali",
+      "see": {
+        "title": "Ione kabla ya kulipa",
+        "body": "Tutumie jina la biashara yako na picha chache. Tunakutumia onyesho kwenye simu yako. Umeipenda? Ndipo tunaanza."
+      },
+      "fast": {
+        "title": "Hewani ndani ya siku tano za kazi",
+        "body": "Kuanzia siku tunapopokea picha, bei na nembo yako. Mzunguko mmoja wa marekebisho umejumuishwa."
+      },
+      "care": {
+        "title": "Mwaka wa huduma, kwa maandishi",
+        "body": "Tunakagua tovuti yako kila miezi mitatu, tunarekebisha hitilafu yoyote na tunakufanyia masasisho mawili madogo ndani ya mwaka."
+      },
+      "office": {
+        "title": "Ofisi unayoweza kutembelea",
+        "body": "Vitorra Holdings ni kampuni iliyosajiliwa Uganda, Padre Pio House, Lumumba Avenue, Kampala. Karibu utuone."
+      }
+    },
+    "steps": {
+      "label": "Jinsi inavyofanya kazi",
+      "title": "Hatua nne. Huhitaji kompyuta.",
+      "body": "Kila kitu kinafanyika kwenye WhatsApp, kutoka simu yako.",
+      "1": {
+        "title": "Tutumie biashara yako",
+        "body": "Jina la biashara, unachouza na picha chache kutoka simu yako, kwa WhatsApp au kupitia fomu iliyo hapa chini."
+      },
+      "2": {
+        "title": "Pata onyesho la bure",
+        "body": "Ndani ya saa 48 tunakutumia onyesho la tovuti yako. Usipoipenda, hutudai chochote."
+      },
+      "3": {
+        "title": "Hifadhi kwa UGX 250,000",
+        "body": "Lipa nusu kuhifadhi. Tuma bei, nembo na picha zako, nasi tunamaliza tovuti ndani ya siku tano za kazi, pamoja na mzunguko mmoja wa marekebisho."
+      },
+      "4": {
+        "title": "Iwe hewani, kisha lipa iliyobaki",
+        "body": "Tunajaribu oda pamoja nawe, tunaweka tovuti kwenye anwani yako mwenyewe na unalipa UGX 250,000 za mwisho. Kisha tunaitunza kwa mwaka mmoja."
+      }
+    },
+    "price": {
+      "label": "Bei",
+      "title": "Bei moja, na unajua inajumuisha nini.",
+      "body": "Hakuna bili za hosting, hakuna ada zilizofichwa. Anwani ya mtandao inasajiliwa kwa jina la biashara yako, hivyo inabaki kuwa yako.",
+      "cardLabel": "Tovuti ya kuanzia, mwaka wa kwanza",
+      "cardNote": "Tovuti, anwani ya mtandao (.com) na hosting kwa miezi 12.",
+      "split": {
+        "deposit": {
+          "label": "Kuhifadhi, baada ya kuona onyesho",
+          "value": "UGX 250,000"
+        },
+        "balance": {
+          "label": "Tovuti ikiwa hewani",
+          "value": "UGX 250,000"
+        },
+        "renewal": {
+          "label": "Kuanzia mwaka wa pili (huduma, anwani, hosting)",
+          "value": "UGX 300,000 / mwaka"
+        }
+      },
+      "cta": "Anza na onyesho la bure",
+      "inTitle": "Imejumuishwa",
+      "in": {
+        "page": "Ukurasa mmoja unaofaa simu, wenye sura ya biashara yako",
+        "items": "Hadi bidhaa au huduma sita pamoja na bei zake",
+        "order": "Kitufe cha oda kwa kila bidhaa kinachofungua WhatsApp, pamoja na vitufe vya kupiga simu na WhatsApp",
+        "address": "Anwani yako ya .com kwa mwaka mmoja, kwa jina lako",
+        "hosting": "Hosting kwa mwaka mmoja",
+        "secure": "Kufuli (HTTPS salama) kwenye tovuti yako",
+        "stats": "Idadi ya wageni: watu wangapi waliona tovuti yako na kugusa kukuwasiliana",
+        "care": "Ukaguzi kila miezi mitatu, na hitilafu kurekebishwa",
+        "updates": "Masasisho mawili madogo ndani ya mwaka (bei, maandishi au picha mpya)"
+      },
+      "outTitle": "Bei yake hutolewa kando",
+      "out": {
+        "pages": "Kurasa za ziada",
+        "pay": "Malipo ya mtandaoni na Mobile Money ya moja kwa moja",
+        "email": "Barua pepe ya biashara (wewe@biasharayako.com)",
+        "ug": "Anwani za .ug, .co.ug na anwani maalum",
+        "ads": "Matangazo, ukiyataka (tazama hapa chini)"
+      },
+      "outNote": "Tunakuambia bei kabla kazi yoyote ya ziada haijaanza. Hakuna kinachoongezwa bila ridhaa yako."
+    },
+    "addons": {
+      "label": "Baada ya kuzindua",
+      "title": "Tovuti hufanya kazi vizuri zaidi watu wanapoelekezwa kwake.",
+      "body": "Si lazima. Pale tu unapotaka wateja waelekezwe kwenye tovuti yako mpya.",
+      "ads": {
+        "tag": "Si lazima",
+        "title": "Matangazo tunakuwekea",
+        "body": "Tunaweka kampeni moja ya matangazo ya Facebook na Instagram, au Google, kwa biashara yako na kukutumia matokeo baada ya siku 30. Wewe unachagua bajeti ya matangazo (tunapendekeza kuanzia UGX 200,000) na unailipa moja kwa moja kwa Facebook au Google."
+      },
+      "screen": {
+        "tag": "Kwa wateja wetu wa tovuti",
+        "title": "Wiki moja kwenye skrini yetu ya barabarani",
+        "body": "Siku saba kwenye skrini ya barabarani ya Vitorra, Padre Pio House, Lumumba Avenue, kwa bei ya uzinduzi. Hifadhi ndani ya siku 60 baada ya tovuti kuwa hewani."
+      },
+      "grow": {
+        "tag": "Ukiwa tayari",
+        "title": "Ikuze zaidi",
+        "price": "Kwa makubaliano",
+        "body": "Kurasa zaidi, malipo ya mtandaoni na Mobile Money, uhifadhi wa nafasi, barua pepe ya biashara au mfumo kamili. Tunakubaliana bei nawe kabla ya kuanza."
+      }
+    },
+    "ask": {
+      "label": "Kabla hujachagua",
+      "title": "Maswali sita ya kumuuliza mtengenezaji yeyote wa tovuti.",
+      "body": "Tatizo la kawaida zaidi la tovuti ni mtengenezaji ambaye hapatikani tena. Uliza haya kwanza, kwetu na kwa mwingine yeyote.",
+      "company": {
+        "q": "Je, ni kampuni iliyosajiliwa?",
+        "a": "Ndiyo. Vitorra Holdings Limited, imesajiliwa Uganda."
+      },
+      "office": {
+        "q": "Naweza kutembelea ofisi yenu?",
+        "a": "Padre Pio House, Plot 32, Lumumba Avenue, Kampala."
+      },
+      "own": {
+        "q": "Je, anwani ya mtandao iko kwa jina langu?",
+        "a": "Ndiyo, kila mara. Ukiondoka, tunakukabidhi kila kitu."
+      },
+      "writing": {
+        "q": "Je, huduma iko kwa maandishi?",
+        "a": "Ndiyo. Mwaka wa huduma kwenye makubaliano yako."
+      },
+      "preview": {
+        "q": "Naweza kuiona kabla ya kulipa?",
+        "a": "Ndiyo. Onyesho ni bure."
+      },
+      "price": {
+        "q": "Je, bei kamili iko kwa maandishi?",
+        "a": "Ndiyo. UGX 500,000, na kuhuisha kwa UGX 300,000 kwa mwaka."
+      }
+    },
+    "for": {
+      "label": "Ni kwa ajili ya nani",
+      "title": "Kwa biashara ambazo tayari zinauza kwa simu na WhatsApp.",
+      "body": "Kama wateja wako wanauliza \"ni bei gani?\" na \"mko wapi?\" kwenye WhatsApp kila siku, tovuti yako inawajibu kabla hawajauliza."
+    },
+    "faqLabel": "Maswali",
+    "faqTitle": "Wamiliki hutuuliza",
+    "faq": {
+      "computer": {
+        "q": "Je, nahitaji kompyuta?",
+        "a": "Hapana. Unatuma picha na bei kutoka simu yako kwa WhatsApp, na unaidhinisha tovuti kwenye simu yako."
+      },
+      "own": {
+        "q": "Nani anamiliki tovuti na anwani ya mtandao?",
+        "a": "Wewe. Anwani inasajiliwa kwa jina la biashara yako. Ukiondoka kwetu, tunakukabidhi anwani na faili za tovuti."
+      },
+      "dislike": {
+        "q": "Nisipolipenda onyesho?",
+        "a": "Basi hulipi chochote. Onyesho ni bure na huna wajibu wowote."
+      },
+      "after": {
+        "q": "Nini kinatokea baada ya mwaka wa kwanza?",
+        "a": "Tunakutumia taarifa ya kuhuisha siku 30 kabla. Kuhuisha ni UGX 300,000 kwa mwaka na kunajumuisha huduma, anwani na hosting. Usipohuisha, tunakukabidhi kila kitu."
+      },
+      "time": {
+        "q": "Inachukua muda gani?",
+        "a": "Siku tano za kazi kuanzia siku tunapokuwa na picha, bei na nembo yako. Mara nyingi kusubiri ni kwa ajili ya vifaa hivyo, hivyo ukivituma mapema, tovuti inakuwa hewani mapema."
+      },
+      "change": {
+        "q": "Naweza kubadilisha bei baadaye?",
+        "a": "Masasisho mawili madogo yamejumuishwa mwaka wa kwanza. Mabadiliko zaidi, au ukurasa mpya, hupewa bei kwanza."
+      },
+      "pay": {
+        "q": "Nalipaje?",
+        "a": "Tunakutumia ankara yenye maelezo ya malipo: nusu kuhifadhi baada ya onyesho, iliyobaki tovuti ikiwa hewani."
+      },
+      "ads": {
+        "q": "Je, tovuti peke yake italeta wateja?",
+        "a": "Inawapa wateja mahali pa kuona bei zako na kuagiza. Kuleta watu wapya, shiriki kiungo chako kwenye WhatsApp, Facebook na bango la duka lako, na ongeza matangazo ukiwa tayari. Tunaweza kukuwekea."
+      },
+      "bigger": {
+        "q": "Nahitaji zaidi ya ukurasa mmoja.",
+        "a": "Tuambie unachohitaji: kurasa zaidi, malipo ya mtandaoni, uhifadhi wa nafasi au mfumo kamili. Tunakubaliana bei kabla kazi haijaanza."
+      }
+    },
+    "previewBlock": {
+      "label": "Onyesho la bure",
+      "title": "Ione tovuti yako kwanza.",
+      "body": "Tuambie kuhusu biashara yako. Tunajibu kwa WhatsApp siku hiyo hiyo ya kazi na kutuma onyesho ndani ya saa 48. Bure, bila wajibu.",
+      "wa": "Au itume moja kwa moja kwa WhatsApp"
+    },
+    "form": {
+      "name": "Jina lako",
+      "business": "Jina la biashara",
+      "phone": "Namba ya WhatsApp",
+      "email": "Barua pepe",
+      "type": "Aina ya biashara",
+      "choose": "Chagua…",
+      "link": "Wateja wanakupata wapi sasa? (si lazima)",
+      "linkPh": "Kiungo cha Facebook, Instagram, TikTok au Google Maps",
+      "sells": "Unauza nini? (si lazima)",
+      "sellsPh": "mf. magauni ya kitenge na mikoba, kuanzia UGX 40,000",
+      "ads": "Huenda nikahitaji pia msaada wa matangazo baada ya kuzindua",
+      "submit": "Nitumie onyesho langu la bure",
+      "sending": "Inatuma…",
+      "error": "Haijafanikiwa. Tafadhali jaribu tena, au tutumie ujumbe kwa WhatsApp.",
+      "privacy": "Tunatumia maelezo haya tu kukutumia onyesho na kuongea nawe kuhusu tovuti yako.",
+      "errName": "Tafadhali andika jina lako.",
+      "errBusiness": "Tafadhali andika jina la biashara yako.",
+      "errPhone": "Tafadhali andika namba ya WhatsApp tunayoweza kukupata.",
+      "errEmail": "Tafadhali andika barua pepe sahihi.",
+      "errType": "Tafadhali chagua aina ya biashara yako.",
+      "doneLabel": "Imepokelewa",
+      "doneTitle": "Asante, {name}.",
+      "doneBody": "Tutakutumia ujumbe kwa WhatsApp leo (au siku ya kazi inayofuata) kuchukua picha chache. Ili kwenda haraka, tuma nembo na picha zako sasa.",
+      "doneCta": "Tuma picha kwa WhatsApp",
+      "waFollowUp": "Habari Vitorra, nimeomba onyesho la tovuti ya {business}. Hizi hapa picha zangu:",
+      "types": {
+        "shop": "Duka / boutique",
+        "salon": "Saluni / urembo",
+        "restaurant": "Mgahawa / kahawa / mikate",
+        "hardware": "Vifaa vya ujenzi",
+        "hotel": "Hoteli / nyumba ya wageni / utalii",
+        "school": "Shule / mafunzo",
+        "clinic": "Kliniki / duka la dawa",
+        "services": "Huduma za kitaalamu",
+        "farm": "Shamba / mazao ya kilimo",
+        "other": "Nyingine"
+      }
+    },
+    "close": {
+      "title": "Tuko tayari ukiwa tayari.",
+      "body": "Tutumie jina la biashara yako kwa WhatsApp. Hiyo ndiyo hatua yote ya kwanza.",
+      "brief": "Onyesho la bure"
+    }
   }
 }

@@ -181,6 +181,8 @@ Route::get('/exchange-rate', [ExchangeRateController::class, 'show']);
 Route::get('/fet/availability', [FetStockController::class, 'availability'])->middleware('throttle:120,1');
 // The light lead step on the FET pages: email the Buyer's Pack, log an FET lead.
 Route::post('/fet/buyers-pack', [\App\Http\Controllers\Api\FetBuyersPackController::class, 'store'])->middleware(['turnstile', 'throttle:6,1']);
+// The lead form on /websites (Vitorra Digital starter websites): a free preview request.
+Route::post('/websites/preview', [\App\Http\Controllers\Api\WebsitePreviewController::class, 'store'])->middleware(['turnstile', 'throttle:6,1']);
 // The current spotlight message for the homepage / FET page.
 Route::get('/spotlight', [\App\Http\Controllers\Api\SpotlightController::class, 'current'])->middleware('throttle:120,1');
 // Reception / street screen: what to show beyond its built-in story (the welcome).

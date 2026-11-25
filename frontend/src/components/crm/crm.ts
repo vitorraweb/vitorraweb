@@ -38,7 +38,7 @@ export const LOST_REASONS: Record<string, string> = {
   price: "Price too high", timing: "Not the right time", competitor: "Chose a competitor", no_response: "Stopped responding",
   no_budget: "No budget", not_fit: "Not a fit", other: "Other",
 };
-export const PRODUCTS: Record<string, string> = { FET: "Fuel Eco Tech", SEAL: "SEAL Wound Spray", COFFEE: "Coffee", LOGISTICS: "Logistics" };
+export const PRODUCTS: Record<string, string> = { FET: "Fuel Eco Tech", SEAL: "SEAL Wound Spray", COFFEE: "Coffee", LOGISTICS: "Logistics", WEB: "Websites" };
 
 export const isoDay = (offsetDays = 0) => {
   const d = new Date(); d.setDate(d.getDate() + offsetDays);

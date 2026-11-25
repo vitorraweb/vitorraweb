@@ -10,7 +10,7 @@ import { apiCustomer } from "@/lib/customer-auth";
 type Enquiry = { id: number; product_category: string | null; message: string; status: string; created_at: string };
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-const LABEL_KEY: Record<string, string> = { FET: "labelFet", SEAL: "labelSeal", COFFEE: "labelCoffee", LOGISTICS: "labelLogistics" };
+const LABEL_KEY: Record<string, string> = { FET: "labelFet", SEAL: "labelSeal", COFFEE: "labelCoffee", LOGISTICS: "labelLogistics", WEB: "labelWeb" };
 const STATUS_KEY: Record<string, string> = { new: "statusNew", in_progress: "statusInProgress", quoted: "statusQuoted", converted: "statusConverted", closed: "statusClosed" };
 
 export default function AccountEnquiries() {

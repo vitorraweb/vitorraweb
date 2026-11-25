@@ -27,7 +27,7 @@ type Summary = {
 const PERIODS: [string, string][] = [["mtd", "This month"], ["last_month", "Last month"], ["week", "Last 7 days"]];
 const ugx = (n: number) => `UGX ${n.toLocaleString()}`;
 const usd = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const PRODUCT_LABEL: Record<string, string> = { FET: "Fuel Eco Tech", SEAL: "SEAL Wound Spray", COFFEE: "Coffee", LOGISTICS: "Logistics", GENERAL: "General" };
+const PRODUCT_LABEL: Record<string, string> = { FET: "Fuel Eco Tech", SEAL: "SEAL Wound Spray", COFFEE: "Coffee", LOGISTICS: "Logistics", WEB: "Websites", GENERAL: "General" };
 
 export default function ExecutivePage() {
   const [period, setPeriod] = useState("mtd");

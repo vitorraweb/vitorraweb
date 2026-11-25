@@ -1672,3 +1672,35 @@
 /* Cookie banner: server-rendered, hidden before first paint once a choice is
    stored (CONSENT_HEAD_SCRIPT), unless the visitor reopened it from the footer. */
 html[data-consent] [data-cookie-banner]:not([data-open]) { display: none; }
+
+/* ═══ VITORRA DIGITAL — sample client websites (/websites) ═══════════════════
+   Each sample wears its own brand on purpose: the client's site should look
+   like the client, not like Vitorra. Colours are scoped to .demo-* only.   */
+
+.demo-phone { background: #111; box-shadow: 0 0 0 1px #2a2a2a, 0 40px 80px -30px rgba(0, 0, 0, 0.7); }
+.demo-notch { background: #111; }
+
+.demo-site { --demo-bg: #fff; --demo-ink: #1b1b1b; --demo-soft: #5f5f5f; --demo-accent: #1b1b1b; --demo-on-accent: #fff; --demo-tint: #f3f3f3; --demo-line: #e6e6e6;
+  background: var(--demo-bg); color: var(--demo-ink); font-family: var(--font-inter), system-ui, sans-serif; }
+.demo-salon      { --demo-bg: #fbf5f2; --demo-ink: #2b1720; --demo-soft: #74606a; --demo-accent: #8e3b5a; --demo-on-accent: #fff; --demo-tint: #f3e3e3; --demo-line: #ead7d6; }
+.demo-hardware   { --demo-bg: #f4f3ef; --demo-ink: #1f2a33; --demo-soft: #5b6670; --demo-accent: #c2561b; --demo-on-accent: #fff; --demo-tint: #e6e2d8; --demo-line: #dcd7cb; }
+.demo-restaurant { --demo-bg: #fff8ec; --demo-ink: #24301f; --demo-soft: #66705f; --demo-accent: #2f6b3a; --demo-on-accent: #fff; --demo-tint: #f3e7cf; --demo-line: #eadcc0; }
+
+.demo-site .demo-soft   { color: var(--demo-soft); }
+.demo-site .demo-kicker,
+.demo-site .demo-price  { color: var(--demo-accent); }
+.demo-site .demo-bar    { background: color-mix(in srgb, var(--demo-bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--demo-line); padding-top: 2.1rem; }
+.demo-site .demo-mark,
+.demo-site .demo-primary { background: var(--demo-accent); color: var(--demo-on-accent); }
+.demo-site .demo-chip   { background: var(--demo-tint); color: var(--demo-ink); }
+.demo-site .demo-ghost  { border: 1px solid var(--demo-line); color: var(--demo-ink); }
+.demo-site .demo-hero   { background: linear-gradient(160deg, var(--demo-tint), var(--demo-bg) 70%); }
+.demo-site .demo-item,
+.demo-site .demo-card   { background: #fff; border: 1px solid var(--demo-line); }
+.demo-site .demo-item   { transition: transform 150ms var(--ease-quiet), border-color 150ms; }
+.demo-site .demo-item:hover { border-color: var(--demo-accent); }
+.demo-site .demo-item:active { transform: scale(0.985); }
+.demo-site .demo-sheet  { background: #fff; color: #1b1b1b; box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.18); }
+.demo-site .wa-thread   { background: #efeae2; }
+.demo-site .wa-bubble   { background: #d9fdd3; color: #111b21; }
+main > div > .demo-site .demo-bar { padding-top: 0.75rem; }

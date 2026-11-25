@@ -30,12 +30,13 @@ export const GOOGLE_ADS_ID =
     ? configuredAdsId
     : process.env.NODE_ENV === "production" ? DEFAULT_ADS_ID : "";
 
-export type ConversionKind = "enquiry" | "contact" | "reserve" | "newsletter" | "call" | "pack";
+export type ConversionKind = "enquiry" | "contact" | "reserve" | "newsletter" | "call" | "pack" | "website";
 
 /** The same moments as PostHog events — the console's "Leads from the website" counts the first three. */
 const POSTHOG_EVENTS: Record<ConversionKind, string> = {
   enquiry: "enquiry_submitted", contact: "contact_submitted", reserve: "reservation_submitted",
   newsletter: "newsletter_subscribed", call: "call_clicked", pack: "buyers_pack_requested",
+  website: "website_preview_requested",
 };
 
 const LABELS: Record<ConversionKind, string | undefined> = {
@@ -46,6 +47,8 @@ const LABELS: Record<ConversionKind, string | undefined> = {
   call: process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_CALL,
   // A Buyer's Pack request is a lead with contact details, so it counts as an enquiry for Ads.
   pack: process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_PACK ?? process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_ENQUIRY,
+  // A website preview request (Vitorra Digital) gets its own action, so its cost per lead is not mixed with FET.
+  website: process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_WEBSITE ?? process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL_ENQUIRY,
 };
 
 /** Routes that are staff tools or unattended screens, never ad landing pages. */

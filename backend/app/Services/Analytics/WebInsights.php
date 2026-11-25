@@ -20,6 +20,7 @@ class WebInsights
         'SEAL'      => ['/products/seal-wound-spray', 'SEAL Wound Spray'],
         'COFFEE'    => ['/products/coffee', 'Coffee'],
         'LOGISTICS' => ['/products/logistics', 'Logistics'],
+        'WEB'       => ['/websites', 'Websites'],
     ];
 
     public function __construct(private PostHogWebStats $stats) {}

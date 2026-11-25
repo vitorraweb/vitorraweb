@@ -15,6 +15,7 @@ const PAGES: { path: string; priority: number; cf: MetadataRoute.Sitemap[number]
   { path: "/products/seal-wound-spray", priority: 0.9, cf: "monthly" },
   { path: "/products/coffee", priority: 0.8, cf: "monthly" },
   { path: "/products/logistics", priority: 0.8, cf: "monthly" },
+  { path: "/websites", priority: 0.8, cf: "monthly" },
   { path: "/enquire", priority: 0.7, cf: "monthly" },
   { path: "/contact", priority: 0.6, cf: "monthly" },
   { path: "/blog", priority: 0.7, cf: "weekly" },

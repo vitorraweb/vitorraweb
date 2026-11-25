@@ -341,6 +341,19 @@ export async function requestBuyersPack(
   trackConversion("pack", { transactionId: `pack-${Date.now()}`, email: data.email, phone: data.phone });
 }
 
+/* ─── Vitorra Digital: free website preview request (/websites) ─────────── */
+
+export async function requestWebsitePreview(
+  data: { name: string; business: string; phone: string; email: string; business_type: string; online_link?: string; sells?: string; add_ads?: boolean },
+  turnstileToken?: string,
+): Promise<void> {
+  await request("/websites/preview", {
+    method: "POST",
+    body: JSON.stringify({ ...data, turnstile_token: turnstileToken, attribution: getAttribution() }),
+  });
+  trackConversion("website", { transactionId: `web-${Date.now()}`, email: data.email, phone: data.phone, value: 500000, currency: "UGX" });
+}
+
 /* ─── Spotlight (the current "what's new" line under a hero) ───────────── */
 
 export type Spotlight = { eyebrow: string | null; title: string; body: string | null; cta_label: string | null; cta_url: string | null };

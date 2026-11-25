@@ -21,7 +21,7 @@ type Receipt = {
 type Account = { id: number; name: string; currency: string; is_active: boolean };
 type Category = { id: number; name: string; kind: string; is_active: boolean };
 
-const SECTORS = ["FET", "SEAL", "COFFEE", "LOGISTICS", "GENERAL"];
+const SECTORS = ["FET", "SEAL", "COFFEE", "LOGISTICS", "WEB", "GENERAL"];
 const major = (minor: number | null, cur: string | null) => (minor == null ? "" : cur && cur !== "UGX" ? (minor / 100).toFixed(2) : String(minor));
 const toMinor = (v: string, cur: string) => Math.round((parseFloat(v.replace(/,/g, "")) || 0) * (cur === "UGX" ? 1 : 100));
 const money = (minor: number | null, cur: string | null) => minor == null ? "—" : cur && cur !== "UGX" ? `${cur} ${(minor / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}` : `UGX ${minor.toLocaleString()}`;
