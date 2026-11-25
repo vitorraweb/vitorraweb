@@ -34,3 +34,17 @@ imply that the people shown endorse a product. Stock people appear only as
 atmosphere, never with a name or a quote.
 
 Showcase captures in frontend/public/websites/shots/*.webp are screenshots of the sample pages (production build, 25 Nov 2026), so they carry the same photos.
+
+## Added 25 Nov 2026 for the /websites page redesign (public/websites/ug)
+
+| File | Source | Licence | Subject | Identifiable | Consent |
+|---|---|---|---|---|---|
+| shopkeeper.webp | pexels.com/photo/30848031 (photographer based in Kampala) | Pexels License | person in his shop | yes | stock (Pexels; no model release on file). Retouched: a sports-brand logo on the shirt and a mark on the shorts painted out |
+| customer-phone.webp | pexels.com/photo/5711715 | Pexels License | person | yes | stock (Pexels; no model release on file) |
+| crafts.webp | pexels.com/photo/33203798 | Pexels License | person at her stall | yes | stock (Pexels; no model release on file). Not captioned with a place |
+| owino-stall.webp | commons.wikimedia.org/wiki/File:Assorted_African_Food_spices_and_medicines.jpg, by Alvinategyeka | CC BY-SA 4.0 (credited on the page) | market stall, Owino, Kampala | no | n/a |
+| nakasero.webp | commons.wikimedia.org/wiki/File:Nakasero_Market_Kampala.jpg, by Kateregga1 | CC BY-SA 4.0 (credited on the photo) | Nakasero Market, Kampala; cropped to remove large billboards | no (crowd at distance) | n/a |
+
+Also used: /photos/company-B-reception.jpg (Vitorra's own reception).
+
+Rejected: pexels 2014342 (sold as Kampala, but the shop signs show it is Arusha, Tanzania, and name two real businesses); pexels 34423206 (Latin American market: Spanish signs, prices per pound).

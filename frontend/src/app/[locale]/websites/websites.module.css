@@ -1,0 +1,76 @@
+/* /websites — Vitorra Digital. The page wears its own professional typeface
+   (Plus Jakarta Sans) instead of the main site's display serif: every heading
+   and paragraph inside .page reads in it. The site header and footer keep the
+   Vitorra type. Colours still come from the Quiet Authority tokens. */
+
+.page {
+  --font-display: var(--web-sans), system-ui, sans-serif;
+  --font-playfair: var(--web-sans);
+  font-family: var(--web-sans), system-ui, sans-serif;
+}
+.page :global(.t-display),
+.page :global(.t-h1),
+.page :global(.t-h2) { font-weight: 700; letter-spacing: -0.035em; line-height: 1.02; }
+.page :global(.t-h3) { font-weight: 650; letter-spacing: -0.02em; }
+.page :global(.t-lead) { font-size: clamp(1.125rem, 1rem + 0.4vw, 1.3rem); line-height: 1.55; }
+.page :where(h1, h2, h3, h4) { font-family: inherit; }
+
+/* Hero: words on ink at left, the photo bleeding to the right edge. */
+.hero { background: var(--color-ink); color: var(--color-ink-fg); display: grid; }
+@media (min-width: 1024px) { .hero { grid-template-columns: 1.05fr 0.95fr; min-height: min(calc(100svh - 96px), 860px); } }
+.heroText { padding: 56px clamp(20px, 6vw, 96px) 56px; display: flex; flex-direction: column; justify-content: center; }
+@media (min-width: 1024px) { .heroText { padding-top: 72px; padding-bottom: 72px; } }
+.heroTitle { font-size: clamp(2.4rem, 1.3rem + 3.4vw, 4.4rem); }
+.heroPhoto { position: relative; min-height: 58svh; }
+@media (min-width: 1024px) { .heroPhoto { min-height: 0; } }
+.price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-top: 32px; }
+.priceFig { font-size: clamp(2.2rem, 1.6rem + 2vw, 3.2rem); font-weight: 700; letter-spacing: -0.03em; color: var(--color-gold); white-space: nowrap; }
+.ticks { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 15px; color: var(--color-ink-fg-muted); }
+.ticks li { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Split: text beside a photo */
+.split { display: grid; gap: 40px; align-items: center; }
+@media (min-width: 1024px) { .split { grid-template-columns: 1fr 1fr; gap: 88px; } }
+.splitPhoto { position: relative; aspect-ratio: 4 / 5; border-radius: 16px; overflow: hidden; }
+.points { margin-top: 32px; border-top: 1px solid var(--color-line-strong); }
+.points li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--color-line); font-size: 18px; color: var(--color-ink); }
+
+/* Photo tiles: who it is for */
+.tiles { margin-top: 48px; display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+@media (min-width: 1024px) { .tiles { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+.tile { position: relative; aspect-ratio: 4 / 5; border-radius: 14px; overflow: hidden; background: var(--color-ink); }
+@media (min-width: 1024px) { .tile { aspect-ratio: 5 / 4; } }
+.tileLabel { position: absolute; left: 12px; right: 12px; bottom: 12px; background: var(--color-paper); color: var(--color-ink); border-radius: 10px; padding: 12px 14px; }
+.tileLabel b { display: block; font-size: 16px; font-weight: 650; letter-spacing: -0.01em; }
+.tileLabel span { display: block; font-size: 13px; color: var(--color-ink-muted); margin-top: 2px; }
+@media (max-width: 640px) { .tileLabel span { display: none; } .tileLabel { padding: 10px 12px; } .tileLabel b { font-size: 14px; } }
+
+/* Steps beside our real office */
+.steps { counter-reset: s; border-top: 1px solid var(--color-line-strong); }
+.steps li { position: relative; display: grid; grid-template-columns: 52px 1fr; gap: 4px 16px; padding: 22px 0; border-bottom: 1px solid var(--color-line); }
+.stepNo { grid-row: span 2; width: 40px; height: 40px; border-radius: 99px; background: var(--color-ink); color: var(--color-ink-fg); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+.steps h3 { font-size: 20px; font-weight: 650; letter-spacing: -0.015em; color: var(--color-ink); }
+.steps p { color: var(--color-ink-soft); font-size: 16px; }
+.caption { margin-top: 12px; font-size: 13px; color: var(--color-ink-muted); }
+
+/* Price */
+.priceGrid { margin-top: 48px; display: grid; gap: 24px; }
+@media (min-width: 1024px) { .priceGrid { grid-template-columns: 0.9fr 1.1fr; gap: 40px; } }
+.priceCard { background: var(--color-ink); color: var(--color-ink-fg); border-radius: 20px; padding: clamp(28px, 4vw, 48px); }
+.bigPrice { font-size: clamp(2.4rem, 1.6rem + 2.4vw, 3.6rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1; margin-top: 12px; white-space: nowrap; }
+.pay { margin-top: 28px; border-top: 1px solid var(--color-ink-line); }
+.pay div { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--color-ink-line); font-size: 15px; }
+.pay dt { color: var(--color-ink-fg-muted); }
+.pay dd { font-weight: 650; white-space: nowrap; }
+.lists { display: grid; gap: 32px; }
+@media (min-width: 720px) { .lists { grid-template-columns: 1.2fr 1fr; } }
+.listTitle { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 650; color: var(--color-ink); padding-bottom: 12px; border-bottom: 1px solid var(--color-ink); }
+.list li { display: flex; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--color-line); font-size: 16px; color: var(--color-ink); }
+
+/* Kampala band: full-bleed market photo, words on a solid panel */
+.band { position: relative; min-height: min(88svh, 820px); display: grid; align-items: end; }
+.bandImg { position: absolute; inset: 0; }
+.panel { position: relative; margin: 0 clamp(16px, 5vw, 80px) clamp(16px, 5vw, 64px); background: var(--color-paper); color: var(--color-ink); border-radius: 20px; padding: clamp(24px, 4vw, 48px); max-width: 620px; }
+@media (max-width: 640px) { .band { display: block; min-height: 0; } .bandImg { position: relative; height: 52svh; } .panel { margin: -40px 16px 16px; } }
+.credit { position: absolute; right: 12px; top: 12px; font-size: 11px; color: var(--color-ink-fg); background: var(--color-ink); padding: 4px 8px; border-radius: 6px; }
+.credit a { text-decoration: underline; text-underline-offset: 2px; }

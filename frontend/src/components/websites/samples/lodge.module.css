@@ -1,10 +1,10 @@
-/* Ridgeline Lodge — quiet and spacious: forest, mist, clay. Cormorant over Space Grotesk. */
+/* Ridgeline Lodge — quiet and spacious: forest, mist, clay. Lora over Work Sans. */
 .root {
   --s-paper: #eef0ea; --s-forest: #142219; --s-ink: #142219; --s-soft: #56625a; --s-clay: #a85532; --s-accent: #a85532; --s-on-accent: #fbf6f0;
   --s-line: #cfd6cc; --s-field: #fbfcf9; --s-radius: 0px;
   background: var(--s-paper); color: var(--s-ink); font-family: var(--lodge-sans), system-ui, sans-serif; font-size: 17px; line-height: 1.6;
 }
-.serif { font-family: var(--lodge-serif), Georgia, serif; font-weight: 500; letter-spacing: -0.01em; }
+.serif { font-family: var(--lodge-serif), Georgia, serif; font-weight: 500; letter-spacing: -0.02em; }
 .wrap { max-width: 1480px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 80px); }
 .label { font-size: 12px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--s-clay); font-weight: 500; }
 

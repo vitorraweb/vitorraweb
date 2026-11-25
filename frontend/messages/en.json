@@ -152,8 +152,8 @@
       "description": "The full Fuel Eco Tech range: four devices covering every engine from 1.0 to 16 litres, with prices in UGX including installation and live stock in Kampala."
     },
     "websites": {
-      "title": "Business Websites in Uganda from UGX 500,000 | Vitorra Digital",
-      "description": "A website for your business, on every phone and computer, built in 5 working days. UGX 500,000 includes the website, your web address and hosting for a year. See a free preview before you pay."
+      "title": "Websites for Ugandan businesses from UGX 500,000 | Vitorra Digital",
+      "description": "A website for your business that customers can find on their phone. UGX 500,000 for the first year: website, web name and a year of care. See a free preview before you pay."
     }
   },
   "finalCta": {
@@ -1891,17 +1891,44 @@
   },
   "websites": {
     "crumb": "Business websites",
-    "schemaName": "Vitorra Digital starter business website",
-    "hero": {
-      "label": "Vitorra Digital",
-      "title1": "Your business, online.",
-      "title2": "Found, trusted, chosen.",
-      "lead": "A website that shows who you are, what you offer and how to reach you, on every phone and computer. For firms, shops, lodges, restaurants, clinics, schools and studios. Ready in five working days.",
-      "priceNote": "Website, web address and hosting for the first year. Nothing else to pay.",
-      "primary": "Chat with us on WhatsApp",
-      "secondary": "Get a free preview",
-      "assure": "See your website before you pay anything. Pay half to start, the rest when it is live.",
-      "waText": "Hello Vitorra, I would like a free preview of a website for my business. My business is called: "
+    "form": {
+      "name": "Your name",
+      "business": "Business name",
+      "phone": "WhatsApp number",
+      "email": "Email",
+      "type": "What kind of business?",
+      "choose": "Choose…",
+      "link": "Facebook, Instagram, TikTok or Google Maps page (optional)",
+      "linkPh": "Paste a link, if you have one",
+      "sells": "What do you sell or do? (optional)",
+      "sellsPh": "e.g. dresses and bags, from UGX 40,000",
+      "ads": "I may also want help with Facebook or Google ads",
+      "submit": "Send me my free preview",
+      "sending": "Sending…",
+      "error": "That didn't go through. Please try again, or message us on WhatsApp.",
+      "privacy": "We use these details only to send your preview and talk to you about your website.",
+      "errName": "Please enter your name.",
+      "errBusiness": "Please enter your business name.",
+      "errPhone": "Please enter a WhatsApp number we can reach.",
+      "errEmail": "Please enter a valid email.",
+      "errType": "Please choose your type of business.",
+      "doneLabel": "Received",
+      "doneTitle": "Thank you, {name}.",
+      "doneBody": "We will message you on WhatsApp today or the next working day. To go faster, send your logo and a few photos now.",
+      "doneCta": "Send photos on WhatsApp",
+      "waFollowUp": "Hello Vitorra, I just asked for a website preview for {business}. Here are my photos:",
+      "types": {
+        "shop": "Shop / boutique",
+        "salon": "Salon / beauty",
+        "restaurant": "Restaurant / café / bakery",
+        "hardware": "Hardware / building supplies",
+        "hotel": "Hotel / guesthouse / tours",
+        "school": "School / training",
+        "clinic": "Clinic / pharmacy",
+        "services": "Professional services",
+        "farm": "Farm / agro products",
+        "other": "Other"
+      }
     },
     "showcase": {
       "tabsLabel": "Sample websites",
@@ -1923,232 +1950,194 @@
       "barCta": "Get yours: UGX 500,000",
       "barNote": "Sample website. The business is made up."
     },
-    "promise": {
-      "title": "Why owners say yes",
-      "see": {
-        "title": "See it before you pay",
-        "body": "Send us your business name and a few photos. We send you a preview on your phone. Like it? Then we start."
+    "schemaName": "Vitorra Digital starter business website",
+    "hero": {
+      "label": "Vitorra Digital · Websites for Ugandan businesses",
+      "title": "Let customers find your business online.",
+      "lead": "We make a website for your business. People can see what you sell, your prices and where you are, then call or WhatsApp you. Ready in 5 days.",
+      "priceNote": "for the whole first year. No other charges.",
+      "primary": "Talk to us on WhatsApp",
+      "secondary": "Get a free preview",
+      "tick": {
+        "see": "See it before you pay",
+        "half": "Pay half to start",
+        "office": "Office on Lumumba Avenue"
       },
-      "fast": {
-        "title": "Live in five working days",
-        "body": "Counted from the day we receive your photos, prices and logo. One round of changes is included."
-      },
-      "care": {
-        "title": "A year of care, in writing",
-        "body": "We check your site every three months, fix any fault and make two small updates for you during the year."
-      },
-      "office": {
-        "title": "An office you can visit",
-        "body": "Vitorra Holdings is a registered Ugandan company at Padre Pio House, Lumumba Avenue, Kampala. Come and see us."
+      "waText": "Hello Vitorra, I want a website for my business. My business is called: "
+    },
+    "why": {
+      "label": "Why a website",
+      "title": "Before they come, they search on their phone.",
+      "body": "Most customers look a business up before they visit, call or buy. If they find you, they come to you. If they find nothing, they go to someone they can find.",
+      "points": {
+        "what": "They see what you sell and how much it costs",
+        "where": "They see where you are and when you are open",
+        "reach": "They call or WhatsApp you with one tap"
       }
+    },
+    "for": {
+      "label": "For every business",
+      "title": "From a market stall to an office.",
+      "body": "If people need to find you, a website helps. These are some of the businesses we make websites for.",
+      "tiles": {
+        "market": {
+          "title": "Shops & market traders",
+          "body": "Show your goods and prices",
+          "alt": "A spice and dry goods stall in Owino market, Kampala"
+        },
+        "salon": {
+          "title": "Salons & barbers",
+          "body": "Show your styles and take bookings",
+          "alt": "Braids being finished by hand"
+        },
+        "food": {
+          "title": "Restaurants & food",
+          "body": "Put your menu where people can see it",
+          "alt": "Food being plated in a kitchen"
+        },
+        "stay": {
+          "title": "Hotels, lodges & tours",
+          "body": "Show your rooms and take enquiries",
+          "alt": "Lake Bunyonyi and its islands"
+        },
+        "office": {
+          "title": "Offices & professionals",
+          "body": "Lawyers, accountants, clinics, schools",
+          "alt": "A professional working at a desk"
+        },
+        "makers": {
+          "title": "Makers & crafts",
+          "body": "Tailors, artists, furniture, crafts",
+          "alt": "A maker standing behind her stall of handmade goods"
+        }
+      }
+    },
+    "samples": {
+      "label": "Examples",
+      "title": "See what yours could look like.",
+      "body": "Four example websites we made for different kinds of business. Open any of them on your phone or computer. Each business gets its own look."
     },
     "steps": {
       "label": "How it works",
-      "title": "Four steps. No computer needed.",
-      "body": "Everything happens on WhatsApp, from your phone.",
+      "title": "Four simple steps. No computer needed.",
       "1": {
-        "title": "Send us your business",
-        "body": "Your business name, what you sell and a few photos from your phone, on WhatsApp or through the form below."
+        "title": "Tell us about your business",
+        "body": "Send your business name and a few photos on WhatsApp, or fill the form below."
       },
       "2": {
-        "title": "Get a free preview",
-        "body": "Within 48 hours we send you a preview of your website. If you don't like it, you owe us nothing."
+        "title": "See it first, for free",
+        "body": "In 2 days we send you a preview of your website. If you don't like it, you pay nothing."
       },
       "3": {
-        "title": "Book with UGX 250,000",
-        "body": "Pay half to book. Send your prices, logo and photos, and we finish your site within five working days, with one round of changes."
+        "title": "Pay half to start",
+        "body": "Pay UGX 250,000. Send your prices and photos. We finish your website in 5 days."
       },
       "4": {
-        "title": "Go live, then pay the rest",
-        "body": "We test an order with you, put the site on your own web address and you pay the last UGX 250,000. Then we look after it for a year."
-      }
+        "title": "Your website goes live",
+        "body": "We test it with you, then you pay the last UGX 250,000. We look after it for a year."
+      },
+      "caption": "Our office at Padre Pio House, Plot 32, Lumumba Avenue, Kampala. You are welcome to visit."
     },
     "price": {
       "label": "The price",
-      "title": "One price, and you know what it covers.",
-      "body": "No hosting bills, no hidden setup fees. The web address is registered in your business's name, so it stays yours.",
-      "cardLabel": "Starter website, first year",
-      "cardNote": "Website, web address (.com) and hosting for 12 months.",
+      "title": "One clear price.",
+      "body": "No hidden charges. You know exactly what you pay and what you get.",
+      "cardLabel": "Your website, first year",
+      "cardNote": "Everything in the list, for 12 months.",
       "split": {
         "deposit": {
-          "label": "To book, after you see the preview",
+          "label": "After you see the free preview",
           "value": "UGX 250,000"
         },
         "balance": {
-          "label": "When your site is live",
+          "label": "When your website is live",
           "value": "UGX 250,000"
         },
         "renewal": {
-          "label": "From year two (care, web address, hosting)",
+          "label": "From the second year",
           "value": "UGX 300,000 / year"
         }
       },
       "cta": "Start with a free preview",
-      "inTitle": "Included",
+      "inTitle": "What you get",
       "in": {
-        "page": "One page that looks like your business, on phones and computers",
-        "items": "Up to six products, services, rooms or packages, with prices",
-        "order": "Buttons that open WhatsApp, a phone call or an enquiry form",
-        "address": "Your own .com web address for a year, in your name",
-        "hosting": "Hosting for a year",
-        "secure": "The padlock (secure HTTPS) on your site",
-        "stats": "Visitor numbers: how many people saw your site and tapped to contact you",
-        "care": "A check every three months, and faults fixed",
-        "updates": "Two small updates during the year (new prices, text or photos)"
+        "page": "Your own website, made to look like your business",
+        "items": "Up to 6 products or services, with prices",
+        "buttons": "Buttons for customers to call or WhatsApp you",
+        "name": "Your own web name, like yourbusiness.com, in your name",
+        "online": "We keep your website online and safe for a year",
+        "care": "We check it every 3 months and fix any problem",
+        "updates": "2 small changes during the year, like new prices or photos"
       },
-      "outTitle": "Quoted separately",
+      "outTitle": "Extras, if you want them",
       "out": {
-        "pages": "Extra pages",
-        "pay": "Online payment and automatic Mobile Money",
-        "email": "Business email (you@yourbusiness.com)",
-        "ug": ".ug, .co.ug and premium web addresses",
-        "ads": "Advertising, if you want it (see below)"
+        "pages": "More pages",
+        "pay": "Customers paying online or by Mobile Money",
+        "email": "Business email, like you@yourbusiness.com",
+        "ug": "A .ug or .co.ug web name",
+        "ads": "Help with Facebook or Google ads",
+        "screen": "A week on our street screen on Lumumba Avenue"
       },
-      "outNote": "We tell you the price before any extra work starts. Nothing is added without your yes."
+      "outNote": "We tell you the price of any extra before we start. Nothing is added without your yes."
     },
-    "addons": {
-      "label": "After launch",
-      "title": "A website works best when people are sent to it.",
-      "body": "Optional. Only when you want customers sent to your new site.",
-      "ads": {
-        "tag": "Optional",
-        "title": "Ads set up for you",
-        "body": "We set up one Facebook and Instagram, or Google, ad campaign for your business and send you the results after 30 days. You choose the ad budget (we suggest from UGX 200,000) and pay it straight to Facebook or Google."
-      },
-      "screen": {
-        "tag": "For our website clients",
-        "title": "A week on our street screen",
-        "body": "Seven days on Vitorra's street screen at Padre Pio House, Lumumba Avenue, at the launch price. Book within 60 days of going live."
-      },
-      "grow": {
-        "tag": "When you're ready",
-        "title": "Grow it into more",
-        "price": "Quoted",
-        "body": "More pages, online payment and Mobile Money, bookings, business email or a full web app. We agree the price with you before we start."
-      }
-    },
-    "ask": {
-      "label": "Before you choose",
-      "title": "Six questions to ask any web designer.",
-      "body": "The most common website problem is a designer who can no longer be found. Ask these first, of us and of anyone else.",
-      "company": {
-        "q": "Are you a registered company?",
-        "a": "Yes. Vitorra Holdings Limited, registered in Uganda."
-      },
-      "office": {
-        "q": "Can I visit your office?",
-        "a": "Padre Pio House, Plot 32, Lumumba Avenue, Kampala."
-      },
-      "own": {
-        "q": "Is the web address in my name?",
-        "a": "Yes, always. If you ever leave, we hand everything over."
-      },
-      "writing": {
-        "q": "Is the support in writing?",
-        "a": "Yes. A year of care in your agreement."
-      },
-      "preview": {
-        "q": "Can I see it before I pay?",
-        "a": "Yes. The preview is free."
-      },
-      "price": {
-        "q": "Is the full price in writing?",
-        "a": "Yes. UGX 500,000, and renewal at UGX 300,000 a year."
-      }
-    },
-    "for": {
-      "label": "Who it's for",
-      "title": "For any business people need to find.",
-      "body": "If people ask \"what do you do?\", \"how much?\" or \"where are you?\" before they buy, book or visit, your website answers them first, any time of day."
+    "kampala": {
+      "label": "Made in Kampala",
+      "title": "A Ugandan company you can visit.",
+      "body": "Vitorra Holdings is registered in Uganda, with an office on Lumumba Avenue. Your web name is always in your name, the price is in writing, and we are here for a full year after your website goes live.",
+      "cta": "Get my free preview"
     },
     "faqLabel": "Questions",
-    "faqTitle": "What owners ask us",
+    "faqTitle": "What people ask us",
     "faq": {
       "computer": {
         "q": "Do I need a computer?",
-        "a": "No. You send photos and prices from your phone on WhatsApp, and you approve the site on your phone."
+        "a": "No. You send photos and prices from your phone on WhatsApp, and you look at your website on your phone."
       },
       "own": {
-        "q": "Who owns the website and the web address?",
-        "a": "You do. The web address is registered in your business's name. If you ever leave us, we hand over the address and the site files."
+        "q": "Who owns the website?",
+        "a": "You do. The web name is registered in your business's name. If you ever leave us, we give you everything."
       },
       "dislike": {
         "q": "What if I don't like the preview?",
-        "a": "Then you pay nothing. The preview is free and you are under no obligation."
+        "a": "Then you pay nothing. The preview is free."
       },
       "after": {
-        "q": "What happens after the first year?",
-        "a": "We send you a renewal notice 30 days before. Renewal is UGX 300,000 a year and covers care, the web address and hosting. If you don't renew, we hand everything over to you."
+        "q": "What happens after one year?",
+        "a": "We remind you 30 days before. To keep your website running it is UGX 300,000 a year. If you stop, we give you everything."
       },
       "time": {
         "q": "How long does it take?",
-        "a": "Five working days from the day we have your photos, prices and logo. Most of the wait is usually the material, so the faster you send it, the faster you are live."
+        "a": "5 working days after we get your photos, prices and logo. The faster you send them, the faster you are online."
       },
       "change": {
-        "q": "Can I change prices later?",
-        "a": "Two small updates are included in the first year. More changes, or a new page, are quoted first."
+        "q": "Can I change my prices later?",
+        "a": "Yes. 2 small changes are free in the first year. For more, we tell you the price first."
       },
       "pay": {
         "q": "How do I pay?",
-        "a": "We send an invoice with the payment details: half to book after the preview, the rest when the site is live."
-      },
-      "ads": {
-        "q": "Will a website bring me customers by itself?",
-        "a": "It gives customers a place to see your prices and order. To bring new people to it, share your link on WhatsApp, Facebook and your shop sign, and add ads when you're ready. We can set those up for you."
+        "a": "We send you an invoice. You pay half after the free preview and the rest when your website is live."
       },
       "bigger": {
-        "q": "I need more than one page.",
-        "a": "Tell us what you need: more pages, online payment, bookings or a full system. We agree the price before any work starts."
+        "q": "I need a bigger website.",
+        "a": "Tell us what you need: more pages, online payment, bookings or a full system. We agree the price before we start."
       }
     },
     "previewBlock": {
       "label": "Free preview",
-      "title": "See your website first.",
-      "body": "Tell us about your business. We reply on WhatsApp the same working day and send a preview within 48 hours. Free, with no obligation.",
-      "wa": "Or send it straight on WhatsApp"
+      "title": "See your website first. It's free.",
+      "body": "Tell us about your business. We reply on WhatsApp the same day and send your preview in 2 days. You decide after you see it.",
+      "wa": "Or send us a WhatsApp message"
     },
-    "form": {
-      "name": "Your name",
-      "business": "Business name",
-      "phone": "WhatsApp number",
-      "email": "Email",
-      "type": "Type of business",
-      "choose": "Choose…",
-      "link": "Where do customers find you now? (optional)",
-      "linkPh": "Facebook, Instagram, TikTok or Google Maps link",
-      "sells": "What do you sell? (optional)",
-      "sellsPh": "e.g. kitenge dresses and bags, from UGX 40,000",
-      "ads": "I may also want help with ads after launch",
-      "submit": "Send me my free preview",
-      "sending": "Sending…",
-      "error": "That didn't go through. Please try again, or message us on WhatsApp.",
-      "privacy": "We use these details only to send your preview and talk to you about your website.",
-      "errName": "Please enter your name.",
-      "errBusiness": "Please enter your business name.",
-      "errPhone": "Please enter a WhatsApp number we can reach.",
-      "errEmail": "Please enter a valid email.",
-      "errType": "Please choose your type of business.",
-      "doneLabel": "Received",
-      "doneTitle": "Thank you, {name}.",
-      "doneBody": "We will message you on WhatsApp today (or the next working day) to collect a few photos. To be faster, send your logo and photos now.",
-      "doneCta": "Send photos on WhatsApp",
-      "waFollowUp": "Hello Vitorra, I just asked for a website preview for {business}. Here are my photos:",
-      "types": {
-        "shop": "Shop / boutique",
-        "salon": "Salon / beauty",
-        "restaurant": "Restaurant / café / bakery",
-        "hardware": "Hardware / building supplies",
-        "hotel": "Hotel / guesthouse / tours",
-        "school": "School / training",
-        "clinic": "Clinic / pharmacy",
-        "services": "Professional services",
-        "farm": "Farm / agro products",
-        "other": "Other"
-      }
+    "alt": {
+      "shop": "A shopkeeper standing in his shop, with goods on the shelves and hanging above",
+      "customer": "A woman looking at her phone",
+      "office": "Reception at Vitorra's office in Padre Pio House, Kampala",
+      "market": "Nakasero Market in Kampala, with traders under umbrellas"
     },
+    "credits": "Photos: Pexels, Vitorra, and Wikimedia Commons:",
     "close": {
       "title": "Ready when you are.",
-      "body": "Message us your business name on WhatsApp. That's the whole first step.",
+      "body": "Send us your business name on WhatsApp. That's all you need to start.",
       "brief": "Free preview"
     }
   }

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Bricolage_Grotesque } from "next/font/google";
+import { Archivo } from "next/font/google";
 import { SampleAction } from "./SampleAction";
 import { ugx } from "../demos";
 import s from "./kitchen.module.css";
@@ -7,7 +7,7 @@ import s from "./kitchen.module.css";
 /* Sample: Mama Rose Kitchen (made up). Food business: dine in, take away,
    office lunch. Loud, warm and appetising. */
 
-const sans = Bricolage_Grotesque({ subsets: ["latin"], variable: "--kitchen-sans", display: "swap" });
+const sans = Archivo({ subsets: ["latin"], variable: "--kitchen-sans", display: "swap" });
 
 const NAME = "Mama Rose Kitchen";
 const order = (what: string, price?: number) =>

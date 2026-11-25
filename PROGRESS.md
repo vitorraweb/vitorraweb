@@ -2827,3 +2827,38 @@ John's brief: the samples should be real web pages, desktop first, premium and u
 - The hero now fits the first screen.
 
 **Street-screen adverts:** three 1920 × 1080 designs in `marketing/websites/screen/` (see the campaign plan for how to upload them).
+
+### The /websites page redesigned: Ugandan, photo-led, plain words, professional type (25 November 2026)
+
+John's brief: the page felt generic and flat. It should feel Ugandan, use simple words that fit every kind of owner, have real visuals, and use a professional typeface on the page and on the samples.
+
+**The page, top to bottom:**
+1. A hero beside a real Kampala shopkeeper.
+2. "Before they come, they search on their phone."
+3. Six photo tiles, from a market stall to an office: an Owino stall, a salon, food, a lodge, an office, a maker.
+4. The four samples.
+5. Four steps, beside Vitorra's real reception.
+6. One clear price.
+7. A full-width Nakasero Market band: "A Ugandan company you can visit."
+8. Questions.
+9. The free preview.
+
+**Wording and presentation:**
+- Everyday words throughout ("web name", "we keep it online"; no "domain", "hosting" or "HTTPS"), in English and Swahili.
+- The page uses Plus Jakarta Sans, scoped to the page in `websites.module.css`. The header and footer keep Vitorra's type.
+- The header is solid on this page so the menu stays readable over the photo.
+
+**Sample fonts:**
+
+| Sample | Before | Now |
+|---|---|---|
+| Studio | Instrument Serif + Manrope | Jost |
+| Kitchen | Bricolage Grotesque | Archivo |
+| Advisory | Newsreader + Inter Tight | Source Serif 4 + Inter |
+| Lodge | Cormorant + Space Grotesk | Lora + Work Sans |
+
+The showcase captures and the three street-screen adverts were re-rendered.
+
+**Photos:** five new photos in `public/websites/ug`, recorded in `marketing/websites/photo-licences.md`. Two "Kampala" stock photos were rejected after checking: one is Arusha, one is Latin America.
+
+**Checked:** typecheck, lint and build are green. Phone (390 px) and desktop (1440 px) show no sideways scroll, and the hero fits the first screen on both.

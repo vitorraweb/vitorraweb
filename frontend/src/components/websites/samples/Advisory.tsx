@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Newsreader, Inter_Tight } from "next/font/google";
+import { Source_Serif_4, Inter } from "next/font/google";
 import { SampleAction } from "./SampleAction";
 import { SampleForm } from "./SampleForm";
 import { ugx } from "../demos";
@@ -10,8 +10,8 @@ import s from "./advisory.module.css";
    site's job is trust and a booked consultation. No accreditations are
    claimed, because the firm does not exist. */
 
-const serif = Newsreader({ subsets: ["latin"], style: ["normal", "italic"], variable: "--adv-serif", display: "swap" });
-const sans = Inter_Tight({ subsets: ["latin"], variable: "--adv-sans", display: "swap" });
+const serif = Source_Serif_4({ subsets: ["latin"], style: ["normal", "italic"], variable: "--adv-serif", display: "swap" });
+const sans = Inter({ subsets: ["latin"], variable: "--adv-sans", display: "swap" });
 
 const NAME = "Mirembe Advisory";
 const ask = (what: string) => `Hello ${NAME}, I would like to book a consultation about ${what}. My business is: `;

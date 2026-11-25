@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Cormorant, Space_Grotesk } from "next/font/google";
+import { Lora, Work_Sans } from "next/font/google";
 import { SampleAction } from "./SampleAction";
 import { SampleForm } from "./SampleForm";
 import { ugx } from "../demos";
@@ -10,8 +10,8 @@ import s from "./lodge.module.css";
    real (Wikimedia Commons, CC BY-SA 4.0, credited in the footer); the rooms
    are stock and never captioned as a real place. */
 
-const serif = Cormorant({ subsets: ["latin"], variable: "--lodge-serif", display: "swap" });
-const sans = Space_Grotesk({ subsets: ["latin"], variable: "--lodge-sans", display: "swap" });
+const serif = Lora({ subsets: ["latin"], variable: "--lodge-serif", display: "swap" });
+const sans = Work_Sans({ subsets: ["latin"], variable: "--lodge-sans", display: "swap" });
 
 const NAME = "Ridgeline Lodge";
 const enquire = (what: string) => `Hello ${NAME}, I would like to ask about ${what}. Dates: ___ to ___, for ___ guests.`;

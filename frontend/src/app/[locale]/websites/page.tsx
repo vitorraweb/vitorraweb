@@ -1,34 +1,41 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Check, Minus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Faq } from "@/components/ui/faq";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { Section, Container, Label, Heading, Text, ButtonLink } from "@/components/system";
-import { SectionHead, Steps, ContactBand } from "@/components/system/blocks";
+import { SectionHead, ContactBand } from "@/components/system/blocks";
 import { SampleShowcase } from "@/components/websites/SampleShowcase";
 import { WebsitePreviewForm } from "@/components/websites/WebsitePreviewForm";
 import { localeAlternates, faqPage, breadcrumbs, ldJson } from "@/lib/seo";
 import { screenAdsOpen } from "@/lib/screen-ads-gate";
 import { CONTACT_PHONE, SITE_URL } from "@/lib/constants";
+import s from "./websites.module.css";
 
 /* ─── /websites — Vitorra Digital starter websites ────────────────────────────
-   The landing page for the ads. One offer: UGX 500,000 buys a one-page
-   website, its web address and hosting for the first year, built in five
-   working days, cared for for a year. Renewal UGX 300,000 a year from year two.
+   The landing page for the ads, written for every Ugandan business owner,
+   from a market stall in Owino to an office in Nakasero: short sentences,
+   everyday words ("web name", not "domain"; "we keep it online", not
+   "hosting"), and real photographs of Ugandan trade.
 
-   The page is built around the three things that stop a small business owner
-   buying a website, in the order they ask them:
-     1. "What would mine look like?"   → four full sample sites (a firm, a
-        lodge, a restaurant, a studio), each with its own look.
-     2. "Will these people vanish?"    → see it before you pay, half up front,
-        an office on Lumumba Avenue, a year of care in writing.
-     3. "What will it really cost?"    → one price, what's in, what's not.
+   The page answers, in order, what an owner asks:
+     1. "Will customers find me?"            → hero + "they look you up first"
+     2. "Is it for a business like mine?"   → photo tiles, then the samples
+     3. "How does it work, and what does it cost?" → steps, one price
+     4. "Can I trust you?"                  → Kampala band, our real office
 
-   Prices here must match the pricing in PROGRESS.md ("Vitorra Digital").
-   The street-screen launch slot only shows while screen adverts are on sale
-   (SCREEN_ADS_ENABLED), so the page never offers something we cannot sell. */
+   Offer: UGX 500,000 first year (website, web name, kept online, a year of
+   care); UGX 250,000 to book after the free preview, 250,000 at launch;
+   renewal UGX 300,000 a year. Keep in step with PROGRESS.md.
+
+   Photographs: public/websites/{ug,samples}; licences and credits in
+   marketing/websites/photo-licences.md. CC BY-SA photos are credited below. */
+
+const sans = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--web-sans", display: "swap" });
 
 const PATH = "/websites";
 const WA = CONTACT_PHONE.replace(/[^0-9]/g, "");
@@ -44,6 +51,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+const TILES = [
+  { key: "market", img: "/websites/ug/owino-stall.webp", pos: "50% 50%" },
+  { key: "salon", img: "/websites/samples/studio-braids.webp", pos: "50% 30%" },
+  { key: "food", img: "/websites/samples/kitchen-plating.webp", pos: "50% 50%" },
+  { key: "stay", img: "/websites/samples/lodge-islands.webp", pos: "60% 60%" },
+  { key: "office", img: "/websites/samples/advisory-desk.webp", pos: "40% 50%" },
+  { key: "makers", img: "/websites/ug/crafts.webp", pos: "50% 25%" },
+] as const;
+
 export default async function WebsitesPage({ params }: { params: Promise<{ locale: string }> }) {
   setRequestLocale((await params).locale);
   const t = await getTranslations("websites");
@@ -51,14 +67,9 @@ export default async function WebsitesPage({ params }: { params: Promise<{ local
   const screenSlot = screenAdsOpen();
 
   const waHref = `https://wa.me/${WA}?text=${encodeURIComponent(t("hero.waText"))}`;
-
-  const promises = ["see", "fast", "care", "office"].map((k) => ({ title: t(`promise.${k}.title`), body: t(`promise.${k}.body`) }));
-  const steps = ["1", "2", "3", "4"].map((k) => ({ title: t(`steps.${k}.title`), body: t(`steps.${k}.body`) }));
-  const included = ["page", "items", "order", "address", "hosting", "secure", "stats", "care", "updates"].map((k) => t(`price.in.${k}`));
-  const extra = ["pages", "pay", "email", "ug", "ads"].map((k) => t(`price.out.${k}`));
-  const checks = ["company", "office", "own", "writing", "preview", "price"] as const;
-  const types = ["shop", "salon", "restaurant", "hardware", "hotel", "school", "clinic", "services", "farm"] as const;
-  const faqs = ["computer", "own", "dislike", "after", "time", "change", "pay", "ads", "bigger"].map((k) => ({ q: t(`faq.${k}.q`), a: t(`faq.${k}.a`) }));
+  const faqs = ["computer", "own", "dislike", "after", "time", "change", "pay", "bigger"].map((k) => ({ q: t(`faq.${k}.q`), a: t(`faq.${k}.a`) }));
+  const included = ["page", "items", "buttons", "name", "online", "care", "updates"].map((k) => t(`price.in.${k}`));
+  const extras = [...["pages", "pay", "email", "ug", "ads"].map((k) => t(`price.out.${k}`)), ...(screenSlot ? [t("price.out.screen")] : [])];
 
   const service = {
     "@context": "https://schema.org",
@@ -72,178 +83,159 @@ export default async function WebsitesPage({ params }: { params: Promise<{ local
 
   return (
     <>
-      <Header overlay />
-      <main id="main" className="flex-1 bg-paper">
+      <Header />
+      <main id="main" className={`flex-1 bg-paper pt-16 lg:pt-[6.25rem] ${s.page} ${sans.variable}`}>
         <script type="application/ld+json" dangerouslySetInnerHTML={ldJson([
           service,
           faqPage(faqs),
           breadcrumbs([{ name: "Vitorra", path: "/" }, { name: t("crumb"), path: PATH }]),
         ])} />
 
-        {/* 1 — The offer, and the phone that proves it */}
-        <Section tone="ink" className="pt-32 sm:pt-36 lg:pt-36">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-12 items-start">
-            <div className="lg:col-span-5">
-              <Label onInk>{t("hero.label")}</Label>
-              <Heading as="h1" size="h1" className="mt-6 text-ink-fg">
-                {t("hero.title1")}<br /><span className="text-gold">{t("hero.title2")}</span>
-              </Heading>
-              <Text size="lead" onInk muted className="mt-6 max-w-[34rem]">{t("hero.lead")}</Text>
-
-              <div className="mt-7 flex items-baseline gap-4 flex-wrap">
-                <p className="font-numeric text-ink-fg text-[clamp(2.4rem,5vw,3.6rem)] leading-none tracking-[-0.02em]">UGX 500,000</p>
-                <p className="t-small text-ink-fg-muted max-w-[15rem]">{t("hero.priceNote")}</p>
-              </div>
-
-              <div className="mt-7 flex flex-wrap items-center gap-3">
-                <a href={waHref} target="_blank" rel="noopener noreferrer" className="q-btn bg-ink-fg text-ink hover:bg-white">
-                  <WhatsAppIcon className="h-4 w-4" />{t("hero.primary")}
-                </a>
-                <ButtonLink href="#preview" variant="secondary" onInk>{t("hero.secondary")}</ButtonLink>
-              </div>
-              <p className="mt-5 t-small text-ink-fg-muted">{t("hero.assure")}</p>
+        {/* 1 — The offer, beside a real Ugandan shop */}
+        <section className={`${s.hero} q-scope`} aria-labelledby="web-hero">
+          <div className={s.heroText}>
+            <Label onInk>{t("hero.label")}</Label>
+            <h1 id="web-hero" className={`t-h1 text-ink-fg mt-6 ${s.heroTitle}`}>{t("hero.title")}</h1>
+            <Text size="lead" onInk muted className="mt-6 max-w-[34rem]">{t("hero.lead")}</Text>
+            <div className={s.price}>
+              <span className={s.priceFig}>UGX 500,000</span>
+              <span className="t-small text-ink-fg-muted max-w-[17rem]">{t("hero.priceNote")}</span>
             </div>
-            <div className="lg:col-span-7">
-              <SampleShowcase />
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <a href={waHref} target="_blank" rel="noopener noreferrer" className="q-btn bg-ink-fg text-ink hover:bg-white">
+                <WhatsAppIcon className="h-4 w-4" />{t("hero.primary")}
+              </a>
+              <ButtonLink href="#preview" variant="secondary" onInk>{t("hero.secondary")}</ButtonLink>
+            </div>
+            <ul className={s.ticks}>
+              {(["see", "half", "office"] as const).map((k) => (
+                <li key={k}><Check aria-hidden="true" className="h-4 w-4 text-gold" />{t(`hero.tick.${k}`)}</li>
+              ))}
+            </ul>
+          </div>
+          <div className={s.heroPhoto}>
+            <Image src="/websites/ug/shopkeeper.webp" alt={t("alt.shop")} fill priority sizes="(min-width: 1024px) 48vw, 100vw" style={{ objectFit: "cover", objectPosition: "60% 45%" }} />
+          </div>
+        </section>
+
+        {/* 2 — Customers look you up first */}
+        <Section aria-labelledby="web-why">
+          <Container className={s.split}>
+            <div>
+              <Label>{t("why.label")}</Label>
+              <Heading id="web-why" size="h2" className="mt-6 text-ink">{t("why.title")}</Heading>
+              <Text size="lead" className="mt-6 max-w-[34rem]">{t("why.body")}</Text>
+              <ul className={s.points}>
+                {(["what", "where", "reach"] as const).map((k) => (
+                  <li key={k}><Check aria-hidden="true" className="h-5 w-5 text-ok-ink translate-y-[0.2em]" /><span>{t(`why.points.${k}`)}</span></li>
+                ))}
+              </ul>
+            </div>
+            <div className={s.splitPhoto}>
+              <Image src="/websites/ug/customer-phone.webp" alt={t("alt.customer")} fill sizes="(min-width: 1024px) 45vw, 100vw" style={{ objectFit: "cover", objectPosition: "50% 40%" }} />
             </div>
           </Container>
         </Section>
 
-        {/* 2 — Why owners can say yes without thinking twice */}
-        <Section tone="cream" tight aria-labelledby="promise-title">
+        {/* 3 — Every kind of business */}
+        <Section tone="cream" aria-labelledby="web-for">
           <Container>
-            <h2 id="promise-title" className="sr-only">{t("promise.title")}</h2>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-line border-y border-line">
-              {promises.map((p, i) => (
-                <li key={p.title} className="bg-cream py-7 sm:p-7">
-                  <p className="t-label font-numeric text-gold-ink">{String(i + 1).padStart(2, "0")}</p>
-                  <h3 className="t-h3 text-ink mt-3">{p.title}</h3>
-                  <p className="t-small text-ink-soft mt-2">{p.body}</p>
+            <SectionHead id="web-for" label={t("for.label")} title={t("for.title")} body={t("for.body")} />
+            <ul className={s.tiles}>
+              {TILES.map((x) => (
+                <li key={x.key} className={s.tile}>
+                  <Image src={x.img} alt={t(`for.tiles.${x.key}.alt`)} fill sizes="(min-width: 1024px) 31vw, 50vw" style={{ objectFit: "cover", objectPosition: x.pos }} />
+                  <p className={s.tileLabel}><b>{t(`for.tiles.${x.key}.title`)}</b><span>{t(`for.tiles.${x.key}.body`)}</span></p>
                 </li>
               ))}
             </ul>
           </Container>
         </Section>
 
-        {/* 3 — How it works */}
-        <Section aria-labelledby="steps-title">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <SectionHead id="steps-title" className="lg:col-span-4" label={t("steps.label")} title={t("steps.title")} body={t("steps.body")} />
-            <Steps className="lg:col-span-8" items={steps} />
+        {/* 4 — What yours could look like */}
+        <Section tone="ink" aria-labelledby="web-samples">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+            <div className="lg:col-span-4">
+              <SectionHead onInk id="web-samples" label={t("samples.label")} title={t("samples.title")} body={t("samples.body")} />
+            </div>
+            <div className="lg:col-span-8"><SampleShowcase /></div>
           </Container>
         </Section>
 
-        {/* 4 — One price, in writing */}
-        <Section tone="deep" aria-labelledby="price-title">
+        {/* 5 — Four steps, beside our real office */}
+        <Section aria-labelledby="web-steps">
+          <Container className={s.split}>
+            <div>
+              <Label>{t("steps.label")}</Label>
+              <Heading id="web-steps" size="h2" className="mt-6 mb-8 text-ink">{t("steps.title")}</Heading>
+              <ol className={s.steps}>
+                {(["1", "2", "3", "4"] as const).map((k) => (
+                  <li key={k}><span className={s.stepNo} aria-hidden="true">{k}</span><h3>{t(`steps.${k}.title`)}</h3><p>{t(`steps.${k}.body`)}</p></li>
+                ))}
+              </ol>
+            </div>
+            <div>
+              <div className={s.splitPhoto}>
+                <Image src="/photos/company-B-reception.jpg" alt={t("alt.office")} fill sizes="(min-width: 1024px) 45vw, 100vw" style={{ objectFit: "cover" }} />
+              </div>
+              <p className={s.caption}>{t("steps.caption")}</p>
+            </div>
+          </Container>
+        </Section>
+
+        {/* 6 — One price */}
+        <Section tone="deep" aria-labelledby="web-price">
           <Container>
-            <SectionHead id="price-title" label={t("price.label")} title={t("price.title")} body={t("price.body")} />
-            <div className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-5 bg-ink text-ink-fg p-8 sm:p-10 rounded-[var(--radius-frame)]">
+            <SectionHead id="web-price" label={t("price.label")} title={t("price.title")} body={t("price.body")} />
+            <div className={s.priceGrid}>
+              <div className={s.priceCard}>
                 <p className="t-label text-ink-fg-muted">{t("price.cardLabel")}</p>
-                <p className="mt-4 font-numeric text-[clamp(2.6rem,6vw,4rem)] leading-none tracking-[-0.02em]">UGX 500,000</p>
+                <p className={s.bigPrice}>UGX 500,000</p>
                 <p className="mt-3 t-small text-ink-fg-muted">{t("price.cardNote")}</p>
-                <dl className="mt-8 border-t border-ink-line">
+                <dl className={s.pay}>
                   {(["deposit", "balance", "renewal"] as const).map((k) => (
-                    <div key={k} className="flex items-baseline justify-between gap-4 py-4 border-b border-ink-line">
-                      <dt className="t-small text-ink-fg-muted">{t(`price.split.${k}.label`)}</dt>
-                      <dd className="font-numeric text-ink-fg text-right whitespace-nowrap">{t(`price.split.${k}.value`)}</dd>
-                    </div>
+                    <div key={k}><dt>{t(`price.split.${k}.label`)}</dt><dd>{t(`price.split.${k}.value`)}</dd></div>
                   ))}
                 </dl>
                 <a href={waHref} target="_blank" rel="noopener noreferrer" className="q-btn bg-ink-fg text-ink hover:bg-white mt-8 w-full justify-center">
                   <WhatsAppIcon className="h-4 w-4" />{t("price.cta")}
                 </a>
               </div>
-              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div className={s.lists}>
                 <div>
-                  <h3 className="t-label text-ink pb-4 border-b border-line-strong">{t("price.inTitle")}</h3>
-                  <ul>
-                    {included.map((x) => (
-                      <li key={x} className="flex gap-3 py-3 border-b border-line t-small text-ink">
-                        <Check aria-hidden="true" className="h-4 w-4 shrink-0 text-ok-ink translate-y-[0.15em]" />{x}
-                      </li>
-                    ))}
-                  </ul>
+                  <h3 className={s.listTitle}>{t("price.inTitle")}</h3>
+                  <ul>{included.map((x) => <li key={x} className={s.list}><Check aria-hidden="true" className="h-4 w-4 shrink-0 text-ok-ink translate-y-[0.2em]" />{x}</li>)}</ul>
                 </div>
                 <div>
-                  <h3 className="t-label text-ink pb-4 border-b border-line-strong">{t("price.outTitle")}</h3>
-                  <ul>
-                    {extra.map((x) => (
-                      <li key={x} className="flex gap-3 py-3 border-b border-line t-small text-ink-soft">
-                        <Minus aria-hidden="true" className="h-4 w-4 shrink-0 text-ink-muted translate-y-[0.15em]" />{x}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-5 t-small text-ink-muted">{t("price.outNote")}</p>
+                  <h3 className={s.listTitle}>{t("price.outTitle")}</h3>
+                  <ul>{extras.map((x) => <li key={x} className={s.list}><Plus aria-hidden="true" className="h-4 w-4 shrink-0 text-ink-muted translate-y-[0.2em]" />{x}</li>)}</ul>
+                  <p className="mt-4 t-small text-ink-muted">{t("price.outNote")}</p>
                 </div>
               </div>
             </div>
           </Container>
         </Section>
 
-        {/* 5 — After launch: getting customers to the site */}
-        <Section aria-labelledby="addons-title">
-          <Container>
-            <SectionHead id="addons-title" label={t("addons.label")} title={t("addons.title")} body={t("addons.body")} />
-            <ul className={`mt-12 grid grid-cols-1 gap-px bg-line border-y border-line ${screenSlot ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
-              <li className="bg-paper py-8 md:p-8">
-                <p className="t-label text-gold-ink">{t("addons.ads.tag")}</p>
-                <h3 className="t-h3 text-ink mt-3">{t("addons.ads.title")}</h3>
-                <p className="font-numeric text-ink text-[1.6rem] mt-4">UGX 70,000</p>
-                <p className="t-small text-ink-soft mt-3">{t("addons.ads.body")}</p>
-              </li>
-              {screenSlot && (
-                <li className="bg-paper py-8 md:p-8">
-                  <p className="t-label text-gold-ink">{t("addons.screen.tag")}</p>
-                  <h3 className="t-h3 text-ink mt-3">{t("addons.screen.title")}</h3>
-                  <p className="mt-4"><span className="font-numeric text-ink text-[1.6rem]">UGX 100,000</span> <s className="t-small text-ink-muted">UGX 150,000</s></p>
-                  <p className="t-small text-ink-soft mt-3">{t("addons.screen.body")}</p>
-                </li>
-              )}
-              <li className="bg-paper py-8 md:p-8">
-                <p className="t-label text-gold-ink">{t("addons.grow.tag")}</p>
-                <h3 className="t-h3 text-ink mt-3">{t("addons.grow.title")}</h3>
-                <p className="font-numeric text-ink text-[1.6rem] mt-4">{t("addons.grow.price")}</p>
-                <p className="t-small text-ink-soft mt-3">{t("addons.grow.body")}</p>
-              </li>
-            </ul>
-          </Container>
-        </Section>
-
-        {/* 6 — The questions to ask any web designer */}
-        <Section tone="ink" aria-labelledby="ask-title">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <SectionHead onInk id="ask-title" className="lg:col-span-5" label={t("ask.label")} title={t("ask.title")} body={t("ask.body")} />
-            <dl className="lg:col-span-7 border-t border-ink-line">
-              {checks.map((k) => (
-                <div key={k} className="grid grid-cols-1 sm:grid-cols-[1.2fr_1fr] gap-2 sm:gap-4 py-5 border-b border-ink-line">
-                  <dt className="t-body text-ink-fg">{t(`ask.${k}.q`)}</dt>
-                  <dd className="flex items-start gap-2.5 t-small text-ink-fg-muted">
-                    <Check aria-hidden="true" className="h-4 w-4 shrink-0 text-gold translate-y-[0.15em]" />
-                    <span>{t(`ask.${k}.a`)}</span>
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </Container>
-        </Section>
-
-        {/* 7 — Who it's for */}
-        <Section aria-labelledby="for-title">
-          <Container>
-            <SectionHead id="for-title" label={t("for.label")} title={t("for.title")} body={t("for.body")} />
-            <ul className="mt-10 flex flex-wrap gap-2.5">
-              {types.map((k) => (
-                <li key={k} className="rounded-full border border-line-strong px-4 py-2 t-small text-ink">{t(`form.types.${k}`)}</li>
-              ))}
-            </ul>
-          </Container>
-        </Section>
+        {/* 7 — Made in Kampala */}
+        <section className={`${s.band} q-scope`} aria-labelledby="web-kampala">
+          <div className={s.bandImg}>
+            <Image src="/websites/ug/nakasero.webp" alt={t("alt.market")} fill sizes="100vw" style={{ objectFit: "cover" }} />
+            <p className={s.credit}>
+              Nakasero Market: <a href="https://commons.wikimedia.org/wiki/File:Nakasero_Market_Kampala.jpg" target="_blank" rel="noopener noreferrer">Kateregga1</a>, CC BY-SA 4.0
+            </p>
+          </div>
+          <div className={s.panel}>
+            <Label>{t("kampala.label")}</Label>
+            <Heading id="web-kampala" size="h2" className="mt-5 text-ink">{t("kampala.title")}</Heading>
+            <Text className="mt-5">{t("kampala.body")}</Text>
+            <div className="mt-7"><ButtonLink href="#preview">{t("kampala.cta")}</ButtonLink></div>
+          </div>
+        </section>
 
         {/* 8 — Questions */}
-        <Section tone="deep" aria-labelledby="faq-title">
+        <Section aria-labelledby="web-faq">
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <SectionHead id="faq-title" className="lg:col-span-4" label={t("faqLabel")} title={t("faqTitle")} />
+            <SectionHead id="web-faq" className="lg:col-span-4" label={t("faqLabel")} title={t("faqTitle")} />
             <div className="lg:col-span-8"><Faq items={faqs} /></div>
           </Container>
         </Section>
@@ -253,13 +245,21 @@ export default async function WebsitesPage({ params }: { params: Promise<{ local
           <Container className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
             <div className="lg:col-span-5">
               <SectionHead id="preview-title" label={t("previewBlock.label")} title={t("previewBlock.title")} body={t("previewBlock.body")} />
-              <a href={waHref} target="_blank" rel="noopener noreferrer" className="q-btn border border-line-strong text-ink hover:border-ink mt-8">
+              <a href={waHref} target="_blank" rel="noopener noreferrer" className="q-btn bg-ink text-paper hover:bg-black mt-8">
                 <WhatsAppIcon className="h-4 w-4" />{t("previewBlock.wa")}
               </a>
             </div>
             <div className="lg:col-span-7">
               <WebsitePreviewForm />
             </div>
+          </Container>
+          <Container>
+            <p className="mt-14 t-small text-ink-muted">
+              {t("credits")}{" "}
+              Owino market stall: <a className="underline" href="https://commons.wikimedia.org/wiki/File:Assorted_African_Food_spices_and_medicines.jpg" target="_blank" rel="noopener noreferrer">Alvinategyeka</a>;
+              Lake Bunyonyi: <a className="underline" href="https://commons.wikimedia.org/wiki/File:Lake_Bunyonyi_Islands_06.jpg" target="_blank" rel="noopener noreferrer">Shaayflix Dr Shaay</a>
+              {" "}(<a className="underline" href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>).
+            </p>
           </Container>
         </Section>
 

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Instrument_Serif, Manrope } from "next/font/google";
+import { Jost } from "next/font/google";
 import { SampleAction } from "./SampleAction";
 import { SampleForm } from "./SampleForm";
 import { ugx } from "../demos";
@@ -8,8 +8,7 @@ import s from "./studio.module.css";
 /* Sample: Amani Studio (made up). A service business: hair, nails, make-up.
    Editorial and calm, booked in a message. */
 
-const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--studio-serif", display: "swap" });
-const sans = Manrope({ subsets: ["latin"], variable: "--studio-sans", display: "swap" });
+const jost = Jost({ subsets: ["latin"], style: ["normal", "italic"], variable: "--studio-sans", display: "swap" });
 
 const NAME = "Amani Studio";
 const book = (what: string, price?: number) =>
@@ -32,7 +31,7 @@ const MENU: { group: string; items: { name: string; note: string; price: number 
 
 export function Studio() {
   return (
-    <div className={`${s.root} ${serif.variable} ${sans.variable}`}>
+    <div className={`${s.root} ${jost.variable}`}>
       <header className={s.nav}>
         <div className={`${s.wrap} ${s.navInner}`}>
           <a href="#top" className={s.logo}>Amani<small>Studio · Ntinda</small></a>
