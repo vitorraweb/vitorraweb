@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { usePathname } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { CONTACT_PHONE } from "@/lib/constants";
 
@@ -17,6 +18,9 @@ const HREF = `https://wa.me/${NUMBER}?text=${encodeURIComponent(OPENER)}`;
    so it stays noticeable without a continuous, cheap-looking bounce. */
 export default function WhatsAppButton() {
   const t = useTranslations("common");
+  const pathname = usePathname();
+  // Sample client websites carry their own contact buttons; Vitorra's would read as theirs.
+  if (pathname.startsWith("/websites/demo")) return null;
 
   /* Desktop only — on phones the contact dock (StickyQuoteBar) carries
      WhatsApp, so the two never stack. A labelled button rather than a

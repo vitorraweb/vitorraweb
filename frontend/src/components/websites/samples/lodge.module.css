@@ -1,0 +1,100 @@
+/* Ridgeline Lodge — quiet and spacious: forest, mist, clay. Cormorant over Space Grotesk. */
+.root {
+  --s-paper: #eef0ea; --s-forest: #142219; --s-ink: #142219; --s-soft: #56625a; --s-clay: #a85532; --s-accent: #a85532; --s-on-accent: #fbf6f0;
+  --s-line: #cfd6cc; --s-field: #fbfcf9; --s-radius: 0px;
+  background: var(--s-paper); color: var(--s-ink); font-family: var(--lodge-sans), system-ui, sans-serif; font-size: 17px; line-height: 1.6;
+}
+.serif { font-family: var(--lodge-serif), Georgia, serif; font-weight: 500; letter-spacing: -0.01em; }
+.wrap { max-width: 1480px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 80px); }
+.label { font-size: 12px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--s-clay); font-weight: 500; }
+
+.nav { position: sticky; top: 0; z-index: 30; background: var(--s-forest); color: var(--s-paper); }
+.navInner { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 78px; }
+.logo { font-family: var(--lodge-serif), Georgia, serif; font-size: 28px; letter-spacing: 0.02em; }
+.logo span { display: block; font-family: var(--lodge-sans), sans-serif; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; opacity: 0.7; margin-top: 2px; }
+.links { display: none; gap: 36px; font-size: 14px; letter-spacing: 0.06em; }
+.links a:hover { color: #e3b79f; }
+@media (min-width: 960px) { .links { display: flex; } }
+.clayBtn { display: inline-flex; align-items: center; min-height: 50px; padding: 0 26px; background: var(--s-clay); color: var(--s-on-accent); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+.clayBtn:hover { background: #8f4527; }
+.lineBtn { display: inline-flex; align-items: center; min-height: 50px; padding: 0 26px; border: 1px solid currentColor; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+
+/* Hero */
+.hero { position: relative; min-height: min(calc(100svh - 118px), 900px); display: grid; align-items: end; }
+.heroImg { position: absolute; inset: 0; }
+.heroPanel { position: relative; background: var(--s-forest); color: var(--s-paper); max-width: 720px; padding: clamp(28px, 4vw, 60px); margin-left: clamp(20px, 5vw, 80px); }
+.heroPanel h1 { font-size: clamp(48px, 6.6vw, 104px); line-height: 0.98; margin-top: 18px; text-wrap: balance; }
+.heroPanel p { margin-top: 20px; max-width: 30rem; opacity: 0.85; font-size: 18px; }
+.heroPanel .label { color: #e3b79f; }
+@media (max-width: 640px) { .hero { display: block; min-height: 0; } .heroImg { position: relative; height: 54svh; } .heroPanel { margin: 0; } }
+
+/* Availability bar */
+.availability { background: var(--s-forest); color: var(--s-paper); border-top: 1px solid rgb(238 240 234 / 0.16); }
+.availGrid { display: grid; gap: 1px; grid-template-columns: 1fr 1fr; }
+@media (min-width: 900px) { .availGrid { grid-template-columns: repeat(3, 1fr) auto; } }
+.availCell { padding: 20px 0; display: grid; gap: 4px; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
+.availCell b { font-family: var(--lodge-serif), Georgia, serif; font-size: 24px; letter-spacing: 0; text-transform: none; font-weight: 500; opacity: 1; }
+.availCta { align-self: center; grid-column: 1 / -1; padding: 16px 0; }
+@media (min-width: 900px) { .availCta { grid-column: auto; padding: 0; } }
+
+/* Intro */
+.intro { padding: clamp(80px, 11vw, 160px) 0; }
+.introGrid { display: grid; gap: 48px; align-items: center; }
+@media (min-width: 1000px) { .introGrid { grid-template-columns: 1fr 1fr; gap: 112px; } }
+.big { font-size: clamp(36px, 4.4vw, 64px); line-height: 1.08; text-wrap: balance; }
+.body { margin-top: 28px; color: var(--s-soft); max-width: 34rem; font-size: 18px; }
+.introImg { position: relative; aspect-ratio: 5 / 4; }
+
+/* Rooms */
+.rooms { background: var(--s-forest); color: var(--s-paper); padding: clamp(72px, 10vw, 144px) 0; }
+.roomsHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 56px; }
+.roomsHead h2 { font-size: clamp(44px, 5.6vw, 88px); line-height: 1; }
+.roomsHead p { max-width: 26rem; opacity: 0.8; }
+.roomList { display: grid; gap: 48px; }
+@media (min-width: 1000px) { .roomList { grid-template-columns: repeat(3, 1fr); gap: 32px; } }
+.room { display: grid; gap: 20px; align-content: start; }
+.roomImg { position: relative; aspect-ratio: 4 / 5; }
+.room h3 { font-family: var(--lodge-serif), Georgia, serif; font-size: 34px; font-weight: 500; line-height: 1.05; }
+.room p { opacity: 0.8; font-size: 16px; }
+.roomMeta { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-top: 16px; border-top: 1px solid rgb(238 240 234 / 0.24); font-size: 15px; }
+.roomMeta b { font-family: var(--lodge-serif), Georgia, serif; font-size: 26px; font-weight: 500; }
+.textBtn { color: #e3b79f; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; min-height: 44px; display: inline-flex; align-items: center; }
+.textBtn:hover { color: var(--s-paper); }
+
+/* Experiences */
+.exp { padding: clamp(80px, 10vw, 144px) 0; }
+.expGrid { display: grid; gap: 48px; }
+@media (min-width: 1000px) { .expGrid { grid-template-columns: 0.85fr 1.15fr; gap: 112px; } }
+.expList { border-top: 1px solid var(--s-ink); }
+.expList li { display: grid; grid-template-columns: 1fr auto; gap: 4px 24px; padding: 24px 0; border-bottom: 1px solid var(--s-line); }
+.expList h3 { font-family: var(--lodge-serif), Georgia, serif; font-size: 28px; font-weight: 500; line-height: 1.1; }
+.expList span { font-variant-numeric: tabular-nums; }
+.expList p { grid-column: 1 / -1; color: var(--s-soft); font-size: 16px; }
+
+/* Mist band */
+.mist { position: relative; min-height: min(64svh, 620px); display: grid; place-items: center; background: var(--s-clay); }
+.mistPanel { position: relative; background: var(--s-paper); padding: clamp(28px, 4vw, 56px); max-width: 660px; margin: 24px; text-align: center; }
+.q { font-family: var(--lodge-serif), Georgia, serif; font-size: clamp(30px, 3.4vw, 48px); line-height: 1.12; }
+.d { margin-top: 16px; color: var(--s-soft); }
+
+/* Getting here + enquiry */
+.stay { padding: clamp(80px, 10vw, 144px) 0; }
+.stayGrid { display: grid; gap: 56px; }
+@media (min-width: 1000px) { .stayGrid { grid-template-columns: 0.9fr 1.1fr; gap: 112px; } }
+.route { margin-top: 32px; border-top: 1px solid var(--s-ink); }
+.route div { display: grid; grid-template-columns: 8rem 1fr; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--s-line); }
+.route dt { color: var(--s-soft); font-size: 15px; }
+.formCard { background: var(--s-field); border: 1px solid var(--s-line); padding: clamp(24px, 4vw, 52px); }
+.formCard h3 { font-family: var(--lodge-serif), Georgia, serif; font-size: 40px; font-weight: 500; line-height: 1.05; margin-bottom: 24px; }
+
+.footer { background: var(--s-forest); color: var(--s-paper); padding: 64px 0 36px; }
+.footWord { font-family: var(--lodge-serif), Georgia, serif; font-size: clamp(64px, 12vw, 200px); line-height: 0.9; }
+.footRow { margin-top: 36px; padding-top: 20px; border-top: 1px solid rgb(238 240 234 / 0.2); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; font-size: 13px; opacity: 0.75; }
+.footRow a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* The main site styles every heading in its own serif (globals.css, @layer base).
+   Samples wear their own type, so headings inherit from the sample root. */
+:where(.root) :where(h1, h2, h3, h4) { font-family: inherit; font-weight: inherit; letter-spacing: inherit; line-height: inherit; }
+
+@media (max-width: 640px) { .navInner .clayBtn { padding: 0 16px; } .logo { font-size: 24px; } }
+.clayBtn { white-space: nowrap; }

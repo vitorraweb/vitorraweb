@@ -1,0 +1,95 @@
+/* Mama Rose Kitchen — bold and warm: olive-black, saffron, tomato, cream. Bricolage Grotesque. */
+.root {
+  --s-paper: #f6eedf; --s-dark: #1b2016; --s-ink: #1b2016; --s-cream: #f6eedf; --s-soft: #5d5a4c; --s-saffron: #f2b134; --s-tomato: #c9432a;
+  --s-accent: #c9432a; --s-on-accent: #fff6ea; --s-line: #ddd0b8; --s-field: #fffaf0; --s-radius: 4px;
+  background: var(--s-paper); color: var(--s-ink); font-family: var(--kitchen-sans), system-ui, sans-serif; font-size: 17px; line-height: 1.55;
+}
+.wrap { max-width: 1480px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 64px); }
+.display { font-weight: 800; letter-spacing: -0.035em; line-height: 0.9; text-transform: uppercase; }
+
+/* Nav (dark) */
+.nav { position: sticky; top: 0; z-index: 30; background: var(--s-dark); color: var(--s-cream); }
+.navInner { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 72px; }
+.logo { display: flex; align-items: baseline; gap: 12px; }
+.logo b { font-weight: 800; font-size: 26px; letter-spacing: -0.03em; }
+.logo span { font-size: 13px; opacity: 0.7; }
+.links { display: none; gap: 32px; font-size: 15px; font-weight: 500; }
+.links a:hover { color: var(--s-saffron); }
+@media (min-width: 900px) { .links { display: flex; } }
+.order { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; background: var(--s-saffron); color: var(--s-dark); font-weight: 700; border-radius: 4px; font-size: 15px; }
+.order:hover { background: #ffc24d; }
+
+/* Hero: photo full bleed, words on a solid saffron panel */
+.hero { position: relative; min-height: min(calc(100svh - 120px), 860px); display: grid; align-items: end; background: var(--s-dark); }
+.heroImg { position: absolute; inset: 0; }
+.heroPanel { position: relative; background: var(--s-saffron); color: var(--s-dark); padding: clamp(28px, 4vw, 56px); margin: 0 0 0 clamp(20px, 4vw, 64px); max-width: 760px; border-radius: 4px 4px 0 0; }
+.heroPanel h1 { font-size: clamp(48px, 7.4vw, 116px); }
+.heroPanel p { margin-top: 20px; font-size: 19px; max-width: 32rem; font-weight: 500; }
+.heroCtas { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
+.dark { display: inline-flex; align-items: center; min-height: 52px; padding: 0 26px; background: var(--s-dark); color: var(--s-cream); font-weight: 700; border-radius: 4px; }
+.dark:hover { background: #000; }
+.line { display: inline-flex; align-items: center; min-height: 52px; padding: 0 26px; border: 2px solid var(--s-dark); font-weight: 700; border-radius: 4px; }
+@media (max-width: 640px) {
+  .hero { min-height: 0; display: block; }
+  .heroImg { position: relative; height: 56svh; }
+  .heroPanel { margin: 0; border-radius: 0; }
+}
+
+/* Menu board */
+.menu { padding: clamp(64px, 8vw, 120px) 0; }
+.menuHead { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 24px; }
+.menuHead h2 { font-size: clamp(56px, 9vw, 150px); color: var(--s-tomato); }
+.menuHead p { max-width: 26rem; color: var(--s-soft); }
+.dishes { margin-top: 48px; display: grid; gap: 20px; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .dishes { grid-template-columns: 1fr 1fr; } }
+.dish { position: relative; aspect-ratio: 4 / 3; border-radius: 4px; overflow: hidden; background: var(--s-dark); }
+.dishLabel { position: absolute; left: 16px; bottom: 16px; background: var(--s-cream); padding: 10px 16px; border-radius: 4px; font-weight: 700; display: flex; gap: 14px; }
+.dishLabel span { color: var(--s-tomato); font-variant-numeric: tabular-nums; }
+.board { margin-top: 56px; display: grid; gap: 40px; grid-template-columns: 1fr; }
+@media (min-width: 1000px) { .board { grid-template-columns: repeat(3, 1fr); gap: 56px; } }
+.col h3 { font-size: 15px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; padding-bottom: 14px; border-bottom: 3px solid var(--s-dark); }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; padding: 16px 0; border-bottom: 1px solid var(--s-line); align-items: baseline; }
+.row b { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+.row em { font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+.row small { grid-column: 1; font-size: 14px; color: var(--s-soft); }
+.add { grid-column: 2; justify-self: end; font-size: 14px; font-weight: 700; color: var(--s-tomato); min-height: 44px; display: inline-flex; align-items: center; }
+.add:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+/* Office lunch */
+.lunch { background: var(--s-tomato); color: var(--s-on-accent); padding: clamp(64px, 9vw, 128px) 0; }
+.lunchGrid { display: grid; gap: 40px; align-items: center; }
+@media (min-width: 1000px) { .lunchGrid { grid-template-columns: 1.3fr 1fr; gap: 80px; } }
+.lunch h2 { font-size: clamp(48px, 7vw, 112px); }
+.lunchFacts { border-top: 2px solid var(--s-on-accent); }
+.lunchFacts div { display: flex; justify-content: space-between; gap: 16px; padding: 18px 0; border-bottom: 1px solid rgb(255 246 234 / 0.35); font-size: 18px; }
+.lunchFacts dd { font-weight: 700; text-align: right; }
+.cream { display: inline-flex; align-items: center; min-height: 52px; padding: 0 26px; background: var(--s-cream); color: var(--s-dark); font-weight: 700; border-radius: 4px; margin-top: 28px; }
+
+/* Story split */
+.story { background: var(--s-dark); color: var(--s-cream); }
+.storyGrid { display: grid; }
+@media (min-width: 1000px) { .storyGrid { grid-template-columns: 1fr 1fr; min-height: 760px; } }
+.storyImg { position: relative; min-height: 420px; }
+.storyText { padding: clamp(48px, 7vw, 112px) clamp(20px, 5vw, 88px); display: flex; flex-direction: column; justify-content: center; }
+.storyText h2 { font-size: clamp(40px, 5vw, 80px); color: var(--s-saffron); }
+.storyText p { margin-top: 24px; font-size: 19px; max-width: 32rem; opacity: 0.9; }
+
+/* Visit */
+.visit { padding: clamp(64px, 8vw, 112px) 0; }
+.visitGrid { display: grid; gap: 40px; }
+@media (min-width: 900px) { .visitGrid { grid-template-columns: repeat(3, 1fr); } }
+.visitGrid h3 { font-size: 15px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; padding-bottom: 12px; border-bottom: 3px solid var(--s-dark); margin-bottom: 16px; }
+.visitGrid p, .visitGrid dl { font-size: 18px; }
+.visitGrid dl div { display: flex; justify-content: space-between; padding: 8px 0; }
+
+/* Footer */
+.footer { background: var(--s-dark); color: var(--s-cream); padding: 56px 0 36px; }
+.footWord { font-weight: 800; letter-spacing: -0.05em; text-transform: uppercase; font-size: clamp(64px, 15vw, 240px); line-height: 0.82; color: var(--s-saffron); }
+.footRow { margin-top: 32px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 14px; opacity: 0.75; }
+
+/* The main site styles every heading in its own serif (globals.css, @layer base).
+   Samples wear their own type, so headings inherit from the sample root. */
+:where(.root) :where(h1, h2, h3, h4) { font-family: inherit; font-weight: inherit; letter-spacing: inherit; line-height: inherit; }
+
+@media (max-width: 640px) { .logo span { display: none; } .order { padding: 0 16px; } }
+.order { white-space: nowrap; }

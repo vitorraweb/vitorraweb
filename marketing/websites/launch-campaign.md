@@ -2,7 +2,13 @@
 
 **Landing page:** vitorra.org/websites (English; Swahili at /sw/websites)
 **Short address for the street screen and print:** vitorra.org/web
-**Sample sites to show on an owner's phone:** vitorra.org/websites/demo/salon, /hardware, /restaurant
+**Sample websites (full pages, open on a phone or a laptop):**
+- vitorra.org/websites/demo/advisory: Mirembe Advisory, a professional firm
+- vitorra.org/websites/demo/lodge: Ridgeline Lodge, hospitality
+- vitorra.org/websites/demo/kitchen: Mama Rose Kitchen, a restaurant
+- vitorra.org/websites/demo/studio: Amani Studio, beauty
+
+All four are made-up businesses and say so. The old addresses (/salon, /restaurant, /hardware) redirect to these.
 
 ## The offer (keep every ad identical to this)
 
@@ -53,7 +59,7 @@ Negatives: "free", "jobs", "course", "template download", "wordpress tutorial".
 
 ## Ad creatives (Meta)
 
-All three: the video or picture is a hand holding a phone with the sample site from /websites. The thumb taps a product, and the WhatsApp message appears. Record it from vitorra.org/websites/demo/restaurant on a real phone (15 seconds, vertical).
+All three: the video or picture is a hand holding a phone with the sample site from /websites. The thumb taps a product, and the WhatsApp message appears. Record it from vitorra.org/websites/demo/kitchen or /studio on a real phone (15 seconds, vertical). For business-to-business audiences, use /advisory: it shows the offer is not only for shops.
 
 **A: "See it first"**
 > Your business online for UGX 500,000, and you see it before you pay.
@@ -131,13 +137,20 @@ Final URL: `https://vitorra.org/websites?utm_source=google&utm_medium=cpc&utm_ca
   - Over UGX 150,000 per booking: stop and rethink the offer or creative.
 - **Capacity cap:** no more than about 10 sites in progress at once with the current team. Pause ads when the queue is full.
 
-## Street screen house slide (1920 × 1080, uploaded in Screen editor → Running order)
+## Street screen adverts (1920 × 1080, ready to upload)
 
-- Line 1: **YOUR BUSINESS ONLINE.**
-- Line 2: **ORDERS ON WHATSAPP.**
-- Small line: **UGX 500,000 · see it before you pay · vitorra.org/web**
+Three finished designs in `marketing/websites/screen/`. They are dark, as the screens require, and show the short address `vitorra.org/web` rather than a QR code:
 
-Show it on the street screen and the reception screen. It's our own content, so it costs nothing and never takes a paid slot.
+1. `vitorra-digital-screen-1-your-business-online.png`: the headline, the price, and three sample websites in browser windows.
+2. `vitorra-digital-screen-2-customers-look-you-up.png`: "Customers look you up before they come," with a business owner at a laptop (stock, dimmed for night).
+3. `vitorra-digital-screen-3-four-websites.png`: "Four businesses. Four websites. One price," with all four samples.
+
+**To put them on air:** Operations → Screen editor → Running order → add a design.
+- Upload each PNG and set about 8 seconds on screen.
+- Choose the street screen and the reception TV.
+- Leave the caption empty, since the words are in the design.
+
+These are Vitorra's own house content, so they fill unsold time and never take a paid slot.
 
 ## Sales script (owner conversations at Padre Pio House / Lumumba Avenue)
 

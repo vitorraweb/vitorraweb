@@ -1,0 +1,37 @@
+/* Shared pieces of every Vitorra Digital sample site: the sample bar, the
+   "what would happen" dialog and the sample form. Each sample sets its own
+   colours on its root (--s-ink, --s-paper, --s-accent, --s-on-accent,
+   --s-line, --s-field); these pieces only read them. */
+
+.bar { background: var(--color-ink); color: var(--color-ink-fg); font-family: var(--font-inter), system-ui, sans-serif; position: relative; z-index: 40; }
+.barInner { max-width: 1440px; margin: 0 auto; padding: 10px clamp(16px, 4vw, 48px); display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 13px; line-height: 1.3; }
+.barBack { display: inline-flex; align-items: center; gap: 8px; color: var(--color-ink-fg-muted); min-height: 44px; }
+.barBack:hover { color: var(--color-ink-fg); }
+.barNote { color: var(--color-ink-fg-muted); }
+.barCta { color: var(--color-gold); font-weight: 600; white-space: nowrap; min-height: 44px; display: inline-flex; align-items: center; }
+@media (max-width: 720px) { .barNote { display: none; } }
+
+/* Dialog */
+.overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; }
+.scrim { position: absolute; inset: 0; background: rgb(0 0 0 / 0.55); border: 0; cursor: pointer; }
+.dialog { position: relative; width: min(460px, 100%); background: #fff; color: #161616; border-radius: 18px; padding: 24px; font-family: var(--font-inter), system-ui, sans-serif; }
+.dialogHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 600; font-size: 15px; }
+.close { display: grid; place-items: center; width: 44px; height: 44px; margin: -10px -10px -10px 0; border-radius: 999px; }
+.close:hover { background: #f1f1f1; }
+.thread { margin-top: 16px; background: #efeae2; border-radius: 14px; padding: 14px; }
+.bubble { margin-left: auto; max-width: 92%; background: #d9fdd3; color: #111b21; border-radius: 12px 4px 12px 12px; padding: 10px 12px; font-size: 14px; line-height: 1.45; white-space: pre-line; }
+.note { margin-top: 14px; font-size: 13px; line-height: 1.55; color: #5c5c5c; }
+
+/* Sample form */
+.form { display: grid; gap: 14px; }
+.row { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .row { grid-template-columns: 1fr 1fr; } }
+.field { display: grid; gap: 6px; font-size: 14px; }
+.field span { font-weight: 500; }
+.field input, .field select, .field textarea { font: inherit; font-size: 16px; min-height: 48px; padding: 10px 14px; border-radius: var(--s-radius, 6px); border: 1px solid var(--s-line); background: var(--s-field); color: var(--s-ink); outline: none; }
+.field textarea { min-height: 104px; resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--s-accent); }
+.submit { min-height: 52px; border-radius: var(--s-radius, 6px); background: var(--s-accent); color: var(--s-on-accent); font-weight: 600; font-size: 15px; padding: 0 24px; justify-self: start; }
+.submit:hover { opacity: 0.92; }
+.done { padding: 20px; border: 1px solid var(--s-line); border-radius: var(--s-radius, 6px); font-size: 15px; line-height: 1.6; }
+.done strong { display: block; font-size: 18px; margin-bottom: 6px; }

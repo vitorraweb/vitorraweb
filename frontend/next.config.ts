@@ -34,6 +34,10 @@ const nextConfig: NextConfig = {
       { source: "/fet", destination: "/enquire?sector=FET&utm_source=display&utm_medium=street&utm_campaign=fet", permanent: false },
       { source: "/seal", destination: "/products/seal-wound-spray?utm_source=display&utm_medium=street&utm_campaign=seal", permanent: false },
       { source: "/coffee", destination: "/products/coffee?utm_source=display&utm_medium=street&utm_campaign=coffee", permanent: false },
+      // Yesterday's phone-style samples (25 Nov 2026) became full web pages.
+      { source: "/:locale(sw|fr)?/websites/demo/salon", destination: "/websites/demo/studio", permanent: true },
+      { source: "/:locale(sw|fr)?/websites/demo/restaurant", destination: "/websites/demo/kitchen", permanent: true },
+      { source: "/:locale(sw|fr)?/websites/demo/hardware", destination: "/websites/demo/advisory", permanent: true },
       { source: "/web", destination: "/websites?utm_source=display&utm_medium=street&utm_campaign=websites", permanent: false },
       { source: "/freight", destination: "/enquire?sector=LOGISTICS&utm_source=display&utm_medium=street&utm_campaign=freight", permanent: false },
     ];

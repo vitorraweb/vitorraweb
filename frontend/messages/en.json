@@ -153,7 +153,7 @@
     },
     "websites": {
       "title": "Business Websites in Uganda from UGX 500,000 | Vitorra Digital",
-      "description": "A mobile website for your business, with orders on WhatsApp, built in 5 working days. UGX 500,000 includes the website, your web address and hosting for a year. See a free preview before you pay."
+      "description": "A website for your business, on every phone and computer, built in 5 working days. UGX 500,000 includes the website, your web address and hosting for a year. See a free preview before you pay."
     }
   },
   "finalCta": {
@@ -1894,9 +1894,9 @@
     "schemaName": "Vitorra Digital starter business website",
     "hero": {
       "label": "Vitorra Digital",
-      "title1": "Your business online.",
-      "title2": "Orders on WhatsApp.",
-      "lead": "A website your customers can find, trust and order from. Your products and prices on one page, and every order arrives on your WhatsApp. Ready in five working days.",
+      "title1": "Your business, online.",
+      "title2": "Found, trusted, chosen.",
+      "lead": "A website that shows who you are, what you offer and how to reach you, on every phone and computer. For firms, shops, lodges, restaurants, clinics, schools and studios. Ready in five working days.",
       "priceNote": "Website, web address and hosting for the first year. Nothing else to pay.",
       "primary": "Chat with us on WhatsApp",
       "secondary": "Get a free preview",
@@ -1906,27 +1906,22 @@
     "showcase": {
       "tabsLabel": "Sample websites",
       "tab": {
-        "salon": "Salon",
-        "hardware": "Hardware",
-        "restaurant": "Restaurant"
+        "advisory": "Professional firm",
+        "lodge": "Lodge",
+        "kitchen": "Restaurant",
+        "studio": "Beauty studio"
       },
-      "hint": "These are samples. Tap any item to see the WhatsApp order your customer would send you.",
-      "openOnPhone": "Open this sample full screen"
+      "address": "vitorra.org/websites/demo/{slug}",
+      "open": "Open the {name} sample website",
+      "openShort": "Open the full sample",
+      "shotAlt": "The first screen of the {name} sample website",
+      "caption": "{name} is a made-up business. Each sample is a real page you can open and use."
     },
     "demo": {
-      "chat": "Chat",
-      "orderWhatsapp": "Order on WhatsApp",
-      "call": "Call",
-      "tapHint": "Tap an item to order on WhatsApp",
-      "hours": "Opening hours",
-      "findUs": "Find us",
-      "sampleNote": "Sample website made by Vitorra Digital. The business is made up.",
-      "sheetTitle": "Your customer's WhatsApp",
-      "sheetBody": "On a real site this opens WhatsApp with the message already written. Your customer presses send, and you confirm the price, payment and delivery in the chat.",
-      "close": "Close",
       "metaSample": "Sample website by Vitorra Digital",
-      "barBack": "Sample by Vitorra Digital",
-      "barCta": "Get yours: UGX 500,000"
+      "barBack": "Back to Vitorra Digital",
+      "barCta": "Get yours: UGX 500,000",
+      "barNote": "Sample website. The business is made up."
     },
     "promise": {
       "title": "Why owners say yes",
@@ -1991,9 +1986,9 @@
       "cta": "Start with a free preview",
       "inTitle": "Included",
       "in": {
-        "page": "One mobile-friendly page that looks like your business",
-        "items": "Up to six products or services with their prices",
-        "order": "An order button for each item that opens WhatsApp, plus call and WhatsApp buttons",
+        "page": "One page that looks like your business, on phones and computers",
+        "items": "Up to six products, services, rooms or packages, with prices",
+        "order": "Buttons that open WhatsApp, a phone call or an enquiry form",
         "address": "Your own .com web address for a year, in your name",
         "hosting": "Hosting for a year",
         "secure": "The padlock (secure HTTPS) on your site",
@@ -2063,8 +2058,8 @@
     },
     "for": {
       "label": "Who it's for",
-      "title": "For businesses that already sell by phone and WhatsApp.",
-      "body": "If your customers ask \"how much?\" and \"where are you?\" on WhatsApp every day, your website answers them before they ask."
+      "title": "For any business people need to find.",
+      "body": "If people ask \"what do you do?\", \"how much?\" or \"where are you?\" before they buy, book or visit, your website answers them first, any time of day."
     },
     "faqLabel": "Questions",
     "faqTitle": "What owners ask us",

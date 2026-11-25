@@ -7,7 +7,7 @@ import { Faq } from "@/components/ui/faq";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { Section, Container, Label, Heading, Text, ButtonLink } from "@/components/system";
 import { SectionHead, Steps, ContactBand } from "@/components/system/blocks";
-import { DemoShowcase } from "@/components/websites/DemoShowcase";
+import { SampleShowcase } from "@/components/websites/SampleShowcase";
 import { WebsitePreviewForm } from "@/components/websites/WebsitePreviewForm";
 import { localeAlternates, faqPage, breadcrumbs, ldJson } from "@/lib/seo";
 import { screenAdsOpen } from "@/lib/screen-ads-gate";
@@ -20,8 +20,8 @@ import { CONTACT_PHONE, SITE_URL } from "@/lib/constants";
 
    The page is built around the three things that stop a small business owner
    buying a website, in the order they ask them:
-     1. "Will it bring me customers?"  → the phone: a working sample where a
-        tap becomes a WhatsApp order.
+     1. "What would mine look like?"   → four full sample sites (a firm, a
+        lodge, a restaurant, a studio), each with its own look.
      2. "Will these people vanish?"    → see it before you pay, half up front,
         an office on Lumumba Avenue, a year of care in writing.
      3. "What will it really cost?"    → one price, what's in, what's not.
@@ -81,21 +81,21 @@ export default async function WebsitesPage({ params }: { params: Promise<{ local
         ])} />
 
         {/* 1 — The offer, and the phone that proves it */}
-        <Section tone="ink" className="pt-32 sm:pt-36 lg:pt-40">
-          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
-            <div className="lg:col-span-6">
+        <Section tone="ink" className="pt-32 sm:pt-36 lg:pt-36">
+          <Container className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-12 items-start">
+            <div className="lg:col-span-5">
               <Label onInk>{t("hero.label")}</Label>
-              <Heading as="h1" size="display" className="mt-7 text-ink-fg">
+              <Heading as="h1" size="h1" className="mt-6 text-ink-fg">
                 {t("hero.title1")}<br /><span className="text-gold">{t("hero.title2")}</span>
               </Heading>
-              <Text size="lead" onInk muted className="mt-7 max-w-[34rem]">{t("hero.lead")}</Text>
+              <Text size="lead" onInk muted className="mt-6 max-w-[34rem]">{t("hero.lead")}</Text>
 
-              <div className="mt-9 flex items-baseline gap-4 flex-wrap">
+              <div className="mt-7 flex items-baseline gap-4 flex-wrap">
                 <p className="font-numeric text-ink-fg text-[clamp(2.4rem,5vw,3.6rem)] leading-none tracking-[-0.02em]">UGX 500,000</p>
                 <p className="t-small text-ink-fg-muted max-w-[15rem]">{t("hero.priceNote")}</p>
               </div>
 
-              <div className="mt-9 flex flex-wrap items-center gap-3">
+              <div className="mt-7 flex flex-wrap items-center gap-3">
                 <a href={waHref} target="_blank" rel="noopener noreferrer" className="q-btn bg-ink-fg text-ink hover:bg-white">
                   <WhatsAppIcon className="h-4 w-4" />{t("hero.primary")}
                 </a>
@@ -103,8 +103,8 @@ export default async function WebsitesPage({ params }: { params: Promise<{ local
               </div>
               <p className="mt-5 t-small text-ink-fg-muted">{t("hero.assure")}</p>
             </div>
-            <div className="lg:col-span-6 lg:col-start-7">
-              <DemoShowcase />
+            <div className="lg:col-span-7">
+              <SampleShowcase />
             </div>
           </Container>
         </Section>

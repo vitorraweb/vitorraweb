@@ -1,0 +1,89 @@
+/* Amani Studio — editorial, blush and plum, Instrument Serif over Manrope. */
+.root {
+  --s-paper: #f8f1ec; --s-paper-2: #f1e5dd; --s-ink: #2a1720; --s-soft: #6e5862; --s-accent: #7c2f4c; --s-on-accent: #fff8f4;
+  --s-line: #e2cfc4; --s-field: #fffaf7; --s-radius: 999px;
+  background: var(--s-paper); color: var(--s-ink); font-family: var(--studio-sans), system-ui, sans-serif; font-size: 17px; line-height: 1.6;
+}
+.serif { font-family: var(--studio-serif), Georgia, serif; font-weight: 400; letter-spacing: -0.01em; }
+.wrap { max-width: 1440px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 72px); }
+
+/* Nav */
+.nav { position: sticky; top: 0; z-index: 30; background: var(--s-paper); border-bottom: 1px solid var(--s-line); }
+.navInner { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 76px; }
+.logo { font-family: var(--studio-serif), Georgia, serif; font-style: italic; font-size: 34px; line-height: 1; }
+.logo small { font-style: normal; font-family: var(--studio-sans), sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; margin-left: 10px; color: var(--s-soft); vertical-align: middle; }
+.links { display: none; gap: 36px; font-size: 15px; }
+.links a:hover { color: var(--s-accent); }
+@media (min-width: 900px) { .links { display: flex; } }
+.pill { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 24px; border-radius: 999px; background: var(--s-accent); color: var(--s-on-accent); font-weight: 600; font-size: 15px; }
+.pill:hover { background: #5f2139; }
+.ghost { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 24px; border-radius: 999px; border: 1px solid var(--s-ink); font-weight: 600; font-size: 15px; }
+.ghost:hover { background: var(--s-ink); color: var(--s-paper); }
+
+/* Hero */
+.hero { padding: clamp(40px, 7vw, 96px) 0 clamp(56px, 8vw, 120px); }
+.heroGrid { display: grid; gap: 40px; align-items: end; }
+@media (min-width: 1000px) { .heroGrid { grid-template-columns: 1.15fr 0.85fr; gap: 72px; } }
+.eyebrow { font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--s-soft); }
+.h1 { font-size: clamp(52px, 8.4vw, 128px); line-height: 0.94; margin-top: 24px; text-wrap: balance; }
+.h1 em { color: var(--s-accent); }
+.lead { margin-top: 28px; max-width: 34rem; font-size: 19px; color: var(--s-soft); }
+.ctas { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 12px; }
+.heroPhoto { position: relative; aspect-ratio: 4 / 5; border-radius: 240px 240px 18px 18px; overflow: hidden; }
+.tag { position: absolute; left: 20px; bottom: 20px; background: var(--s-paper); border-radius: 999px; padding: 10px 18px; font-size: 14px; }
+.tag b { color: var(--s-accent); }
+
+/* Services */
+.services { background: var(--s-paper-2); padding: clamp(64px, 9vw, 128px) 0; }
+.svcGrid { display: grid; gap: 48px; }
+@media (min-width: 1000px) { .svcGrid { grid-template-columns: 0.8fr 1.2fr; gap: 96px; } }
+.h2 { font-size: clamp(40px, 5.2vw, 76px); line-height: 1; text-wrap: balance; }
+.sticky { position: relative; }
+@media (min-width: 1000px) { .sticky { position: sticky; top: 110px; align-self: start; } }
+.sidePhoto { margin-top: 32px; aspect-ratio: 4 / 5; position: relative; border-radius: 18px; overflow: hidden; }
+.group + .group { margin-top: 48px; }
+.groupTitle { font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--s-soft); padding-bottom: 12px; border-bottom: 1px solid var(--s-ink); }
+.item { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 4px 16px; padding: 20px 0; border-bottom: 1px solid var(--s-line); }
+.itemName { display: flex; align-items: baseline; gap: 12px; font-family: var(--studio-serif), Georgia, serif; font-size: clamp(24px, 2.2vw, 32px); line-height: 1.15; }
+.itemName::after { content: ""; flex: 1; border-bottom: 1px dotted var(--s-soft); transform: translateY(-6px); min-width: 24px; }
+.price { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 16px; }
+.itemNote { grid-column: 1 / -1; font-size: 14px; color: var(--s-soft); display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.bookLink { font-weight: 600; color: var(--s-accent); min-height: 44px; display: inline-flex; align-items: center; }
+.bookLink:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+/* Studio band */
+.band { position: relative; min-height: min(86svh, 820px); display: grid; align-items: end; }
+.bandImg { position: absolute; inset: 0; }
+.panel { position: relative; background: var(--s-paper); margin: 0 clamp(20px, 5vw, 72px) clamp(20px, 5vw, 72px); padding: clamp(28px, 4vw, 56px); max-width: 640px; border-radius: 18px; }
+.panel ul { margin-top: 24px; border-top: 1px solid var(--s-line); }
+.panel li { padding: 14px 0; border-bottom: 1px solid var(--s-line); font-size: 16px; display: flex; justify-content: space-between; gap: 16px; }
+.panel li span { color: var(--s-soft); }
+
+/* Bridal */
+.bridal { padding: clamp(72px, 10vw, 144px) 0; text-align: center; }
+.quoteLine { font-size: clamp(36px, 5vw, 72px); line-height: 1.05; max-width: 18ch; margin: 0 auto; text-wrap: balance; }
+.bridalMeta { margin-top: 28px; color: var(--s-soft); }
+.bridalMeta b { color: var(--s-ink); }
+
+/* Visit + book */
+.visit { border-top: 1px solid var(--s-line); padding: clamp(64px, 9vw, 120px) 0; }
+.visitGrid { display: grid; gap: 56px; }
+@media (min-width: 1000px) { .visitGrid { grid-template-columns: 1fr 1fr; gap: 96px; } }
+.hours { margin-top: 28px; border-top: 1px solid var(--s-ink); }
+.hours div { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--s-line); }
+.hours dt { color: var(--s-soft); }
+.address { margin-top: 28px; font-size: 17px; }
+.formCard { background: var(--s-paper-2); border-radius: 24px; padding: clamp(24px, 4vw, 48px); }
+.formCard h3 { font-size: 36px; line-height: 1.05; margin-bottom: 24px; }
+
+/* Footer */
+.footer { background: var(--s-ink); color: var(--s-paper); padding: 64px 0 40px; }
+.footWord { font-family: var(--studio-serif), Georgia, serif; font-style: italic; font-size: clamp(80px, 18vw, 260px); line-height: 0.85; }
+.footRow { margin-top: 40px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 14px; opacity: 0.8; }
+
+/* The main site styles every heading in its own serif (globals.css, @layer base).
+   Samples wear their own type, so headings inherit from the sample root. */
+:where(.root) :where(h1, h2, h3, h4) { font-family: inherit; font-weight: inherit; letter-spacing: inherit; line-height: inherit; }
+
+@media (max-width: 640px) { .logo small { display: none; } .navInner .pill { padding: 0 18px; } }
+.pill, .ghost { white-space: nowrap; }

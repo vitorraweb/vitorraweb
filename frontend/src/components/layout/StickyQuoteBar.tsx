@@ -8,7 +8,7 @@ import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { CONTACT_PHONE } from "@/lib/constants";
 
 // Routes where a contact dock would be redundant or in the way.
-const HIDDEN_ON = ["/enquire", "/contact", "/account", "/shop/cart", "/shop/checkout", "/unsubscribe", "/display"];
+const HIDDEN_ON = ["/enquire", "/contact", "/account", "/shop/cart", "/shop/checkout", "/unsubscribe", "/display", "/websites/demo"];
 const telHref = `tel:${CONTACT_PHONE.replace(/\s+/g, "")}`;
 const waHref = `https://wa.me/${CONTACT_PHONE.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
   "Hi Vitorra Holdings, I'd like to know more about your products.",

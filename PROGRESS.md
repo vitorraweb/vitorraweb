@@ -2794,3 +2794,36 @@ Tests: `WebsitePreviewTest` (3); full suite 652 passing. Production build OK; th
 1. Decide who answers the WhatsApp leads, and keep the promised times: same-day reply, preview within 48 hours.
 2. Have a Ugandan colleague check the Luganda ad line.
 3. Add a link from the main site (footer) once the first sites are live.
+
+### Sample websites rebuilt as real web pages, with photography (25 November 2026)
+
+John's brief: the samples should be real web pages, desktop first, premium and unique, not only for businesses that sell, with real visuals, and visuals on the screen adverts too. Built to `moses-build-standards`.
+
+**Four sample sites**, each a full page with its own brand, typefaces and layout (`components/websites/samples/*`, routes `/websites/demo/{advisory,lodge,kitchen,studio}`, noindex):
+
+| Sample | Business | Look |
+|---|---|---|
+| Mirembe Advisory | accounting and tax firm | ivory, navy and brass; Newsreader + Inter Tight; fee table, process, FAQ, consultation form |
+| Ridgeline Lodge | lodge on Lake Bunyonyi | forest and clay; Cormorant + Space Grotesk; availability bar, rooms, experiences, stay form |
+| Mama Rose Kitchen | restaurant | olive-black, saffron, tomato; Bricolage Grotesque; menu board, office lunch |
+| Amani Studio | hair, nails, make-up | blush and plum; Instrument Serif + Manrope; price list, bridal, booking form |
+
+**Rules followed in the samples:**
+- Words over photos sit on solid panels, never a fade.
+- No glass effects, and no repeated photo on a page.
+- Phone layouts checked at 390 px with no sideways scroll.
+- Contact buttons show the WhatsApp message a customer would send. Forms say they sent nothing.
+- Vitorra's own floating WhatsApp button and contact bar are hidden on samples, so they don't read as the sample's.
+- The old `/salon`, `/restaurant` and `/hardware` addresses redirect with a 308 (permanent) redirect.
+
+**Photography** (`public/websites/samples`, 16 files): Pexels (free commercial licence) and two Lake Bunyonyi photos from Wikimedia Commons (CC BY-SA 4.0, credited in the lodge footer).
+- Every file has had its camera and location data stripped, was checked by eye, and has a row in `marketing/websites/photo-licences.md`.
+- One photo was rejected because a real Ugandan school's logo was on the chef's jacket.
+- Photos with identifiable people are stock and used as atmosphere only, never with a name or a quote.
+
+**The /websites page:**
+- The phone mock-up is replaced by a browser window showing real captures of the four samples (`SampleShowcase`, `public/websites/shots`).
+- The wording is generalised ("Found, trusted, chosen."; "for any business people need to find").
+- The hero now fits the first screen.
+
+**Street-screen adverts:** three 1920 × 1080 designs in `marketing/websites/screen/` (see the campaign plan for how to upload them).

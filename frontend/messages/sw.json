@@ -153,7 +153,7 @@
     },
     "websites": {
       "title": "Tovuti za Biashara Uganda kuanzia UGX 500,000 | Vitorra Digital",
-      "description": "Tovuti ya simu kwa biashara yako, oda zikifika WhatsApp, tayari ndani ya siku 5 za kazi. UGX 500,000 inajumuisha tovuti, anwani ya mtandao na hosting kwa mwaka mmoja. Ona onyesho la bure kabla ya kulipa."
+      "description": "Tovuti ya biashara yako, kwenye kila simu na kompyuta, tayari ndani ya siku 5 za kazi. UGX 500,000 inajumuisha tovuti, anwani ya mtandao na hosting kwa mwaka mmoja. Ona onyesho la bure kabla ya kulipa."
     }
   },
   "finalCta": {
@@ -1894,9 +1894,9 @@
     "schemaName": "Tovuti ya kuanzia ya biashara ya Vitorra Digital",
     "hero": {
       "label": "Vitorra Digital",
-      "title1": "Biashara yako mtandaoni.",
-      "title2": "Oda kupitia WhatsApp.",
-      "lead": "Tovuti ambayo wateja wako wanaweza kuipata, kuiamini na kuagiza kupitia. Bidhaa na bei zako kwenye ukurasa mmoja, na kila oda inafika kwenye WhatsApp yako. Tayari ndani ya siku tano za kazi.",
+      "title1": "Biashara yako, mtandaoni.",
+      "title2": "Ipatikane, iaminike, ichaguliwe.",
+      "lead": "Tovuti inayoonyesha wewe ni nani, unatoa nini na jinsi ya kukufikia, kwenye kila simu na kompyuta. Kwa kampuni, maduka, nyumba za wageni, migahawa, kliniki, shule na studio. Tayari ndani ya siku tano za kazi.",
       "priceNote": "Tovuti, anwani ya mtandao na hosting kwa mwaka wa kwanza. Hakuna malipo mengine.",
       "primary": "Ongea nasi kwenye WhatsApp",
       "secondary": "Pata onyesho la bure",
@@ -1906,27 +1906,22 @@
     "showcase": {
       "tabsLabel": "Mifano ya tovuti",
       "tab": {
-        "salon": "Saluni",
-        "hardware": "Vifaa vya ujenzi",
-        "restaurant": "Mgahawa"
+        "advisory": "Kampuni ya kitaalamu",
+        "lodge": "Nyumba ya wageni",
+        "kitchen": "Mgahawa",
+        "studio": "Studio ya urembo"
       },
-      "hint": "Hii ni mifano. Gusa bidhaa yoyote kuona oda ya WhatsApp ambayo mteja wako angekutumia.",
-      "openOnPhone": "Fungua mfano huu skrini nzima"
+      "address": "vitorra.org/websites/demo/{slug}",
+      "open": "Fungua mfano wa tovuti ya {name}",
+      "openShort": "Fungua mfano kamili",
+      "shotAlt": "Skrini ya kwanza ya mfano wa tovuti ya {name}",
+      "caption": "{name} ni biashara ya kubuni. Kila mfano ni ukurasa halisi unaoweza kuufungua na kuutumia."
     },
     "demo": {
-      "chat": "Ongea",
-      "orderWhatsapp": "Agiza kwa WhatsApp",
-      "call": "Piga simu",
-      "tapHint": "Gusa bidhaa kuagiza kwa WhatsApp",
-      "hours": "Saa za kazi",
-      "findUs": "Tupate",
-      "sampleNote": "Mfano wa tovuti uliotengenezwa na Vitorra Digital. Biashara hii si ya kweli.",
-      "sheetTitle": "WhatsApp ya mteja wako",
-      "sheetBody": "Kwenye tovuti halisi hii inafungua WhatsApp ujumbe ukiwa tayari umeandikwa. Mteja anabonyeza tuma, nawe unathibitisha bei, malipo na usafirishaji kwenye mazungumzo.",
-      "close": "Funga",
       "metaSample": "Mfano wa tovuti wa Vitorra Digital",
-      "barBack": "Mfano wa Vitorra Digital",
-      "barCta": "Pata yako: UGX 500,000"
+      "barBack": "Rudi Vitorra Digital",
+      "barCta": "Pata yako: UGX 500,000",
+      "barNote": "Mfano wa tovuti. Biashara hii si ya kweli."
     },
     "promise": {
       "title": "Kwa nini wamiliki wanakubali",
@@ -1991,9 +1986,9 @@
       "cta": "Anza na onyesho la bure",
       "inTitle": "Imejumuishwa",
       "in": {
-        "page": "Ukurasa mmoja unaofaa simu, wenye sura ya biashara yako",
-        "items": "Hadi bidhaa au huduma sita pamoja na bei zake",
-        "order": "Kitufe cha oda kwa kila bidhaa kinachofungua WhatsApp, pamoja na vitufe vya kupiga simu na WhatsApp",
+        "page": "Ukurasa mmoja wenye sura ya biashara yako, kwenye simu na kompyuta",
+        "items": "Hadi bidhaa, huduma, vyumba au vifurushi sita, pamoja na bei",
+        "order": "Vitufe vinavyofungua WhatsApp, simu au fomu ya maulizo",
         "address": "Anwani yako ya .com kwa mwaka mmoja, kwa jina lako",
         "hosting": "Hosting kwa mwaka mmoja",
         "secure": "Kufuli (HTTPS salama) kwenye tovuti yako",
@@ -2063,8 +2058,8 @@
     },
     "for": {
       "label": "Ni kwa ajili ya nani",
-      "title": "Kwa biashara ambazo tayari zinauza kwa simu na WhatsApp.",
-      "body": "Kama wateja wako wanauliza \"ni bei gani?\" na \"mko wapi?\" kwenye WhatsApp kila siku, tovuti yako inawajibu kabla hawajauliza."
+      "title": "Kwa biashara yoyote ambayo watu wanahitaji kuipata.",
+      "body": "Kama watu wanauliza \"mnafanya nini?\", \"ni bei gani?\" au \"mko wapi?\" kabla ya kununua, kuhifadhi au kutembelea, tovuti yako inawajibu kwanza, wakati wowote."
     },
     "faqLabel": "Maswali",
     "faqTitle": "Wamiliki hutuuliza",
