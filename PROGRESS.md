@@ -1,6 +1,6 @@
 # Vitorra Holdings — Progress Snapshot
 
-**Last updated:** 18 November 2026
+**Last updated:** 25 November 2026
 **Live site:** [vitorra.org](https://vitorra.org) · **API:** api.vitorra.org · **Branch:** `master` (production)
 
 > High-level "what's done / what's live / what's left." The week-by-week build
@@ -58,18 +58,20 @@
 | **Blog drafts written with Claude, approved by Marketing by email** | ✅ **Live** — three drafts waiting for Send for review |
 | **Console redesigned like Odoo** — dark top bar, app tiles, breadcrumb control panels, list views, larger system fonts, light/dark mode, graph ⇄ pivot reporting on Overview, CEO report, Google Ads and Accounting | ✅ **Built** (28 October) |
 | **Staff test records removed from enquiries / orders / messages** (`leads:purge-test`) | ⏳ Run on the server: list first, then `--force` |
-| **Marketing app** — email template designer, markets, campaigns that must be tested to support before sending, open/click scorer, one-click unsubscribe, lead-priority decision engine; CEO report renamed Executive report | 🔨 **Built** (29 October) — server update needed |
-| **Everyone sorted into markets and ranked**; contacts from outside the website added by hand or imported; Sales screens tidied; **Finance receipt scanner** (phone QR, AI-read, kept encrypted) | 🔨 **Built** (30 October) — server update + `markets:build` |
+| **Marketing app** — email template designer, markets, campaigns that must be tested to support before sending, open/click scorer, one-click unsubscribe, lead-priority decision engine; CEO report renamed Executive report | ✅ **Live** (server updated 18 November) |
+| **Everyone sorted into markets and ranked**; contacts from outside the website added by hand or imported; Sales screens tidied; **Finance receipt scanner** (phone QR, AI-read, kept encrypted) | ✅ **Live** (server updated 18 November). Confirm `markets:build` has been run on the server |
 | **Street screen box runs smoothly**: light profile, cached media, automatic video shrinking, daylight versions, large info board; screen editor can resize the logo and replace, delete or lighten any item | ✅ **Live** (4–6 November) |
-| **Street screen adverts on Finance's airtime sheet** (6:30am to 7:30pm, airtime hours and price per hour on each package) | 🔨 **Built** (7 November). Server update needed |
-| **Official receipts** (invoices, orders, deposits) and **petty cash vouchers** | 🔨 **Built** (5–6 November). Server update and migrations needed; address to confirm with Finance |
+| **Street screen adverts on Finance's airtime sheet** (6:30am to 7:30pm, airtime hours and price per hour on each package) | ✅ **Live** (server updated 18 November). Advert sales still hidden behind `SCREEN_ADS_ENABLED` |
+| **Official receipts** (invoices, orders, deposits) and **petty cash vouchers** | ✅ **Live** (server updated 18 November). Office address (Plot 21 or Plot 32) still to confirm with Finance |
 | **Overview dashboard** (today, website visitors and clicks, operations) and **Teams switched on** | ✅ **Live** (5 November). PostHog keys are still needed on the server |
-| **Leave tracker, printable leave form, colour per person on the leave calendar** (Operations' request) | 🔨 **Built** (9 November). Server update needed |
+| **Leave tracker, printable leave form, colour per person on the leave calendar** (Operations' request) | ✅ **Live** (server updated 18 November). Operations to enter this year's paper leave |
 | **Website speed, accuracy and forms** (12 November): main pages score 93–96 on a phone (were 64–74), show in about 2.5 s, half the data; Google Ads tag fixed | ✅ **Live** (12 November). Correct `NEXT_PUBLIC_GOOGLE_ADS_ID` on Vercel; send a test enquiry from a phone |
-| **Screen editor: several headlines on one video or design**, each at its own second (up to 5 more) | 🔨 **Built** (12 November). Website live; server update + migration needed |
+| **Screen editor: several headlines on one video or design**, each at its own second (up to 5 more) | ✅ **Live** (migration run 18 November) |
 | **Proforma invoices** — a step between quotation and commercial invoice; kept out of the books, VAT and overdue chasers | ✅ **Live** (18 November). Finance to send one test to their own inbox first |
 | **Server update for 4–12 November** (receipts, petty cash, screen editor, leave) | ✅ **Done** (18 November) — all migrations run |
-| **Vitorra Digital — starter websites for small businesses** (`/websites`): UGX 500,000 first year, free preview, sample sites, leads in Enquiries as Websites | ✅ **Live** (25 November). Assign who answers WhatsApp leads before ads start |
+| **Vitorra Digital — starter websites for small businesses** (`/websites`): UGX 500,000 first year, free preview, four full sample websites, Ugandan photo-led page in plain words, leads in Enquiries as Websites | ✅ **Live** (25 November). Assign who answers WhatsApp leads before ads start |
+| **Vitorra Digital — profit model for Finance** (revenue, cost, profit per site and at 10 / 25 / 50 sites a year) | ✅ **Done** (25 November). Workbook on John's Desktop; Finance presenting to the CEO |
+| **Vitorra Digital — own site kit + one CMS for all client sites** (static sites on Cloudflare Pages, content edited in the Vitorra console) | 📋 **Decided, not built** (25 November). Next build after Finance's go-ahead |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -2444,6 +2446,15 @@ F. **Write the incident runbook** — what to check, in what order, when the sit
 12. **Optional — switch login to HttpOnly cookies** (extra XSS hardening): set `SANCTUM_STATEFUL_DOMAINS`, `SESSION_DOMAIN=.vitorra.org`, `SESSION_SECURE_COOKIE=true` (backend) + `NEXT_PUBLIC_AUTH_MODE=cookie` (Vercel). Reversible by unsetting; default stays token-based.
 13. **Point the reception TV at `vitorra.org/display`** — open it full-screen (kiosk mode) in the front-desk browser; it self-refreshes and needs no further setup.
 
+**Vitorra Digital (from 25 November)**
+- **Decide who answers the website leads** on WhatsApp before any ads run. The page promises a same-day reply and a preview within 48 hours.
+- **Send one test request** from the form on a phone, check it lands in Enquiries under Websites, then close it.
+- **Google Ads:** create a "Website preview request" conversion and set `NEXT_PUBLIC_GOOGLE_ADS_LABEL_WEBSITE` on Vercel.
+- **Operations:** upload the three street-screen adverts (`marketing/websites/screen/`) in Screen editor → Running order.
+- **Luganda ad line** in `marketing/websites/launch-campaign.md`: a native speaker checks it before use.
+- **Build the site kit and the CMS** (see "Vitorra Digital: how client sites are built and what they cost" below) once Finance and the CEO approve the model.
+- **Better photos later:** a real client photographed in their own shop would beat any stock photo on `/websites`.
+
 **Growth — next upgrades** (from `planning/10-platform-upgrades-brief.md`)
 14. **WhatsApp + SMS notifications** (order/payment/delivery updates) — needs Solomon's approval + a one-time business setup; small per-message cost.
 15. **Anti-spam on forms** (Cloudflare Turnstile) — free, ~10-min account setup, then wire in.
@@ -2862,3 +2873,39 @@ The showcase captures and the three street-screen adverts were re-rendered.
 **Photos:** five new photos in `public/websites/ug`, recorded in `marketing/websites/photo-licences.md`. Two "Kampala" stock photos were rejected after checking: one is Arusha, one is Latin America.
 
 **Checked:** typecheck, lint and build are green. Phone (390 px) and desktop (1440 px) show no sideways scroll, and the hero fits the first screen on both.
+
+### Vitorra Digital: how client sites are built and what they cost (25 November 2026)
+
+**Decision (John, 25 November):** client websites are custom-built from Vitorra's own site kit, not WordPress. WordPress stays a quoted upgrade for a client who insists on editing alone, with the hosting paid by that client. Who builds the sites, and on what terms, is an agreement between John and management and is outside this model.
+
+**Why the kit wins:**
+- Static sites on Cloudflare Pages cost nothing per site. WordPress needs a paid PHP and database host.
+- There are no plugins or server to update, so the year of care stays cheap and there is little to hack.
+- Sites load fast on Ugandan mobile data.
+- Every client still gets their own look, like the four samples.
+- **Never host client sites on the Namecheap server that runs api.vitorra.org.** A problem on a client site there could take down Vitorra's own systems.
+
+**The plan (not built yet):**
+1. **One site kit:** shared sections (hero, products or services with prices, about, gallery, hours and location, questions, contact or booking form) plus a theme per client, with a Claude skill that sets up a new site, checks it at phone and desktop sizes, and publishes it.
+2. **One CMS in the Vitorra console:** a new Client websites app with fixed fields (details, prices, hours, photos, questions, WhatsApp number). **Publish** rebuilds that client's site through a Cloudflare deploy hook.
+3. **One form handler for every client site:** it emails and WhatsApps the owner and keeps a record, which gives real enquiry counts for the 30-day review and the renewal.
+4. **Visitor numbers** from Cloudflare Web Analytics, which is free.
+5. **Editing:** phase 1 is staff only. Phase 2 adds a "My website" page in the customer portal (`/account`) for clients who want to edit their own prices, hours and photos.
+6. **Handover:** export the content and built files and transfer the domain. Any host can run them.
+
+**Cost per site, as given to Finance** ("Vitorra Digital - Website Service Profit Model.xlsx", on John's Desktop, recalculated in Excel, 197 formulas, no errors):
+
+| | First year | Each renewal year |
+|---|---|---|
+| Revenue | UGX 500,000 | UGX 300,000 |
+| Cost (web address only, budgeted at USD 15 × 4,200) | UGX 63,000 | UGX 63,000 |
+| Profit | UGX 437,000 (87%) | UGX 237,000 (79%) |
+
+- One client over three years brings UGX 911,000 in profit.
+- At 70% of clients renewing each year, three-year profit is UGX 17.6m (10 new sites a year), UGX 44.2m (25 a year) or UGX 88.1m (50 a year).
+- Hosting, the CMS, the HTTPS padlock, visitor numbers and form handling cost UGX 0 per site.
+- Left out, by decision: staff time, payment fees, Vitorra's own advertising and photography (free photography only).
+
+**Sources (checked 25 November):** Porkbun .com about USD 11.08 a year to register and renew, with a ~7% yearly rise expected. Cloudflare Pages Free plan: 100 sites per account and 500 rebuilds a month. At 50 new sites a year, year 3 needs a second free account.
+
+**Housekeeping (25 November):** on John's machine, deleted `frontend/.next` (build output) and the session's temporary files to free disk space. Nothing in the repository was removed.
