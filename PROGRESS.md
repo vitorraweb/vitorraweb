@@ -69,7 +69,7 @@
 | **Screen editor: several headlines on one video or design**, each at its own second (up to 5 more) | 🔨 **Built** (12 November). Website live; server update + migration needed |
 | **Proforma invoices** — a step between quotation and commercial invoice; kept out of the books, VAT and overdue chasers | ✅ **Live** (18 November). Finance to send one test to their own inbox first |
 | **Server update for 4–12 November** (receipts, petty cash, screen editor, leave) | ✅ **Done** (18 November) — all migrations run |
-| **Vitorra Digital — starter websites for small businesses** (`/websites`): UGX 500,000 first year, free preview, sample sites, leads in Enquiries as Websites | 🔨 **Built** (25 November). Not deployed; Solomon to approve the price list first |
+| **Vitorra Digital — starter websites for small businesses** (`/websites`): UGX 500,000 first year, free preview, sample sites, leads in Enquiries as Websites | ✅ **Live** (25 November). Assign who answers WhatsApp leads before ads start |
 | Uptime checks / automated backups | ⏳ Still to do — the incoming engineer's first assignments |
 
 ---
@@ -2757,7 +2757,7 @@ Finance asked for a **Proforma invoice** in the document sequence: Quotation →
 - Deployed 18 November (commit 356e13a): website, and the server with `git pull`, `composer install`, `config:cache`, `route:cache`. Every migration up to `2026_11_12_000001` (screen-editor headlines) shows as run, so the "Server update owed" notes above are cleared.
 - **To do:** Joseph or Daniel make a test proforma from a quotation, email it to themselves and check the title band and layout before a customer sees one. Open for Finance: whether a proforma should ever show as "expected income".
 
-## Vitorra Digital: starter websites (25 November 2026) — built, not deployed
+## Vitorra Digital: starter websites (25 November 2026) — live
 
 A new line of business from `Vitorra-Website-Pilot.docx`, changed by John on 25 November:
 - **UGX 500,000 for the first year**, all in: website, .com web address (in the client's name) and hosting. The pilot document had UGX 420,000 including the domain.
@@ -2788,9 +2788,9 @@ The sample sites open full screen at `/websites/demo/{salon,hardware,restaurant}
 
 Tests: `WebsitePreviewTest` (3); full suite 652 passing. Production build OK; the pages are built ahead and cached.
 
-**Before switching on:**
-1. Solomon approves the price list.
-2. Deploy: the website on push; on the server, `git pull`, `config:cache`, `route:cache` (no migration).
-3. Decide who answers the WhatsApp leads, and keep the promised times: same-day reply, preview within 48 hours.
-4. Have a Ugandan colleague check the Luganda ad line.
-5. Add a link from the main site (footer) once the first sites are live.
+**Deployed 25 November** (commit ad6a45c): website live on Vercel; server pulled with `composer install`, `config:cache`, `route:cache` (no migration). John approved going live.
+
+**Before the ads start:**
+1. Decide who answers the WhatsApp leads, and keep the promised times: same-day reply, preview within 48 hours.
+2. Have a Ugandan colleague check the Luganda ad line.
+3. Add a link from the main site (footer) once the first sites are live.
