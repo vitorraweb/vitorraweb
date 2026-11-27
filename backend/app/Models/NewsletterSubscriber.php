@@ -16,9 +16,15 @@ class NewsletterSubscriber extends Model
         'consent_ip',
         'consent_at',
         'unsubscribed_at',
+        'lead_source',
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'attribution',
     ];
 
     protected $casts = [
+        'attribution'     => 'array',
         'consent_at'      => 'datetime',
         'unsubscribed_at' => 'datetime',
     ];

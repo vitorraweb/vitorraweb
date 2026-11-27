@@ -12,6 +12,7 @@ use App\Models\Prospect;
 use App\Models\ProspectCampaignRecipient;
 use App\Models\SalesActivity;
 use App\Models\User;
+use App\Support\LeadSource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -172,8 +173,16 @@ class CrmController extends Controller
 
         $enquiries = Enquiry::query()->where('status', 'new')
             ->when(! $everyone, fn ($q) => $q->where(fn ($w) => $w->where('assigned_user_id', $user->id)->orWhereNull('assigned_user_id')))
-            ->latest()->limit(10)->get(['id', 'name', 'company', 'email', 'phone', 'product_category', 'requirements', 'created_at'])
-            ->map(fn (Enquiry $e) => $e->only(['id', 'name', 'company', 'email', 'phone', 'product_category', 'created_at']) + $this->asks($e));
+            ->latest()->limit(10)->get(['id', 'name', 'company', 'email', 'phone', 'product_category', 'requirements', 'lead_source', 'created_at'])
+            ->map(fn (Enquiry $e) => $e->only(['id', 'name', 'company', 'email', 'phone', 'product_category', 'created_at'])
+                + $this->asks($e) + $this->origin($e->lead_source));
+
+        // Contact-page messages are leads too ("do you deliver to Gulu?"), and
+        // until now only the Messages inbox showed them.
+        // Shown only to staff who may read the Messages inbox.
+        $messages = ! $user->canModule('messages') ? collect() : ContactMessage::query()->where('status', 'unread')
+            ->latest()->limit(10)->get(['id', 'name', 'email', 'subject', 'lead_source', 'created_at'])
+            ->map(fn (ContactMessage $m) => $m->only(['id', 'name', 'email', 'subject', 'created_at']) + $this->origin($m->lead_source));
 
         $hot = Prospect::query()->whereIn('lead_tier', ['hot', 'warm'])->whereNotIn('outreach_status', ['converted', 'not_interested'])
             ->when(! $everyone, fn ($q) => $q->where(fn ($w) => $w->whereNull('assigned_to')->orWhere('assigned_to', '')->orWhereIn('assigned_to', [(string) $user->id, $user->name])))
@@ -193,6 +202,7 @@ class CrmController extends Controller
             'follow_ups'   => $followUps,
             'overdue'      => $followUps->where('due', '<', today()->toDateString())->count(),
             'new_enquiries' => $enquiries,
+            'new_messages' => $messages,
             'hot_leads'    => $hot,
             'closing_soon' => $closing->map(fn ($n) => $this->deal($n) + ['name' => $n->override_name ?: ($closingNames[$n->email]['name'] ?? $n->email), 'phone' => $n->override_phone ?: ($closingNames[$n->email]['phone'] ?? null)])->values(),
             'this_week'    => ['activities' => (int) $week->sum(), 'by_kind' => $week],
@@ -298,6 +308,14 @@ class CrmController extends Controller
             'assessment_where' => $a->get('assessment_where'),
             'contact_pref'     => $a->get('contact_pref'),
         ];
+    }
+
+    /** Where a lead came from, as the channel name a salesperson can say aloud ("Meta ads"). */
+    private function origin(?string $leadSource): array
+    {
+        $channel = LeadSource::channel($leadSource);
+
+        return ['channel' => $channel, 'channel_label' => LeadSource::CHANNELS[$channel]];
     }
 
     /** Best-known name and phone for each email, from enquiries, orders and prospects. */

@@ -27,6 +27,8 @@ class NewsletterController extends Controller
             'source' => ['nullable', 'string', 'max:50'],
             // Honeypot — real users never fill this; bots usually do.
             'hp'     => ['nullable', 'string', 'max:0'],
+            // How the visitor reached the site (see EnquiryController); optional, never blocking.
+            'attribution' => ['nullable', 'array'],
         ]);
 
         $email = Str::lower(trim($data['email']));
@@ -44,6 +46,7 @@ class NewsletterController extends Controller
                 'consent_ip'      => $request->ip(),
                 'consent_at'      => now(),
                 'unsubscribed_at' => null,
+                ...\App\Support\LeadSource::resolve($data['attribution'] ?? []),
             ])->save();
 
             $frontendUrl    = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'https://vitorra.org')), '/');

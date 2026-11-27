@@ -44,6 +44,30 @@ class Enquiry extends Model
         return $this->attribution['gclid'] ?? null;
     }
 
+    /** Minutes within which an identical submission counts as the same lead. */
+    public const DUPLICATE_WINDOW_MINUTES = 10;
+
+    /**
+     * The lead this submission repeats, if the same person sent the same thing
+     * for the same product a few minutes ago: a double tap on a slow phone
+     * connection, or "it didn't seem to send, let me try again". Returning the
+     * first one means the team is told once, the lead is counted once, and
+     * the ad conversion (keyed on the lead's id) is reported once.
+     *
+     * A genuinely new message from the same person is a new enquiry.
+     */
+    public static function recentDuplicate(string $email, ?string $product, ?string $message, ?array $requirements = null): ?self
+    {
+        $candidates = self::query()
+            ->whereRaw('LOWER(email) = ?', [mb_strtolower(trim($email))])
+            ->where('created_at', '>=', now()->subMinutes(self::DUPLICATE_WINDOW_MINUTES))
+            ->when(filled($product), fn ($q) => $q->where('product_category', $product), fn ($q) => $q->where(fn ($w) => $w->whereNull('product_category')->orWhere('product_category', '')))
+            ->latest('id')->take(5)->get();
+
+        return $candidates->first(fn (self $e) => trim((string) $e->message) === trim((string) $message)
+            && json_encode($e->requirements ?? []) === json_encode($requirements ?? []));
+    }
+
     public function isNew(): bool
     {
         return $this->status === 'new';

@@ -142,6 +142,99 @@ final class LeadSource
         return 'direct';
     }
 
+    /* ── Channels ──────────────────────────────────────────────────────────────
+       A label is precise ("facebook / paid", "ig / paid_social") but Marketing
+       asks broader questions: "how many website enquiries came from our Meta
+       ads?". A channel groups the labels that answer the same question. It is
+       worked out from the stored label alone, so it applies to every lead
+       already recorded, with no extra column to keep in step.
+
+       Meta's ad links name the platform in several ways: "facebook" when the
+       link is typed by hand (the launch plan's tracking links), or fb / ig /
+       msg / an / threads when the ad uses the {{site_source_name}} parameter.
+       All of them are Meta. They count as Meta ADS only when the medium says
+       the click was paid for: an untagged fbclid or a Facebook referrer is
+       Meta, but not evidence of spend. */
+
+    public const CHANNELS = [
+        'google_ads'     => 'Google Ads',
+        'meta_ads'       => 'Meta ads (Facebook / Instagram)',
+        'meta'           => 'Facebook / Instagram (unpaid)',
+        'organic_search' => 'Search (unpaid)',
+        'whatsapp'       => 'WhatsApp',
+        'email'          => 'Email',
+        'other_social'   => 'Other social',
+        'referral'       => 'Other websites and campaigns',
+        'direct'         => 'Direct',
+        'unknown'        => 'Unknown (before tracking)',
+    ];
+
+    private const META_SOURCES = ['facebook', 'fb', 'instagram', 'ig', 'meta', 'messenger', 'msg', 'an', 'threads'];
+
+    private const SEARCH_SOURCES = ['google', 'bing', 'duckduckgo', 'yahoo'];
+
+    private const SOCIAL_SOURCES = ['linkedin', 'x', 'twitter', 'youtube', 'tiktok', 'telegram'];
+
+    private const PAID_MEDIUMS = [
+        'cpc', 'ppc', 'paid', 'paid_social', 'paidsocial', 'paid-social', 'social_paid', 'paid_search',
+        'ads', 'ad', 'cpm', 'display', 'sponsored',
+    ];
+
+    /** The channel a stored lead_source label belongs to (a key of CHANNELS). */
+    public static function channel(?string $label): string
+    {
+        if ($label === null || trim($label) === '' || $label === 'unknown') {
+            return 'unknown';
+        }
+        if ($label === 'direct') {
+            return 'direct';
+        }
+
+        [$source, $medium] = array_pad(array_map('trim', explode('/', Str::lower($label), 2)), 2, '');
+        $paid = in_array($medium, self::PAID_MEDIUMS, true);
+
+        if (in_array($source, self::META_SOURCES, true)) {
+            return $paid ? 'meta_ads' : 'meta';
+        }
+        if (in_array($source, self::SEARCH_SOURCES, true)) {
+            if ($paid) {
+                return $source === 'google' ? 'google_ads' : 'referral';
+            }
+
+            return 'organic_search';
+        }
+        if (in_array($source, ['whatsapp', 'wa'], true)) {
+            return 'whatsapp';
+        }
+        if (in_array($medium, ['email', 'newsletter', 'e-mail'], true) || in_array($source, ['email', 'newsletter'], true)) {
+            return 'email';
+        }
+        if (in_array($source, self::SOCIAL_SOURCES, true)) {
+            return 'other_social';
+        }
+
+        return 'referral';
+    }
+
+    /**
+     * Which of the given stored labels belong to a channel, for a whereIn().
+     * Labels are few (one per source/medium pair), so this stays cheap.
+     *
+     * @param  iterable<string|null>  $labels
+     * @return array<int,string>
+     */
+    public static function labelsFor(string $channel, iterable $labels): array
+    {
+        $out = [];
+        foreach ($labels as $l) {
+            if ($l !== null && $l !== '' && self::channel($l) === $channel) {
+                $out[] = $l;
+            }
+        }
+
+        return $out;
+    }
+
     private static function str(array $in, string $key): ?string
     {
         $v = $in[$key] ?? null;

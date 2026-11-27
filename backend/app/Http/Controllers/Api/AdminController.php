@@ -11,6 +11,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Notifications\EnquiryAssigned;
 use App\Services\DocumentService;
+use App\Support\LeadSource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -104,6 +105,31 @@ class AdminController extends Controller
             'count'     => (int) $r->c,
             'converted' => (int) $r->conv,
         ])->values();
+
+        /* ── Channel × product ──────────────────────────────────────────
+           Answers "how many website enquiries came from our Meta ads?" in
+           one look. Labels fold into channels (LeadSource::channel), then
+           split by product; `last_30` shows whether a channel is live now. */
+        $since30 = $now->copy()->subDays(30);
+        $channelRows = Enquiry::selectRaw(
+            "COALESCE(NULLIF(lead_source, ''), 'unknown') AS s,
+             COALESCE(NULLIF(product_category, ''), 'GENERAL') AS p,
+             COUNT(*) c,
+             SUM(CASE WHEN status = 'converted' THEN 1 ELSE 0 END) conv,
+             SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) recent",
+            [$since30]
+        )->groupBy('s', 'p')->get();
+
+        $byChannel = [];
+        foreach ($channelRows as $r) {
+            $ch = LeadSource::channel($r->s);
+            $byChannel[$ch] ??= ['channel' => $ch, 'label' => LeadSource::CHANNELS[$ch], 'count' => 0, 'converted' => 0, 'last_30' => 0, 'by_product' => []];
+            $byChannel[$ch]['count'] += (int) $r->c;
+            $byChannel[$ch]['converted'] += (int) $r->conv;
+            $byChannel[$ch]['last_30'] += (int) $r->recent;
+            $byChannel[$ch]['by_product'][$r->p] = ($byChannel[$ch]['by_product'][$r->p] ?? 0) + (int) $r->c;
+        }
+        $byChannel = collect($byChannel)->sortByDesc('count')->values();
 
         $campaignRows = Enquiry::whereNotNull('utm_campaign')
             ->selectRaw('utm_campaign, COUNT(*) c')
@@ -199,6 +225,7 @@ class AdminController extends Controller
                 ],
                 'lead_sources' => [
                     'by_source'    => $bySource,
+                    'by_channel'   => $byChannel,
                     'by_campaign'  => $campaignRows->map(fn ($r) => [
                         'campaign' => $r->utm_campaign,
                         'count'    => (int) $r->c,
@@ -284,8 +311,33 @@ class AdminController extends Controller
                 ->orWhere('email', 'like', $q)
                 ->orWhere('company', 'like', $q));
         }
+        $this->filterByChannel($query, $request);
 
-        return response()->json($query->paginate(25));
+        return response()->json($query->paginate(25)->through(
+            fn (Enquiry $e) => $e->setAttribute('lead_channel', LeadSource::channel($e->lead_source))
+        ));
+    }
+
+    /**
+     * Narrow an enquiry query to where the lead came from: a channel
+     * (`?channel=meta_ads`, see LeadSource::CHANNELS) or one exact label
+     * (`?source=facebook / paid`).
+     */
+    private function filterByChannel($query, Request $request): void
+    {
+        if ($request->filled('channel') && array_key_exists((string) $request->channel, LeadSource::CHANNELS)) {
+            $channel = (string) $request->channel;
+            $labels = LeadSource::labelsFor($channel, Enquiry::query()->distinct()->pluck('lead_source'));
+            $query->where(function ($w) use ($channel, $labels) {
+                $w->whereIn('lead_source', $labels ?: ['']);
+                if ($channel === 'unknown') {
+                    $w->orWhereNull('lead_source')->orWhere('lead_source', '')->orWhere('lead_source', 'unknown');
+                }
+            });
+        }
+        if ($request->filled('source')) {
+            $query->where('lead_source', (string) $request->source);
+        }
     }
 
     /** Update an enquiry's status */
@@ -513,11 +565,12 @@ class AdminController extends Controller
         $query = Enquiry::latest();
         if ($request->filled('status'))   $query->where('status', $request->status);
         if ($request->filled('category')) $query->where('product_category', strtoupper($request->category));
+        $this->filterByChannel($query, $request);
         $enquiries = $query->get();
 
         return response()->stream(function () use ($enquiries) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['ID', 'Date', 'Name', 'Email', 'Company', 'Phone', 'Country', 'Product', 'Status', 'Assigned To', 'Message']);
+            fputcsv($out, ['ID', 'Date', 'Name', 'Email', 'Company', 'Phone', 'Country', 'Product', 'Status', 'Assigned To', 'Message', 'Channel', 'Source', 'Campaign']);
             foreach ($enquiries as $e) {
                 fputcsv($out, [
                     $e->id,
@@ -531,6 +584,9 @@ class AdminController extends Controller
                     $e->status,
                     $e->assigned_to ?? '',
                     $e->message,
+                    LeadSource::CHANNELS[LeadSource::channel($e->lead_source)],
+                    $e->lead_source ?? '',
+                    $e->utm_campaign ?? '',
                 ]);
             }
             fclose($out);

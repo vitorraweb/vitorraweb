@@ -23,6 +23,17 @@ class ContactController extends Controller
             'attribution' => ['nullable', 'array'],
         ]);
 
+        // The same message sent again a moment later (double tap, retry) is
+        // one message: the team is told once and the lead counted once.
+        $dup = ContactMessage::query()
+            ->whereRaw('LOWER(email) = ?', [mb_strtolower(trim($data['email']))])
+            ->where('created_at', '>=', now()->subMinutes(\App\Models\Enquiry::DUPLICATE_WINDOW_MINUTES))
+            ->latest('id')->take(5)->get()
+            ->first(fn (ContactMessage $m) => trim((string) $m->message) === trim($data['message']));
+        if ($dup) {
+            return response()->json(['data' => $dup, 'duplicate' => true, 'message' => 'Message received. We will reply within 24 hours.'], 200);
+        }
+
         $data = array_merge($data, LeadSource::resolve($request->input('attribution', []) ?: []));
 
         $msg = ContactMessage::create($data);
