@@ -96,10 +96,10 @@ export default function Footer() {
         {cols.map((col, i) => (
           <div key={col.heading} className={i === 0 ? "lg:col-span-2 lg:col-start-6" : "lg:col-span-2"}>
             <h3 className="t-label text-ink-fg-muted mb-5">{col.heading}</h3>
-            <ul className="space-y-1 sm:space-y-3 t-small">
+            <ul className="sm:space-y-3 t-small">
               {col.links.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="inline-block py-1.5 sm:py-0 text-ink-fg/85 hover:text-ink-fg hover:underline underline-offset-4 decoration-gold transition-colors">
+                  <Link href={link.href} className="inline-block py-2.5 sm:py-0 text-ink-fg/85 hover:text-ink-fg hover:underline underline-offset-4 decoration-gold transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -109,7 +109,7 @@ export default function Footer() {
                   column beside the policy it changes. */}
               {col.heading === t("footer.colLegal") && (
                 <li>
-                  <CookieSettingsButton className="text-ink-fg/85 hover:text-ink-fg transition-colors text-left" />
+                  <CookieSettingsButton className="py-2.5 sm:py-0 text-ink-fg/85 hover:text-ink-fg transition-colors text-left" />
                 </li>
               )}
             </ul>
@@ -121,10 +121,10 @@ export default function Footer() {
       <div className="border-t border-ink-line">
         <div className="q-container flex flex-col lg:flex-row lg:items-center justify-between gap-3 py-6 t-small text-ink-fg-muted">
           <p>{t("footer.rights", { year, name: SITE_NAME })} <span className="font-numeric">· {t("footer.regLine", { reg: COMPANY_REG_NO })}</span></p>
-          <p className="flex flex-wrap gap-x-6 gap-y-1">
-            <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-ink-fg transition-colors">{CONTACT_EMAIL}</a>
-            <a href={telHref} className="hover:text-ink-fg transition-colors font-numeric">{CONTACT_PHONE}</a>
-            <a href={telAltHref} className="hover:text-ink-fg transition-colors font-numeric">{CONTACT_PHONE_ALT}</a>
+          <p className="flex flex-wrap gap-x-6">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="py-2.5 lg:py-0 hover:text-ink-fg transition-colors">{CONTACT_EMAIL}</a>
+            <a href={telHref} className="py-2.5 lg:py-0 hover:text-ink-fg transition-colors font-numeric">{CONTACT_PHONE}</a>
+            <a href={telAltHref} className="py-2.5 lg:py-0 hover:text-ink-fg transition-colors font-numeric">{CONTACT_PHONE_ALT}</a>
           </p>
         </div>
       </div>

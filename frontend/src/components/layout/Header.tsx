@@ -199,7 +199,7 @@ export default function Header({ overlay = false, languageSwitcher }: {
             </div>
             <button
               type="button"
-              className={cn("lg:hidden inline-flex h-10 w-10 items-center justify-center", light ? "text-ink-fg" : "text-ink")}
+              className={cn("lg:hidden inline-flex h-11 w-11 -mr-1.5 items-center justify-center", light ? "text-ink-fg" : "text-ink")}
               onClick={() => setOpen(true)}
               aria-label={t("header.toggleMenu")}
               aria-expanded={open}

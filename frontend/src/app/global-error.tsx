@@ -2,7 +2,8 @@
 
 // Top-level error boundary. Replaces the root layout when an unrecoverable
 // render error occurs, reports it to Sentry, and shows a branded fallback.
-import * as Sentry from "@sentry/nextjs";
+// Sentry is imported only when this screen shows: a static import put the
+// SDK in the script every page downloads up front.
 import { useEffect } from "react";
 
 export default function GlobalError({
@@ -13,7 +14,10 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    if (!process.env.NEXT_PUBLIC_SENTRY_DSN) return;
+    import("@/lib/sentry-client")
+      .then((S) => S.captureException(error))
+      .catch(() => {});
   }, [error]);
 
   return (

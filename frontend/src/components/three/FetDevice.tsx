@@ -7,16 +7,21 @@ import type { MotionValue } from "motion/react";
 import { cn } from "@/lib/utils";
 
 /* ─── FetDevice — the 3D device with an honest fallback ───────────────────────
-   three.js (~200 KB) is only fetched when the device is about to scroll into
-   view, and only on a device that can draw it: WebGL available, motion not
-   reduced, data-saver off. Everyone else sees the product photograph, which
-   is also what shows while the scene loads, so there is never an empty box. */
+   three.js (~260 KB compressed) is only fetched when the device is about to
+   scroll into view, and only on a device that can draw it comfortably: a
+   screen at least tablet-wide with a mouse or trackpad, WebGL available,
+   motion not reduced, data-saver off. Phones and touch tablets see the
+   product photograph: on a phone the device sits in a short static block
+   (the scroll-driven turn is desktop-only), so the scene cost a quarter of a
+   megabyte of mobile data and battery for a slow spin. The photograph is
+   also what shows while the scene loads, so there is never an empty box. */
 
 const Scene = dynamic(() => import("./FetDeviceCanvas"), { ssr: false });
 
 function canRender3D() {
   if (typeof window === "undefined") return false;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+  if (window.matchMedia("(max-width: 767px), (hover: none) and (pointer: coarse)").matches) return false;
   const nav = navigator as Navigator & { connection?: { saveData?: boolean }; deviceMemory?: number };
   if (nav.connection?.saveData) return false;
   if (nav.deviceMemory !== undefined && nav.deviceMemory < 2) return false;

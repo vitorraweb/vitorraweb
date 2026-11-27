@@ -14,6 +14,19 @@ import { siteMetadata, siteViewport } from "@/lib/site-metadata";
 export const metadata = siteMetadata;
 export const viewport = siteViewport;
 
+/* Message groups read only by server components (page copy, metadata, legal
+   text, Q&As). Every page used to ship the whole dictionary, about 110 KB of
+   text, inside its HTML for the browser to parse; these groups are half of it
+   and no browser-side component reads them. A new group is sent to the
+   browser unless it is listed here. ⚠ Before a "use client" component reads
+   one of these with useTranslations, take it off this list, or the visitor
+   sees the message key instead of the words. */
+const SERVER_ONLY_NAMESPACES = new Set([
+  "meta", "legal", "team", "evidence", "banners", "visuals",
+  "fetPage", "sealPage", "coffeePage", "logisticsPage", "enquirePage", "blogPage", "careersPage", "shopSoon", "fetCatalogue",
+  "homeQA", "fetQA", "productQA", "sealQA", "coffeeQA", "logisticsQA", "aboutQA",
+]);
+
 /* Pre-render both locales at build time (/, /sw). */
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -37,7 +50,10 @@ export default async function LocaleLayout({
   }
   setRequestLocale(locale);
   const common = await getTranslations("common");
-  const messages = await getMessages();
+  const all = await getMessages();
+  const messages = Object.fromEntries(
+    Object.entries(all).filter(([ns]) => !SERVER_ONLY_NAMESPACES.has(ns)),
+  );
   return (
     <RootDocument locale={locale} messages={messages}>
       {/* Who Vitorra is, for search engines and AI assistants (every page). */}

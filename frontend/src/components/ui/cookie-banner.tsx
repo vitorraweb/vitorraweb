@@ -76,7 +76,7 @@ export function CookieBanner() {
           <button
             onClick={() => (current ? setVisible(false) : decline())}
             aria-label={t("dismiss")}
-            className="shrink-0 -mr-1 -mt-0.5 p-1 text-ink-muted hover:text-ink transition-colors"
+            className="shrink-0 -mr-3 -mt-3 p-3.5 text-ink-muted hover:text-ink transition-colors"
           >
             <X aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -87,10 +87,10 @@ export function CookieBanner() {
           </p>
         )}
         <div className="mt-3.5 md:mt-0 flex gap-2 md:shrink-0 md:w-[280px]">
-          <button onClick={decline} className="q-btn flex-1 min-h-10 border border-line-strong text-ink hover:border-ink">
+          <button onClick={decline} className="q-btn flex-1 min-h-11 border border-line-strong text-ink hover:border-ink">
             {t("decline")}
           </button>
-          <button onClick={accept} className="q-btn flex-1 min-h-10 bg-ink text-paper hover:bg-black">
+          <button onClick={accept} className="q-btn flex-1 min-h-11 bg-ink text-paper hover:bg-black">
             {t("acceptAll")}
           </button>
         </div>
