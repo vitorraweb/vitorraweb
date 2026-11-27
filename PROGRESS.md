@@ -2909,3 +2909,34 @@ The showcase captures and the three street-screen adverts were re-rendered.
 **Sources (checked 25 November):** Porkbun .com about USD 11.08 a year to register and renew, with a ~7% yearly rise expected. Cloudflare Pages Free plan: 100 sites per account and 500 rebuilds a month. At 50 new sites a year, year 3 needs a second free account.
 
 **Housekeeping (25 November):** on John's machine, deleted `frontend/.next` (build output) and the session's temporary files to free disk space. Nothing in the repository was removed.
+
+## Operations' IT tasks, week of 27 November 2026 — live
+
+Operations gave four tasks: website content, phone layout and speed; screen scheduling and product displays; CRM, lead forms and marketing tools; tests, backups and the weekly IT report.
+
+**Website (public pages):**
+- FET "How it works" no longer says "patented" (EN + SW).
+- Phones: language switch, menu, cookie banner, footer links and "Copy reservation link" are finger-sized (~44px). Back-to-top shows on large screens only; on phones the quote bar is the only floating element.
+- Speed: phones and tablets get the FET photo instead of the 3D device (263 KB less on the home page); pages no longer send the browser the server-only text groups (`SERVER_ONLY_NAMESPACES` in `app/[locale]/layout.tsx` — a group a browser component needs must come off that list); Sentry loads when the browser is idle and only with a DSN (`lib/sentry-client.ts`). Home on a phone 1,629 → 1,236 KB; HTML about a third smaller; /about JS before usable 369 → 294 KB.
+- Checked: no sideways scroll at 375px on any main page, all internal links work, every image has alt text.
+- Open for the business: coffee "wholesale" wording vs export-only; "Proprietary swirl chamber"; French advertised to search engines though only careers is in French.
+
+**Screens:**
+- Screen editor → Running order: every item (built-in scenes too) takes From / Until dates and Each day from / until hours (Kampala time; overnight windows allowed), with a status: Showing now / Not in its hours now / Scheduled / Ended. Paid adverts' 12 units and 15 plays an hour are untouched. `Support/ScreenSchedule.php`, `components/display/schedule.ts`, migration `2026_11_27_000002_add_daily_hours_to_screen_media`; scene schedules live in `display_programme`.
+- Fixed: adverts kept playing up to 4 minutes after their booking or hours ended (plays then went unrecorded); first adverts after 06:30 waited up to 4 minutes; a server error put switched-off scenes back on air; nightly reload followed the box's clock, not Kampala's; editing an upload with dates was refused after a reload.
+- FET 13.9% on the screens now reads from `lib/fet-pricing.ts`. **New line under the FET call to action: "Fitted from UGX 1,891,000 · installation included"** (from the price list; remove with `price: FET_FROM` in `scenes.ts` if not wanted). Headlines keep a minimum size and wrap instead of shrinking.
+- Tests: `ScreenScheduleTest` (7).
+
+**CRM and lead forms:**
+- Every lead now has a **channel** worked out from its stored source (Meta ads, Google Ads, Meta unpaid, search, WhatsApp, email, other social, other websites, direct, unknown) — applies to past leads too. Meta ads needs `utm_medium=paid` (or cpc / paid_social) on the ad link; fbclid alone counts as unpaid Meta.
+- Console: Enquiries "All channels" filter (`?channel=`); CSV export now honours filters and adds Channel / Source / Campaign; Overview "Enquiries by channel and product" (Meta ads × WEB = website enquiries from Meta); Sales → Today shows each enquiry's channel and unread contact messages.
+- Fixed: double taps created two enquiries and two team emails (same email + product + message within 10 minutes now returns the first lead); Contact, Buyer's Pack and /websites conversions could be counted twice; newsletter dropped the visitor's source (migration `2026_11_27_000001_add_lead_source_to_newsletter_subscribers`); contact messages missing from Today.
+- **Meta Pixel** (`components/MetaPixel.tsx`, `lib/meta-pixel.ts`): off until `NEXT_PUBLIC_META_PIXEL_ID` is set on Vercel; loads only after "Accept all"; never on staff/private pages; `Lead` on lead forms, `Contact` on call/WhatsApp taps. ⚠ **Before setting the ID, the cookie banner and Cookie Policy (EN + SW) must name Meta/Facebook** — they list only Google Ads and PostHog today.
+- Tests: `LeadCaptureTest` (11).
+
+**Tests and backups:**
+- Full suite 670 passing (was 652). Website build and lint clean (0 errors).
+- ⚠ **Found: the server's scheduler had not run since June.** The crontab line for vitorraweb calls plain `php` (8.2), which the app refuses, so no backup, CEO report, invoice reminder, campaign send, lead scoring, Google Ads sync, receipt read, Teams alert or screen watch has run by itself since about 16 June. Last backup was 16 June.
+- A fresh backup was taken by hand on 27 November (16.4 MB, database included) and a copy saved off the server at `~/Backups/vitorra-server/` on John's Mac.
+- **Still to do (John, on the server):** change that crontab line to `/opt/alt/php83/usr/bin/php artisan schedule:run`. Checked first: nothing customer-facing is waiting to send (0 overdue invoices, no queued campaigns, no enquiries to chase), so switching it on only restores the staff/team emails.
+- Backups still live only on the same server; an off-site copy (S3 or similar) is the next step.
