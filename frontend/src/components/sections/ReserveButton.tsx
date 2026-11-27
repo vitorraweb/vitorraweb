@@ -194,7 +194,7 @@ export default function ReserveButton({ tier }: { tier: FetTier }) {
       <button
         type="button"
         onClick={copyLink}
-        className="inline-flex items-center justify-center gap-1.5 mt-3 w-full t-small text-ink-muted transition-colors hover:text-ink"
+        className="inline-flex items-center justify-center gap-1.5 mt-1 py-2.5 w-full t-small text-ink-muted transition-colors hover:text-ink"
       >
         <Copy className="w-3 h-3" />
         {linkCopied ? tr("reserveLinkCopied") : tr("reserveCopyLink")}
