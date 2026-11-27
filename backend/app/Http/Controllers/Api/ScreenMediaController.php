@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ScreenMedia;
 use App\Models\Setting;
 use App\Support\Audit;
+use App\Support\ScreenSchedule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,7 +24,7 @@ class ScreenMediaController extends Controller
     {
         return response()->json(['data' => [
             'media' => ScreenMedia::orderBy('id')->get(),
-            'programme' => $this->programme(),
+            'programme' => self::programmeForScreen(),
         ]]);
     }
 
@@ -32,10 +33,9 @@ class ScreenMediaController extends Controller
         $data = $this->validated($request, true);
         $media = ScreenMedia::create($data + ['created_by' => $request->user()->id]);
         // New items join the end of the running order.
-        $p = $this->programme();
+        $p = self::programme();
         if ($p['order']) {
-            $p['order'][] = "media-{$media->id}";
-            Setting::put(['display_programme' => $p]);
+            self::save([...$p['order'], "media-{$media->id}"], $p['hidden'], $p['schedule']);
         }
         Audit::log('display.media_added', "Added {$media->kind} \"{$media->title}\" to the screens");
 
@@ -55,32 +55,74 @@ class ScreenMediaController extends Controller
         $id = "media-{$media->id}";
         $title = $media->title;
         $media->delete();
-        $p = $this->programme();
-        Setting::put(['display_programme' => ['order' => array_values(array_diff($p['order'], [$id])), 'hidden' => array_values(array_diff($p['hidden'], [$id]))]]);
+        $p = self::programme();
+        self::save(array_values(array_diff($p['order'], [$id])), array_values(array_diff($p['hidden'], [$id])), $p['schedule']);
         Audit::log('display.media_removed', "Removed \"{$title}\" from the screens");
 
         return response()->json(['ok' => true]);
     }
 
-    /** The running order and what is switched off, as scene ids. */
+    /**
+     * The running order, what is switched off, and when built-in scenes may show
+     * (`schedule`, by scene id). A request without `schedule` keeps the saved one,
+     * so moving an item never clears another's dates.
+     */
     public function programmeUpdate(Request $request): JsonResponse
     {
         $data = $request->validate([
             'order' => ['present', 'array', 'max:100'], 'order.*' => ['string', 'regex:/^[a-z0-9-]{1,40}$/'],
             'hidden' => ['present', 'array', 'max:100'], 'hidden.*' => ['string', 'regex:/^[a-z0-9-]{1,40}$/'],
+            'schedule' => ['sometimes', 'array', 'max:100'],
+            ...ScreenSchedule::rules('schedule.*.'),
         ]);
-        Setting::put(['display_programme' => ['order' => array_values(array_unique($data['order'])), 'hidden' => array_values(array_unique($data['hidden']))]]);
-        Audit::log('display.programme', 'Changed the screens\' running order ('.count($data['hidden']).' switched off)');
 
-        return response()->json(['data' => $this->programme()]);
+        $before = self::programme();
+        $schedule = $before['schedule'];
+        if (array_key_exists('schedule', $data)) {
+            $schedule = [];
+            foreach ($data['schedule'] as $id => $s) {
+                abort_unless(is_string($id) && preg_match('/^[a-z0-9-]{1,40}$/', $id) && is_array($s), 422, 'Unknown scene.');
+                // Vitorra's own videos and designs keep their dates and hours on the item itself.
+                abort_if(str_starts_with($id, 'media-'), 422, 'Set an added item\'s dates and hours on the item.');
+                if ($clean = ScreenSchedule::clean($s)) {
+                    $schedule[$id] = $clean;
+                }
+            }
+            ksort($schedule); // the validator reorders nested keys; keep it stable
+        }
+
+        self::save(array_values(array_unique($data['order'])), array_values(array_unique($data['hidden'])), $schedule);
+        Audit::log('display.programme', 'Changed the screens\' running order ('.count($data['hidden']).' switched off'
+            .($schedule !== $before['schedule'] ? '; '.count($schedule).' built-in scene(s) on a schedule' : '').')');
+
+        return response()->json(['data' => self::programmeForScreen()]);
     }
 
-    /** @return array{order: string[], hidden: string[]} */
+    /** @return array{order: string[], hidden: string[], schedule: array<string, array>} */
     public static function programme(): array
     {
         $p = Setting::get('display_programme', []);
+        $p = is_array($p) ? $p : [];
 
-        return ['order' => is_array($p['order'] ?? null) ? $p['order'] : [], 'hidden' => is_array($p['hidden'] ?? null) ? $p['hidden'] : []];
+        return [
+            'order' => is_array($p['order'] ?? null) ? $p['order'] : [],
+            'hidden' => is_array($p['hidden'] ?? null) ? $p['hidden'] : [],
+            'schedule' => is_array($p['schedule'] ?? null) ? $p['schedule'] : [],
+        ];
+    }
+
+    /** As JSON: an empty schedule is an object, never a list. */
+    public static function programmeForScreen(): array
+    {
+        $p = self::programme();
+        $p['schedule'] = (object) $p['schedule'];
+
+        return $p;
+    }
+
+    private static function save(array $order, array $hidden, array $schedule): void
+    {
+        Setting::put(['display_programme' => ['order' => $order, 'hidden' => $hidden, 'schedule' => (object) $schedule]]);
     }
 
     private function validated(Request $request, bool $creating): array
@@ -104,8 +146,7 @@ class ScreenMediaController extends Controller
             'seconds'   => [$req, 'integer', 'min:4', 'max:60'],
             'screens'   => [$req, 'array', 'min:1'],
             'screens.*' => [Rule::in(ScreenMedia::SCREENS)],
-            'starts_on' => ['nullable', 'date_format:Y-m-d'],
-            'ends_on'   => ['nullable', 'date_format:Y-m-d', 'after_or_equal:starts_on'],
+            ...ScreenSchedule::rules(),
             'width'     => ['nullable', 'integer', 'min:1'],
             'height'    => ['nullable', 'integer', 'min:1'],
         ]);

@@ -25,7 +25,7 @@ class DisplayController extends Controller
             'welcome' => $this->welcome(),
             'copy' => (object) $this->copy(),
             'logo' => self::logo(),
-            'programme' => ScreenMediaController::programme(),
+            'programme' => ScreenMediaController::programmeForScreen(),
             'media' => \App\Models\ScreenMedia::orderBy('id')->get()->filter->isLive()->map->forScreen()->values(),
         ]])
             ->header('Cache-Control', 'public, max-age=30');
