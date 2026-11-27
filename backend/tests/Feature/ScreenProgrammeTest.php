@@ -277,7 +277,7 @@ class ScreenProgrammeTest extends TestCase
 
         // A built-in scene replaced in place: switched off, the new item right after it.
         $this->putJson('/api/admin/display/programme', ['order' => ['ident', 'logistics', "media-{$id}", 'proof'], 'hidden' => ['logistics']], $h)->assertOk();
-        $this->assertSame(['order' => ['ident', 'logistics', "media-{$id}", 'proof'], 'hidden' => ['logistics']], $this->getJson('/api/display')->json('data.programme'));
+        $this->assertSame(['order' => ['ident', 'logistics', "media-{$id}", 'proof'], 'hidden' => ['logistics'], 'schedule' => []], $this->getJson('/api/display')->json('data.programme'));
     }
 
     public function test_an_adverts_file_can_be_replaced_or_made_light_but_not_swapped_between_video_and_design(): void

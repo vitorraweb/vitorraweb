@@ -4,10 +4,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import Image from "next/image";
 import { API_BASE_URL, CONTACT_PHONE } from "@/lib/constants";
 import { useKioskClock, useKioskFx, useKioskHeadlines, useKioskWeather, weatherEntry } from "@/lib/kiosk";
-import { newCycle, next, slice, spent, type Advert, type Carry, type Cycle } from "./programme";
+import { drop, newCycle, next, slice, spent, type Advert, type Carry, type Cycle } from "./programme";
 import { isLocal, localSrc, onMediaReady, releaseVideo, warm } from "./mediaCache";
 import type { MediaScene, Programme } from "./scenes";
-import { mediaBeats } from "./scenes";
+import { mediaBeats, scheduledOut } from "./scenes";
+import { kampala, type Schedule } from "./schedule";
 import { COPY_DRAFT_KEY, DAY_FILMS, mediaBrand, DEFAULT_COPY, DEFAULT_LOGO, dayVersion, LOGO_DRAFT_KEY, type ScreenLogo, FILMS, LIGHT_FOR, MONTAGE, MOMENT_STARTS, SECTORS, STILLS, applyCopy, daypartAt, durationOf, lightAt, storyFor, type Daypart, type Light, type Mode, type Moment, type ReelScene, type Scene, type SectorScene, type Still, type Wash } from "./scenes";
 
 /* ─── The stage ───────────────────────────────────────────────────────────────
@@ -94,13 +95,21 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
   useEffect(() => onMediaReady(() => setDownloaded((n) => n + 1)), []);
   const playable = lite && !solo ? media.filter((m) => m.media !== "video" || isLocal(m.url)) : media;
   const playableKey = playable.map((m) => m.id).join(",");
+  // Items outside their dates or daily hours (Screen editor), checked each minute by Kampala's
+  // clock. A string, so the story is only rebuilt when the set actually changes.
+  const minute = useMinute();
+  const outNow = useMemo(() => (minute === null ? "" : scheduledOut(media, order, new Date(minute)).join(",")), [media, order, minute]);
   const story = useMemo(() => solo
     ? storyFor(mode, false, copy, media.map((m) => ({ ...m, screens: [...m.screens, mode] })), { order: [], hidden: [] })
-    : storyFor(mode, !!welcome, copy, media.filter((m) => playableKey.split(",").includes(m.id)), order), [solo, mode, welcome, copy, media, order, playableKey]);
-  const [i, setI] = useState(0);
+    : storyFor(mode, !!welcome, copy, media.filter((m) => playableKey.split(",").includes(m.id)), { ...order, hidden: [...order.hidden, ...(outNow ? outNow.split(",") : [])] }),
+  [solo, mode, welcome, copy, media, order, playableKey, outNow]);
+  // The scene on screen is followed by its id, so an item joining or leaving the story
+  // (a new upload, a scheduled item starting or ending) never swaps the picture mid-scene.
+  const [pos, setPos] = useState<{ i: number; id: string | null }>({ i: 0, id: null });
   const [loop, setLoop] = useState(0);
   const pinned = pin ? story.findIndex((s) => s.id === pin) : -1;
-  const index = pinned >= 0 ? pinned : i % story.length;
+  const kept = pos.id ? story.findIndex((s) => s.id === pos.id) : -1;
+  const index = pinned >= 0 ? pinned : kept >= 0 ? kept : pos.i % story.length;
   const scene = story[index];
   // The street screen runs Finance's 4-minute programme; the others simply play the story.
   const programme = mode === "street" && pinned < 0;
@@ -112,23 +121,36 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
   useEffect(() => { latest.current = adverts; }, [adverts]);
   const cycle = useRef<Cycle | null>(null);
   const carry = useRef<Carry>({});
+  const builtWith = useRef(0); // adverts on air when the current cycle began
   const [ad, setAd] = useState<{ advert: Advert; started: string } | null>(null);
   const key = useScreenKey(mode);
 
   // The next scene of our own content, starting a new cycle first if this one is done.
   const nextScene = useCallback(() => {
     const now = Date.now();
-    if (programme && (!cycle.current || spent(cycle.current, now))) cycle.current = newCycle(latest.current, now, cycle.current, carry.current);
-    const n = (i + 1) % story.length;
+    // A cycle with no paid plays (before 6:30am, or nothing sold) gives way at once when
+    // adverts come on air, so the first plays of the day are not held back up to 4 minutes.
+    // (Only a cycle built with no adverts at all: one whose adverts owe less than a play this
+    // time round must run its full 4 minutes, or the fractional carry would over-deliver.)
+    const idle = !!cycle.current && builtWith.current === 0 && latest.current.length > 0;
+    if (programme && (!cycle.current || idle || spent(cycle.current, now))) {
+      cycle.current = newCycle(latest.current, now, idle ? null : cycle.current, carry.current);
+      builtWith.current = latest.current.length;
+    }
+    const n = (index + 1) % story.length;
     const natural = durationOf(story[n], mode);
     const s = programme ? slice(cycle.current, natural, now) : natural;
     setCut(s < natural ? s : null);
-    setI(n);
-    if (index === story.length - 1) setLoop((l) => l + 1);
-  }, [programme, i, story, mode, index]);
+    setPos({ i: n, id: story[n].id });
+    // A new pass of the loop also replays a story of one scene.
+    if (n <= index) setLoop((l) => l + 1);
+  }, [programme, story, mode, index]);
 
   const playNext = useCallback(() => {
     const c = cycle.current;
+    // A booking that has come off air since the cycle began (its last day, or the end of
+    // its chosen hours) gives its remaining plays this cycle back to our own content.
+    if (c) drop(c, latest.current.map((a) => a.id));
     if (c && next(c, Date.now()) === "advert") setAd({ advert: c.queue[0], started: new Date().toISOString() });
     else nextScene();
   }, [nextScene]);
@@ -144,7 +166,10 @@ function Loop({ mode, pin, at, hold, turn = 0, draft = false, solo = false }: { 
     if (pinned >= 0 || ad) return;
     const t = setTimeout(() => {
       if (!programme) { nextScene(); return; }
-      cycle.current ??= newCycle(latest.current, Date.now() - seconds * 1000, null, carry.current);
+      if (!cycle.current) {
+        cycle.current = newCycle(latest.current, Date.now() - seconds * 1000, null, carry.current);
+        builtWith.current = latest.current.length;
+      }
       playNext();
     }, seconds * 1000);
     return () => clearTimeout(t);
@@ -564,14 +589,17 @@ function ReelView({ r, street, panel = false }: { r: ReelScene; street: boolean;
   const t = useElapsed();
   const cap = r.captions.find((c) => t >= c.from && t < c.to) ?? null;
   const shown = cap ?? r.captions.filter((c) => c.from <= t).at(-1) ?? r.captions[0];
+  // One title size for the whole film, so it never jumps between captions; long wording from
+  // the editor steps down and wraps rather than climbing up over the picture.
+  const size = useMemo(() => fitSize(r.captions.flatMap((c) => [c.line1, c.line2 ?? ""]), 150 / TYPE_SCALE, street ? 8 : 7.4, 4.6), [r.captions, street]);
   return (
     <div className="w-full self-end" style={{ paddingBottom: "1cqmin" }}>
       <div style={{ maxWidth: "150cqmin", width: "fit-content", opacity: cap ? 1 : 0, transform: cap ? "none" : "translateY(1.2cqmin)", transition: "opacity 700ms ease, transform 900ms cubic-bezier(0.16,1,0.3,1)", ...(panel ? PANEL : {}) }}>
         <SectorTag>{r.tag}</SectorTag>
-        <h2 key={shown.from} className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.04, marginTop: "1.8cqmin", fontSize: scaled(street ? 8 : 7.4) }}>
+        <h2 key={shown.from} className="vx-mega font-sans vx-rise" style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.04, marginTop: "1.8cqmin", fontSize: scaled(size) }}>
           <span className="block">{shown.line1}</span>
           {shown.line2 && <span className="block" style={{ color: "var(--vx-accent)" }}>{shown.line2}</span>}
-          {shown.sub?.map((l, i) => <span key={i} className="block" style={{ color: "var(--vx-accent)", fontSize: scaled(4.2), fontWeight: 700, letterSpacing: "-0.015em", lineHeight: 1.2, marginTop: i === 0 ? "1.2cqmin" : 0 }}>{l}</span>)}
+          {shown.sub?.map((l, i) => <span key={i} className="block" style={{ color: "var(--vx-accent)", fontSize: scaled(Math.min(4.2, Math.max(3, size * 0.6))), fontWeight: 700, letterSpacing: "-0.015em", lineHeight: 1.2, marginTop: i === 0 ? "1.2cqmin" : 0 }}>{l}</span>)}
         </h2>
       </div>
     </div>
@@ -580,18 +608,25 @@ function ReelView({ r, street, panel = false }: { r: ReelScene; street: boolean;
 
 /** The business's name, in its colour: present in every frame, so any single glance says whose message this is. */
 function SectorTag({ children, large = false }: { children: React.ReactNode; large?: boolean }) {
+  // The large name on the opening moment keeps to one row: a long name from the editor shrinks.
+  const big = large ? scaled(fitSize([typeof children === "string" ? children : ""], 150, 6.4, 3.6)) : null;
   return (
-    <div className="font-sans flex items-center" style={{ gap: "1.2cqmin", fontSize: large ? scaled(6.4) : "var(--vx-tag)", fontWeight: 700, letterSpacing: large ? "-0.02em" : "0.06em", textTransform: "uppercase", lineHeight: 1 }}>
-      <span style={{ width: large ? "1.4cqmin" : "0.6cqmin", height: large ? scaled(6.4) : "var(--vx-tag)", background: "var(--vx-accent)" }} />
+    <div className="font-sans flex items-center" style={{ gap: "1.2cqmin", fontSize: big ?? "var(--vx-tag)", fontWeight: 700, letterSpacing: large ? "-0.02em" : "0.06em", textTransform: "uppercase", lineHeight: 1 }}>
+      <span className="shrink-0" style={{ width: large ? "1.4cqmin" : "0.6cqmin", height: big ?? "var(--vx-tag)", background: "var(--vx-accent)" }} />
       {children}
     </div>
   );
 }
 
-/** Headline type scaled so the longest line fills the room it has, and no more. */
-function fitSize(lines: string[], room: number, max: number): number {
-  const longest = Math.max(...lines.map((l) => l.length));
-  return Math.min(max, room / (longest * 0.64));
+/** The smallest a headline may become (before TYPE_SCALE): still well above the small line,
+ *  so the scale between headline and small print holds however long the editor's words are. */
+const HEADLINE_FLOOR = 6;
+
+/** Headline type scaled so the longest line fills the room it has, and no more. A line too
+ *  long for one row at a readable size wraps onto a second row instead of shrinking further. */
+function fitSize(lines: string[], room: number, max: number, floor = HEADLINE_FLOOR): number {
+  const longest = Math.max(1, ...lines.map((l) => l.length));
+  return Math.min(max, Math.max(floor, room / (longest * 0.64)));
 }
 
 /** This loop's headline and proof: the time of day first, otherwise the next headline in turn. */
@@ -640,6 +675,7 @@ function CallToAction({ s, road }: { s: SectorScene; road: boolean }) {
         </h2>
         {s.cta && <div className="font-sans vx-rise" style={{ fontSize: scaled(5), fontWeight: 700, letterSpacing: "-0.01em", marginTop: "1.8cqmin", ["--d" as string]: "0.5s" }}>{s.cta.sub}</div>}
         {road && <div className="vx-mega font-sans vx-rise" style={{ fontSize: scaled(7.4), fontWeight: 800, letterSpacing: "-0.02em", marginTop: "2.4cqmin", color: "var(--vx-accent)", ["--d" as string]: "0.7s" }}>{s.url}</div>}
+        {s.price && <div className="font-sans vx-rise tabular-nums" style={{ fontSize: "var(--vx-small)", fontWeight: 700, marginTop: "1.8cqmin", ["--d" as string]: "0.9s" }}>{s.price}</div>}
       </div>
       {!road && <QrCard src={s.qr.src} label={s.qr.label} size="27cqmin" delay="0.6s" />}
     </div>
@@ -805,8 +841,10 @@ function useNightlyReload(on: boolean): void {
   useEffect(() => {
     if (!on) return;
     const t = setInterval(() => {
-      const now = new Date();
-      if (now.getHours() !== 3 || now.getMinutes() < 30 || now.getMinutes() > 44) return;
+      // Kampala's 03:30, whatever time zone the box is set to: a box left on UTC would
+      // otherwise reload at 06:30 in Kampala, the first minute of paid airtime.
+      const { mins } = kampala(new Date());
+      if (mins < 3 * 60 + 30 || mins > 3 * 60 + 44) return;
       if (performance.now() < 2 * 60 * 60_000) return; // already fresh tonight
       fetch(window.location.pathname, { method: "HEAD", cache: "no-store" })
         .then((r) => { if (r.ok) window.location.reload(); })
@@ -823,8 +861,10 @@ function useAdverts(mode: Mode): Advert[] {
   const [ads, setAds] = useState<Advert[]>([]);
   useEffect(() => {
     if (mode !== "street") return;
+    // Only a good answer replaces the list: a server error must not read as "nothing is booked"
+    // and silently drop paid plays. Offline, the screen keeps the last list it had.
     const load = () => fetch(`${API_BASE_URL}/display/adverts`, { headers: { Accept: "application/json" } })
-      .then((r) => r.json()).then((j) => setAds(j?.data ?? [])).catch(() => {});
+      .then((r) => (r.ok ? r.json() : null)).then((j) => { if (Array.isArray(j?.data)) setAds(j.data); }).catch(() => {});
     void load();
     const t = setInterval(load, 60_000);
     return () => clearInterval(t);
@@ -899,6 +939,23 @@ function useMoment(key: string, seconds: number, hold?: number | null): number {
   return at.key === key ? at.n : 0;
 }
 
+/** The current minute (ms), ticking at the turn of each minute; null until the page is on
+ *  screen, so the server-drawn first frame and the browser agree. */
+function useMinute(): number | null {
+  const [minute, setMinute] = useState<number | null>(null);
+  useEffect(() => {
+    let t = 0;
+    const tick = () => {
+      const now = Date.now();
+      setMinute(now - (now % 60_000));
+      t = window.setTimeout(tick, 60_000 - (now % 60_000) + 50);
+    };
+    t = window.setTimeout(tick, 0);
+    return () => window.clearTimeout(t);
+  }, []);
+  return minute;
+}
+
 /** The light outside, for the street screen only, checked every minute. */
 function useLight(street: boolean, forced?: Daypart | null): Light | null {
   const [light, setLight] = useState<Light>("sun");
@@ -932,7 +989,7 @@ function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes:
   const [logo, setLogo] = useState<ScreenLogo>(DEFAULT_LOGO);
   const [changes, setChanges] = useState<Record<string, string>>({});
   const [media, setMedia] = useState<MediaScene[]>([]);
-  const [programme, setProgramme] = useState<Programme>({ order: [], hidden: [] });
+  const [programme, setProgramme] = useState<Programme>({ order: [], hidden: [], schedule: {} });
   useEffect(() => {
     if (!draft) return;
     const read = () => {
@@ -946,15 +1003,17 @@ function useScreenData(mode: Mode, draft: boolean): { welcome: Welcome; changes:
   useEffect(() => {
     let live = true;
     const same = <T,>(old: T, next: T) => (JSON.stringify(old) === JSON.stringify(next) ? old : next);
+    // Only a good answer is applied: an error page must not put switched-off scenes back on air.
     const load = () => fetch(`${API_BASE_URL}/display`, { headers: { Accept: "application/json" } })
-      .then((r) => r.json()).then((j) => {
-        if (!live) return;
+      .then((r) => (r.ok ? r.json() : null)).then((j) => {
+        if (!live || !j?.data) return;
         if (mode !== "street") setWelcome(j?.data?.welcome ?? null);
         if (!draft) setChanges((old) => same(old, j?.data?.copy ?? {}));
         if (!draft || !localStorage.getItem(LOGO_DRAFT_KEY)) setLogo((old) => same(old, { ...DEFAULT_LOGO, ...(j?.data?.logo ?? {}) }));
-        setProgramme((old) => same(old, { order: j?.data?.programme?.order ?? [], hidden: j?.data?.programme?.hidden ?? [] }));
-        setMedia((old) => same(old, (j?.data?.media ?? []).map((m: { id: string; kind: "video" | "image"; url: string; seconds: number; line1?: string; line2?: string; small?: string; captions?: MediaScene["captions"]; business?: MediaScene["business"]; screens: string[] }) => ({
-          kind: "media", id: m.id, media: m.kind, url: m.url, seconds: m.seconds, line1: m.line1, line2: m.line2, small: m.small, captions: m.captions ?? [], business: m.business, screens: m.screens,
+        const p = j.data.programme;
+        setProgramme((old) => same(old, { order: p?.order ?? [], hidden: p?.hidden ?? [], schedule: p?.schedule && !Array.isArray(p.schedule) ? p.schedule : {} }));
+        setMedia((old) => same(old, (j.data.media ?? []).map((m: { id: string; kind: "video" | "image"; url: string; seconds: number; line1?: string; line2?: string; small?: string; captions?: MediaScene["captions"]; business?: MediaScene["business"]; screens: string[]; schedule?: Schedule | null }) => ({
+          kind: "media", id: m.id, media: m.kind, url: m.url, seconds: m.seconds, line1: m.line1, line2: m.line2, small: m.small, captions: m.captions ?? [], business: m.business, screens: m.screens, schedule: m.schedule ?? null,
         }))));
       }).catch(() => {});
     void load();

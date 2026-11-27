@@ -21,13 +21,19 @@ class ScreenMedia extends Model
         return ['screens' => 'array', 'captions' => 'array', 'starts_on' => 'date', 'ends_on' => 'date', 'optimised' => 'boolean'];
     }
 
-    /** In its dates today, by Kampala's calendar. */
+    /** In its dates today, by Kampala's calendar. Its daily hours are applied by the screen, to the minute. */
     public function isLive(): bool
     {
-        $today = now('Africa/Kampala')->toDateString();
+        return \App\Support\ScreenSchedule::inDates($this->starts_on?->toDateString(), $this->ends_on?->toDateString());
+    }
 
-        return (! $this->starts_on || $this->starts_on->toDateString() <= $today)
-            && (! $this->ends_on || $this->ends_on->toDateString() >= $today);
+    /** Its first and last day and daily hours, as the screen applies them. */
+    public function schedule(): array
+    {
+        return [
+            'starts_on' => $this->starts_on?->toDateString(), 'ends_on' => $this->ends_on?->toDateString(),
+            'daily_from' => $this->daily_from, 'daily_until' => $this->daily_until,
+        ];
     }
 
     /** Most further headlines on one item: one every few seconds is already busy. */
@@ -68,7 +74,7 @@ class ScreenMedia extends Model
         return [
             'id' => "media-{$this->id}", 'kind' => $this->kind, 'url' => $this->url, 'seconds' => $this->seconds,
             'line1' => $this->line1, 'line2' => $this->line2, 'small' => $this->small, 'business' => $this->business,
-            'captions' => $this->captionsFor(), 'screens' => $this->screens,
+            'captions' => $this->captionsFor(), 'screens' => $this->screens, 'schedule' => $this->schedule(),
         ];
     }
 }

@@ -13,6 +13,9 @@
    closed, so nothing here may read as an offer to buy a cup or a bag in Kampala.
    ─────────────────────────────────────────────────────────────────────────── */
 
+import { isShowing, type Schedule } from "./schedule";
+import { FET_TIERS, SAVINGS } from "@/lib/fet-pricing";
+
 /** reception: a TV in the lobby · street: the screen facing the road
  *  · projector: the reception story projected onto a wall (projectors cannot show
  *  black, so it is bright, heavy and high-contrast). */
@@ -111,6 +114,9 @@ export type SectorScene = {
   ctaStill?: Still;
   /** A line with some personality above the plain instruction. */
   cta?: { lines: string[]; sub: string };
+  /** A published price under the call to action. Read from the price list, never typed, and
+   *  not editable as wording: a price changes only when the price list does. */
+  price?: string;
 };
 
 /** A feature film played once, start to finish, with captions timed to it. */
@@ -147,6 +153,8 @@ export type MediaScene = {
   /** The business it belongs to: its tag and colour, as the built-in scenes. */
   business?: MediaBusiness | null;
   screens: string[];
+  /** Its first and last day and daily hours, if set (Screen editor). */
+  schedule?: Schedule | null;
 };
 
 export type MediaCaptionSet = { at: number; line1?: string | null; line2?: string | null; small?: string | null };
@@ -174,8 +182,9 @@ export function mediaBrand(b?: MediaBusiness | null): { tag: string; accent: str
   return s ? { tag: s.tag, accent: s.accent } : null;
 }
 
-/** The running order from the Screen editor: scene ids in order, and those switched off. */
-export type Programme = { order: string[]; hidden: string[] };
+/** The running order from the Screen editor: scene ids in order, those switched off, and
+ *  when built-in scenes may show (added items carry their own `schedule`). */
+export type Programme = { order: string[]; hidden: string[]; schedule?: Record<string, Schedule> };
 
 export type Scene =
   | { kind: "ident"; id: "ident" }
@@ -188,9 +197,14 @@ export type Scene =
 
 /* Every FET headline carries the test beside it: a saving is only ever stated
    as what one test measured, never as a promise. */
-const FET_SMALL = "13.9% measured on one working VW T5 · CTI GmbH, Germany";
+/* The figure and the prices come from the website's own source (lib/fet-pricing.ts),
+   so the screens can never quote a different number from the FET page. */
+const FET_PCT = SAVINGS.verified.toFixed(1);
+/** The cheapest device, fitted: the catalogue price includes installation. */
+export const FET_FROM = `Fitted from UGX ${Math.min(...FET_TIERS.map((t) => t.priceUgx)).toLocaleString("en-US")} · installation included`;
+const FET_SMALL = `${FET_PCT}% measured on one working VW T5 · CTI GmbH, Germany`;
 const FET_RESULT: Moment = {
-  number: { value: 13.9, decimals: 1, unit: "%", size: 47 },
+  number: { value: SAVINGS.verified, decimals: 1, unit: "%", size: 47 },
   lines: ["FUEL SAVED"],
   accent: [0],
   small: "Measured on one working VW T5 · CTI GmbH, Germany",
@@ -258,6 +272,7 @@ export const SECTORS: SectorScene[] = [
     timed: { morning: FET_TRAFFIC, rush: FET_TRAFFIC },
     qr: { src: "/display/qr/fet.svg", label: "Book a free fuel assessment" },
     url: "vitorra.org/fet",
+    price: FET_FROM,
   },
   {
     kind: "sector",
@@ -360,7 +375,7 @@ export const FET_REEL: ReelScene = {
     // "German-tested", and 13.9% from one test: the evidence does not support
     // "German-engineered" or "up to 15%" (the top of one vehicle's range, with new
     // injectors and EGR fitted first). See PROGRESS.md.
-    { from: 2.6, to: 9.2, line1: "GERMAN-TESTED TECHNOLOGY", sub: ["13.9% LESS FUEL IN ONE VEHICLE TEST"] },
+    { from: 2.6, to: 9.2, line1: "GERMAN-TESTED TECHNOLOGY", sub: [`${FET_PCT}% LESS FUEL IN ONE VEHICLE TEST`] },
     { from: 9.8, to: 14.2, line1: "EASY INSTALLATION", sub: ["FITTED DIRECTLY INTO THE FUEL LINE", "NO ENGINE MODIFICATION OR ECU REMAPPING REQUIRED"] },
     { from: 14.8, to: 20.4, line1: "ENGINEERED FOR PETROL AND DIESEL", sub: ["PERSONAL VEHICLES, PUBLIC TRANSPORT, CONSTRUCTION", "& HEAVY EQUIPMENT, MARINE, FLEETS & LOGISTICS"] },
   ],
@@ -581,7 +596,7 @@ export const FILMS: { id: string; film: string; poster: string; grade?: string; 
 /** Standing lines for the information band, woven between the latest articles. */
 export const TICKER_LINES = [
   "Free on-site fuel assessment for fleets: visit vitorra.org/fet",
-  "Fuel Eco Tech: 13.9% less fuel in an independent field test by CTI GmbH, Germany",
+  `Fuel Eco Tech: ${FET_PCT}% less fuel in an independent field test by CTI GmbH, Germany`,
   "SEAL Wound Spray: US FDA 510(k) cleared, 36-month shelf life",
   "Ugandan Arabica for export: grades, terms and samples on request",
   "Talk to us on WhatsApp: +256 740 026 294",
@@ -626,8 +641,22 @@ export const BUILT_IN_SCENES: { id: string; label: string }[] = [
   { id: "visit", label: "Visit us" },
 ];
 
+/** An item's dates and daily hours: its own for an added video or design, the editor's for a built-in scene. */
+export function scheduleOf(scene: Scene, programme: Programme): Schedule | null {
+  return scene.kind === "media" ? scene.schedule ?? null : programme.schedule?.[scene.id] ?? null;
+}
+
+/** Ids of the items that may not show at this moment: outside their dates or daily hours.
+ *  The screen works this out once a minute and leaves them out like switched-off ones. */
+export function scheduledOut(media: MediaScene[], programme: Programme, now: Date): string[] {
+  const builtIn = Object.entries(programme.schedule ?? {}).filter(([, s]) => !isShowing(s, now)).map(([id]) => id);
+  return [...builtIn, ...media.filter((m) => !isShowing(m.schedule, now)).map((m) => m.id)];
+}
+
 /** Built-in scenes and the console's own media, put in the editor's running order with
- *  anything switched off left out. The reception welcome always follows the opening. */
+ *  anything switched off left out (on the screens, `hidden` also holds whatever is outside
+ *  its hours: see scheduledOut). If nothing is left the opening plays alone, so the screen
+ *  is never empty. The reception welcome always follows the opening. */
 export function storyFor(mode: Mode, hasWelcome: boolean, copy: ScreenCopy = DEFAULT_COPY, media: MediaScene[] = [], programme: Programme = { order: [], hidden: [] }): Scene[] {
   const all: Scene[] = [
     { kind: "ident", id: "ident" },
