@@ -73,6 +73,12 @@ class WebsitePreviewController extends Controller
         $requirements[] = ['key' => 'contact_pref', 'label' => 'Contact preference', 'value' => 'WhatsApp'];
 
         $route = config('enquiries.routing')['WEB'] ?? null;
+        $message = 'Asked for a free website preview. Reply on WhatsApp for their logo, photos and prices, then send the preview within 48 hours.';
+
+        // The same request again a moment later is the same lead (see Enquiry::recentDuplicate).
+        if ($dup = Enquiry::recentDuplicate($data['email'], 'WEB', $message, $requirements)) {
+            return response()->json(['data' => ['id' => $dup->id], 'duplicate' => true, 'message' => 'Received. We will message you on WhatsApp.'], 200);
+        }
 
         $enquiry = Enquiry::create([
             'product_category' => 'WEB',
@@ -81,7 +87,7 @@ class WebsitePreviewController extends Controller
             'phone'            => Phone::e164($data['phone']),
             'company'          => $data['business'],
             'country'          => 'Uganda',
-            'message'          => 'Asked for a free website preview. Reply on WhatsApp for their logo, photos and prices, then send the preview within 48 hours.',
+            'message'          => $message,
             'requirements'     => $requirements,
             'assigned_to'      => $route['team'] ?? config('enquiries.default_team'),
             ...LeadSource::resolve($data['attribution'] ?? []),
@@ -95,6 +101,7 @@ class WebsitePreviewController extends Controller
             Log::warning('Website preview team notice failed', ['enquiry' => $enquiry->id, 'error' => $e->getMessage()]);
         }
 
-        return response()->json(['message' => 'Received. We will message you on WhatsApp.'], 201);
+        // The id lets the browser report this lead to the ad platforms exactly once.
+        return response()->json(['data' => ['id' => $enquiry->id], 'message' => 'Received. We will message you on WhatsApp.'], 201);
     }
 }

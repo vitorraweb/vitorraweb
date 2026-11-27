@@ -1,4 +1,5 @@
 import { capture } from "@/lib/posthog";
+import { trackMeta } from "@/lib/meta-pixel";
 /* ─── Google Ads tag ──────────────────────────────────────────────────────────
    Marketing pays for Google Ads, and Google can only optimise (and report) on
    what the site tells it: which visits became an enquiry, a call, a
@@ -90,6 +91,45 @@ export interface ConversionDetails {
   /** Enhanced conversions: Google hashes these in the browser, and only uses them with consent. */
   email?: string;
   phone?: string;
+  /** Product line for the ad platforms ("FET", "WEB"); never personal data. */
+  category?: string;
+  /** How a call conversion was made: "whatsapp" or "phone". */
+  method?: string;
+}
+
+/* The same moments for Meta (Facebook / Instagram ads), see lib/meta-pixel.ts.
+   Form leads are "Lead"; a call or WhatsApp tap is "Contact". */
+const META_EVENTS: Record<ConversionKind, { event: string; custom?: boolean }> = {
+  enquiry: { event: "Lead" }, contact: { event: "Lead" }, reserve: { event: "Lead" },
+  pack: { event: "Lead" }, website: { event: "Lead" },
+  newsletter: { event: "NewsletterSignup", custom: true }, call: { event: "Contact" },
+};
+
+const SENT_KEY = "vitorra_conversions_sent";
+
+/** True the first time a transaction id is seen in this visit; false on a repeat.
+    A repeated submission returns the same lead id, so it is reported once. */
+function firstTime(transactionId: string | undefined): boolean {
+  if (!transactionId) return true;
+  try {
+    const sent: string[] = JSON.parse(sessionStorage.getItem(SENT_KEY) ?? "[]");
+    if (sent.includes(transactionId)) return false;
+    sessionStorage.setItem(SENT_KEY, JSON.stringify([...sent.slice(-49), transactionId]));
+  } catch {
+    /* storage blocked: report anyway; Google still de-duplicates on transaction_id */
+  }
+  return true;
+}
+
+/** A short, stable, non-reversible tag for a value (FNV-1a), used to give a
+    newsletter sign-up the same transaction id each time the same address joins. */
+export function shortHash(value: string): string {
+  let h = 0x811c9dc5;
+  for (const ch of value.trim().toLowerCase()) {
+    h ^= ch.codePointAt(0)!;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(36);
 }
 
 /**
@@ -97,8 +137,20 @@ export interface ConversionDetails {
  * and never delays the form: a blocked tag or a missing label is a no-op.
  */
 export function trackConversion(kind: ConversionKind, details: ConversionDetails = {}): void {
+  if (!firstTime(details.transactionId)) return;
   // Product analytics (PostHog) gets the same moment, without any personal data.
-  capture(POSTHOG_EVENTS[kind], details.value != null ? { value: details.value, currency: details.currency ?? "UGX" } : {});
+  capture(POSTHOG_EVENTS[kind], {
+    ...(details.value != null ? { value: details.value, currency: details.currency ?? "UGX" } : {}),
+    ...(details.category ? { category: details.category } : {}),
+    ...(details.method ? { method: details.method } : {}),
+  });
+  // Meta Pixel: only runs after cookie consent, and only when an ID is set.
+  const meta = META_EVENTS[kind];
+  trackMeta(meta.event, {
+    content_name: POSTHOG_EVENTS[kind],
+    ...(details.category ? { content_category: details.category } : {}),
+    ...(details.value != null ? { value: details.value, currency: details.currency ?? "UGX" } : {}),
+  }, details.transactionId, meta.custom);
   try {
     const label = LABELS[kind];
     const g = gtag();

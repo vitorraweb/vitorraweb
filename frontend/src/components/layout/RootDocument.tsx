@@ -7,6 +7,7 @@ import { CartProvider } from "@/lib/cart";
 import { Toaster } from "@/components/ui/sonner";
 import { AttributionCapture } from "@/components/AttributionCapture";
 import { GoogleTag } from "@/components/GoogleTag";
+import { MetaPixel } from "@/components/MetaPixel";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 
 /* ── Type pairing — Quiet Authority (October 2026) ─────────────────────────────
@@ -66,6 +67,7 @@ export function RootDocument({
             {children}
             <AttributionCapture />
             <GoogleTag />
+            <MetaPixel />
             <PostHogAnalytics />
             <CookieBanner />
             <Toaster position="bottom-right" />

@@ -39,6 +39,16 @@ class EnquiryController extends Controller
 
         $data['phone'] = Phone::e164($data['phone'] ?? null);
 
+        // A repeat of the same enquiry a moment ago (double tap, retry on a
+        // slow connection) returns the first one: one lead, one team email.
+        if ($dup = Enquiry::recentDuplicate($data['email'], $data['product_category'] ?? null, $data['message'] ?? null, $data['requirements'] ?? null)) {
+            return response()->json([
+                'data'      => $dup,
+                'duplicate' => true,
+                'message'   => 'Enquiry received. We will be in touch within 24 hours.',
+            ], 200);
+        }
+
         // Resolve the channel before create() so it is stored on the row itself
         // and not inferred later from something that has since been lost.
         $data = array_merge($data, LeadSource::resolve($request->input('attribution', []) ?: []));

@@ -56,6 +56,16 @@ class FetBuyersPackController extends Controller
         if (! empty($data['vehicle'])) {
             $requirements[] = ['key' => 'vehicle', 'label' => 'Main vehicles', 'value' => self::VEHICLE_LABEL[$data['vehicle']]];
         }
+        $message = "Requested the FET Buyer's Pack from the website. Follow up with a free fuel assessment offer.";
+
+        // Asked again a moment later (often because the first email has not
+        // arrived yet): send the pack again, but it is still one lead and the
+        // team is not told twice (see Enquiry::recentDuplicate).
+        if ($dup = Enquiry::recentDuplicate($data['email'], 'FET', $message, $requirements)) {
+            Mail::to($dup->email)->send(new FetBuyersPack($dup->name, $this->prices()));
+
+            return response()->json(['data' => ['id' => $dup->id], 'duplicate' => true, 'message' => "Sent. Check your inbox for the FET Buyer's Pack."], 200);
+        }
 
         $enquiry = Enquiry::create([
             'product_category' => 'FET',
@@ -64,7 +74,7 @@ class FetBuyersPackController extends Controller
             'phone'            => Phone::e164($data['phone'] ?? null),
             'company'          => $data['company'] ?? null,
             'country'          => 'Uganda',
-            'message'          => "Requested the FET Buyer's Pack from the website. Follow up with a free fuel assessment offer.",
+            'message'          => $message,
             'requirements'     => $requirements,
             'assigned_to'      => config('enquiries.routing')['FET']['team'] ?? config('enquiries.default_team'),
             ...LeadSource::resolve($data['attribution'] ?? []),
@@ -80,7 +90,8 @@ class FetBuyersPackController extends Controller
             Log::warning('Buyer\'s pack team notice failed', ['enquiry' => $enquiry->id, 'error' => $e->getMessage()]);
         }
 
-        return response()->json(['message' => "Sent. Check your inbox for the FET Buyer's Pack."], 201);
+        // The id lets the browser report this lead to the ad platforms exactly once.
+        return response()->json(['data' => ['id' => $enquiry->id], 'message' => "Sent. Check your inbox for the FET Buyer's Pack."], 201);
     }
 
     private const FITS = [
