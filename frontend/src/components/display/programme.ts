@@ -66,6 +66,14 @@ export function next(c: Cycle, now: number): "advert" | "house" {
   return c.played < Math.ceil((c.total * (now - c.start)) / CYCLE_MS) ? "advert" : "house";
 }
 
+/** Take out the plays still to come for bookings no longer on air (`live` is what the server
+ *  says may run now). Their time goes back to our own content; plays already made stand. */
+export function drop(c: Cycle, live: number[]): void {
+  const before = c.queue.length;
+  c.queue = c.queue.filter((a) => live.includes(a.id));
+  c.total -= before - c.queue.length;
+}
+
 /** Whether this cycle is finished and a new one should start before the next scene. */
 export function spent(c: Cycle, now: number): boolean {
   return c.queue.length === 0 && (c.total === 0 || now >= c.start + CYCLE_MS - MIN_SLICE * 1000);

@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, Eye, EyeOff, Film, Image as ImageIcon, Loader2, Plu
 import { uploadPresigned } from "@vercel/blob/client";
 import { apiAdmin, auth } from "@/lib/auth";
 import { BUILT_IN_SCENES } from "@/components/display/scenes";
+import { describeSchedule, hasSchedule, scheduleState, STATE_LABEL, type Schedule, type ScheduleState } from "@/components/display/schedule";
 import { IMAGE_TYPES, isH264, readImage, readVideo } from "@/lib/screen-ads";
 import { deleteFile, mbps, optimiseVideo } from "@/lib/screen-files";
 import { ScreenCaptionSets, type CaptionSet } from "@/components/admin/ScreenCaptionSets";
@@ -23,9 +24,39 @@ import { ScreenCaptionSets, type CaptionSet } from "@/components/admin/ScreenCap
 type Media = {
   id: number; kind: "video" | "image"; url: string; title: string; line1: string | null; line2: string | null; small: string | null;
   captions: CaptionSet[] | null; business: string | null; optimised: boolean;
-  seconds: number; screens: string[]; starts_on: string | null; ends_on: string | null; width: number | null; height: number | null;
+  seconds: number; screens: string[]; starts_on: string | null; ends_on: string | null; daily_from: string | null; daily_until: string | null;
+  width: number | null; height: number | null;
 };
-type Programme = { order: string[]; hidden: string[] };
+type Programme = { order: string[]; hidden: string[]; schedule: Record<string, Schedule> };
+
+const TONE: Record<ScheduleState, string> = { always: "", showing: "ok", later: "blue", scheduled: "gold", ended: "muted" };
+
+/** The clock the status chips follow: the current minute, so "Ended" and "Scheduled" change on their own. */
+function useNow(): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const t = setInterval(() => setNow(new Date()), 30_000); return () => clearInterval(t); }, []);
+  return now;
+}
+
+/** First and last day, and daily hours, for one item. Kampala time; every field optional. */
+function ScheduleFields({ value, onSave }: { value: Schedule; onSave: (s: Schedule) => void }) {
+  const field = (k: keyof Schedule, v: string) => onSave({ ...value, [k]: v || null });
+  const set = hasSchedule(value);
+  return (
+    <fieldset className="sm:col-span-2 grid sm:grid-cols-2 gap-3">
+      <legend className="mb-1">When it shows <span className="opacity-70">(optional, Kampala time; leave blank to show every day, all day)</span></legend>
+      <label className="block">From (first day)<input type="date" className="c-input w-full mt-1" defaultValue={day(value.starts_on ?? null)} onChange={(e) => field("starts_on", e.target.value)} /></label>
+      <label className="block">Until (last day)<input type="date" className="c-input w-full mt-1" defaultValue={day(value.ends_on ?? null)} onChange={(e) => field("ends_on", e.target.value)} /></label>
+      <label className="block">Each day from<input type="time" step={60} className="c-input w-full mt-1" defaultValue={value.daily_from ?? ""} onBlur={(e) => e.target.value !== (value.daily_from ?? "") && field("daily_from", e.target.value)} /></label>
+      <label className="block">Each day until<input type="time" step={60} className="c-input w-full mt-1" defaultValue={value.daily_until ?? ""} onBlur={(e) => e.target.value !== (value.daily_until ?? "") && field("daily_until", e.target.value)} /></label>
+      <p className="sm:col-span-2 text-[12px]" style={{ color: "var(--o-muted)" }}>
+        Hours run from the first time up to the second, every day in its dates: 06:30 to 10:00 is mornings only; 20:00 to 02:00 runs past midnight.
+        On the street screen this only changes which of our own scenes fill the time; paid adverts keep every play they were sold.
+        {set && <> <button type="button" className="underline" onClick={() => onSave({ starts_on: null, ends_on: null, daily_from: null, daily_until: null })}>Clear, show it always</button></>}
+      </p>
+    </fieldset>
+  );
+}
 type Item = { id: string; label: string; media?: Media };
 type Upload = { kind: "video" | "image"; url: string; width: number; height: number; seconds: number; name: string; heavy: boolean; optimised: boolean };
 
@@ -41,7 +72,8 @@ const day = (d: string | null) => (d ? d.slice(0, 10) : "");
 
 export function ScreenRunningOrder() {
   const [media, setMedia] = useState<Media[]>([]);
-  const [programme, setProgramme] = useState<Programme>({ order: [], hidden: [] });
+  const [programme, setProgramme] = useState<Programme>({ order: [], hidden: [], schedule: {} });
+  const now = useNow();
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [note, setNote] = useState("");
@@ -56,7 +88,8 @@ export function ScreenRunningOrder() {
   const load = useCallback(async () => {
     try {
       const r = await apiAdmin<{ data: { media: Media[]; programme: Programme } }>("/admin/screen-media");
-      setMedia(r.data.media); setProgramme(r.data.programme);
+      const p = r.data.programme;
+      setMedia(r.data.media); setProgramme({ order: p.order, hidden: p.hidden, schedule: p.schedule && !Array.isArray(p.schedule) ? p.schedule : {} });
     } catch (e) { setNote(e instanceof Error ? e.message : "Could not load the running order."); } finally { setLoading(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -83,8 +116,19 @@ export function ScreenRunningOrder() {
   const toggle = (id: string) => {
     const hidden = programme.hidden.includes(id) ? programme.hidden.filter((h) => h !== id) : [...programme.hidden, id];
     if (items.every((i) => hidden.includes(i.id))) { setNote("At least one scene has to stay on."); return; }
-    void save({ order: items.map((i) => i.id), hidden });
+    void save({ ...programme, order: items.map((i) => i.id), hidden });
   };
+  /** Dates and hours for a built-in scene (added items keep theirs on the item). */
+  const scheduleScene = (id: string, s: Schedule) => {
+    const schedule = { ...programme.schedule };
+    if (hasSchedule(s)) schedule[id] = s; else delete schedule[id];
+    void save({ order: items.map((i) => i.id), hidden: programme.hidden, schedule });
+  };
+  const scheduleFor = (it: Item): Schedule => (it.media
+    ? { starts_on: it.media.starts_on, ends_on: it.media.ends_on, daily_from: it.media.daily_from, daily_until: it.media.daily_until }
+    : programme.schedule[it.id] ?? {});
+  // Everything switched on, but nothing in its dates and hours: the screens fall back to the opening.
+  const nothingOn = items.every((it) => programme.hidden.includes(it.id) || !["always", "showing"].includes(scheduleState(scheduleFor(it), now)));
 
   /** Check a file against what the screens can play, then upload it. Null if refused. */
   const upload = async (f: File): Promise<Upload | null> => {
@@ -184,7 +228,7 @@ export function ScreenRunningOrder() {
   const update = async (m: Media, patch: Partial<Media>) => {
     const next = { ...m, ...patch };
     setMedia((list) => list.map((x) => (x.id === m.id ? next : x)));
-    try { await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ title: next.title, line1: next.line1 || null, line2: next.line2 || null, small: next.small || null, captions: next.captions ?? [], business: next.business || null, seconds: next.seconds, screens: next.screens, starts_on: next.starts_on || null, ends_on: next.ends_on || null }) }); setNote("Saved. Screens follow within a minute."); }
+    try { await apiAdmin(`/admin/screen-media/${m.id}`, { method: "PATCH", body: JSON.stringify({ title: next.title, line1: next.line1 || null, line2: next.line2 || null, small: next.small || null, captions: next.captions ?? [], business: next.business || null, seconds: next.seconds, screens: next.screens, starts_on: day(next.starts_on) || null, ends_on: day(next.ends_on) || null, daily_from: next.daily_from || null, daily_until: next.daily_until || null }) }); setNote("Saved. Screens follow within a minute."); }
     catch (e) { setNote(e instanceof Error ? e.message : "Saving failed."); void load(); }
   };
   /** Re-encode a video that is already in the running order, keeping everything else about it. */
@@ -244,27 +288,36 @@ export function ScreenRunningOrder() {
           <input ref={file} type="file" accept="video/mp4,.mp4,image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => void add(e.target.files?.[0])} />
           <input ref={replaceFile} type="file" accept="video/mp4,.mp4,image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => replacing && void replace(replacing, e.target.files?.[0])} />
         </div>
+        {nothingOn && <p role="status" className="text-[13px] mb-3 p-2 rounded" style={{ color: "var(--o-warning)", background: "var(--o-warning-bg)" }}>Nothing is in its dates and hours right now, so the screens show the opening (VITORRA) on its own. Switch something on or widen a schedule.</p>}
         <ol className="c-panel divide-y" style={{ borderColor: "var(--o-line)" }}>
           {items.map((it, n) => {
             const off = programme.hidden.includes(it.id);
             const m = it.media;
+            const sched = scheduleFor(it);
+            const state = scheduleState(sched, now);
+            const when = describeSchedule(sched);
             return (
               <li key={it.id} className="p-3" style={{ opacity: off ? 0.55 : 1, background: preview === it.id ? "var(--o-surface-2, rgba(0,0,0,0.04))" : undefined }}>
                 <div className="flex items-center gap-2">
                   <span className="tabular-nums text-[12px] w-6 text-right">{n + 1}</span>
                   {m ? (m.kind === "video" ? <Film aria-hidden="true" className="w-4 h-4 shrink-0" /> : <ImageIcon aria-hidden="true" className="w-4 h-4 shrink-0" />) : <span className="w-4" />}
                   <button type="button" aria-pressed={preview === it.id} className="text-left flex-1 min-w-0 text-[14px] truncate" onClick={() => { setPreview(it.id); setOpen(m && open !== m.id ? m.id : null); }}>
-                    {it.label}{off ? " (off)" : ""}{m && (m.starts_on || m.ends_on) ? ` · ${day(m.starts_on) || "now"} to ${day(m.ends_on) || "open"}` : ""}
+                    {it.label}{off ? " (off)" : ""}
+                    {when && <span className="block text-[12px] truncate" style={{ color: "var(--o-muted)" }}>{when}</span>}
                   </button>
+                  {state !== "always" && !off && <span className="c-chip shrink-0" data-tone={TONE[state]} title={when}>{STATE_LABEL[state]}</span>}
                   <button type="button" className="c-btn c-btn-ghost" aria-label="Move up" disabled={n === 0} onClick={() => move(n, -1)}><ArrowUp aria-hidden="true" className="w-4 h-4" /></button>
                   <button type="button" className="c-btn c-btn-ghost" aria-label="Move down" disabled={n === items.length - 1} onClick={() => move(n, 1)}><ArrowDown aria-hidden="true" className="w-4 h-4" /></button>
                   <button type="button" className="c-btn c-btn-ghost" aria-label={off ? "Switch on" : "Switch off"} title={off ? "Switch on" : "Switch off (keeps it for later)"} onClick={() => toggle(it.id)}>{off ? <EyeOff aria-hidden="true" className="w-4 h-4" /> : <Eye aria-hidden="true" className="w-4 h-4" />}</button>
                   {m && <button type="button" className="c-btn c-btn-ghost" aria-label={`Delete ${m.title}`} title="Delete for good" onClick={() => void remove(m)}><Trash2 aria-hidden="true" className="w-4 h-4" style={{ color: "var(--o-danger)" }} /></button>}
                 </div>
                 {!m && preview === it.id && (
-                  <div className="flex items-center justify-between gap-2 flex-wrap mt-3 pl-12 text-[13px]">
-                    <span style={{ color: "var(--o-muted)" }}>Built-in scene. Its words are in the Wording tab.</span>
-                    <button type="button" className="c-btn" disabled={!!busy} onClick={() => pickReplacement(it)}><Replace aria-hidden="true" className="w-4 h-4" />Replace with a video or design</button>
+                  <div className="grid sm:grid-cols-2 gap-3 mt-3 pl-12 text-[13px]">
+                    <div className="sm:col-span-2 flex items-center justify-between gap-2 flex-wrap">
+                      <span style={{ color: "var(--o-muted)" }}>Built-in scene. Its words are in the Wording tab.</span>
+                      <button type="button" className="c-btn" disabled={!!busy} onClick={() => pickReplacement(it)}><Replace aria-hidden="true" className="w-4 h-4" />Replace with a video or design</button>
+                    </div>
+                    <ScheduleFields key={JSON.stringify(sched)} value={sched} onSave={(s) => scheduleScene(it.id, s)} />
                   </div>
                 )}
                 {m && open === m.id && (
@@ -289,8 +342,7 @@ export function ScreenRunningOrder() {
                         }} />{s.label}</label>
                       ))}</div>
                     </fieldset>
-                    <label className="block">From (optional)<input type="date" className="c-input w-full mt-1" defaultValue={day(m.starts_on)} onChange={(e) => void update(m, { starts_on: e.target.value || null })} /></label>
-                    <label className="block">Until (optional)<input type="date" className="c-input w-full mt-1" defaultValue={day(m.ends_on)} onChange={(e) => void update(m, { ends_on: e.target.value || null })} /></label>
+                    <ScheduleFields key={JSON.stringify(sched)} value={sched} onSave={(s) => void update(m, { starts_on: s.starts_on ?? null, ends_on: s.ends_on ?? null, daily_from: s.daily_from ?? null, daily_until: s.daily_until ?? null })} />
                     <div className="sm:col-span-2 flex items-center justify-between gap-2 flex-wrap">
                       <span>{m.kind === "video" ? `Video, ${m.seconds} seconds` : "Design"}{m.width ? `, ${m.width} × ${m.height}` : ""}</span>
                       <span className="flex gap-2">
