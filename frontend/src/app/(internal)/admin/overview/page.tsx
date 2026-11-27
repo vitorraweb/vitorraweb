@@ -17,6 +17,9 @@ import { OperationsGlance, TodayRow, WebsiteGlance, operationsAttention, useOper
 
 type Money = { UGX: number; USD: number };
 
+/** Product columns in the channel table (enquiries with no product show as General). */
+const CHANNEL_PRODUCTS = ["FET", "SEAL", "COFFEE", "LOGISTICS", "WEB", "GENERAL"];
+
 type ActivityItem = { type: "enquiry" | "order" | "message"; title: string; meta: string; created_at: string; href: string };
 
 type Stats = {
@@ -38,6 +41,7 @@ type Stats = {
   };
   lead_sources?: {
     by_source: { source: string; count: number; converted: number }[];
+    by_channel?: { channel: string; label: string; count: number; converted: number; last_30: number; by_product: Record<string, number> }[];
     by_campaign: { campaign: string; count: number }[];
     tracked_from: string | null;
   };
@@ -249,6 +253,43 @@ export default function AdminOverview() {
               />
             )}
           </div>
+
+          {/* ── Channel × product: "how many website enquiries came from Meta?" ── */}
+          {(stats.lead_sources?.by_channel?.length ?? 0) > 0 && (
+            <section className="c-panel overflow-x-auto">
+              <div className="c-panel-head">
+                <h3 className="c-panel-title">Enquiries by channel and product</h3>
+                <Link href="/admin/enquiries" className="text-[13.5px] font-medium text-gold-ink hover:underline">Open enquiries</Link>
+              </div>
+              <table className="c-table min-w-[720px]">
+                <thead>
+                  <tr>
+                    <th>Channel</th>
+                    {CHANNEL_PRODUCTS.map((p) => <th key={p} className="text-right">{p === "GENERAL" ? "General" : p}</th>)}
+                    <th className="text-right">Total</th>
+                    <th className="text-right">Last 30 days</th>
+                    <th className="text-right">Won</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.lead_sources!.by_channel!.map((c) => (
+                    <tr key={c.channel}>
+                      <td><Link href={`/admin/enquiries?channel=${c.channel}`} className="hover:underline">{c.label}</Link></td>
+                      {CHANNEL_PRODUCTS.map((p) => (
+                        <td key={p} className="text-right tabular-nums">
+                          {c.by_product[p] ? (p === "GENERAL" ? num(c.by_product[p]) : <Link href={`/admin/enquiries?channel=${c.channel}&category=${p}`} className="hover:underline">{num(c.by_product[p])}</Link>) : <span className="text-ink-muted">0</span>}
+                        </td>
+                      ))}
+                      <td className="text-right tabular-nums font-medium">{num(c.count)}</td>
+                      <td className="text-right tabular-nums">{num(c.last_30)}</td>
+                      <td className="text-right tabular-nums">{num(c.converted)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="px-4 py-3 text-[12.5px] text-ink-muted">&ldquo;Meta ads&rdquo; counts clicks on Facebook and Instagram ads whose link is tagged as paid (utm_medium=paid). An untagged Facebook click is counted as unpaid, because Facebook adds its click id to ordinary posts too.</p>
+            </section>
+          )}
 
           {/* ── Outreach ─────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

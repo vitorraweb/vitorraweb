@@ -16,10 +16,11 @@ import { isoDay, money, telUrl, whatsappUrl } from "@/components/crm/crm";
    one tap away and opens the customer panel to log what happened.         */
 
 type FollowUp = { kind: "customer" | "prospect"; email: string | null; prospect_id: number | null; name: string; phone: string | null; what: string; due: string; stage: string | null; owner: string | null };
-type Enq = { id: number; name: string; company: string | null; email: string; phone: string | null; product_category: string | null; created_at: string; wants_assessment: boolean; assessment_when: string | null; assessment_where: string | null; contact_pref: string | null };
+type Enq = { id: number; name: string; company: string | null; email: string; phone: string | null; product_category: string | null; created_at: string; wants_assessment: boolean; assessment_when: string | null; assessment_where: string | null; contact_pref: string | null; channel?: string; channel_label?: string };
+type Msg = { id: number; name: string; email: string; subject: string | null; created_at: string; channel?: string; channel_label?: string };
 type Hot = { id: number; name: string; email: string | null; phone: string | null; product: string; lead_score: number; lead_tier: string; lead_action: string | null };
 type Closing = { email: string; name: string; phone: string | null; deal_value: number | null; deal_currency: string; expected_close: string; stage: string; probability: number };
-type Today = { follow_ups: FollowUp[]; overdue: number; new_enquiries: Enq[]; hot_leads: Hot[]; closing_soon: Closing[]; this_week: { activities: number; by_kind: Record<string, number> }; everyone: boolean };
+type Today = { follow_ups: FollowUp[]; overdue: number; new_enquiries: Enq[]; new_messages?: Msg[]; hot_leads: Hot[]; closing_soon: Closing[]; this_week: { activities: number; by_kind: Record<string, number> }; everyone: boolean };
 type Open = { email: string | null; prospectId?: number | null; name: string; phone: string | null; company?: string | null };
 
 const day = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
@@ -74,12 +75,27 @@ export default function TodayPage() {
                     e.product_category ?? "General",
                     e.wants_assessment ? `Wants a free assessment${e.assessment_when ? ` ${e.assessment_when.toLowerCase()}` : ""}${e.assessment_where ? ` at ${e.assessment_where}` : ""}` : null,
                     e.contact_pref ? `Prefers ${e.contact_pref}` : null,
+                    e.channel_label && e.channel !== "unknown" ? `From ${e.channel_label}` : null,
                     new Date(e.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
                   ].filter(Boolean).join(" · ")}
                   right={e.wants_assessment ? <span className="c-chip" data-tone="ok">Assessment</span> : undefined}
                   onOpen={() => setOpen({ email: e.email, name: e.name, phone: e.phone, company: e.company })} />
               ))}
             </Panel>
+
+            {(d.new_messages?.length ?? 0) > 0 && (
+              <Panel icon={MessageSquare} title="Unread contact messages" note="Sent from the Contact page">
+                {d.new_messages!.map((m) => (
+                  <Row key={`m${m.id}`} name={m.name} phone={null}
+                    sub={[
+                      m.subject || "Contact message",
+                      m.channel_label && m.channel !== "unknown" ? `From ${m.channel_label}` : null,
+                      new Date(m.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+                    ].filter(Boolean).join(" · ")}
+                    onOpen={() => setOpen({ email: m.email, name: m.name, phone: null })} />
+                ))}
+              </Panel>
+            )}
 
             <Panel icon={Flame} title="Hottest prospects" note="From Lead priorities — engaged with our emails recently">
               {d.hot_leads.length === 0 ? <Empty text="No hot or warm prospects right now." /> : d.hot_leads.map((h) => (

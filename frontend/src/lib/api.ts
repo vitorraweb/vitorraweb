@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "./constants";
 import { getAttribution } from "@/lib/attribution";
-import { trackConversion } from "@/lib/google-ads";
+import { shortHash, trackConversion } from "@/lib/google-ads";
 import type {
   ApiResponse,
   BlogPost,
@@ -98,7 +98,8 @@ export async function submitEnquiry(
     }),
   });
   // Tell Google Ads which visit produced this lead (see lib/google-ads.ts).
-  trackConversion("enquiry", { transactionId: `enq-${res.data?.id ?? Date.now()}`, email: data.email, phone: data.phone });
+  // A repeat of the same enquiry returns the same id, so it is reported once.
+  trackConversion("enquiry", { transactionId: `enq-${res.data?.id ?? Date.now()}`, email: data.email, phone: data.phone, category: data.product_category || "GENERAL" });
   return res.data;
 }
 
@@ -115,7 +116,7 @@ export async function submitContact(
   data: ContactFormData,
   turnstileToken?: string
 ): Promise<{ message: string }> {
-  const res = await request<{ message: string }>("/contact", {
+  const res = await request<{ message: string; data?: { id?: number } }>("/contact", {
     method: "POST",
     body: JSON.stringify({
       ...data,
@@ -123,7 +124,7 @@ export async function submitContact(
       attribution: getAttribution(),
     }),
   });
-  trackConversion("contact", { email: data.email });
+  trackConversion("contact", { transactionId: res.data?.id ? `msg-${res.data.id}` : undefined, email: data.email });
   return res;
 }
 
@@ -136,9 +137,11 @@ export async function subscribeNewsletter(
 ): Promise<{ message: string }> {
   const res = await request<{ message: string }>("/newsletter/subscribe", {
     method: "POST",
-    body: JSON.stringify({ email, locale, source: "footer", turnstile_token: turnstileToken }),
+    body: JSON.stringify({ email, locale, source: "footer", turnstile_token: turnstileToken, attribution: getAttribution() }),
   });
-  trackConversion("newsletter", { email });
+  // The API never says whether the address was already on the list, so the id
+  // is derived from the address: the same person joining twice counts once.
+  trackConversion("newsletter", { transactionId: `nl-${shortHash(email)}`, email });
   return res;
 }
 
@@ -294,6 +297,7 @@ export async function reserveFet(payload: ReserveFetPayload): Promise<{ order: O
   });
   const order = res.data;
   trackConversion("reserve", {
+    category: "FET",
     // Orders hold UGX in shillings and USD in cents.
     value: order ? (order.currency === "USD" ? order.total / 100 : order.total) : undefined,
     currency: order?.currency,
@@ -334,11 +338,11 @@ export async function requestBuyersPack(
   data: { name: string; email: string; phone?: string; company?: string; fleet_size: string; vehicle?: string },
   turnstileToken?: string,
 ): Promise<void> {
-  await request("/fet/buyers-pack", {
+  const res = await request<{ data?: { id?: number } }>("/fet/buyers-pack", {
     method: "POST",
     body: JSON.stringify({ ...data, turnstile_token: turnstileToken, attribution: getAttribution() }),
   });
-  trackConversion("pack", { transactionId: `pack-${Date.now()}`, email: data.email, phone: data.phone });
+  trackConversion("pack", { transactionId: `pack-${res.data?.id ?? Date.now()}`, email: data.email, phone: data.phone, category: "FET" });
 }
 
 /* ─── Vitorra Digital: free website preview request (/websites) ─────────── */
@@ -347,11 +351,11 @@ export async function requestWebsitePreview(
   data: { name: string; business: string; phone: string; email: string; business_type: string; online_link?: string; sells?: string; add_ads?: boolean },
   turnstileToken?: string,
 ): Promise<void> {
-  await request("/websites/preview", {
+  const res = await request<{ data?: { id?: number } }>("/websites/preview", {
     method: "POST",
     body: JSON.stringify({ ...data, turnstile_token: turnstileToken, attribution: getAttribution() }),
   });
-  trackConversion("website", { transactionId: `web-${Date.now()}`, email: data.email, phone: data.phone, value: 500000, currency: "UGX" });
+  trackConversion("website", { transactionId: `web-${res.data?.id ?? Date.now()}`, email: data.email, phone: data.phone, value: 500000, currency: "UGX", category: "WEB" });
 }
 
 /* ─── Spotlight (the current "what's new" line under a hero) ───────────── */

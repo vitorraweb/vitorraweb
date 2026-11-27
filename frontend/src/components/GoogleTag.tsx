@@ -48,9 +48,8 @@ export function GoogleTag() {
     const onClick = (e: MouseEvent) => {
       const a = (e.target as Element | null)?.closest?.("a[href]");
       const href = a?.getAttribute("href") ?? "";
-      if (/^tel:/i.test(href) || /(wa\.me|api\.whatsapp\.com|whatsapp:)/i.test(href)) {
-        trackConversion("call");
-      }
+      if (/^tel:/i.test(href)) trackConversion("call", { method: "phone" });
+      else if (/(wa\.me|api\.whatsapp\.com|whatsapp:)/i.test(href)) trackConversion("call", { method: "whatsapp" });
     };
     document.addEventListener("click", onClick, { capture: true });
     return () => document.removeEventListener("click", onClick, { capture: true });

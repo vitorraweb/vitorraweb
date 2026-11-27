@@ -24,6 +24,15 @@ type AssignableUser = { id: number; name: string };
 
 const STATUSES = ["new", "in_progress", "quoted", "converted", "closed"];
 const CATEGORIES = ["FET", "SEAL", "COFFEE", "LOGISTICS", "WEB"];
+/* Where a lead came from, grouped (backend LeadSource::CHANNELS). "Meta ads"
+   counts tagged, paid Facebook/Instagram clicks; "Facebook / Instagram
+   (unpaid)" is a post, a profile link or an untagged click. */
+const CHANNELS: [string, string][] = [
+  ["meta_ads", "Meta ads (Facebook / Instagram)"], ["google_ads", "Google Ads"],
+  ["meta", "Facebook / Instagram (unpaid)"], ["organic_search", "Search (unpaid)"],
+  ["whatsapp", "WhatsApp"], ["email", "Email"], ["other_social", "Other social"],
+  ["referral", "Other websites and campaigns"], ["direct", "Direct"], ["unknown", "Unknown (before tracking)"],
+];
 
 /* Convert to Order — "Reserve Online, Pay Cash on Installation" for fleet
    enquiries staff have quoted. Tier picked explicitly (Enquiry.requirements
@@ -63,6 +72,16 @@ export default function EnquiriesPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter]   = useState("");
   const [cat, setCat]         = useState("");
+  const [channel, setChannel] = useState("");
+  // ?channel= and ?category= deep links (from the dashboard's channel table),
+  // read once before the first load.
+  const [urlRead, setUrlRead] = useState(false);
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("channel")) setChannel(p.get("channel") ?? "");
+    if (p.get("category")) setCat(p.get("category") ?? "");
+    setUrlRead(true);
+  }, []);
   const [page, setPage]       = useState(1);
   const [meta, setMeta]       = useState({ current_page: 1, last_page: 1, total: 0 });
   const [q, setQ]             = useState("");
@@ -77,7 +96,12 @@ export default function EnquiriesPage() {
   const [exporting, setExporting] = useState(false);
   const handleExport = async () => {
     setExporting(true);
-    try { await downloadCsv("/admin/enquiries/export", `enquiries-${new Date().toISOString().slice(0, 10)}.csv`); }
+    const p = new URLSearchParams();
+    if (filter) p.set("status", filter);
+    if (cat) p.set("category", cat);
+    if (channel) p.set("channel", channel);
+    const qs = p.toString();
+    try { await downloadCsv(`/admin/enquiries/export${qs ? `?${qs}` : ""}`, `enquiries-${new Date().toISOString().slice(0, 10)}.csv`); }
     catch { /* ignore */ }
     finally { setExporting(false); }
   };
@@ -92,6 +116,7 @@ export default function EnquiriesPage() {
       const params = new URLSearchParams();
       if (filter) params.set("status", filter);
       if (cat) params.set("category", cat);
+      if (channel) params.set("channel", channel);
       if (appliedQ) params.set("q", appliedQ);
       params.set("page", String(page));
       const res = await apiAdmin<Paginated<Enquiry>>(`/admin/enquiries?${params.toString()}`);
@@ -99,17 +124,18 @@ export default function EnquiriesPage() {
       setMeta({ current_page: res.current_page, last_page: res.last_page, total: res.total });
     } catch { setList([]); }
     finally { setLoading(false); }
-  }, [filter, cat, appliedQ, page]);
+  }, [filter, cat, channel, appliedQ, page]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (urlRead) load(); }, [load, urlRead]);
 
   // Filter changes show the spinner (set from the click, not synchronously in the effect).
   const selStatus = (s: string) => { setLoading(true); setPage(1); setFilter(s); };
   const selCat = (c: string) => { setLoading(true); setPage(1); setCat(c); };
+  const selChannel = (c: string) => { setLoading(true); setPage(1); setChannel(c); };
   const search = () => { setLoading(true); setPage(1); setAppliedQ(q.trim()); };
   const goPage = (n: number) => { setLoading(true); setOpen(null); setPage(n); };
-  const filtered = !!(filter || cat || appliedQ);
-  const clearFilters = () => { setLoading(true); setPage(1); setFilter(""); setCat(""); setQ(""); setAppliedQ(""); };
+  const filtered = !!(filter || cat || channel || appliedQ);
+  const clearFilters = () => { setLoading(true); setPage(1); setFilter(""); setCat(""); setChannel(""); setQ(""); setAppliedQ(""); };
 
   const updateStatus = async (id: number, status: string) => {
     setList((l) => l.map((e) => (e.id === id ? { ...e, status } : e)));
@@ -198,6 +224,10 @@ export default function EnquiriesPage() {
         <select aria-label="Product" value={cat} onChange={(ev) => selCat(ev.target.value)} className="c-select" data-active={!!cat}>
           <option value="">All products</option>
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select aria-label="Where from" value={channel} onChange={(ev) => selChannel(ev.target.value)} className="c-select" data-active={!!channel}>
+          <option value="">All channels</option>
+          {CHANNELS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
         </select>
         {filtered && <button onClick={clearFilters} className="c-btn c-btn-ghost text-ink-muted">Clear</button>}
       </div>
